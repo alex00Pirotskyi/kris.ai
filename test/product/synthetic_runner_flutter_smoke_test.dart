@@ -57,8 +57,8 @@ void main() {
           projectId: project.id,
           mode: CommandMode.build,
           request: 'Build a minimal Flutter application named synthetic_app '
-              'in the active project root without network access. Keep the '
-              'generated starter application and pass analyzer and tests.',
+              'in the active project root without network access. The app must '
+              'render "Kristin real Flutter smoke" and pass analyzer and tests.',
           model: model,
         );
         var run = await coordinator.createRun(
@@ -92,7 +92,8 @@ void main() {
         expect(
           run.state.name,
           'succeeded',
-          reason: 'runFailure=${run.failure}; items=${run.items.map((item) => '${item.item.title}:${item.state.name}:${item.attempts}:${item.lastError ?? ''}').join('|')}',
+          reason:
+              'runFailure=${run.failure}; items=${run.items.map((item) => '${item.item.title}:${item.state.name}:${item.attempts}:${item.lastError ?? ''}').join('|')}',
         );
         expect(provider.readinessRequests, 1);
         expect(provider.executionRequests, lessThanOrEqualTo(12));
@@ -110,7 +111,7 @@ void main() {
           '${Platform.pathSeparator}main.dart',
         ).readAsString();
         expect(pubspec, contains('name: synthetic_app'));
-        expect(mainSource, contains('class MyApp extends StatelessWidget'));
+        expect(mainSource, contains('Kristin real Flutter smoke'));
 
         final evidence = await runtime.evidenceForRun(run.id);
         final commandEvidence = evidence
@@ -333,6 +334,26 @@ final class _FlutterSmokeProvider implements LanguageModelProvider {
             },
             <String, Object?>{
               'action': 'tool',
+              'tool': 'write_file',
+              'arguments': <String, Object?>{
+                'path': 'tool/repair_smoke.dart',
+                'content': _repairSource,
+              },
+              'reason':
+                  'Create a deterministic project-local repair script that removes generated pub dependencies.',
+            },
+            <String, Object?>{
+              'action': 'tool',
+              'tool': 'run_command',
+              'arguments': <String, Object?>{
+                'executable': 'dart',
+                'args': <String>['dart', 'tool/repair_smoke.dart'],
+              },
+              'reason':
+                  'Apply the deterministic SDK-only app and test fixture through finite process execution.',
+            },
+            <String, Object?>{
+              'action': 'tool',
               'tool': 'run_command',
               'arguments': <String, Object?>{
                 'executable': 'flutter',
@@ -345,12 +366,12 @@ final class _FlutterSmokeProvider implements LanguageModelProvider {
               'action': 'tool',
               'tool': 'inspect_file',
               'arguments': <String, Object?>{'path': 'lib/main.dart'},
-              'reason': 'Inspect the generated Flutter application artifact.',
+              'reason': 'Inspect the final Flutter application artifact.',
             },
             <String, Object?>{
               'action': 'complete',
               'summary':
-                  'Flutter starter application exists in the active root with offline dependencies and inspected app source.',
+                  'Flutter application exists in the active root with offline dependencies and inspected app source.',
             },
           ],
           'Verify acceptance criteria and repair defects':
@@ -367,6 +388,62 @@ final class _FlutterSmokeProvider implements LanguageModelProvider {
             },
           ],
         };
+
+  static const String _repairSource = r"""
+import 'dart:io';
+
+void main() {
+  final analysis = File('analysis_options.yaml');
+  if (analysis.existsSync()) {
+    analysis.deleteSync();
+  }
+  File('pubspec.yaml').writeAsStringSync('''
+name: synthetic_app
+description: Deterministic Kristin Runner smoke fixture.
+publish_to: none
+version: 1.0.0+1
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  uses-material-design: true
+''');
+  Directory('lib').createSync(recursive: true);
+  File('lib/main.dart').writeAsStringSync(r'''
+import 'package:flutter/material.dart';
+
+void main() => runApp(const SmokeApp());
+
+class SmokeApp extends StatelessWidget {
+  const SmokeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) => const MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Kristin real Flutter smoke')),
+        ),
+      );
+}
+''');
+  Directory('test').createSync(recursive: true);
+  File('test/smoke_test.dart').writeAsStringSync(r'''
+import 'package:flutter_test/flutter_test.dart';
+import 'package:synthetic_app/main.dart';
+
+void main() {
+  testWidgets('renders deterministic smoke marker', (tester) async {
+    await tester.pumpWidget(const SmokeApp());
+    expect(find.text('Kristin real Flutter smoke'), findsOneWidget);
+  });
+}
+''');
+}
+""";
 
   final ModelIdentity identity;
   final Map<String, List<Map<String, Object?>>> _actions;
