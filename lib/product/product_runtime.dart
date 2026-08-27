@@ -12,6 +12,7 @@ import 'extensions_index.dart';
 import 'file_adapters.dart';
 import 'git_state_probe.dart';
 import 'models_research.dart';
+import 'research_search_provider.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
 import 'mcp_registry_v2.dart';
@@ -2038,6 +2039,37 @@ class ProductRuntime {
     );
     final current = await repositories.projects.get(project.id) ?? project;
     await repositories.projects.put(apply(current, result));
+  }
+
+  /// Runs a live web search using the canonical built-in, zero-key search
+  /// provider -- the same provider [RunPreflightService] already uses to
+  /// probe research readiness before a Run. Deliberately requires no
+  /// project: research is a standalone capability, not a project action.
+  /// Callers that have a project in scope may separately archive results
+  /// as project knowledge via [KnowledgeService.addResearchSearch]; this
+  /// method never does so, so it never needs one to succeed.
+  Future<List<Map<String, String>>> searchWeb({
+    required String query,
+    int count = 10,
+  }) async {
+    if (settings.localOnly) {
+      throw ProductException(
+        'network_disabled',
+        'Research is disabled in local-only mode.',
+      );
+    }
+    final router = SearchProviderRouter(
+      builtIn: BuiltInDuckDuckGoSearchProvider(
+        timeout: research.policy.timeout,
+        maxBytes: research.policy.maxBytes,
+      ),
+    );
+    final response = await router.search(
+      SearchProviderRequest(query: query, count: count.clamp(1, 20).toInt()),
+    );
+    return response.results.map((result) => result.toMap()).toList(
+          growable: false,
+        );
   }
 
   Future<ProjectProcessStatus> startProject(String projectId) async {

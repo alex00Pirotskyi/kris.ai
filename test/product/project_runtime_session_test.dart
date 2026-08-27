@@ -294,8 +294,20 @@ void main() {
       if (!runtimeClosed) {
         await runtime.close();
       }
-      if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+      // On Windows, killing a persist-until-stopped child process (as the
+      // "close does not kill it" test does deliberately) does not
+      // synchronously release its handle on this directory -- the OS can
+      // still be tearing the process down for a moment after killPid
+      // returns. Retry the delete instead of failing the test on that
+      // transient sharing violation.
+      for (var attempt = 0; attempt < 10; attempt++) {
+        if (!await temporary.exists()) return;
+        try {
+          await temporary.delete(recursive: true);
+          return;
+        } on FileSystemException {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+        }
       }
     });
 

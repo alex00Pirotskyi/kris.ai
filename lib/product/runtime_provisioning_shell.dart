@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'api_server.dart';
 import 'application_runtime_provisioner.dart';
-import 'chat_studio.dart';
+import 'chat_control_plane_studio.dart';
 import 'p2_product_runtime_bootstrap.dart';
 import 'p5_command_palette.dart';
 import 'p5_design_tokens.dart';
@@ -92,7 +92,7 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
       themeAnimationCurve: Curves.easeOutCubic,
       home: _ProvisioningMainShell(
         runtime: widget.runtime,
-        chat: ChatStudio(
+        chat: ChatControlPlaneStudio(
           runtime: widget.runtime,
           api: api,
           startupError: startupError,
