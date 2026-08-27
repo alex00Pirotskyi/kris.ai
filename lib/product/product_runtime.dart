@@ -10,11 +10,16 @@ import 'domain.dart';
 import 'execution_intelligence.dart';
 import 'extensions_index.dart';
 import 'file_adapters.dart';
+import 'git_state_probe.dart';
 import 'models_research.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
 import 'mcp_registry_v2.dart';
 import 'planning_runtime.dart';
+import 'process_identity.dart';
+import 'project_admission.dart';
+import 'project_control_service.dart';
+import 'project_launch_profile_detection.dart';
 import 'prompt_planning.dart';
 import 'prompt_studio_v2.dart';
 import 'project_diagnostics.dart';
@@ -337,6 +342,13 @@ class ProductRuntime {
   P1AuthorityServiceHandleV1? get p1AuthorityService =>
       _p1AuthorityServiceRuntime?.handle;
   final Map<String, String> _projectProcessIds = <String, String>{};
+  final ProcessIdentityProbe _processIdentity = const ProcessIdentityProbe();
+  late final ProjectAdmissionService projectAdmission = ProjectAdmissionService(
+    projects: repositories.projects,
+  );
+  late final ProjectControlService projectControl = ProjectControlService(
+    runtime: this,
+  );
   ProductSettings _settings;
 
   ProductSettings get settings => _settings;
@@ -798,6 +810,7 @@ class ProductRuntime {
     }
     await coordinator.reconcileInterruptedRuns();
     await coordinator.reconcileMemoryEpisodes();
+    await runtime.reconcileProjectRuntimeSessions();
     await audit.append('application.started', 'application', <String, dynamic>{
       'version': kristinVersion,
       'platform': Platform.operatingSystem,
@@ -1153,7 +1166,11 @@ class ProductRuntime {
     await _p3BrowserRuntime?.close();
     await _p2OwnerModeRuntime?.close();
     await _p1AuthorityServiceRuntime?.close();
-    await managedProcesses.stopAll();
+    // Ordinary managed processes (agent tool calls, Analyze/Test/Build)
+    // terminate with Kristin. A Project Manager Run is durable and
+    // deliberately left running — see ManagedProcessLifecycle and
+    // reconcileProjectRuntimeSessions.
+    await managedProcesses.stopEphemeral();
     await mcp.closeAll();
     secrets.clearSession();
     await audit.append('application.stopped', 'application', <String, dynamic>{
@@ -1218,6 +1235,7 @@ class ProductRuntime {
   Future<ProjectRecord> addProject({
     required String name,
     required String rootPath,
+    ProjectAdmissionReason admissionReason = ProjectAdmissionReason.userAdded,
   }) async {
     final root = Directory(rootPath.trim()).absolute;
     if (!await root.exists()) {
@@ -1235,7 +1253,15 @@ class ProductRuntime {
       return path == normalized;
     }).firstOrNull;
     if (existing != null) {
-      return existing;
+      final touchedNow = DateTime.now().toUtc();
+      final touched = existing.copyWith(
+        updatedAt: touchedNow,
+        admissionReason: existing.admissionReason ?? admissionReason,
+        admittedAt: existing.admittedAt ?? touchedNow,
+        lastMeaningfulActivityAt: touchedNow,
+      );
+      await repositories.projects.put(touched);
+      return touched;
     }
     final now = DateTime.now().toUtc();
     final project = ProjectRecord(
@@ -1246,6 +1272,9 @@ class ProductRuntime {
       rootPath: canonical,
       createdAt: now,
       updatedAt: now,
+      admissionReason: admissionReason,
+      admittedAt: now,
+      lastMeaningfulActivityAt: now,
     );
     await repositories.projects.put(project);
     await audit.append('project.added', project.id, <String, dynamic>{
@@ -1301,7 +1330,11 @@ class ProductRuntime {
         flush: true,
       );
     }
-    return addProject(name: safeName, rootPath: root.path);
+    return addProject(
+      name: safeName,
+      rootPath: root.path,
+      admissionReason: ProjectAdmissionReason.userCreated,
+    );
   }
 
   Future<String?> pickProjectFolder({
@@ -1903,6 +1936,17 @@ class ProductRuntime {
       'warnings': report.warnings,
       'failed': report.failed,
     });
+    if (!report.hasBlockingFailure) {
+      await projectAdmission.touchExisting(
+        project,
+        ProjectAdmissionReason.successfullyTested,
+      );
+    }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastTestResult: result),
+    );
     return report;
   }
 
@@ -1928,6 +1972,17 @@ class ProductRuntime {
       project.id,
       <String, dynamic>{...details, 'report': report.toJson()},
     );
+    if (!report.hasBlockingFailure) {
+      await projectAdmission.touchExisting(
+        project,
+        ProjectAdmissionReason.successfullyAnalyzed,
+      );
+    }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastAnalyzeResult: result),
+    );
     return report;
   }
 
@@ -1951,7 +2006,38 @@ class ProductRuntime {
       project.id,
       <String, dynamic>{...details, 'report': report.toJson()},
     );
+    if (!report.hasBlockingFailure) {
+      await projectAdmission.touchExisting(
+        project,
+        ProjectAdmissionReason.builtByKristin,
+      );
+    }
+    await _recordProjectQualityResult(
+      project: project,
+      passed: !report.hasBlockingFailure,
+      apply: (record, result) => record.copyWith(lastBuildResult: result),
+    );
     return report;
+  }
+
+  /// Records a Project Manager quality signal (analyze/test/build) on the
+  /// project's durable record, together with the git HEAD sha at the
+  /// moment it completed — the cheap comparison signal
+  /// `ProjectControlService` later uses to report STALE, rather than
+  /// hashing the source tree on every status read.
+  Future<void> _recordProjectQualityResult({
+    required ProjectRecord project,
+    required bool passed,
+    required ProjectRecord Function(ProjectRecord, ProjectQualityResult) apply,
+  }) async {
+    final git = await probeGitState(project.rootPath);
+    final result = ProjectQualityResult(
+      passed: passed,
+      at: DateTime.now().toUtc(),
+      sourceGitSha: git.headSha ?? '',
+    );
+    final current = await repositories.projects.get(project.id) ?? project;
+    await repositories.projects.put(apply(current, result));
   }
 
   Future<ProjectProcessStatus> startProject(String projectId) async {
@@ -1985,6 +2071,7 @@ class ProductRuntime {
       environment: diagnostics.commandEnvironment(command),
       runId: newId('project_session'),
       workItemId: 'project-manager-run',
+      lifecycle: ManagedProcessLifecycle.persistUntilStopped,
     );
     final processId = status['id']?.toString() ?? '';
     if (processId.isEmpty) {
@@ -2000,6 +2087,42 @@ class ProductRuntime {
       command: command.display,
       status: status,
     );
+
+    // Durable Project Manager runtime session: written synchronously,
+    // before this method returns, so a Kristin shutdown moments later can
+    // never race persistence. Unlike this in-memory _projectProcessIds
+    // entry, this record survives an application restart and is what
+    // restart reconciliation (see reconcileProjectRuntimeSessions) consults.
+    final launchKind = detectProjectLaunchKind(profile.type);
+    final launchProfile =
+        await repositories.workflow.upsertProjectLaunchProfile(
+      projectId: project.id,
+      kind: launchKind,
+      label: command.label,
+      executable: command.executable,
+      arguments: command.arguments,
+      workingDirectory: project.rootPath,
+      openBehavior: openBehaviorForLaunchKind(launchKind),
+      source: ProjectLaunchProfileSource.detected,
+      preferred: true,
+    );
+    final processIdentity = await _processIdentity.capture(result.pid);
+    await repositories.workflow.insertManagedProjectProcess(
+      id: processId,
+      projectId: project.id,
+      lifecycle: ManagedProcessLifecycle.persistUntilStopped,
+      commandSha256: Sha256.text(command.display),
+      request: <String, dynamic>{
+        'executable': command.executable,
+        'arguments': command.arguments,
+        'workingDirectory': project.rootPath,
+      },
+      launchProfileId: launchProfile.id,
+      kind: launchKind,
+      pid: result.pid,
+      processIdentity: processIdentity,
+    );
+
     final details = <String, dynamic>{
       'projectId': project.id,
       'processId': processId,
@@ -2009,13 +2132,183 @@ class ProductRuntime {
     };
     await audit.append('project.process_started', project.id, details);
     await events.publish('project.process_started', project.id, details);
+    await projectAdmission.touchExisting(
+      project,
+      ProjectAdmissionReason.successfullyVerified,
+    );
     return result;
+  }
+
+  /// Loads durable project runtime sessions left in `starting`/`running`/
+  /// `stopping` state (i.e. a Project Manager Run whose lifecycle is
+  /// [ManagedProcessLifecycle.persistUntilStopped] and that outlived a
+  /// prior Kristin process, per `close()`'s use of `stopEphemeral()`
+  /// instead of `stopAll()`) and verifies each one's exact process
+  /// identity before trusting it as still running. A bare PID is never
+  /// enough: a mismatch, a gone process, or a platform with no identity
+  /// reader (macOS in Wave A) all reconcile to `interrupted` rather than
+  /// being silently assumed alive.
+  Future<void> reconcileProjectRuntimeSessions() async {
+    final sessions = await repositories.workflow.listManagedProjectProcesses(
+      states: const <ProjectRuntimeState>{
+        ProjectRuntimeState.starting,
+        ProjectRuntimeState.running,
+        ProjectRuntimeState.stopping,
+      },
+    );
+    for (final session in sessions) {
+      final pid = session.pid;
+      if (pid == null) {
+        await repositories.workflow.updateManagedProjectProcessState(
+          id: session.id,
+          state: ProjectRuntimeState.interrupted,
+          failureCode: 'process_pid_missing',
+          completedAt: DateTime.now().toUtc(),
+        );
+        continue;
+      }
+      final verification = await _processIdentity.verify(
+        pid,
+        session.processIdentity,
+      );
+      if (verification == ProcessIdentityVerification.alive) {
+        // Genuinely still running. There is no live ManagedProcessService
+        // handle to reattach to in this fresh process — a newly started
+        // Dart isolate cannot wrap an arbitrary external pid back into a
+        // dart:io Process — so the durable row is left as the source of
+        // truth; projectProcessStatus/stopProject fall back to it (and to
+        // Process.killPid for termination) whenever _projectProcessIds has
+        // no in-session entry for the project.
+        continue;
+      }
+      await repositories.workflow.updateManagedProjectProcessState(
+        id: session.id,
+        state: ProjectRuntimeState.interrupted,
+        failureCode:
+            verification == ProcessIdentityVerification.unverifiablePlatform
+                ? 'process_identity_unverifiable'
+                : 'process_identity_mismatch_or_gone',
+        completedAt: DateTime.now().toUtc(),
+      );
+    }
+  }
+
+  /// Every durable project runtime session currently starting/running/
+  /// stopping, across all projects — a single batched query, so the
+  /// Project Manager "Running" section never needs an N+1 loop over
+  /// `listProjects()`.
+  Future<List<ProjectRuntimeSession>> listRunningProjectSessions() =>
+      repositories.workflow.listManagedProjectProcesses(
+        states: const <ProjectRuntimeState>{
+          ProjectRuntimeState.starting,
+          ProjectRuntimeState.running,
+          ProjectRuntimeState.stopping,
+        },
+      );
+
+  Future<ProjectProcessStatus?> _reconciledProjectProcessStatus(
+    String projectId,
+  ) async {
+    final sessions = await repositories.workflow.listManagedProjectProcesses(
+      projectId: projectId,
+      states: const <ProjectRuntimeState>{
+        ProjectRuntimeState.starting,
+        ProjectRuntimeState.running,
+        ProjectRuntimeState.stopping,
+      },
+    );
+    final session = sessions.firstOrNull;
+    final pid = session?.pid;
+    if (session == null || pid == null) {
+      return null;
+    }
+    return ProjectProcessStatus(
+      projectId: projectId,
+      processId: session.id,
+      label: 'Project process',
+      command: '',
+      pid: pid,
+      running: true,
+      startedAt: session.startedAt,
+      outputTail: '',
+      logFileName: session.logReference ?? '',
+    );
+  }
+
+  /// Stops a durable project runtime session recovered on a prior restart
+  /// (i.e. one with no matching entry in `_projectProcessIds`, so there is
+  /// no live `ManagedProcessService`-owned `Process` handle to signal).
+  /// `Process.killPid` operates on a bare pid without requiring the
+  /// `Process` object that spawned it, which is exactly what an OS-level
+  /// stop of a reattached session needs.
+  Future<ProjectProcessStatus?> _stopReconciledProjectSession(
+    String projectId,
+  ) async {
+    final sessions = await repositories.workflow.listManagedProjectProcesses(
+      projectId: projectId,
+      states: const <ProjectRuntimeState>{
+        ProjectRuntimeState.starting,
+        ProjectRuntimeState.running,
+        ProjectRuntimeState.stopping,
+      },
+    );
+    final session = sessions.firstOrNull;
+    if (session == null) {
+      return null;
+    }
+    final project = await _requireProject(projectId);
+    final pid = session.pid;
+    final now = DateTime.now().toUtc();
+    if (pid == null) {
+      await repositories.workflow.updateManagedProjectProcessState(
+        id: session.id,
+        state: ProjectRuntimeState.stopped,
+        completedAt: now,
+      );
+      return null;
+    }
+    Process.killPid(pid, ProcessSignal.sigterm);
+    var alive = true;
+    for (var attempt = 0; attempt < 10 && alive; attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      alive = await _processIdentity.verify(pid, session.processIdentity) ==
+          ProcessIdentityVerification.alive;
+    }
+    if (alive) {
+      Process.killPid(pid, ProcessSignal.sigkill);
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+    }
+    final completedAt = DateTime.now().toUtc();
+    await repositories.workflow.updateManagedProjectProcessState(
+      id: session.id,
+      state: ProjectRuntimeState.stopped,
+      completedAt: completedAt,
+    );
+    final details = <String, dynamic>{
+      'projectId': project.id,
+      'processId': session.id,
+      'pid': pid,
+    };
+    await audit.append('project.process_stopped', project.id, details);
+    await events.publish('project.process_stopped', project.id, details);
+    return ProjectProcessStatus(
+      projectId: projectId,
+      processId: session.id,
+      label: 'Project process',
+      command: '',
+      pid: pid,
+      running: false,
+      startedAt: session.startedAt,
+      completedAt: completedAt,
+      outputTail: '',
+      logFileName: session.logReference ?? '',
+    );
   }
 
   Future<ProjectProcessStatus?> projectProcessStatus(String projectId) async {
     final processId = _projectProcessIds[projectId];
     if (processId == null) {
-      return null;
+      return _reconciledProjectProcessStatus(projectId);
     }
     final project = await repositories.projects.get(projectId);
     if (project == null) {
@@ -2044,7 +2337,7 @@ class ProductRuntime {
   Future<ProjectProcessStatus?> stopProject(String projectId) async {
     final processId = _projectProcessIds[projectId];
     if (processId == null) {
-      return null;
+      return _stopReconciledProjectSession(projectId);
     }
     final project = await _requireProject(projectId);
     final profile = await diagnostics.executionProfile(project);
@@ -2055,6 +2348,12 @@ class ProductRuntime {
       label: command?.label ?? 'Project process',
       command: command?.display ?? '',
       status: status,
+    );
+    await repositories.workflow.updateManagedProjectProcessState(
+      id: processId,
+      state: ProjectRuntimeState.stopped,
+      exitCode: result.exitCode,
+      completedAt: result.completedAt,
     );
     final details = <String, dynamic>{
       'projectId': project.id,

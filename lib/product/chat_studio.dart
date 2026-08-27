@@ -193,6 +193,8 @@ class _ChatStudioState extends State<ChatStudio> {
   ProjectDiagnosticReport? diagnosticReport;
   CapabilityDoctorReport? capabilityDoctorReport;
   ProjectProcessStatus? projectProcessStatusValue;
+  List<ProjectRuntimeSession> runningProjectSessions =
+      <ProjectRuntimeSession>[];
   Map<String, dynamic>? auditReport;
   String? lastSupportBundlePath;
   String? conversationUserRequest;
@@ -252,6 +254,9 @@ class _ChatStudioState extends State<ChatStudio> {
       }
       if (mounted && projectProcessStatusValue?.running == true) {
         unawaited(_refreshProjectProcess(silent: true));
+      }
+      if (mounted && area == _StudioArea.projects) {
+        unawaited(_refreshRunningProjects(silent: true));
       }
       if (mounted && promptGenerationActive) {
         setState(() {});
@@ -324,6 +329,7 @@ class _ChatStudioState extends State<ChatStudio> {
     await _perform<void>('Opening your workspace', () async {
       projects = await runtime.listProjects();
       selectedProjectId ??= projects.firstOrNull?.id;
+      runningProjectSessions = await runtime.listRunningProjectSessions();
       models = await runtime.discoverModels();
       selectedModelId ??= models.firstOrNull?.exactId;
       runs = await runtime.listRuns(limit: 250);
@@ -382,6 +388,7 @@ class _ChatStudioState extends State<ChatStudio> {
     }
     if (event.type.startsWith('project.')) {
       unawaited(_refreshProjectManager(silent: true));
+      unawaited(_refreshRunningProjects(silent: true));
     }
     if (event.type == 'run.succeeded') {
       unawaited(_refreshProjectManager(silent: true));
@@ -585,6 +592,18 @@ class _ChatStudioState extends State<ChatStudio> {
     if (mounted && completed && selectedProjectId == projectId) {
       setState(() {
         projectProcessStatusValue = loaded;
+      });
+    }
+  }
+
+  Future<void> _refreshRunningProjects({bool silent = false}) async {
+    List<ProjectRuntimeSession>? loaded;
+    await _perform<void>('Refreshing running projects', () async {
+      loaded = await runtime.listRunningProjectSessions();
+    }, silent: silent);
+    if (mounted && loaded != null) {
+      setState(() {
+        runningProjectSessions = loaded!;
       });
     }
   }
@@ -2950,6 +2969,7 @@ class _ChatStudioState extends State<ChatStudio> {
             ),
           ],
         ),
+        if (runningProjectSessions.isNotEmpty) _runningProjectsSection(),
         if (projects.isEmpty)
           _emptyPanel(
             icon: Icons.folder_open_outlined,
@@ -2970,9 +2990,16 @@ class _ChatStudioState extends State<ChatStudio> {
                 runSpacing: 12,
                 children: projects.map((project) {
                   final active = project.id == selectedProjectId;
+                  final session = runningProjectSessions
+                      .where((item) => item.projectId == project.id)
+                      .firstOrNull;
                   return SizedBox(
                     width: cardWidth,
-                    child: _projectCard(project, active: active),
+                    child: _projectCard(
+                      project,
+                      active: active,
+                      runtimeSession: session,
+                    ),
                   );
                 }).toList(),
               );
@@ -2983,11 +3010,113 @@ class _ChatStudioState extends State<ChatStudio> {
     );
   }
 
-  Widget _projectCard(ProjectRecord project, {required bool active}) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _runningProjectsSection() {
+    final rows = <Widget>[];
+    for (final session in runningProjectSessions) {
+      final project = projects
+          .where((candidate) => candidate.id == session.projectId)
+          .firstOrNull;
+      if (project == null) {
+        continue;
+      }
+      rows.add(_runningProjectRow(project, session));
+    }
+    if (rows.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return Card(
       margin: EdgeInsets.zero,
-      color: active ? colors.secondaryContainer : null,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                _statusPill('Running', Icons.play_circle_fill),
+                const SizedBox(width: 10),
+                Text(
+                  '${rows.length} project${rows.length == 1 ? '' : 's'}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...rows,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _runningProjectRow(
+    ProjectRecord project,
+    ProjectRuntimeSession session,
+  ) {
+    final kindLabel = session.kind == null ? '' : ' · ${session.kind!.name}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: <Widget>[
+          const Icon(Icons.play_circle_fill),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  project.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                Text(
+                  'PID ${session.pid ?? '—'}$kindLabel',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => unawaited(_selectProject(project.id)),
+            child: const Text('View'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed: busy
+                ? null
+                : () => unawaited(_restartManagedProjectFor(project)),
+            icon: const Icon(Icons.replay),
+            label: const Text('Restart'),
+          ),
+          const SizedBox(width: 8),
+          OutlinedButton.icon(
+            onPressed:
+                busy ? null : () => unawaited(_stopManagedProjectFor(project)),
+            icon: const Icon(Icons.stop_circle_outlined),
+            label: const Text('Stop'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _projectCard(
+    ProjectRecord project, {
+    required bool active,
+    ProjectRuntimeSession? runtimeSession,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    final running = runtimeSession?.running == true;
+    return Card(
+      margin: EdgeInsets.zero,
+      color: running
+          ? colors.primaryContainer.withValues(alpha: 0.35)
+          : active
+              ? colors.secondaryContainer
+              : null,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -3007,7 +3136,10 @@ class _ChatStudioState extends State<ChatStudio> {
                         ),
                   ),
                 ),
-                if (active) _statusPill('Active', Icons.check_circle_outline),
+                if (running)
+                  _statusPill('Running', Icons.play_circle_fill)
+                else if (active)
+                  _statusPill('Active', Icons.check_circle_outline),
               ],
             ),
             const SizedBox(height: 9),
@@ -3021,6 +3153,29 @@ class _ChatStudioState extends State<ChatStudio> {
               spacing: 8,
               runSpacing: 8,
               children: <Widget>[
+                if (running) ...<Widget>[
+                  OutlinedButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => unawaited(_stopManagedProjectFor(project)),
+                    icon: const Icon(Icons.stop_circle_outlined),
+                    label: const Text('Stop'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => unawaited(_restartManagedProjectFor(project)),
+                    icon: const Icon(Icons.replay),
+                    label: const Text('Restart'),
+                  ),
+                ] else
+                  FilledButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => unawaited(_startManagedProjectFor(project)),
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Run'),
+                  ),
                 FilledButton.tonal(
                   onPressed: active
                       ? null
@@ -3169,6 +3324,13 @@ class _ChatStudioState extends State<ChatStudio> {
                       onPressed: busy || !running ? null : _stopManagedProject,
                       icon: const Icon(Icons.stop_circle_outlined),
                       label: const Text('Stop'),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: busy || !running
+                          ? null
+                          : () => unawaited(_restartManagedProjectFor(project)),
+                      icon: const Icon(Icons.replay),
+                      label: const Text('Restart'),
                     ),
                     OutlinedButton.icon(
                       onPressed: _newChat,
@@ -3779,30 +3941,46 @@ class _ChatStudioState extends State<ChatStudio> {
       setState(() => area = _StudioArea.projects);
       return;
     }
+    final started = await _startManagedProjectFor(project);
+    if (started && mounted) {
+      setState(() => composerController.text = '/run');
+    }
+  }
+
+  /// Starts [project]'s managed run, regardless of whether it is the
+  /// currently selected project. Shared by the control-center Run button
+  /// (via [_startManagedProject]) and each project card's own Run button,
+  /// so a project does not need to be selected first just to press ▶.
+  /// Returns true if a new process was actually started.
+  Future<bool> _startManagedProjectFor(ProjectRecord project) async {
     final current = await runtime.projectProcessStatus(project.id);
     if (current?.running == true) {
       if (mounted) {
         setState(() {
-          projectProcessStatusValue = current;
+          if (selectedProjectId == project.id) {
+            projectProcessStatusValue = current;
+          }
           area = _StudioArea.projects;
           status = '${project.name} is already running';
         });
       }
-      return;
+      return false;
     }
     final profile = await _projectProfileForAction(project);
     if (profile == null || !mounted) {
-      return;
+      return false;
     }
     if (profile.runCommand.isEmpty) {
       setState(() {
-        diagnosticReport = profile;
+        if (selectedProjectId == project.id) {
+          diagnosticReport = profile;
+        }
         area = _StudioArea.projects;
       });
       _showError(
         'No managed run command was detected. Add a run entry to kristin.project.json.',
       );
-      return;
+      return false;
     }
     final confirmed = await _confirmProjectCommand(
       title: 'Run ${project.name}?',
@@ -3813,7 +3991,7 @@ class _ChatStudioState extends State<ChatStudio> {
       icon: Icons.play_circle_outline,
     );
     if (!confirmed) {
-      return;
+      return false;
     }
     final process = await _perform<ProjectProcessStatus>(
       'Starting ${project.name}',
@@ -3821,11 +3999,25 @@ class _ChatStudioState extends State<ChatStudio> {
     );
     if (process != null && mounted) {
       setState(() {
-        projectProcessStatusValue = process;
+        if (selectedProjectId == project.id) {
+          projectProcessStatusValue = process;
+        }
         area = _StudioArea.projects;
-        composerController.text = '/run';
       });
     }
+    unawaited(_refreshRunningProjects(silent: true));
+    return process != null;
+  }
+
+  /// Stops then starts [project]'s managed run again, verifying the old
+  /// process actually stopped before starting the new one (Stop already
+  /// waits for OS-level termination — see `ProductRuntime.stopProject`).
+  Future<void> _restartManagedProjectFor(ProjectRecord project) async {
+    await _stopManagedProjectFor(project);
+    if (!mounted) {
+      return;
+    }
+    await _startManagedProjectFor(project);
   }
 
   Future<void> _stopManagedProject() async {
@@ -3835,20 +4027,33 @@ class _ChatStudioState extends State<ChatStudio> {
       setState(() => area = _StudioArea.projects);
       return;
     }
+    final stopped = await _stopManagedProjectFor(project);
+    if (mounted) {
+      setState(() => composerController.text = '/stop');
+      if (!stopped) {
+        _showError('No managed project process is currently running.');
+      }
+    }
+  }
+
+  /// Stops [project]'s managed run, regardless of whether it is the
+  /// currently selected project. Returns true if a running process was
+  /// actually stopped.
+  Future<bool> _stopManagedProjectFor(ProjectRecord project) async {
     final process = await _perform<ProjectProcessStatus?>(
       'Stopping ${project.name}',
       () => runtime.stopProject(project.id),
     );
     if (mounted) {
       setState(() {
-        projectProcessStatusValue = process;
+        if (selectedProjectId == project.id) {
+          projectProcessStatusValue = process;
+        }
         area = _StudioArea.projects;
-        composerController.text = '/stop';
       });
-      if (process == null) {
-        _showError('No managed project process is currently running.');
-      }
     }
+    unawaited(_refreshRunningProjects(silent: true));
+    return process != null;
   }
 
   Future<void> _addExistingProject() async {

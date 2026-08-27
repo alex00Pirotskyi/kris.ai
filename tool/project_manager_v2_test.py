@@ -187,7 +187,7 @@ def main() -> int:
             results,
         )
         case(
-            "Workflow schema v6 contains Project Manager, intelligence, and interoperability tables",
+            "Workflow schema v7 contains Project Manager, intelligence, and interoperability tables",
             lambda: _schema_case(data_root),
             results,
         )
@@ -294,7 +294,7 @@ def _schema_case(data_root: Path) -> str:
             "fleet_profiles",
             "support_compatibility_policies",
         }
-        return require(version == 6 and required <= tables, "schema v6 and all cumulative tables are present")
+        return require(version == 7 and required <= tables, "schema v7 and all cumulative tables are present")
     finally:
         connection.close()
 

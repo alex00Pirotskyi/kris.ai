@@ -1441,9 +1441,9 @@ def check_durable_workflow_kernel() -> None:
         failures.append(
             f"workflow kernel expected 14/14 cases, got {payload.get('passed')}/{(payload.get('passed') or 0) + (payload.get('failed') or 0)}"
         )
-    if payload.get("schemaVersion") != 6:
-        failures.append("workflow schema version must be 6")
-    if payload.get("migrationDigest") != "df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261":
+    if payload.get("schemaVersion") != 7:
+        failures.append("workflow schema version must be 7")
+    if payload.get("migrationDigest") != "435e2b76b8d7afd8dc99859793d82c3b00eb7581194e874c818151a4f33c9d36":
         failures.append("workflow migration digest drifted")
     database = payload.get("database", {})
     if not isinstance(database, dict) or str(database.get("integrity", "")).lower() != "ok":

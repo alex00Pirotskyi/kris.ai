@@ -7,6 +7,7 @@ import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/durable_workflow.dart';
 import 'package:kristin_local_agent/product/storage_security.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 void main() {
   group('v1.3 durable workflow kernel', () {
@@ -42,7 +43,7 @@ void main() {
           migrationBackupDirectory: backupDirectory,
         );
 
-        expect(store!.schemaVersion, 6);
+        expect(store!.schemaVersion, 7);
         final report = await store!.verifyIntegrity();
         expect(report.ok, isTrue);
         expect(report.integrityResult.toLowerCase(), 'ok');
@@ -500,6 +501,251 @@ void main() {
               ?.kind,
           'workspace_rolled_back',
         );
+      },
+    );
+  });
+
+  group('Project Control Center durable storage (migration 007)', () {
+    late Directory root;
+    late File databaseFile;
+    late Directory backupDirectory;
+    DurableWorkflowStore? store;
+
+    setUp(() async {
+      root = await Directory.systemTemp.createTemp('kristin-pcc-007-');
+      databaseFile = File(
+        '${root.path}${Platform.pathSeparator}state'
+        '${Platform.pathSeparator}workflow.sqlite3',
+      );
+      backupDirectory = Directory(
+        '${root.path}${Platform.pathSeparator}migration-backups',
+      );
+    });
+
+    tearDown(() async {
+      await store?.close();
+      store = null;
+      if (await root.exists()) {
+        await root.delete(recursive: true);
+      }
+    });
+
+    test('applies cleanly on top of 001-006 and creates the new schema',
+        () async {
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+      expect(store!.schemaVersion, 7);
+      final report = await store!.verifyIntegrity();
+      expect(report.ok, isTrue);
+    });
+
+    test('reopening an already-migrated database is an idempotent no-op',
+        () async {
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+      await store!.close();
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+      expect(store!.schemaVersion, 7);
+      expect((await store!.verifyIntegrity()).ok, isTrue);
+    });
+
+    test(
+      'a foreign schema_migrations row for version 7 with a different '
+      'digest is rejected, never silently accepted',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        await store!.close();
+        store = null;
+
+        final raw = sqlite3.sqlite3.open(databaseFile.path);
+        raw.execute(
+          "UPDATE schema_migrations SET sha256 = "
+          "'0000000000000000000000000000000000000000000000000000000000000000' "
+          'WHERE version = 7',
+        );
+        raw.dispose();
+
+        await expectLater(
+          DurableWorkflowStore.open(
+            databaseFile: databaseFile,
+            migrationBackupDirectory: backupDirectory,
+          ),
+          throwsA(
+            isA<WorkflowStorageException>().having(
+              (error) => error.code,
+              'code',
+              'workflow_migration_drift',
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'a database with migration 007 objects already present but no '
+      'schema_migrations bookkeeping fails loudly instead of corrupting',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        await store!.close();
+        store = null;
+
+        // Simulate a database that reached the same column/table shape as
+        // migration 007 through some means other than this migration
+        // pipeline (e.g. PRAGMA user_version set directly): the columns
+        // already exist, but nothing recorded that migration 007 was the
+        // one that put them there.
+        final raw = sqlite3.sqlite3.open(databaseFile.path);
+        raw.execute('DELETE FROM schema_migrations WHERE version = 7');
+        raw.dispose();
+
+        await expectLater(
+          DurableWorkflowStore.open(
+            databaseFile: databaseFile,
+            migrationBackupDirectory: backupDirectory,
+          ),
+          throwsA(anything),
+        );
+
+        // The failure must not corrupt the database: after cleanup, a
+        // fresh open still succeeds.
+        await root.delete(recursive: true);
+        root = await Directory.systemTemp.createTemp('kristin-pcc-007-');
+        databaseFile = File(
+          '${root.path}${Platform.pathSeparator}state'
+          '${Platform.pathSeparator}workflow.sqlite3',
+        );
+        backupDirectory = Directory(
+          '${root.path}${Platform.pathSeparator}migration-backups',
+        );
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        expect(store!.schemaVersion, 7);
+      },
+    );
+
+    test('managed project process rows persist through insert/update/list',
+        () async {
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+      await store!.insertManagedProjectProcess(
+        id: 'process-1',
+        projectId: 'project-1',
+        lifecycle: ManagedProcessLifecycle.persistUntilStopped,
+        commandSha256: Sha256.text('npm run dev'),
+        request: <String, dynamic>{'executable': 'npm'},
+        launchProfileId: 'profile-1',
+        kind: ProjectLaunchKind.web,
+        pid: 4242,
+        processIdentity: 'linux:4242:123',
+        port: 5173,
+      );
+
+      final fetched = await store!.getManagedProjectProcess('process-1');
+      expect(fetched, isNotNull);
+      expect(fetched!.projectId, 'project-1');
+      expect(fetched.state, ProjectRuntimeState.running);
+      expect(fetched.lifecycle, ManagedProcessLifecycle.persistUntilStopped);
+      expect(fetched.pid, 4242);
+      expect(fetched.processIdentity, 'linux:4242:123');
+      expect(fetched.kind, ProjectLaunchKind.web);
+      expect(fetched.port, 5173);
+
+      final listed = await store!.listManagedProjectProcesses(
+        projectId: 'project-1',
+        states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
+      );
+      expect(listed, hasLength(1));
+      expect(listed.first.id, 'process-1');
+
+      await store!.updateManagedProjectProcessState(
+        id: 'process-1',
+        state: ProjectRuntimeState.stopped,
+        exitCode: 0,
+        completedAt: DateTime.utc(2026, 8, 26),
+      );
+      final stopped = await store!.getManagedProjectProcess('process-1');
+      expect(stopped!.state, ProjectRuntimeState.stopped);
+      expect(stopped.exitCode, 0);
+      expect(stopped.running, isFalse);
+
+      final stillRunning = await store!.listManagedProjectProcesses(
+        projectId: 'project-1',
+        states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
+      );
+      expect(stillRunning, isEmpty);
+    });
+
+    test(
+      'launch profiles upsert by (project, identity) and preferred is '
+      'exclusive per project',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+
+        final dev = await store!.upsertProjectLaunchProfile(
+          projectId: 'project-1',
+          kind: ProjectLaunchKind.web,
+          label: 'Node application',
+          executable: 'npm',
+          arguments: const <String>['run', 'dev'],
+          workingDirectory: '/tmp/project-1',
+          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+          source: ProjectLaunchProfileSource.detected,
+          preferred: true,
+        );
+        expect(dev.preferred, isTrue);
+
+        // Re-detecting the exact same command must refresh, not duplicate.
+        final devAgain = await store!.upsertProjectLaunchProfile(
+          projectId: 'project-1',
+          kind: ProjectLaunchKind.web,
+          label: 'Node application',
+          executable: 'npm',
+          arguments: const <String>['run', 'dev'],
+          workingDirectory: '/tmp/project-1',
+          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+          source: ProjectLaunchProfileSource.learned,
+          preferred: true,
+        );
+        expect(devAgain.id, dev.id);
+
+        final start = await store!.upsertProjectLaunchProfile(
+          projectId: 'project-1',
+          kind: ProjectLaunchKind.web,
+          label: 'Node application (start)',
+          executable: 'npm',
+          arguments: const <String>['start'],
+          workingDirectory: '/tmp/project-1',
+          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+          source: ProjectLaunchProfileSource.detected,
+          preferred: true,
+        );
+
+        final profiles = await store!.listProjectLaunchProfiles('project-1');
+        expect(profiles, hasLength(2));
+        final preferredProfiles =
+            profiles.where((profile) => profile.preferred);
+        expect(preferredProfiles, hasLength(1));
+        expect(preferredProfiles.single.id, start.id);
       },
     );
   });

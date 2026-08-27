@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "6edaf3169165d5c141b77d045db9632283a0ab97fabbd8ac85e45e469985d044",
+  "benchmarkInputsSha256": "8b0525e9d73bfc0752681ddb0cb0dddcb59a746b300034fbc3e838cf5f801294",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -125,7 +125,7 @@
     {
       "assuranceLevel": "behavioral",
       "category": "crash_recovery",
-      "evidenceSha256": "5e427c00e5748231d6daf0b7e232cd128cf8e1ddbee3da5efada01b3bca8f61c",
+      "evidenceSha256": "b16f62c5d39ae89c3d8b00e84abdf1cdca25f0c18f4b9119e37e2480401d9dc2",
       "id": "crash_recovery.sqlite_workflow_kernel",
       "observations": {
         "exitCode": 0,
@@ -133,7 +133,7 @@
           "$.database.integrity": "ok",
           "$.failed": 0,
           "$.passed": 14,
-          "$.schemaVersion": 6
+          "$.schemaVersion": 7
         }
       },
       "proofKind": "executed_behavior",
@@ -367,10 +367,10 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "c70529f579a2ce03fef196090b889b3d2002d39c460abac454fa5fbf692aa314",
+  "resultFingerprint": "08c0ec9caf0d04ebc8a93d9713548498a6e60d9b56869d60415c0c465aa28eaf",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
-  "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
+  "suiteSha256": "e0a24b9dfe09952e1efb4b84473ad8564a72927b98156d931a008c14cc8c17be",
   "suiteVersion": "1.0.0",
   "summary": {
     "behavioralCaseCount": 6,
