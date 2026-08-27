@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'crypto_utils.dart';
 import 'domain.dart';
+import 'performance_spans.dart';
 import 'storage_security.dart';
 
 class SourceIndexEntry {
@@ -79,9 +80,13 @@ class SourceIndexReport {
 }
 
 class SourceIndexService {
-  SourceIndexService(this.indexDirectory);
+  SourceIndexService(
+    this.indexDirectory, {
+    PerformanceSpanSink performance = const NoopPerformanceSpanSink(),
+  }) : _performance = performance;
 
   final Directory indexDirectory;
+  final PerformanceSpanSink _performance;
 
   AtomicJsonFile _file(String projectId) => AtomicJsonFile(
         File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'),
@@ -96,6 +101,21 @@ class SourceIndexService {
         'Project root no longer exists.',
       );
     }
+    final indexFile = File(
+      '${indexDirectory.path}${Platform.pathSeparator}${project.id}.json',
+    );
+    final indexExists = await indexFile.exists();
+    final span = PerformanceSpan.start(
+      'source.index.update',
+      sink: _performance,
+      projectHash: Sha256.text(project.id),
+      cacheResult: indexExists
+          ? PerformanceCacheResult.hit
+          : PerformanceCacheResult.miss,
+      thermalState: indexExists
+          ? PerformanceThermalState.warm
+          : PerformanceThermalState.cold,
+    );
     final canonicalRoot = (await root.resolveSymbolicLinks()).replaceAll(
       '\\',
       '/',
@@ -116,6 +136,7 @@ class SourceIndexService {
     var scanned = 0;
     var changed = 0;
     var skipped = 0;
+    var bytesConsidered = 0;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is! File) {
         continue;
@@ -157,6 +178,7 @@ class SourceIndexService {
         continue;
       }
       final bytes = await entity.readAsBytes();
+      bytesConsidered += bytes.length;
       if (bytes.take(min(bytes.length, 8192)).contains(0)) {
         skipped++;
         continue;
@@ -187,7 +209,7 @@ class SourceIndexService {
       'generatedAt': generatedAt.toIso8601String(),
       'entries': ordered.map((entry) => entry.toJson()).toList(),
     });
-    return SourceIndexReport(
+    final report = SourceIndexReport(
       scanned: scanned,
       changed: changed,
       removed: removed,
@@ -195,6 +217,12 @@ class SourceIndexService {
       total: ordered.length,
       generatedAt: generatedAt,
     );
+    span.finish(
+      itemCount: report.total,
+      bytesConsidered: bytesConsidered,
+      candidateCount: report.scanned,
+    );
+    return report;
   }
 
   Future<List<Map<String, dynamic>>> search(
@@ -202,17 +230,46 @@ class SourceIndexService {
     String query, {
     int limit = 20,
   }) async {
+    final indexFile = File(
+      '${indexDirectory.path}${Platform.pathSeparator}$projectId.json',
+    );
+    final indexExists = await indexFile.exists();
+    var indexBytes = 0;
+    if (indexExists) {
+      try {
+        indexBytes = await indexFile.length();
+      } catch (_) {}
+    }
+    final span = PerformanceSpan.start(
+      'source.search',
+      sink: _performance,
+      projectHash: Sha256.text(projectId),
+      cacheResult: PerformanceCacheResult.miss,
+      thermalState: indexExists
+          ? PerformanceThermalState.warm
+          : PerformanceThermalState.cold,
+    );
     final raw = await _file(
       projectId,
     ).read(fallback: <String, dynamic>{'entries': <Object>[]});
     final entriesRaw = mapValue(raw)['entries'];
     if (entriesRaw is! List) {
+      span.finish(
+        itemCount: 0,
+        bytesConsidered: indexBytes,
+        candidateCount: 0,
+      );
       return <Map<String, dynamic>>[];
     }
     final terms = RegExp(
       r'[A-Za-z0-9_\-]{2,}',
     ).allMatches(query.toLowerCase()).map((match) => match.group(0)!).toSet();
     if (terms.isEmpty) {
+      span.finish(
+        itemCount: 0,
+        bytesConsidered: indexBytes,
+        candidateCount: entriesRaw.length,
+      );
       return <Map<String, dynamic>>[];
     }
     final scored = <({SourceIndexEntry entry, double score, String snippet})>[];
@@ -264,7 +321,7 @@ class SourceIndexService {
       final score = b.score.compareTo(a.score);
       return score != 0 ? score : a.entry.path.compareTo(b.entry.path);
     });
-    return scored
+    final results = scored
         .take(limit.clamp(1, 100).toInt())
         .map(
           (result) => <String, dynamic>{
@@ -278,6 +335,12 @@ class SourceIndexService {
           },
         )
         .toList();
+    span.finish(
+      itemCount: results.length,
+      bytesConsidered: indexBytes,
+      candidateCount: entriesRaw.length,
+    );
+    return results;
   }
 
   bool _ignored(String path) => path.replaceAll('\\', '/').split('/').any(
