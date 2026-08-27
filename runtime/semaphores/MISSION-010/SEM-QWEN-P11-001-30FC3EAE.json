@@ -1,0 +1,25 @@
+{
+  "allowedPaths": [
+    "tool/worker_e*.py",
+    "tool/worker_e_dependency_binding.py",
+    "tool/worker_e_native_parity_readiness_test.py"
+  ],
+  "authorityId": null,
+  "baseCommit": "f5d2e747edd463877c1fa0df7db4a6211b16d51b",
+  "baseTree": "893f8ab6fbd266684dc8ee658e70a6a540e5bed3",
+  "branch": "agent/local-qwen/elastic-qwen-8f78c7b7/mission-010/wo-p11-001-continuous-qwen-bff5ec93-30fc3eae",
+  "createdAt": "2026-08-27T15:07:34Z",
+  "executionRole": "DEFECT_HUNTER",
+  "expiresAt": "2026-08-27T17:07:34Z",
+  "kind": "WRITE",
+  "mission": "MISSION-010",
+  "productPr": null,
+  "refreshedAt": "2026-08-27T15:07:34Z",
+  "resourceId": null,
+  "runtimeGeneration": 1032,
+  "schemaVersion": 1,
+  "semaphoreId": "SEM-QWEN-P11-001-30FC3EAE",
+  "status": "ACTIVE",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-BFF5EC93",
+  "workerIdentity": "ELASTIC-QWEN-8F78C7B7"
+}
