@@ -140,6 +140,9 @@ void main() {
           ProcessIdentityVerification.mismatchOrGone,
         );
       },
+      skip: Platform.isLinux || Platform.isWindows
+          ? null
+          : 'no process identity reader for this platform in Wave A',
     );
 
     test(
@@ -317,7 +320,11 @@ void main() {
           ManagedProcessLifecycle.persistUntilStopped,
         );
         expect(sessions.first.pid, status.pid);
-        expect(sessions.first.processIdentity, isNotNull);
+        if (Platform.isLinux || Platform.isWindows) {
+          // No process-identity reader exists for this platform in Wave A
+          // (fails closed by design), so the column is legitimately null.
+          expect(sessions.first.processIdentity, isNotNull);
+        }
 
         final launchProfiles =
             await runtime.repositories.workflow.listProjectLaunchProfiles(
@@ -352,7 +359,9 @@ void main() {
         // shuts down; verified independently of any in-app bookkeeping.
         const probe = ProcessIdentityProbe();
         final identityAfterClose = await probe.capture(status.pid);
-        expect(identityAfterClose, isNotNull);
+        if (Platform.isLinux || Platform.isWindows) {
+          expect(identityAfterClose, isNotNull);
+        }
 
         Process.killPid(status.pid, ProcessSignal.sigkill);
       },

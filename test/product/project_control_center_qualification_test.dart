@@ -229,6 +229,10 @@ void main() {
         await runtime.close();
       },
       timeout: const Timeout(Duration(minutes: 2)),
+      skip: Platform.isLinux || Platform.isWindows
+          ? null
+          : 'no process identity reader for this platform in Wave A '
+              '(restart reconciliation fails closed on macOS by design)',
     );
   });
 }

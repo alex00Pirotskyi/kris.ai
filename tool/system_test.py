@@ -1291,7 +1291,7 @@ def main() -> int:
                     "const String interoperabilityV19Version = '1.9.0+190'",
                     "const String releaseOperationsV19Version = '1.9.0+190'",
                     "const String v190ContractsSha256",
-                    "generatedWorkflowSchemaVersion = 6",
+                    "generatedWorkflowSchemaVersion = 7",
                 ),
             )
             and "CREATE TABLE IF NOT EXISTS audit_records" in read(root, "migrations/workflow/006_interoperability_admin.sql"),
@@ -1306,7 +1306,7 @@ def main() -> int:
             and "ProjectManagerV2Service" in runtime
             and "executionIntelligence: executionIntelligence" in runtime
             and "projectManagerV2: projectManagerV2" in runtime
-            and "generatedWorkflowSchemaVersion = 6" in workflow_migrations,
+            and "generatedWorkflowSchemaVersion = 7" in workflow_migrations,
             "One ProductRuntime composes the typed protocol, SQLite kernel, Linux sandbox, Prompt Studio 2, Project Manager 2, and execution-intelligence services.",
         )
     )

@@ -1,5 +1,5 @@
 {
-  "benchmarkInputsSha256": "849f2df00ef8700e4db5f6d0f8b304fbc439fd7d098ac1f82873a1de27c44516",
+  "benchmarkInputsSha256": "95e4075e1b147c6885dbe52230111d6ea9369a7b2f4065914332b4e178b710bb",
   "cases": [
     {
       "assuranceLevel": "benchmark_task",
@@ -367,10 +367,10 @@
   "generatedAt": "2026-07-24T00:00:00Z",
   "mode": "portable",
   "networkPolicy": "forbidden",
-  "resultFingerprint": "d79f724def54a8c84aa75e5759d5126533be91a7f4c54bbde3faf1c0a8711c64",
+  "resultFingerprint": "17c3d2a3985eb8d562970ec89bda5cfd104c2cbd28e8c5f06bbb85558f9b5d1d",
   "schemaVersion": "1.0.0",
   "suiteId": "kristin.p0-009.initial",
-  "suiteSha256": "1b5a0d77b62769efac59b667d3e6c09ad187a9a8dddc06f54ce4c3765de79338",
+  "suiteSha256": "e0a24b9dfe09952e1efb4b84473ad8564a72927b98156d931a008c14cc8c17be",
   "suiteVersion": "1.0.0",
   "summary": {
     "behavioralCaseCount": 6,
