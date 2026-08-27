@@ -365,7 +365,11 @@ void main() {
         SemanticProgressSnapshot(
           artifacts: <String, String>{'lib/a.dart': 'repair-2'},
           errorCodes: <String>{'verify_error'},
-          evidenceIds: <String>{'verify:compile', 'verify:test', 'verify:later'},
+          evidenceIds: <String>{
+            'verify:compile',
+            'verify:test',
+            'verify:later',
+          },
           resultHash: 'later-stage-failure',
         ),
         SemanticProgressSnapshot(
