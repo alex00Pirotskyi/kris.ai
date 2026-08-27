@@ -1,0 +1,2 @@
+Temporary source-manifest refresh trigger for repository integrity issue #283.
+This carrier file must not be present in the final pull-request diff.
