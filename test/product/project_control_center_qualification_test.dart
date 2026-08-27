@@ -212,8 +212,7 @@ void main() {
             started.pid,
             recoveredSession.processIdentity,
           );
-          return !healthy &&
-              identity != ProcessIdentityVerification.alive;
+          return !healthy && identity != ProcessIdentityVerification.alive;
         });
         expect(
           terminatedAtOsLevel,

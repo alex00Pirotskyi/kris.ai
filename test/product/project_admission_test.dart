@@ -107,8 +107,7 @@ void main() {
       },
     );
 
-    test('touchExisting refreshes an already-resolved record by id',
-        () async {
+    test('touchExisting refreshes an already-resolved record by id', () async {
       final project = await admission.admitOrTouch(
         rootPath: projectDirectory.path,
         name: 'My App',
@@ -159,8 +158,7 @@ void main() {
       }
     });
 
-    test('addProject admits with user_added and does not duplicate',
-        () async {
+    test('addProject admits with user_added and does not duplicate', () async {
       final first = await runtime.addProject(
         name: 'Fixture project',
         rootPath: projectDirectory.path,

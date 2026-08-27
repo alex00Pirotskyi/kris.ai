@@ -100,8 +100,9 @@ WindowsProcessIdentity? readWindowsProcessIdentity(int pid) {
   try {
     openProcess = kernel32
         .lookupFunction<_OpenProcessNative, _OpenProcessDart>('OpenProcess');
-    getProcessTimes = kernel32.lookupFunction<_GetProcessTimesNative,
-        _GetProcessTimesDart>('GetProcessTimes');
+    getProcessTimes =
+        kernel32.lookupFunction<_GetProcessTimesNative, _GetProcessTimesDart>(
+            'GetProcessTimes');
     closeHandle = kernel32
         .lookupFunction<_CloseHandleNative, _CloseHandleDart>('CloseHandle');
   } on ArgumentError {

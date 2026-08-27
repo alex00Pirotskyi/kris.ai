@@ -16,8 +16,7 @@ ProjectQualityState _qualityStateFor(
   if (result == null) {
     return ProjectQualityState.notRun;
   }
-  final hasComparableShas =
-      currentHeadSha != null &&
+  final hasComparableShas = currentHeadSha != null &&
       currentHeadSha.isNotEmpty &&
       result.sourceGitSha.isNotEmpty;
   if (hasComparableShas && currentHeadSha != result.sourceGitSha) {
@@ -59,7 +58,8 @@ class ProjectControlStatus {
   /// `listProjectLaunchProfiles` already orders `preferred DESC, updated_at
   /// DESC`, so the first entry is always the preferred profile (or, absent
   /// one, the most recently detected/learned profile).
-  ProjectLaunchProfile? get preferredLaunchProfile => launchProfiles.firstOrNull;
+  ProjectLaunchProfile? get preferredLaunchProfile =>
+      launchProfiles.firstOrNull;
 }
 
 /// One row of the Project Manager "Running" section: a project with an

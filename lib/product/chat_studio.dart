@@ -193,7 +193,8 @@ class _ChatStudioState extends State<ChatStudio> {
   ProjectDiagnosticReport? diagnosticReport;
   CapabilityDoctorReport? capabilityDoctorReport;
   ProjectProcessStatus? projectProcessStatusValue;
-  List<ProjectRuntimeSession> runningProjectSessions = <ProjectRuntimeSession>[];
+  List<ProjectRuntimeSession> runningProjectSessions =
+      <ProjectRuntimeSession>[];
   Map<String, dynamic>? auditReport;
   String? lastSupportBundlePath;
   String? conversationUserRequest;
@@ -3084,8 +3085,9 @@ class _ChatStudioState extends State<ChatStudio> {
           ),
           const SizedBox(width: 8),
           OutlinedButton.icon(
-            onPressed:
-                busy ? null : () => unawaited(_restartManagedProjectFor(project)),
+            onPressed: busy
+                ? null
+                : () => unawaited(_restartManagedProjectFor(project)),
             icon: const Icon(Icons.replay),
             label: const Text('Restart'),
           ),
@@ -3326,8 +3328,7 @@ class _ChatStudioState extends State<ChatStudio> {
                     OutlinedButton.icon(
                       onPressed: busy || !running
                           ? null
-                          : () =>
-                              unawaited(_restartManagedProjectFor(project)),
+                          : () => unawaited(_restartManagedProjectFor(project)),
                       icon: const Icon(Icons.replay),
                       label: const Text('Restart'),
                     ),

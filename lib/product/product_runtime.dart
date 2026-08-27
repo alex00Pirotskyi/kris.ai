@@ -2094,7 +2094,8 @@ class ProductRuntime {
     // entry, this record survives an application restart and is what
     // restart reconciliation (see reconcileProjectRuntimeSessions) consults.
     final launchKind = detectProjectLaunchKind(profile.type);
-    final launchProfile = await repositories.workflow.upsertProjectLaunchProfile(
+    final launchProfile =
+        await repositories.workflow.upsertProjectLaunchProfile(
       projectId: project.id,
       kind: launchKind,
       label: command.label,

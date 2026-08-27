@@ -2120,8 +2120,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         projectId: row['project_id']?.toString() ?? '',
         launchProfileId: row['launch_profile_id']?.toString(),
         state: ProjectRuntimeState.fromStorageValue(row['state']?.toString()),
-        lifecycle:
-            ManagedProcessLifecycle.fromStorageValue(row['lifecycle']?.toString()),
+        lifecycle: ManagedProcessLifecycle.fromStorageValue(
+            row['lifecycle']?.toString()),
         pid: row['pid'] == null ? null : _asInt(row['pid']),
         processIdentity: row['process_identity']?.toString(),
         kind: row['kind'] == null
@@ -2135,8 +2135,9 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             : (_decodeMap(row['result_json']!)['logReference']?.toString()),
         startedAt: _parseDate(row['started_at']),
         updatedAt: _parseDate(row['updated_at']),
-        completedAt:
-            row['completed_at'] == null ? null : _parseDate(row['completed_at']),
+        completedAt: row['completed_at'] == null
+            ? null
+            : _parseDate(row['completed_at']),
         exitCode: row['exit_code'] == null ? null : _asInt(row['exit_code']),
         failureCode: row['failure_code']?.toString(),
       );

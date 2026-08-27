@@ -92,7 +92,8 @@ void main() {
       );
     });
 
-    test('unrecognized/unknown project types fall back to command, never '
+    test(
+        'unrecognized/unknown project types fall back to command, never '
         'a guessed web/server kind', () {
       expect(detectProjectLaunchKind('Unknown'), ProjectLaunchKind.command);
       expect(detectProjectLaunchKind('Dart'), ProjectLaunchKind.command);

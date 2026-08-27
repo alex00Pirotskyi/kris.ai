@@ -360,7 +360,8 @@ void main() {
   });
 }
 
-String jsonEncodeCustomProfile(String scriptPath) => jsonEncode(<String, dynamic>{
+String jsonEncodeCustomProfile(String scriptPath) =>
+    jsonEncode(<String, dynamic>{
       'type': 'custom-sleeper',
       'run': <String, dynamic>{
         'executable': 'dart',

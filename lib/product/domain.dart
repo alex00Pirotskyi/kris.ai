@@ -163,11 +163,9 @@ enum ProjectAdmissionReason {
         ProjectAdmissionReason.userCreated => 'user_created',
         ProjectAdmissionReason.builtByKristin => 'built_by_kristin',
         ProjectAdmissionReason.modifiedByKristin => 'modified_by_kristin',
-        ProjectAdmissionReason.successfullyAnalyzed =>
-          'successfully_analyzed',
+        ProjectAdmissionReason.successfullyAnalyzed => 'successfully_analyzed',
         ProjectAdmissionReason.successfullyTested => 'successfully_tested',
-        ProjectAdmissionReason.successfullyVerified =>
-          'successfully_verified',
+        ProjectAdmissionReason.successfullyVerified => 'successfully_verified',
         ProjectAdmissionReason.imported => 'imported',
       };
 
