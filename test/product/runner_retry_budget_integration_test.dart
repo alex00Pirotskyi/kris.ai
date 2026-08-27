@@ -18,12 +18,15 @@ void main() {
     expect(retrySource, contains('_recoverySafetyLimit(run)'));
   });
 
-  test('live Runner exposes no-progress pressure and a generous outer fuse', () {
+  test('live Runner exposes no-progress pressure and a generous outer fuse',
+      () {
     final source = File('lib/product/planning_runtime.dart').readAsStringSync();
     final promptStart = source.indexOf('String _userPrompt(');
-    final promptEnd = source.indexOf('AgentAction _agentActionFromText', promptStart);
+    final promptEnd =
+        source.indexOf('AgentAction _agentActionFromText', promptStart);
 
-    expect(source, contains('static const int _minimumRecoverySafetyLimit = 24;'));
+    expect(
+        source, contains('static const int _minimumRecoverySafetyLimit = 24;'));
     expect(source, contains("'repairBudgetSemantic': 'outer_recovery_fuse'"));
     expect(source, contains('successfulVerification = result.ok;'));
     expect(promptStart, greaterThanOrEqualTo(0));

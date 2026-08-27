@@ -3081,8 +3081,8 @@ class RunCoordinator {
         if (!_isAgentProtocolError(protocolError)) {
           rethrow;
         }
-        final canRequestRepair =
-            protocolRepairAttempts < 2 && current.repairs < phaseRecoveryCeiling;
+        final canRequestRepair = protocolRepairAttempts < 2 &&
+            current.repairs < phaseRecoveryCeiling;
         if (canRequestRepair) {
           protocolRepairAttempts++;
           current = current.copyWith(repairs: current.repairs + 1);
@@ -5637,6 +5637,9 @@ Choose the single safest next action. Return one JSON object only.
       'cancelled',
       'model_not_installed',
       'model_digest_changed',
+      // The provider already performs its configured bounded cold-load retry.
+      // Repeating the complete work item would multiply a long infrastructure
+      // wait without collecting any new project evidence.
       'model_load_timeout',
       'model_load_failed',
       'model_load_response_invalid',
@@ -5646,6 +5649,7 @@ Choose the single safest next action. Return one JSON object only.
       'permission_scope_missing',
       'permission_scope_unrequested',
       'permission_read_required',
+      // Project scope cannot improve through a fresh work-item attempt.
       'path_outside_project',
       'transaction_recovery_required',
     }.contains(code)) {
