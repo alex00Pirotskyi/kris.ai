@@ -1574,9 +1574,8 @@ class AutomaticArtifactVerificationPolicy {
       .replaceAll(RegExp(r'/+'), '/');
 }
 
-/// Reserves enough repair capacity for a retry to perform meaningful protocol,
-/// tool-input, and verification correction instead of starting a doomed
-/// attempt with only one or two counters remaining.
+/// Legacy compatibility helper for callers that still inspect historical
+/// repair-budget policy. The live coordinator no longer uses this reserve gate.
 class RunRetryBudgetPolicy {
   const RunRetryBudgetPolicy({this.minimumRemainingRepairs = 4});
 
@@ -1646,6 +1645,7 @@ class RunCoordinator {
   final String _instanceId = newId('workflow_kernel');
   static const Duration _runLeaseDuration = Duration(minutes: 2);
   static const Duration _runLeaseHeartbeat = Duration(seconds: 20);
+  static const int _minimumRecoverySafetyLimit = 24;
 
   Future<void> reconcileInterruptedRuns() async {
     final recovered = await repositories.workflow.recoverInFlightRuns();
@@ -1864,10 +1864,10 @@ class RunCoordinator {
         (run.modelRequests >= run.budget.maxModelRequests ||
             run.toolCalls >= run.budget.maxToolCalls ||
             run.mutations >= run.budget.maxMutations ||
-            run.repairs >= run.budget.maxRepairs)) {
+            run.repairs >= _recoverySafetyLimit(run))) {
       throw ProductException(
         'run_retry_required',
-        'This interrupted run exhausted at least one autonomy budget. Create a fresh linked retry instead of resuming it.',
+        'This interrupted run exhausted at least one autonomy safety limit. Create a fresh linked retry instead of resuming it.',
         details: <String, dynamic>{
           'runId': run.id,
           'budget': _budgetSnapshot(run),
@@ -2494,9 +2494,6 @@ class RunCoordinator {
             : run.summary,
         clearFailure: true,
       );
-      // This SQLite state transition is the durable acknowledgement boundary.
-      // Everything below it is ancillary and must not turn a committed run into
-      // a failed run if logging, permission cleanup, or memory admission fails.
       await _save(run);
       await repositories.workflow.createCheckpoint(
         runId: run.id,
@@ -2509,9 +2506,7 @@ class RunCoordinator {
       );
       try {
         await permissions.revokeForCommand(run.command.id);
-      } catch (_) {
-        // Permission expiry remains enforced by its own scope and lifetime.
-      }
+      } catch (_) {}
       await _bestEffortAudit('run.succeeded', run.id, <String, dynamic>{
         'runId': run.id,
         'mutations': transaction.mutationCount,
@@ -2522,9 +2517,7 @@ class RunCoordinator {
       });
       try {
         await _recordEpisode(run);
-      } catch (_) {
-        // Episodic memory is not part of the committed workflow result.
-      }
+      } catch (_) {}
       return run;
     } catch (error, stackTrace) {
       final cancelled = control.cancellation.isCancelled ||
@@ -2563,9 +2556,7 @@ class RunCoordinator {
       await _save(run);
       try {
         await permissions.revokeForCommand(run.command.id);
-      } catch (_) {
-        // Failure state is already durable; permission cleanup is best effort.
-      }
+      } catch (_) {}
       final failureDiagnostics = <String, dynamic>{
         'runId': run.id,
         'sourceRunId': run.sourceRunId,
@@ -2594,9 +2585,7 @@ class RunCoordinator {
       });
       try {
         await _recordEpisode(run);
-      } catch (_) {
-        // Failure recovery does not depend on episodic-memory admission.
-      }
+      } catch (_) {}
       return run;
     }
   }
@@ -2876,8 +2865,8 @@ class RunCoordinator {
       planHash: Sha256.text(canonicalJson(current.command.plan.toJson())),
     );
     _enforceBudget(current, started);
-    final phaseRepairCeiling = min(
-      current.budget.maxRepairs,
+    final phaseRecoveryCeiling = min(
+      _recoverySafetyLimit(current),
       current.repairs + executionPhaseBudget.maxRepairs,
     );
     var phaseToolCalls = 0;
@@ -2918,6 +2907,7 @@ class RunCoordinator {
         turnLimit: turnLimit,
         itemMutations: itemMutations,
         inspectionEvidence: inspectionEvidence,
+        stalledTurns: stalledTurns,
       );
       final pendingSteering = steering.takePending(current.id);
       if (pendingSteering.isNotEmpty) {
@@ -3091,8 +3081,8 @@ class RunCoordinator {
         if (!_isAgentProtocolError(protocolError)) {
           rethrow;
         }
-        final canRequestRepair =
-            protocolRepairAttempts < 2 && current.repairs < phaseRepairCeiling;
+        final canRequestRepair = protocolRepairAttempts < 2 &&
+            current.repairs < phaseRecoveryCeiling;
         if (canRequestRepair) {
           protocolRepairAttempts++;
           current = current.copyWith(repairs: current.repairs + 1);
@@ -3224,7 +3214,7 @@ class RunCoordinator {
             _requiresProjectMutation(progress.item) &&
             itemMutations == 0) {
           if (mutationRepairAttempts < 2 &&
-              current.repairs < phaseRepairCeiling) {
+              current.repairs < phaseRecoveryCeiling) {
             mutationRepairAttempts++;
             current = current.copyWith(repairs: current.repairs + 1);
             await _save(current);
@@ -3266,7 +3256,7 @@ class RunCoordinator {
             progress.item,
           );
           if (artifactRepairAttempts < 2 &&
-              current.repairs < phaseRepairCeiling) {
+              current.repairs < phaseRecoveryCeiling) {
             artifactRepairAttempts++;
             current = current.copyWith(repairs: current.repairs + 1);
             await _save(current);
@@ -3384,10 +3374,10 @@ class RunCoordinator {
                 .replaceFirst(RegExp(r'^\./+'), '')
                 .replaceAll(RegExp(r'/+'), '/');
         if (artifactPathsNeedingMutation.contains(path)) {
-          if (current.repairs >= phaseRepairCeiling) {
+          if (current.repairs >= phaseRecoveryCeiling) {
             throw ProductException(
-              'budget_repairs',
-              'Repair budget exhausted while requiring a material artifact correction.',
+              'budget_recovery_safety',
+              'Recovery safety limit reached while requiring a material artifact correction.',
               details: _budgetSnapshot(current),
             );
           }
@@ -3483,10 +3473,10 @@ class RunCoordinator {
           loopRecoveryApplied = true;
           final repeated = prior.copyWith(repetitions: prior.repetitions + 1);
           staticObservations[actionFingerprint] = repeated;
-          if (current.repairs >= phaseRepairCeiling) {
+          if (current.repairs >= phaseRecoveryCeiling) {
             throw ProductException(
-              'budget_repairs',
-              'Repair budget exhausted while preventing a repeated tool loop.',
+              'budget_recovery_safety',
+              'Recovery safety limit reached while preventing a repeated tool loop.',
               details: _budgetSnapshot(current),
             );
           }
@@ -3723,7 +3713,7 @@ class RunCoordinator {
         );
         if (!_isRecoverableToolInputError(toolError) ||
             toolRepairAttempts >= 3 ||
-            current.repairs >= phaseRepairCeiling) {
+            current.repairs >= phaseRecoveryCeiling) {
           rethrow;
         }
         toolRepairAttempts++;
@@ -3796,8 +3786,9 @@ class RunCoordinator {
         materialMutationPaths.addAll(mutationPaths);
         artifactPathsNeedingMutation.removeAll(mutationPaths);
       }
-      successfulVerification = successfulVerification ||
-          (action.tool == 'verify_project' && result.ok);
+      if (action.tool == 'verify_project') {
+        successfulVerification = result.ok;
+      }
       if (result.ok &&
           const <String>{
             'list_directory',
@@ -3870,8 +3861,8 @@ class RunCoordinator {
       if (result.mutated && result.data['operation']?.toString() != 'noop') {
         lastMutationEvidenceHash = objectiveResultHash;
       }
-      if (action.tool == 'verify_project' && result.ok) {
-        lastVerificationEvidenceHash = objectiveResultHash;
+      if (action.tool == 'verify_project') {
+        lastVerificationEvidenceHash = result.ok ? objectiveResultHash : null;
       }
       if (action.tool == 'inspect_file' && result.ok) {
         lastArtifactInspectionEvidenceHash = objectiveResultHash;
@@ -3905,7 +3896,7 @@ class RunCoordinator {
         }),
       );
       final semanticCriteria = <String>{...semanticSnapshot.satisfiedCriteria};
-      if (action.tool == 'verify_project' && result.ok) {
+      if (action.tool == 'verify_project') {
         for (var index = 0;
             index < progress.item.acceptanceCriteria.length;
             index++) {
@@ -3913,7 +3904,12 @@ class RunCoordinator {
                 progress.item.acceptanceCriteria[index],
               ) ==
               'verification') {
-            semanticCriteria.add('${progress.item.id}:criterion:${index + 1}');
+            final criterionId = '${progress.item.id}:criterion:${index + 1}';
+            if (result.ok) {
+              semanticCriteria.add(criterionId);
+            } else {
+              semanticCriteria.remove(criterionId);
+            }
           }
         }
       }
@@ -3970,6 +3966,7 @@ class RunCoordinator {
           'turn': turn + 1,
           ...semanticDelta.toJson(),
           'convergenceAction': convergenceDecision.action.name,
+          'stopReason': convergenceDecision.stopReason,
           'permissionsUnchanged': convergenceDecision.permissionsUnchanged,
         },
       );
@@ -4067,6 +4064,7 @@ class RunCoordinator {
             convergenceDecision.reason,
             details: <String, dynamic>{
               'stalledTurns': stalledTurns,
+              'stopReason': convergenceDecision.stopReason,
               'permissionsUnchanged': true,
             },
           );
@@ -4228,7 +4226,7 @@ class RunCoordinator {
           }
         }
         if (artifactRepairAttempts < 2 &&
-            current.repairs < phaseRepairCeiling) {
+            current.repairs < phaseRecoveryCeiling) {
           artifactRepairAttempts++;
           current = current.copyWith(repairs: current.repairs + 1);
           await _save(current);
@@ -4473,7 +4471,7 @@ class RunCoordinator {
       const <String, dynamic>{},
       context,
     );
-    var updated = run.copyWith(toolCalls: run.toolCalls + 1);
+    final updated = run.copyWith(toolCalls: run.toolCalls + 1);
     await _save(updated);
     await _evidence(
       updated,
@@ -4675,6 +4673,7 @@ ${skillEnvelope.render()}
     required int turnLimit,
     required int itemMutations,
     required bool inspectionEvidence,
+    required int stalledTurns,
   }) {
     final compactHistory = _compactExecutionHistory(history);
     final coordinatorHistory = compactHistory
@@ -4753,7 +4752,7 @@ COUNTERS
 modelRequests=${run.modelRequests}/${run.budget.maxModelRequests}
 toolCalls=${run.toolCalls}/${run.budget.maxToolCalls}
 mutations=${run.mutations}/${run.budget.maxMutations}
-repairs=${run.repairs}/${run.budget.maxRepairs}
+consecutiveNoProgress=$stalledTurns/${executionIntelligence.convergence.consecutiveNoProgressLimit}
 agentTurn=$turn/$turnLimit
 remainingAgentTurns=${max(0, turnLimit - turn + 1)}
 itemMutations=$itemMutations
@@ -5282,9 +5281,7 @@ Choose the single safest next action. Return one JSON object only.
   ) async {
     try {
       await audit.append(action, subjectId, payload);
-    } catch (_) {
-      // Derived knowledge and diagnostic telemetry must never change run outcome.
-    }
+    } catch (_) {}
   }
 
   Future<void> _bestEffortEvent(
@@ -5294,9 +5291,7 @@ Choose the single safest next action. Return one JSON object only.
   ) async {
     try {
       await events.publish(type, subjectId, payload);
-    } catch (_) {
-      // Derived knowledge and diagnostic telemetry must never change run outcome.
-    }
+    } catch (_) {}
   }
 
   Future<void> _recordModelCircuitFailure(
@@ -5350,6 +5345,9 @@ Choose the single safest next action. Return one JSON object only.
   String _errorCode(Object error) =>
       error is ProductException ? error.code : 'unexpected_error';
 
+  int _recoverySafetyLimit(RunRecord run) =>
+      max(_minimumRecoverySafetyLimit, run.budget.maxRepairs);
+
   Map<String, dynamic> _budgetSnapshot(RunRecord run) => <String, dynamic>{
         'modelRequests': run.modelRequests,
         'maxModelRequests': run.budget.maxModelRequests,
@@ -5363,6 +5361,9 @@ Choose the single safest next action. Return one JSON object only.
         'maxMutations': run.budget.maxMutations,
         'repairs': run.repairs,
         'maxRepairs': run.budget.maxRepairs,
+        'repairBudgetSemantic': 'outer_recovery_fuse',
+        'recoverySafetyTurns': run.repairs,
+        'recoverySafetyLimit': _recoverySafetyLimit(run),
       };
 
   int _agentTurnLimit(RunRecord run, {required bool conversational}) {
@@ -5626,8 +5627,8 @@ Choose the single safest next action. Return one JSON object only.
     if (consecutiveFailures >= run.budget.maxConsecutiveFailures) {
       return const _RetryDecision(false, 'consecutive_failure_limit');
     }
-    if (run.repairs >= run.budget.maxRepairs) {
-      return const _RetryDecision(false, 'repair_budget_exhausted');
+    if (run.repairs >= _recoverySafetyLimit(run)) {
+      return const _RetryDecision(false, 'recovery_safety_limit');
     }
     if (code.startsWith('budget_')) {
       return _RetryDecision(false, code);
@@ -5653,21 +5654,6 @@ Choose the single safest next action. Return one JSON object only.
       'transaction_recovery_required',
     }.contains(code)) {
       return _RetryDecision(false, code);
-    }
-    const retryBudgetPolicy = RunRetryBudgetPolicy();
-    if (!retryBudgetPolicy.canStartAnotherAttempt(
-      repairs: run.repairs,
-      maxRepairs: run.budget.maxRepairs,
-    )) {
-      final repairReserve = retryBudgetPolicy.remaining(
-        repairs: run.repairs,
-        maxRepairs: run.budget.maxRepairs,
-      );
-      return _RetryDecision(
-        false,
-        'insufficient_repair_reserve:'
-        '$repairReserve<${retryBudgetPolicy.minimumRemainingRepairs}',
-      );
     }
     if (remaining < run.budget.minModelRequestsForRetry) {
       return _RetryDecision(
@@ -5714,6 +5700,13 @@ Choose the single safest next action. Return one JSON object only.
       throw ProductException(
         'budget_model_requests',
         'Model-request budget exhausted (${run.modelRequests}/${run.budget.maxModelRequests}). Split oversized work items, review repeated actions in the diagnostic bundle, or start a fresh retry with a newly calculated plan budget.',
+        details: _budgetSnapshot(run),
+      );
+    }
+    if (run.repairs >= _recoverySafetyLimit(run)) {
+      throw ProductException(
+        'budget_recovery_safety',
+        'Recovery safety limit reached after ${run.repairs} bounded correction or retry turns. This is an emergency outer fuse, not a normal convergence stop.',
         details: _budgetSnapshot(run),
       );
     }
@@ -5777,9 +5770,7 @@ Choose the single safest next action. Return one JSON object only.
           'runId': runId,
         });
       }
-    } catch (_) {
-      // The next state write is fail-closed if the lease cannot be renewed.
-    }
+    } catch (_) {}
   }
 }
 
