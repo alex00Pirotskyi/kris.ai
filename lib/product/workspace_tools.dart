@@ -1139,7 +1139,7 @@ class ManagedProcessService {
     _processes[id] = record;
     final stdoutPump = _pump(record, 'stdout', process.stdout);
     final stderrPump = _pump(record, 'stderr', process.stderr);
-    unawaited(() async {
+    record.completion = () async {
       try {
         final code = await process.exitCode;
         record.exitCode = code;
@@ -1158,7 +1158,8 @@ class ManagedProcessService {
         record.lifecycleError = redactor.redact('$error');
         record.lifecycleErrorHash = Sha256.text('$stackTrace');
       }
-    }());
+    }();
+    unawaited(record.completion);
     return _status(record);
   }
 
@@ -1193,6 +1194,9 @@ class ManagedProcessService {
         await record.process.exitCode;
       }
     }
+    // Wait for stdout/stderr draining and the final log write to finish,
+    // not just OS process exit -- see [_ManagedProcess.completion].
+    await record.completion;
     return _status(record);
   }
 
@@ -1332,6 +1336,14 @@ class _ManagedProcess {
   DateTime? completedAt;
   String? lifecycleError;
   String? lifecycleErrorHash;
+
+  /// Resolves once the process has exited, its stdout/stderr pumps have
+  /// fully drained, and the final lifecycle line has been flushed to the
+  /// log file. [ManagedProcessService.stop] awaits this before returning
+  /// so a caller that immediately deletes the log directory afterwards
+  /// (as tests do) never races an open log-file handle -- fatal on
+  /// Windows, which locks files exclusively while open, unlike POSIX.
+  late final Future<void> completion;
 }
 
 class ToolContext {
