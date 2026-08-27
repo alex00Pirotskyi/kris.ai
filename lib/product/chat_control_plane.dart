@@ -207,16 +207,17 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     route: ChatExecutionRoute.researchSearch,
     preferredMode: CommandMode.ask,
   ),
-  // 'analyze' and 'review' shared one route and one handler under the old
-  // branch (both called ProductRuntime.analyzeProject); merged into one
-  // capability rather than kept as two ids for the same runtime effect.
+  // 'analyze' and 'review' share one route and one handler (both call
+  // ProductRuntime.analyzeProject) but stay two capabilities: they carry
+  // distinct preferredMode/displayName so the UI's Analyze vs Review
+  // framing (see ui_components.dart's inferCommandMode) is preserved.
   KristinCapability(
-    id: 'project.inspect',
-    displayName: 'Inspect',
-    description: 'Analyze or review a selected project without changing it.',
+    id: 'project.analyze',
+    displayName: 'Analyze',
+    description: 'Analyze a selected project without changing it.',
     category: ChatCapabilityCategory.understand,
-    slashCommands: <String>['analyze', 'analyse', 'review', 'audit', 'inspect'],
-    mentionAliases: <String>['analyze', 'review', 'inspect'],
+    slashCommands: <String>['analyze', 'analyse', 'inspect'],
+    mentionAliases: <String>['analyze', 'inspect'],
     acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
     actionClass: ChatActionClass.small,
     riskClass: ChatRiskClass.readOnly,
@@ -224,6 +225,21 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     planningPolicy: ChatPlanningPolicy.never,
     route: ChatExecutionRoute.projectAnalyze,
     preferredMode: CommandMode.analyze,
+  ),
+  KristinCapability(
+    id: 'project.review',
+    displayName: 'Review',
+    description: 'Review a selected project without changing it.',
+    category: ChatCapabilityCategory.understand,
+    slashCommands: <String>['review', 'audit', 'assess'],
+    mentionAliases: <String>['review'],
+    acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
+    actionClass: ChatActionClass.small,
+    riskClass: ChatRiskClass.readOnly,
+    understandingPolicy: ChatUnderstandingPolicy.actions,
+    planningPolicy: ChatPlanningPolicy.never,
+    route: ChatExecutionRoute.projectAnalyze,
+    preferredMode: CommandMode.review,
   ),
   KristinCapability(
     id: 'project.test',
@@ -1020,15 +1036,11 @@ class ChatIntentCompiler {
     if (const <String>{'search', 'research', 'look up'}.contains(action)) {
       return registry.byId('research.search');
     }
-    if (const <String>{
-      'analyze',
-      'analyse',
-      'inspect',
-      'review',
-      'audit',
-      'assess'
-    }.contains(action)) {
-      return registry.byId('project.inspect');
+    if (const <String>{'analyze', 'analyse', 'inspect'}.contains(action)) {
+      return registry.byId('project.analyze');
+    }
+    if (const <String>{'review', 'audit', 'assess'}.contains(action)) {
+      return registry.byId('project.review');
     }
     if (action == 'test') return registry.byId('project.test');
     if (action == 'verify') return registry.byId('project.verify');
@@ -1063,7 +1075,7 @@ class ChatIntentCompiler {
     }
     if (inferredMode == CommandMode.run) return registry.byId('project.run');
     if (inferredMode == CommandMode.review) {
-      return registry.byId('project.inspect');
+      return registry.byId('project.review');
     }
     return null;
   }
@@ -1137,7 +1149,8 @@ class ChatIntentCompiler {
         return target.isEmpty ? 'Test the selected project.' : 'Test $target.';
       case 'project.verify':
         return 'Explain how Kristin verifies a governed run result.';
-      case 'project.inspect':
+      case 'project.analyze':
+      case 'project.review':
         if (target.isNotEmpty) {
           return argument.isEmpty
               ? '${capability.displayName} $target.'

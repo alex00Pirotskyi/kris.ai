@@ -187,7 +187,8 @@ class ConversationOrchestrator {
           projectMayBeProvisioned: false,
           suggestedProjectName: '',
         );
-      case 'project.inspect':
+      case 'project.analyze':
+      case 'project.review':
       case 'project.test':
       case 'project.verify':
       case 'system.diagnose':
