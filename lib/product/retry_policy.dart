@@ -94,13 +94,23 @@ class WorkflowRetryTaxonomy {
       'base64_invalid',
       'tool_not_allowed',
       'tool_unknown',
-      'executable_missing',
       'working_directory_invalid',
     }.contains(code)) {
       return const RetryClassification(
         failureClass: WorkflowFailureClass.toolInput,
         disposition: RetryDisposition.retrySameAttempt,
         retryability: 'model_correction',
+      );
+    }
+    if (const <String>{
+      'executable_missing',
+      'tool_executable_not_found',
+      'tool_spawn_permission_denied',
+    }.contains(code)) {
+      return const RetryClassification(
+        failureClass: WorkflowFailureClass.resourceUnavailable,
+        disposition: RetryDisposition.awaitResource,
+        retryability: 'environment',
       );
     }
     if (const <String>{
