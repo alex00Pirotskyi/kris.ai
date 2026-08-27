@@ -90,7 +90,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              Icon(failing ? Icons.error_outline : Icons.info_outline, size: 18),
+              Icon(failing ? Icons.error_outline : Icons.info_outline,
+                  size: 18),
             const SizedBox(width: 9),
             Expanded(child: Text(startup ?? error ?? status)),
             if (error != null)
@@ -105,36 +106,60 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     );
   }
 
+  /// Which card renders is driven by one authoritative
+  /// [ChatConversationState] snapshot rather than an ad-hoc combination
+  /// of loose booleans -- see Architectural Improvement #6. The
+  /// null-guards on the widget calls themselves stay as a defensive
+  /// second layer (some card widgets force-unwrap `prepared`/
+  /// `currentRun`), so a snapshot/field mismatch fails safe -- renders
+  /// nothing extra -- rather than crashing.
   Widget _conversation() {
+    final state = chatConversationSnapshot(
+      hasPendingDecision: pendingDecision != null,
+      ambiguous: pendingDecision?.ambiguous ?? false,
+      hasPreparedCommand: prepared != null,
+      awaitingPermission: awaitingPermission,
+      currentRunState: currentRun?.state,
+    );
     final children = <Widget>[];
-    if (transcript.isEmpty &&
-        pendingDecision == null &&
-        currentRun == null &&
-        prepared == null) {
+    if (transcript.isEmpty && state is ChatIdle) {
       children.add(_welcome());
     }
     for (final line in transcript) {
       children.add(_messageBubble(line));
       children.add(const SizedBox(height: 14));
     }
-    if (understandingHistory != null &&
-        prepared == null &&
-        currentRun == null) {
-      children.add(_understandingCard());
-      children.add(const SizedBox(height: 14));
-    }
-    if (prepared != null && (currentRun == null || runAwaitingApproval)) {
-      children.add(awaitingPermission || runAwaitingApproval
-          ? _permissionCard()
-          : _planCard());
-      children.add(const SizedBox(height: 14));
-    }
-    if (currentRun != null && !runAwaitingApproval) {
-      children.add(_runCard(currentRun!));
-      if (runTerminal) {
+    switch (state) {
+      case ChatIdle():
+      case ChatInterpreting():
+        break;
+      case ChatClarificationNeeded():
+      case ChatUnderstanding():
+        children.add(_understandingCard());
         children.add(const SizedBox(height: 14));
-        children.add(_resultCard(currentRun!));
-      }
+      case ChatPlanning():
+        if (prepared != null) {
+          children.add(_planCard());
+          children.add(const SizedBox(height: 14));
+        }
+      case ChatAwaitingPermission():
+        if (prepared != null) {
+          children.add(_permissionCard());
+          children.add(const SizedBox(height: 14));
+        }
+      case ChatExecuting():
+      case ChatVerifying():
+        if (currentRun != null) children.add(_runCard(currentRun!));
+      case ChatCompleted():
+      case ChatFailed():
+      case ChatCancelled():
+        if (currentRun != null) {
+          children.add(_runCard(currentRun!));
+          children.add(const SizedBox(height: 14));
+          children.add(_resultCard(currentRun!));
+        }
+      case ChatDenied():
+        break;
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -281,7 +306,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               ),
               Chip(
                 avatar: const Icon(Icons.account_tree_outlined, size: 16),
-                label: Text(decision.needsPlan ? 'Plan follows' : 'Direct action'),
+                label:
+                    Text(decision.needsPlan ? 'Plan follows' : 'Direct action'),
               ),
               if (decision.riskClass != ChatRiskClass.none)
                 Chip(
@@ -429,9 +455,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   label: const Text('Start'),
                 ),
                 OutlinedButton(
-                  onPressed: busy
-                      ? null
-                      : () => _mutate(() => planAdjusting = true),
+                  onPressed:
+                      busy ? null : () => _mutate(() => planAdjusting = true),
                   child: const Text('Adjust plan'),
                 ),
               ],
@@ -539,7 +564,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             onExpansionChanged: (value) => detailsExpanded = value,
             tilePadding: EdgeInsets.zero,
             title: const Text('Details'),
-            subtitle: const Text('Model, tools, evidence, and technical output'),
+            subtitle:
+                const Text('Model, tools, evidence, and technical output'),
             children: <Widget>[
               Align(
                 alignment: Alignment.centerLeft,
@@ -551,7 +577,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                     Chip(label: Text('${run.toolCalls} tool calls')),
                     Chip(label: Text('${run.mutations} mutations')),
                     Chip(label: Text('${run.repairs} repairs')),
-                    if (liveToolName.isNotEmpty) Chip(label: Text(liveToolName)),
+                    if (liveToolName.isNotEmpty)
+                      Chip(label: Text(liveToolName)),
                   ],
                 ),
               ),
@@ -562,14 +589,14 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               if (evidence.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 8),
                 ...evidence.take(10).map(
-                  (item) => ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.verified_outlined, size: 18),
-                    title: Text(item.summary),
-                    subtitle: Text(item.kind.name),
-                  ),
-                ),
+                      (item) => ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.verified_outlined, size: 18),
+                        title: Text(item.summary),
+                        subtitle: Text(item.kind.name),
+                      ),
+                    ),
               ],
             ],
           ),
@@ -606,14 +633,17 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
   Widget _resultCard(RunRecord run) {
     final successful = run.state == RunState.succeeded;
     final summary = _resultText(run);
-    final artifacts = evidence.where((item) {
-      return const <EvidenceKind>{
-        EvidenceKind.mutation,
-        EvidenceKind.test,
-        EvidenceKind.verification,
-        EvidenceKind.deployment,
-      }.contains(item.kind);
-    }).take(8).toList(growable: false);
+    final artifacts = evidence
+        .where((item) {
+          return const <EvidenceKind>{
+            EvidenceKind.mutation,
+            EvidenceKind.test,
+            EvidenceKind.verification,
+            EvidenceKind.deployment,
+          }.contains(item.kind);
+        })
+        .take(8)
+        .toList(growable: false);
     return _assistantCard(
       icon: successful ? Icons.task_alt : Icons.error_outline,
       title: successful ? 'Ready' : 'Needs attention',
@@ -779,7 +809,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               meta: true,
                             ): const _SubmitIntent(),
                             if (hasSuggestions)
-                              const SingleActivator(LogicalKeyboardKey.arrowDown):
+                              const SingleActivator(
+                                      LogicalKeyboardKey.arrowDown):
                                   const _NextSuggestionIntent(),
                             if (hasSuggestions)
                               const SingleActivator(LogicalKeyboardKey.arrowUp):
@@ -803,8 +834,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                                   CallbackAction<_NextSuggestionIntent>(
                                 onInvoke: (_) {
                                   _mutate(() {
-                                    suggestionIndex =
-                                        (suggestionIndex + 1) % suggestions.length;
+                                    suggestionIndex = (suggestionIndex + 1) %
+                                        suggestions.length;
                                   });
                                   return null;
                                 },
@@ -813,9 +844,10 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                                   CallbackAction<_PreviousSuggestionIntent>(
                                 onInvoke: (_) {
                                   _mutate(() {
-                                    suggestionIndex =
-                                        (suggestionIndex - 1 + suggestions.length) %
-                                            suggestions.length;
+                                    suggestionIndex = (suggestionIndex -
+                                            1 +
+                                            suggestions.length) %
+                                        suggestions.length;
                                   });
                                   return null;
                                 },
@@ -823,7 +855,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               _AcceptSuggestionIntent:
                                   CallbackAction<_AcceptSuggestionIntent>(
                                 onInvoke: (_) {
-                                  _selectSuggestion(suggestions[suggestionIndex]);
+                                  _selectSuggestion(
+                                      suggestions[suggestionIndex]);
                                   return null;
                                 },
                               ),
@@ -882,10 +915,10 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               const Spacer(),
                               IconButton.filled(
                                 tooltip: 'Send',
-                                onPressed:
-                                    busy || composerController.text.trim().isEmpty
-                                        ? null
-                                        : _submit,
+                                onPressed: busy ||
+                                        composerController.text.trim().isEmpty
+                                    ? null
+                                    : _submit,
                                 icon: busy
                                     ? const SizedBox.square(
                                         dimension: 17,

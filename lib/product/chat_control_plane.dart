@@ -20,16 +20,45 @@ enum ChatTargetType {
 
 enum ChatActionClass { informational, small, substantial }
 
-enum ChatRiskClass { none, readOnly, execution, mutation, sensitive, destructive }
+enum ChatRiskClass {
+  none,
+  readOnly,
+  execution,
+  mutation,
+  sensitive,
+  destructive
+}
 
 enum ChatUnderstandingPolicy { never, actions }
 
 enum ChatPlanningPolicy { never, substantial, always }
 
 enum ChatExecutionRoute {
-  agent,
+  /// Provisions a brand-new project workspace and runs the full governed
+  /// agent plan/permission/execution pipeline against it. Never confused
+  /// with [projectBuild], which only rebuilds an already-selected project.
+  createProject,
+
+  /// A general change/feature request against an already-selected or
+  /// @mentioned project, routed through the full governed agent pipeline.
+  modifyProject,
+
+  /// A diagnose-and-repair request against an already-selected or
+  /// @mentioned project, routed through the full governed agent pipeline.
+  fixProject,
+
+  /// A standalone web search. Deliberately independent of
+  /// [ProductRuntime.prepare]'s project requirement -- see
+  /// Architectural Improvement #9: research must not require a project.
+  researchSearch,
+
   projectAnalyze,
   projectTest,
+
+  /// Informational only: explains that verification is an automatic part
+  /// of governed Run convergence rather than a separately re-runnable
+  /// project action. Never silently re-runs project tests under this
+  /// route -- see Architectural Improvement #8.
   projectVerify,
   projectBuild,
   projectRun,
@@ -88,25 +117,46 @@ class KristinCapability {
 }
 
 const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
+  // Architectural Improvement #8: "build a new app" and "build the selected
+  // project" are different capabilities with different runtime effects --
+  // they must never share one capability id or one route. agent.create_project
+  // provisions a new project and runs the full governed agent pipeline;
+  // project.build only rebuilds an already-selected/@mentioned project via
+  // the direct, small ProductRuntime.buildProject action.
   KristinCapability(
-    id: 'build',
-    displayName: 'Build',
-    description: 'Create or change product code, or build a selected project.',
+    id: 'agent.create_project',
+    displayName: 'Create',
+    description: 'Create a brand-new project from a natural-language request.',
     category: ChatCapabilityCategory.create,
-    slashCommands: <String>['build', 'create'],
-    mentionAliases: <String>['build'],
+    slashCommands: <String>['create'],
+    mentionAliases: <String>['create'],
+    acceptedTargetTypes: <ChatTargetType>{},
+    actionClass: ChatActionClass.substantial,
+    riskClass: ChatRiskClass.mutation,
+    understandingPolicy: ChatUnderstandingPolicy.actions,
+    planningPolicy: ChatPlanningPolicy.substantial,
+    route: ChatExecutionRoute.createProject,
+    preferredMode: CommandMode.build,
+  ),
+  KristinCapability(
+    id: 'agent.modify_project',
+    displayName: 'Modify',
+    description: 'Change or extend an already-selected project.',
+    category: ChatCapabilityCategory.create,
+    slashCommands: <String>['modify', 'change'],
+    mentionAliases: <String>['modify'],
     acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
     actionClass: ChatActionClass.substantial,
     riskClass: ChatRiskClass.mutation,
     understandingPolicy: ChatUnderstandingPolicy.actions,
     planningPolicy: ChatPlanningPolicy.substantial,
-    route: ChatExecutionRoute.projectBuild,
+    route: ChatExecutionRoute.modifyProject,
     preferredMode: CommandMode.build,
   ),
   KristinCapability(
-    id: 'fix',
+    id: 'agent.fix_project',
     displayName: 'Fix',
-    description: 'Diagnose, repair, and verify a project problem.',
+    description: 'Diagnose and repair a project problem.',
     category: ChatCapabilityCategory.create,
     slashCommands: <String>['fix', 'repair'],
     mentionAliases: <String>['fix'],
@@ -115,34 +165,58 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     riskClass: ChatRiskClass.mutation,
     understandingPolicy: ChatUnderstandingPolicy.actions,
     planningPolicy: ChatPlanningPolicy.substantial,
-    route: ChatExecutionRoute.agent,
+    route: ChatExecutionRoute.fixProject,
     preferredMode: CommandMode.fix,
   ),
   KristinCapability(
-    id: 'search',
+    id: 'project.build',
+    displayName: 'Build',
+    description: 'Build an already-selected or @mentioned project.',
+    category: ChatCapabilityCategory.create,
+    slashCommands: <String>['build'],
+    mentionAliases: <String>['build'],
+    acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
+    actionClass: ChatActionClass.small,
+    riskClass: ChatRiskClass.mutation,
+    understandingPolicy: ChatUnderstandingPolicy.actions,
+    planningPolicy: ChatPlanningPolicy.never,
+    route: ChatExecutionRoute.projectBuild,
+    preferredMode: CommandMode.build,
+    availableWithoutTarget: false,
+  ),
+  // Architectural Improvement #9: research must not require a project.
+  // research.search never routes through ProductRuntime.prepare (which
+  // requires a projectId); it calls ProductRuntime.searchWeb directly and
+  // only archives to project knowledge when a project happens to be in
+  // scope -- a project enriches research, it never gates it.
+  KristinCapability(
+    id: 'research.search',
     displayName: 'Search',
     description: 'Search current public sources and return grounded findings.',
     category: ChatCapabilityCategory.understand,
     slashCommands: <String>['search', 'web_search', 'research'],
     mentionAliases: <String>['web', 'search'],
     acceptedTargetTypes: <ChatTargetType>{
-      ChatTargetType.capability,
+      ChatTargetType.project,
       ChatTargetType.workspace,
     },
     actionClass: ChatActionClass.small,
     riskClass: ChatRiskClass.readOnly,
     understandingPolicy: ChatUnderstandingPolicy.actions,
     planningPolicy: ChatPlanningPolicy.never,
-    route: ChatExecutionRoute.agent,
+    route: ChatExecutionRoute.researchSearch,
     preferredMode: CommandMode.ask,
   ),
+  // 'analyze' and 'review' shared one route and one handler under the old
+  // branch (both called ProductRuntime.analyzeProject); merged into one
+  // capability rather than kept as two ids for the same runtime effect.
   KristinCapability(
-    id: 'analyze',
-    displayName: 'Analyze',
-    description: 'Analyze a selected project without changing it.',
+    id: 'project.inspect',
+    displayName: 'Inspect',
+    description: 'Analyze or review a selected project without changing it.',
     category: ChatCapabilityCategory.understand,
-    slashCommands: <String>['analyze', 'analyse'],
-    mentionAliases: <String>['analyze'],
+    slashCommands: <String>['analyze', 'analyse', 'review', 'audit', 'inspect'],
+    mentionAliases: <String>['analyze', 'review', 'inspect'],
     acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
     actionClass: ChatActionClass.small,
     riskClass: ChatRiskClass.readOnly,
@@ -152,22 +226,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.analyze,
   ),
   KristinCapability(
-    id: 'review',
-    displayName: 'Review',
-    description: 'Review a selected project and report practical findings.',
-    category: ChatCapabilityCategory.understand,
-    slashCommands: <String>['review', 'audit'],
-    mentionAliases: <String>['review'],
-    acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
-    actionClass: ChatActionClass.small,
-    riskClass: ChatRiskClass.readOnly,
-    understandingPolicy: ChatUnderstandingPolicy.actions,
-    planningPolicy: ChatPlanningPolicy.never,
-    route: ChatExecutionRoute.projectAnalyze,
-    preferredMode: CommandMode.review,
-  ),
-  KristinCapability(
-    id: 'test',
+    id: 'project.test',
     displayName: 'Test',
     description: 'Run the selected project test profile.',
     category: ChatCapabilityCategory.quality,
@@ -182,26 +241,31 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.run,
     availableWithoutTarget: false,
   ),
+  // Architectural Improvement #8: there is no canonical ProductRuntime
+  // verifyProject distinct from testProject -- objective verification is
+  // an automatic part of governed Run convergence (IndependentVerifier),
+  // not a separately re-runnable project action. /verify must not silently
+  // alias to testProject; it explains real behavior instead.
   KristinCapability(
-    id: 'verify',
+    id: 'project.verify',
     displayName: 'Verify',
-    description: 'Verify the selected project or latest governed result.',
+    description: 'Explain how Kristin verifies a governed run result.',
     category: ChatCapabilityCategory.quality,
     slashCommands: <String>['verify'],
     mentionAliases: <String>['verification', 'verify'],
     acceptedTargetTypes: <ChatTargetType>{ChatTargetType.project},
-    actionClass: ChatActionClass.small,
-    riskClass: ChatRiskClass.execution,
-    understandingPolicy: ChatUnderstandingPolicy.actions,
+    actionClass: ChatActionClass.informational,
+    riskClass: ChatRiskClass.none,
+    understandingPolicy: ChatUnderstandingPolicy.never,
     planningPolicy: ChatPlanningPolicy.never,
     route: ChatExecutionRoute.projectVerify,
     preferredMode: CommandMode.review,
-    availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'run',
+    id: 'project.run',
     displayName: 'Run',
-    description: 'Start a selected project through the managed project runtime.',
+    description:
+        'Start a selected project through the managed project runtime.',
     category: ChatCapabilityCategory.operate,
     slashCommands: <String>['run', 'start'],
     mentionAliases: <String>['run'],
@@ -218,7 +282,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'stop',
+    id: 'project.stop',
     displayName: 'Stop',
     description: 'Stop a managed project process safely.',
     category: ChatCapabilityCategory.operate,
@@ -237,7 +301,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'restart',
+    id: 'project.restart',
     displayName: 'Restart',
     description: 'Restart a managed project process.',
     category: ChatCapabilityCategory.operate,
@@ -256,7 +320,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'open',
+    id: 'workspace.open',
     displayName: 'Open',
     description: 'Open a project or deep workspace view.',
     category: ChatCapabilityCategory.operate,
@@ -276,7 +340,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'connect',
+    id: 'provider.connect',
     displayName: 'Connect',
     description: 'Open the governed connection flow for a provider or service.',
     category: ChatCapabilityCategory.connections,
@@ -292,7 +356,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'use',
+    id: 'model.select',
     displayName: 'Use model',
     description: 'Select a model or provider for the next eligible task.',
     category: ChatCapabilityCategory.connections,
@@ -311,7 +375,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     availableWithoutTarget: false,
   ),
   KristinCapability(
-    id: 'owner',
+    id: 'owner.mode',
     displayName: 'Owner Mode',
     description: 'Inspect or enter the governed Owner Mode flow.',
     category: ChatCapabilityCategory.system,
@@ -326,7 +390,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'diagnose',
+    id: 'system.diagnose',
     displayName: 'Diagnose',
     description: 'Run the canonical capability or project health check.',
     category: ChatCapabilityCategory.quality,
@@ -344,7 +408,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.analyze,
   ),
   KristinCapability(
-    id: 'help',
+    id: 'system.help',
     displayName: 'Help',
     description: 'Show concise user-facing capability groups and examples.',
     category: ChatCapabilityCategory.system,
@@ -359,7 +423,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'new_chat',
+    id: 'navigation.new_chat',
     displayName: 'New chat',
     description: 'Start a fresh conversation.',
     category: ChatCapabilityCategory.system,
@@ -374,7 +438,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'projects',
+    id: 'navigation.projects',
     displayName: 'Project Manager',
     description: 'Open the persistent project control workspace.',
     category: ChatCapabilityCategory.system,
@@ -389,7 +453,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'runs',
+    id: 'navigation.runs',
     displayName: 'Runs',
     description: 'Open the deep execution view.',
     category: ChatCapabilityCategory.system,
@@ -404,7 +468,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'prompts',
+    id: 'navigation.prompts',
     displayName: 'Prompt Studio',
     description: 'Open the advanced prompt workbench.',
     category: ChatCapabilityCategory.system,
@@ -419,7 +483,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'knowledge',
+    id: 'navigation.knowledge',
     displayName: 'Knowledge',
     description: 'Open project knowledge and run memory.',
     category: ChatCapabilityCategory.system,
@@ -437,7 +501,7 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     preferredMode: CommandMode.ask,
   ),
   KristinCapability(
-    id: 'logs',
+    id: 'navigation.logs',
     displayName: 'Logs',
     description: 'Open the technical log workspace.',
     category: ChatCapabilityCategory.system,
@@ -470,10 +534,8 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? bySlash(String slash) {
-    final normalized = slash
-        .trim()
-        .toLowerCase()
-        .replaceFirst(RegExp(r'^/'), '');
+    final normalized =
+        slash.trim().toLowerCase().replaceFirst(RegExp(r'^/'), '');
     for (final capability in capabilities) {
       if (capability.slashCommands.contains(normalized)) return capability;
     }
@@ -481,10 +543,8 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? byMention(String mention) {
-    final normalized = mention
-        .trim()
-        .toLowerCase()
-        .replaceFirst(RegExp(r'^@'), '');
+    final normalized =
+        mention.trim().toLowerCase().replaceFirst(RegExp(r'^@'), '');
     for (final capability in capabilities) {
       if (capability.mentionAliases.contains(normalized)) return capability;
     }
@@ -492,10 +552,7 @@ class ChatCapabilityRegistry {
   }
 
   List<KristinCapability> searchSlash(String query, {int limit = 8}) {
-    final needle = query
-        .trim()
-        .toLowerCase()
-        .replaceFirst(RegExp(r'^/'), '');
+    final needle = query.trim().toLowerCase().replaceFirst(RegExp(r'^/'), '');
     final ranked = <_CapabilityScore>[];
     for (final capability in capabilities) {
       if (capability.slashCommands.isEmpty) continue;
@@ -623,27 +680,50 @@ class ParsedChatInput {
   bool get hasExplicitCommand => commandToken.isNotEmpty;
 }
 
+/// Architectural Improvement #4: a small, deterministic, bounded grammar --
+/// not an ever-growing regex scan of the whole message. Mentions are
+/// recognized only when a whitespace-delimited token *begins* with `@`.
+/// This one rule is what keeps `alex@example.com` and
+/// `https://example.com/@user` from ever being misread as a target: an
+/// email's local part, or a URL's scheme/host/path, is never itself a
+/// standalone whitespace token starting with `@`. A quoted `"@project"`
+/// is excluded the same way (the token starts with `"`, not `@`) -- to
+/// mention a target, write it unquoted.
 class ChatCommandMentionParser {
   const ChatCommandMentionParser();
 
+  static final RegExp _commandPattern = RegExp(r'^/([A-Za-z][A-Za-z0-9_-]*)');
+  static final RegExp _mentionPattern =
+      RegExp(r'^@([A-Za-z0-9][A-Za-z0-9._:-]*)');
+
   ParsedChatInput parse(String input) {
     final value = input.trim();
-    final commandMatch =
-        RegExp(r'^/([A-Za-z][A-Za-z0-9_-]*)').firstMatch(value);
+    final commandMatch = _commandPattern.firstMatch(value);
     final command = commandMatch?.group(1)?.toLowerCase() ?? '';
     final arguments = commandMatch == null
         ? value
         : value.substring(commandMatch.end).trimLeft();
-    final mentions = RegExp(r'@([A-Za-z0-9][A-Za-z0-9._:-]*)')
-        .allMatches(value)
-        .map((match) => match.group(1)!.toLowerCase())
-        .toSet()
-        .toList(growable: false);
+
+    final mentions = <String>{};
+    for (final token in value.split(RegExp(r'\s+'))) {
+      if (!token.startsWith('@')) continue;
+      final match = _mentionPattern.firstMatch(token);
+      if (match == null) continue;
+      var mention = match.group(1)!;
+      // A mention captured right up against sentence-final punctuation
+      // ("Fix @rome-clock.") should not swallow that trailing period --
+      // '.' is otherwise a legitimate interior character (e.g. a
+      // provider/model pair), so only a single *trailing* one is trimmed.
+      if (mention.length > 1 && mention.endsWith('.')) {
+        mention = mention.substring(0, mention.length - 1);
+      }
+      mentions.add(mention.toLowerCase());
+    }
     return ParsedChatInput(
       originalText: value,
       commandToken: command,
       arguments: arguments,
-      mentions: mentions,
+      mentions: List<String>.unmodifiable(mentions),
     );
   }
 }
@@ -805,7 +885,7 @@ class ChatIntentCompiler {
       );
     }
 
-    final capability = _naturalCapability(parsed.originalText, inferredMode);
+    final capability = _naturalCapability(parsed, inferredMode, targets);
     if (capability != null && _isActionLanguage(parsed.originalText)) {
       return _decision(
         kind: ChatInteractionKind.action,
@@ -822,7 +902,9 @@ class ChatIntentCompiler {
           parsed,
           naturalLanguage: true,
         ),
-        ambiguous: unresolved.isNotEmpty,
+        ambiguous: unresolved.isNotEmpty ||
+            (capability.id == 'agent.create_project' &&
+                _isUnderspecifiedCreateRequest(parsed)),
       );
     }
 
@@ -845,7 +927,9 @@ class ChatIntentCompiler {
     }
 
     final fallback = registry.byId(
-      inferredMode == CommandMode.fix ? 'fix' : 'build',
+      inferredMode == CommandMode.fix
+          ? 'agent.fix_project'
+          : 'agent.create_project',
     );
     return _decision(
       kind: ChatInteractionKind.ambiguous,
@@ -891,14 +975,23 @@ class ChatIntentCompiler {
     );
   }
 
-  KristinCapability? _naturalCapability(String input, CommandMode inferredMode) {
-    final action = _leadingAction(input);
-    const buildActions = <String>{
+  KristinCapability? _naturalCapability(
+    ParsedChatInput parsed,
+    CommandMode inferredMode,
+    List<ChatTarget> targets,
+  ) {
+    final action = _leadingAction(parsed.originalText);
+    final hasProjectTarget =
+        targets.any((target) => target.type == ChatTargetType.project);
+
+    const createVerbs = <String>{
       'build',
       'create',
       'make',
       'develop',
       'implement',
+    };
+    const modifyVerbs = <String>{
       'change',
       'add',
       'update',
@@ -909,44 +1002,104 @@ class ChatIntentCompiler {
       'rename',
       'move',
     };
-    if (buildActions.contains(action)) return registry.byId('build');
+    if (createVerbs.contains(action)) {
+      // "build @project" targets an existing project directly (small,
+      // direct rebuild); an unscoped "build me a clock app" may still be
+      // a brand-new project or a change to whatever is already active --
+      // see _createOrModify.
+      return hasProjectTarget
+          ? registry.byId('project.build')
+          : _createOrModify(parsed);
+    }
+    if (modifyVerbs.contains(action)) {
+      return registry.byId('agent.modify_project');
+    }
     if (const <String>{'fix', 'repair', 'debug'}.contains(action)) {
-      return registry.byId('fix');
+      return registry.byId('agent.fix_project');
     }
     if (const <String>{'search', 'research', 'look up'}.contains(action)) {
-      return registry.byId('search');
+      return registry.byId('research.search');
     }
-    if (const <String>{'analyze', 'analyse', 'inspect'}.contains(action)) {
-      return registry.byId('analyze');
+    if (const <String>{
+      'analyze',
+      'analyse',
+      'inspect',
+      'review',
+      'audit',
+      'assess'
+    }.contains(action)) {
+      return registry.byId('project.inspect');
     }
-    if (const <String>{'review', 'audit', 'assess'}.contains(action)) {
-      return registry.byId('review');
-    }
-    if (action == 'test') return registry.byId('test');
-    if (action == 'verify') return registry.byId('verify');
+    if (action == 'test') return registry.byId('project.test');
+    if (action == 'verify') return registry.byId('project.verify');
     if (const <String>{'run', 'launch', 'start'}.contains(action)) {
-      return registry.byId('run');
+      // "run the tests"/"run tests" names its object explicitly enough
+      // that this is project.test, not project.run, even though the
+      // sentence's own verb is "run" -- a bare leading-verb match alone
+      // would misclassify "Could you run the tests?" the same way it
+      // misclassifies "run @project".
+      if (RegExp(r'\brun\s+(?:the\s+)?tests?\b')
+          .hasMatch(_normalized(parsed.originalText))) {
+        return registry.byId('project.test');
+      }
+      return registry.byId('project.run');
     }
-    if (action == 'stop') return registry.byId('stop');
-    if (action == 'restart') return registry.byId('restart');
-    if (action == 'open') return registry.byId('open');
-    if (action == 'connect') return registry.byId('connect');
-    if (action == 'use') return registry.byId('use');
-    if (action == 'enable owner mode') return registry.byId('owner');
+    if (action == 'stop') return registry.byId('project.stop');
+    if (action == 'restart') return registry.byId('project.restart');
+    if (action == 'open') return registry.byId('workspace.open');
+    if (action == 'connect') return registry.byId('provider.connect');
+    if (action == 'use') return registry.byId('model.select');
+    if (action == 'enable owner mode') return registry.byId('owner.mode');
     if (const <String>{'diagnose', 'troubleshoot'}.contains(action)) {
-      return registry.byId('diagnose');
+      return registry.byId('system.diagnose');
     }
-    if (inferredMode == CommandMode.build) return registry.byId('build');
-    if (inferredMode == CommandMode.fix) return registry.byId('fix');
-    if (inferredMode == CommandMode.run) return registry.byId('run');
-    if (inferredMode == CommandMode.review) return registry.byId('review');
+    if (inferredMode == CommandMode.build) {
+      return hasProjectTarget
+          ? registry.byId('project.build')
+          : _createOrModify(parsed);
+    }
+    if (inferredMode == CommandMode.fix) {
+      return registry.byId('agent.fix_project');
+    }
+    if (inferredMode == CommandMode.run) return registry.byId('project.run');
+    if (inferredMode == CommandMode.review) {
+      return registry.byId('project.inspect');
+    }
     return null;
+  }
+
+  /// Decides whether an unscoped create/build-verb request ("build me a
+  /// clock app") should provision a brand-new project
+  /// (agent.create_project) or is more likely a change to whatever project
+  /// is already active (agent.modify_project). Architectural Improvement
+  /// #3/#8: this decision is made once, here, at intent-compile time --
+  /// it used to live as a downstream Flutter-UI heuristic
+  /// (`_shouldProvisionNewProject`) that re-derived the same judgment from
+  /// the accepted decision after the fact.
+  KristinCapability? _createOrModify(ParsedChatInput parsed) {
+    final original = _normalized(parsed.originalText);
+    if (RegExp(
+      r'\b(?:this|current|existing|selected)\s+(?:project|repo|repository|app|application|codebase)\b',
+    ).hasMatch(original)) {
+      return registry.byId('agent.modify_project');
+    }
+    final requestText =
+        parsed.hasExplicitCommand ? parsed.arguments.toLowerCase() : original;
+    final outcome = RegExp(
+      r'\b(?:app|application|website|site|tool|service|bot|dashboard|game|api|project)\b',
+    ).hasMatch(requestText);
+    final modification = RegExp(
+      r'\b(?:add|change|update|refactor|migrate|rename|move|remove|delete|fix|repair)\b',
+    ).hasMatch(requestText);
+    if (outcome && !modification) {
+      return registry.byId('agent.create_project');
+    }
+    return registry.byId('agent.modify_project');
   }
 
   ChatRiskClass _riskFor(KristinCapability capability, String input) {
     final normalized = _normalized(input);
-    if (RegExp(r'^(?:please\s+)?(?:delete|remove)\b')
-            .hasMatch(normalized) ||
+    if (RegExp(r'^(?:please\s+)?(?:delete|remove)\b').hasMatch(normalized) ||
         RegExp(
           r'\b(?:delete|remove)\s+(?:the\s+)?(?:file|folder|project|data|database)\b',
         ).hasMatch(normalized)) {
@@ -968,26 +1121,23 @@ class ChatIntentCompiler {
             .trim()
         : parsed.originalText.trim();
     switch (capability.id) {
-      case 'search':
+      case 'research.search':
         return argument.isEmpty
             ? 'Search current public sources.'
             : 'Search current public sources for "$argument" and summarize what is found.';
-      case 'run':
+      case 'project.run':
         return target.isEmpty ? 'Run the selected project.' : 'Run $target.';
-      case 'stop':
+      case 'project.stop':
         return target.isEmpty ? 'Stop the selected project.' : 'Stop $target.';
-      case 'restart':
+      case 'project.restart':
         return target.isEmpty
             ? 'Restart the selected project.'
             : 'Restart $target.';
-      case 'test':
+      case 'project.test':
         return target.isEmpty ? 'Test the selected project.' : 'Test $target.';
-      case 'verify':
-        return target.isEmpty
-            ? 'Verify the selected project.'
-            : 'Verify $target.';
-      case 'analyze':
-      case 'review':
+      case 'project.verify':
+        return 'Explain how Kristin verifies a governed run result.';
+      case 'project.inspect':
         if (target.isNotEmpty) {
           return argument.isEmpty
               ? '${capability.displayName} $target.'
@@ -996,28 +1146,33 @@ class ChatIntentCompiler {
         return argument.isEmpty
             ? '${capability.displayName} the selected project.'
             : '${capability.displayName} $argument.';
-      case 'connect':
+      case 'provider.connect':
         return target.isEmpty
             ? 'Connect the selected provider through the governed connection flow.'
             : 'Connect $target through the governed connection flow.';
-      case 'use':
+      case 'model.select':
         return target.isEmpty
             ? 'Use the selected model for the next eligible task.'
             : 'Use $target for the next eligible task.';
-      case 'owner':
+      case 'owner.mode':
         return 'Open the governed Owner Mode flow without widening authority automatically.';
-      case 'diagnose':
+      case 'system.diagnose':
         return target.isEmpty
             ? 'Diagnose the selected project and Kristin capabilities.'
             : 'Diagnose $target.';
-      case 'open':
-        return target.isEmpty ? 'Open the selected workspace.' : 'Open $target.';
-      case 'build':
-        if (target.isNotEmpty && argument.isEmpty) {
-          return 'Build $target using its canonical project build capability.';
-        }
-        return argument.isEmpty ? parsed.originalText : 'Build $argument.';
-      case 'fix':
+      case 'workspace.open':
+        return target.isEmpty
+            ? 'Open the selected workspace.'
+            : 'Open $target.';
+      case 'project.build':
+        return target.isEmpty
+            ? 'Build the selected project.'
+            : 'Build $target using its canonical project build capability.';
+      case 'agent.create_project':
+        return argument.isEmpty ? parsed.originalText : 'Create $argument.';
+      case 'agent.modify_project':
+        return argument.isEmpty ? parsed.originalText : 'Change $argument.';
+      case 'agent.fix_project':
         return argument.isEmpty ? parsed.originalText : 'Fix $argument.';
       default:
         return parsed.originalText;
@@ -1137,8 +1292,7 @@ class ChatAutocompleteEngine {
     final safeOffset = cursorOffset.clamp(0, text.length).toInt();
     final prefix = text.substring(0, safeOffset);
     final trimmedLeft = prefix.trimLeft();
-    if (trimmedLeft.startsWith('/') &&
-        !trimmedLeft.contains(RegExp(r'\s'))) {
+    if (trimmedLeft.startsWith('/') && !trimmedLeft.contains(RegExp(r'\s'))) {
       final query = trimmedLeft.substring(1);
       return registry.searchSlash(query, limit: limit).map((capability) {
         return ChatAutocompleteSuggestion(
@@ -1155,8 +1309,9 @@ class ChatAutocompleteEngine {
     if (mentionMatch == null) return const <ChatAutocompleteSuggestion>[];
     final query = mentionMatch.group(1) ?? '';
     final parsed = parser.parse(prefix);
-    final capability =
-        parsed.hasExplicitCommand ? registry.bySlash(parsed.commandToken) : null;
+    final capability = parsed.hasExplicitCommand
+        ? registry.bySlash(parsed.commandToken)
+        : null;
     final accepted =
         capability?.acceptedTargetTypes ?? ChatTargetType.values.toSet();
     final ranked = targets
@@ -1166,10 +1321,10 @@ class ChatAutocompleteEngine {
         )
         .toList(growable: false);
     ranked.sort((a, b) {
-      final exact = (a.matches(query) ? 0 : 1).compareTo(b.matches(query) ? 0 : 1);
+      final exact =
+          (a.matches(query) ? 0 : 1).compareTo(b.matches(query) ? 0 : 1);
       if (exact != 0) return exact;
-      final availability =
-          (b.available ? 1 : 0).compareTo(a.available ? 1 : 0);
+      final availability = (b.available ? 1 : 0).compareTo(a.available ? 1 : 0);
       if (availability != 0) return availability;
       return a.displayName.compareTo(b.displayName);
     });
@@ -1186,7 +1341,8 @@ class ChatAutocompleteEngine {
   }
 }
 
-bool isInformationalChatRequest(String input) => _isInformationalLanguage(input);
+bool isInformationalChatRequest(String input) =>
+    _isInformationalLanguage(input);
 
 bool isSemanticActionRequest(String input) => _isActionLanguage(input);
 
@@ -1287,6 +1443,28 @@ String _leadingAction(String input) {
     if (cleaned == phrase || cleaned.startsWith('$phrase ')) return phrase;
   }
   return '';
+}
+
+/// A brand-new project request with no platform/outcome/scope signal and
+/// a short sentence is materially underspecified -- Kristin should ask a
+/// clarifying question rather than start planning against a guess. This
+/// signal lives on the compiler's own ambiguity computation rather than
+/// downstream (Architectural Improvement #2: one compiler decides
+/// ambiguity, not a second reinterpretation of the same request later).
+bool _isUnderspecifiedCreateRequest(ParsedChatInput parsed) {
+  final normalized = _normalized(parsed.originalText);
+  final outcomeSignal = RegExp(
+    r'\b(?:app|application|tool|dashboard|site|website|service|converter|editor|viewer|manager|game|api|bot)\b',
+  ).hasMatch(normalized);
+  final platformSignal = RegExp(
+    r'\b(?:flutter|web|website|desktop|windows|macos|linux|android|ios|python|node|react|html|javascript|typescript)\b',
+  ).hasMatch(normalized);
+  final scopeSignal = RegExp(
+    r'\b(?:local|backend|account|login|database|offline|online|simple|prototype|production|polished|responsive)\b',
+  ).hasMatch(normalized);
+  return normalized.length < 90 ||
+      !outcomeSignal ||
+      (!platformSignal && !scopeSignal);
 }
 
 String _normalized(String input) => input

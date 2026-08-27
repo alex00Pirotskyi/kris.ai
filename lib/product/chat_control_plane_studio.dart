@@ -6,7 +6,10 @@ import 'package:flutter/services.dart';
 
 import 'api_server.dart';
 import 'capability_doctor.dart';
+import 'chat_action_dispatcher.dart';
 import 'chat_control_plane.dart';
+import 'chat_conversation_state.dart';
+import 'chat_target_resolver.dart';
 import 'chat_studio.dart';
 import 'conversation_orchestrator.dart';
 import 'domain.dart';
@@ -40,7 +43,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   final TextEditingController composerController = TextEditingController();
   final TextEditingController understandingAdjustmentController =
       TextEditingController();
-  final TextEditingController planAdjustmentController = TextEditingController();
+  final TextEditingController planAdjustmentController =
+      TextEditingController();
   final FocusNode composerFocus = FocusNode();
 
   final List<_ChatLine> transcript = <_ChatLine>[];
@@ -88,9 +92,11 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
   ProductRuntime get runtime => widget.runtime;
 
-  ProjectRecord? get selectedProject => projects
-      .where((project) => project.id == selectedProjectId)
-      .firstOrNull;
+  ChatActionDispatcher get dispatcher =>
+      ChatActionDispatcher(ProductRuntimeChatGateway(runtime));
+
+  ProjectRecord? get selectedProject =>
+      projects.where((project) => project.id == selectedProjectId).firstOrNull;
 
   ModelIdentity? get selectedModel =>
       models.where((model) => model.exactId == selectedModelId).firstOrNull;
@@ -98,7 +104,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   bool get runAwaitingApproval =>
       currentRun?.state == RunState.awaitingApproval;
 
-  bool get runActive => currentRun != null &&
+  bool get runActive =>
+      currentRun != null &&
       const <RunState>{
         RunState.running,
         RunState.paused,
@@ -106,7 +113,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         RunState.interrupted,
       }.contains(currentRun!.state);
 
-  bool get runTerminal => currentRun != null &&
+  bool get runTerminal =>
+      currentRun != null &&
       const <RunState>{
         RunState.succeeded,
         RunState.failed,
@@ -222,9 +230,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       RunState.failed,
       RunState.cancelled,
     }.contains(refreshed.state);
-    final loadedEvidence = newTerminal
-        ? await runtime.evidenceForRun(refreshed.id)
-        : evidence;
+    final loadedEvidence =
+        newTerminal ? await runtime.evidenceForRun(refreshed.id) : evidence;
     _mutate(() {
       currentRun = refreshed;
       evidence = loadedEvidence;
@@ -310,90 +317,21 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     });
   }
 
+  /// Adding a future target type (a filesystem location, a terminal, a
+  /// browser window, ...) means writing one new [ChatTargetProvider] and
+  /// listing it here -- see Architectural Improvement #5.
   List<ChatTarget> _knownTargets() {
-    final targets = <ChatTarget>[];
-    for (final project in projects) {
-      targets.add(
-        ChatTarget(
-          id: project.id,
-          type: ChatTargetType.project,
-          displayName: project.name,
-          aliases: <String>[_slug(project.name), project.id],
-          description: 'Project',
-          status: project.id == selectedProjectId ? 'Selected project' : 'Project',
-        ),
-      );
-    }
-    for (final model in models) {
-      targets.add(
-        ChatTarget(
-          id: model.exactId,
-          type: ChatTargetType.model,
-          displayName: model.name,
-          aliases: <String>[
-            _slug(model.name),
-            model.name.toLowerCase(),
-            model.exactId,
-          ],
-          description: model.providerId,
-          status: model.exactId == selectedModelId
-              ? 'Selected model'
-              : 'Available model',
-        ),
-      );
-    }
-    final providerIds = runtime.models.providers().map((item) => item.id).toSet();
-    targets.addAll(<ChatTarget>[
-      ChatTarget(
-        id: 'ollama',
-        type: ChatTargetType.provider,
-        displayName: 'Ollama',
-        aliases: const <String>['ollama'],
-        description: 'Local model provider',
-        status: providerIds.contains('ollama') ? 'Configured' : 'Not configured',
-        available: providerIds.contains('ollama'),
+    final providerIds =
+        runtime.models.providers().map((item) => item.id).toSet();
+    return ChatTargetResolver(<ChatTargetProvider>[
+      ProjectTargetProvider(
+        projects: projects,
+        selectedProjectId: selectedProjectId,
       ),
-      ChatTarget(
-        id: 'openai-compatible',
-        type: ChatTargetType.provider,
-        displayName: 'OpenAI-compatible',
-        aliases: const <String>['openai', 'openai-compatible'],
-        description: 'OpenAI-compatible model provider',
-        status: providerIds.contains('openai-compatible')
-            ? 'Configured'
-            : 'Not connected',
-        available: providerIds.contains('openai-compatible'),
-      ),
-      const ChatTarget(
-        id: 'webstudio',
-        type: ChatTargetType.workspace,
-        displayName: 'Web Studio',
-        aliases: <String>['webstudio'],
-        description: 'Web deep-dive workspace',
-      ),
-      const ChatTarget(
-        id: 'web',
-        type: ChatTargetType.workspace,
-        displayName: 'Web',
-        aliases: <String>['web'],
-        description: 'Public-source research',
-      ),
-      const ChatTarget(
-        id: 'owner',
-        type: ChatTargetType.capability,
-        displayName: 'Owner Mode',
-        aliases: <String>['owner'],
-        description: 'Governed elevated execution mode',
-      ),
-      const ChatTarget(
-        id: 'project-manager',
-        type: ChatTargetType.workspace,
-        displayName: 'Project Manager',
-        aliases: <String>['project-manager'],
-        description: 'Persistent deep project controls',
-      ),
-    ]);
-    return targets;
+      ModelTargetProvider(models: models, selectedModelId: selectedModelId),
+      ProviderTargetProvider(configuredProviderIds: providerIds),
+      const WorkspaceTargetProvider(),
+    ]).resolve();
   }
 
   void _updateSuggestions() {
@@ -419,7 +357,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (suggestion.kind == ChatAutocompleteKind.command) {
       composerController.value = TextEditingValue(
         text: suggestion.insertText,
-        selection: TextSelection.collapsed(offset: suggestion.insertText.length),
+        selection:
+            TextSelection.collapsed(offset: suggestion.insertText.length),
       );
     } else {
       final match = RegExp(r'@[A-Za-z0-9._:-]*$').firstMatch(prefix);
@@ -543,8 +482,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (decision.explicitCommand) return false;
     final value = request.trim().toLowerCase();
     return RegExp(
-      r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$'
-    ).hasMatch(value);
+            r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$')
+        .hasMatch(value);
   }
 
   void _archiveFinishedRun() {
@@ -602,7 +541,8 @@ class _StudioInteractionPolicy extends ChatInteractionPolicy {
 class _ChatLine {
   const _ChatLine({required this.assistant, required this.text});
 
-  factory _ChatLine.user(String text) => _ChatLine(assistant: false, text: text);
+  factory _ChatLine.user(String text) =>
+      _ChatLine(assistant: false, text: text);
   factory _ChatLine.assistant(String text) =>
       _ChatLine(assistant: true, text: text);
 

@@ -180,44 +180,46 @@ class ConversationOrchestrator {
 
     final capability = decision.capability;
     switch (capability?.id) {
-      case 'search':
+      case 'research.search':
         return ConversationIntent(
           kind: ConversationIntentKind.research,
           needsClarification: decision.ambiguous,
           projectMayBeProvisioned: false,
           suggestedProjectName: '',
         );
-      case 'analyze':
-      case 'test':
-      case 'verify':
-      case 'diagnose':
+      case 'project.inspect':
+      case 'project.test':
+      case 'project.verify':
+      case 'system.diagnose':
         return ConversationIntent(
           kind: ConversationIntentKind.analyzeProject,
           needsClarification: decision.ambiguous,
           projectMayBeProvisioned: false,
           suggestedProjectName: '',
         );
-      case 'build':
+      case 'agent.create_project':
         return ConversationIntent(
           kind: ConversationIntentKind.buildNewProject,
           needsClarification: decision.ambiguous,
           projectMayBeProvisioned: true,
           suggestedProjectName: suggestProjectName(normalized),
         );
-      case 'fix':
+      case 'agent.modify_project':
+      case 'agent.fix_project':
         return ConversationIntent(
           kind: ConversationIntentKind.modifyProject,
           needsClarification: decision.ambiguous,
           projectMayBeProvisioned: false,
           suggestedProjectName: suggestProjectName(normalized),
         );
-      case 'run':
-      case 'stop':
-      case 'restart':
-      case 'open':
-      case 'connect':
-      case 'use':
-      case 'owner':
+      case 'project.build':
+      case 'project.run':
+      case 'project.stop':
+      case 'project.restart':
+      case 'workspace.open':
+      case 'provider.connect':
+      case 'model.select':
+      case 'owner.mode':
         return ConversationIntent(
           kind: ConversationIntentKind.other,
           needsClarification: decision.ambiguous,

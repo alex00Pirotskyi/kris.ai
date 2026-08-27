@@ -5,23 +5,32 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     ChatInteractionDecision decision,
   ) async {
     final id = decision.capability?.id;
-    if (id == 'new_chat') {
+    if (id == 'navigation.new_chat') {
       _newChat();
       return;
     }
-    if (id == 'help') {
+    if (id == 'system.help') {
       _mutate(() {
         transcript.add(_ChatLine.assistant(_capabilityHelpText()));
         status = 'Kristin is ready';
       });
       return;
     }
+    if (id == 'project.verify') {
+      _finishDirectAction(
+        'Kristin does not re-run tests under a separate "verify" step. '
+        'Objective verification happens automatically while a governed run '
+        'converges (see Details for the evidence). Use /test to run the '
+        'project test profile directly.',
+      );
+      return;
+    }
     if (const <String>{
-      'projects',
-      'runs',
-      'prompts',
-      'knowledge',
-      'logs',
+      'navigation.projects',
+      'navigation.runs',
+      'navigation.prompts',
+      'navigation.knowledge',
+      'navigation.logs',
     }.contains(id)) {
       await _openAdvanced();
       return;
@@ -31,11 +40,12 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
   String _capabilityHelpText() {
     return 'I can answer questions directly and operate Kristin from Chat. '
-        'Core actions include /build, /fix, /search, /analyze, /test, /verify, '
-        '/run, /stop, /restart, /connect, /use, /owner, and /diagnose. '
-        'Use @ to target a project, model, provider, or workspace. '
-        'Actions show what I understood before execution; substantial actions '
-        'also show a plan; governed permissions remain a separate approval.';
+        'Core actions include /create, /build, /modify, /fix, /search, '
+        '/analyze, /test, /run, /stop, /restart, /connect, /use, /owner, '
+        'and /diagnose. Use @ to target a project, model, provider, or '
+        'workspace. Actions show what I understood before execution; '
+        'substantial actions also show a plan; governed permissions remain '
+        'a separate approval.';
   }
 
   Future<void> _answerInformational(
@@ -141,9 +151,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     if (projectTarget != null &&
         RegExp(r'\b(running|status|started|stopped|active)\b').hasMatch(text)) {
       final process = await runtime.projectProcessStatus(projectTarget.id);
-      final project = projects
-          .where((item) => item.id == projectTarget.id)
-          .firstOrNull;
+      final project =
+          projects.where((item) => item.id == projectTarget.id).firstOrNull;
       final name = project?.name ?? projectTarget.displayName;
       if (process?.running == true) return '$name is running.';
       return '$name is not currently running.';
@@ -168,7 +177,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
     if (text.contains('@owner') || text.contains('owner mode status')) {
       final owner = runtime.p2OwnerMode;
-      return 'Owner Mode status: ${owner.statusCode}. Mentioning it never grants authority.';
+      final status = owner.available ? 'ready' : owner.diagnosticCode;
+      return 'Owner Mode status: $status. Mentioning it never grants authority.';
     }
     return null;
   }
@@ -225,44 +235,19 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
   }
 
-  bool _shouldProvisionNewProject(ChatInteractionDecision decision) {
-    if (decision.capability?.id != 'build') return false;
-    if (decision.targets.any((target) => target.type == ChatTargetType.project)) {
-      return false;
-    }
-    final original = decision.parsed.originalText.trim().toLowerCase();
-    if (RegExp(
-      r'\b(?:this|current|existing|selected)\s+(?:project|repo|repository|app|application|codebase)\b',
-    ).hasMatch(original)) {
-      return false;
-    }
-    if (decision.parsed.commandToken == 'create') return true;
-    final requestText = decision.parsed.hasExplicitCommand
-        ? decision.parsed.arguments.toLowerCase()
-        : original;
-    final outcome = RegExp(
-      r'\b(?:app|application|website|site|tool|service|bot|dashboard|game|api|project)\b',
-    ).hasMatch(requestText);
-    final modification = RegExp(
-      r'\b(?:add|change|update|refactor|migrate|rename|move|remove|delete|fix|repair)\b',
-    ).hasMatch(requestText);
-    final createVerb = RegExp(
-      r'^(?:please\s+)?(?:can|could|would|will)?(?:\s+you)?\s*'
-      r'(?:build|create|make|develop|implement)\b',
-    ).hasMatch(original) || decision.parsed.hasExplicitCommand;
-    return createVerb && outcome && !modification;
-  }
-
   Future<void> _preparePlan(
     String request,
     ChatInteractionDecision decision,
   ) async {
+    final capabilityId = decision.capability?.id ?? '';
     var project = selectedProject;
-    if (_shouldProvisionNewProject(decision)) {
-      project = await _perform<ProjectRecord>(
+    if (capabilityId == 'agent.create_project') {
+      project = await _perform<ProjectRecord?>(
         'Creating the project workspace',
-        () => runtime.provisionProjectForRequest(
-          request: decision.parsed.originalText,
+        () => dispatcher.resolveAgentProject(
+          capabilityId: capabilityId,
+          selectedProject: selectedProject,
+          originalRequest: decision.parsed.originalText,
         ),
       );
       if (project == null || !mounted) return;
@@ -280,7 +265,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       model = selectedModel;
     }
     if (model == null) {
-      _showError('Connect an AI model before Kristin creates the execution plan.');
+      _showError(
+          'Connect an AI model before Kristin creates the execution plan.');
       return;
     }
 
@@ -323,7 +309,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         await _runDiagnosticAction(
           label: 'Analysis',
           activity: 'Analyzing ${project.name}',
-          action: () => runtime.analyzeProject(project.id),
+          action: () => dispatcher.inspect(project.id),
         );
         return;
       case ChatExecutionRoute.projectTest:
@@ -334,18 +320,19 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         await _runDiagnosticAction(
           label: 'Tests',
           activity: 'Testing ${project.name}',
-          action: () => runtime.testProject(project.id),
+          action: () => dispatcher.test(project.id),
         );
         return;
       case ChatExecutionRoute.projectVerify:
-        if (project == null) {
-          _showProjectNeeded();
-          return;
-        }
-        await _runDiagnosticAction(
-          label: 'Verification',
-          activity: 'Verifying ${project.name}',
-          action: () => runtime.testProject(project.id),
+        // Informational only -- see Architectural Improvement #8. This
+        // capability's understandingPolicy is `never`, so real requests
+        // for it are already handled by _handleImmediateCapability; this
+        // case only guards against ever reaching here via a future
+        // routing change without silently re-running project tests.
+        _finishDirectAction(
+          'Kristin does not re-run tests under a separate "verify" step. '
+          'Objective verification happens automatically while a governed '
+          'run converges.',
         );
         return;
       case ChatExecutionRoute.projectBuild:
@@ -356,7 +343,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         await _runDiagnosticAction(
           label: 'Build',
           activity: 'Building ${project.name}',
-          action: () => runtime.buildProject(project.id),
+          action: () => dispatcher.build(project.id),
         );
         return;
       case ChatExecutionRoute.projectRun:
@@ -366,7 +353,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         }
         final process = await _perform<ProjectProcessStatus>(
           'Starting ${project.name}',
-          () => runtime.startProject(project.id),
+          () => dispatcher.run(project.id),
         );
         if (process != null) {
           projectProcessStatus = process;
@@ -380,7 +367,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         }
         final process = await _perform<ProjectProcessStatus?>(
           'Stopping ${project.name}',
-          () => runtime.stopProject(project.id),
+          () => dispatcher.stop(project.id),
         );
         projectProcessStatus = process;
         if (error == null) _finishDirectAction('${project.name} is stopped.');
@@ -392,15 +379,15 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         }
         final process = await _perform<ProjectProcessStatus>(
           'Restarting ${project.name}',
-          () async {
-            await runtime.stopProject(project.id);
-            return runtime.startProject(project.id);
-          },
+          () => dispatcher.restart(project.id),
         );
         if (process != null) {
           projectProcessStatus = process;
           _finishDirectAction('${project.name} restarted and is running.');
         }
+        return;
+      case ChatExecutionRoute.researchSearch:
+        await _runResearchSearch(decision, project: project);
         return;
       case ChatExecutionRoute.connectProvider:
         await _openSettings(initialSection: 1);
@@ -433,9 +420,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       case ChatExecutionRoute.diagnose:
         final report = await _perform<CapabilityDoctorReport>(
           'Checking Kristin readiness',
-          () => runtime.inspectCapabilities(
+          () => dispatcher.diagnose(
             projectId: selectedProjectId,
-            depth: CapabilityDoctorDepth.full,
             discoveredModels: models,
           ),
         );
@@ -450,7 +436,9 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       case ChatExecutionRoute.open:
         await _openAdvanced();
         return;
-      case ChatExecutionRoute.agent:
+      case ChatExecutionRoute.createProject:
+      case ChatExecutionRoute.modifyProject:
+      case ChatExecutionRoute.fixProject:
         await _prepareAgentAction(request, decision);
         return;
       case ChatExecutionRoute.navigation:
@@ -458,6 +446,38 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         await _handleImmediateCapability(decision);
         return;
     }
+  }
+
+  /// research.search: reachable with or without a project in scope --
+  /// Architectural Improvement #9. Never routes through
+  /// ProductRuntime.prepare, which requires a projectId.
+  Future<void> _runResearchSearch(
+    ChatInteractionDecision decision, {
+    required ProjectRecord? project,
+  }) async {
+    final query = decision.parsed.arguments
+        .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final effectiveQuery = query.isEmpty ? decision.parsed.originalText : query;
+    final result = await _perform<ChatResearchResult>(
+      'Searching current public sources',
+      () => dispatcher.search(query: effectiveQuery, projectId: project?.id),
+    );
+    if (result == null) return;
+    if (result.results.isEmpty) {
+      _finishDirectAction(
+        'No public sources were found for "$effectiveQuery".',
+      );
+      return;
+    }
+    final summary = result.results
+        .take(5)
+        .map((entry) => '- ${entry['title']}\n  ${entry['url']}')
+        .join('\n');
+    _finishDirectAction(
+      'Found ${result.results.length} result(s) for "$effectiveQuery":\n$summary',
+    );
   }
 
   Future<void> _runDiagnosticAction({
@@ -494,18 +514,30 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     });
   }
 
+  /// The direct (no plan card) path for a substantial agent capability
+  /// (create/modify/fix) whose residual request text is short enough that
+  /// [ChatInteractionPolicy.needsPlan] decided a plan review is not
+  /// needed. Shares project/model resolution with [_preparePlan] via
+  /// [ChatActionDispatcher.resolveAgentProject] so create-vs-existing
+  /// project selection is made in exactly one place (the compiler's
+  /// capability id), not re-derived here.
   Future<void> _prepareAgentAction(
     String request,
     ChatInteractionDecision decision,
   ) async {
-    var project = selectedProject;
-    if (project == null && projects.isNotEmpty) {
-      project = projects.first;
+    final capabilityId = decision.capability?.id ?? '';
+    var project = await dispatcher.resolveAgentProject(
+      capabilityId: capabilityId,
+      selectedProject: selectedProject,
+      originalRequest: decision.parsed.originalText,
+    );
+    if (capabilityId == 'agent.create_project' && project != null) {
+      projects = await runtime.listProjects();
       selectedProjectId = project.id;
     }
     if (project == null) {
       _showError(
-        'This governed action needs a project workspace. Add a project first; Kristin will not create an unrelated project just to satisfy the command.',
+        'This governed action needs a project workspace. Mention a project or select one first.',
       );
       return;
     }
@@ -520,25 +552,14 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return;
     }
 
-    var governedRequest = request;
-    if (decision.capability?.id == 'search') {
-      final query = decision.parsed.arguments
-          .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim();
-      governedRequest =
-          'Search current public sources for this request and return grounded findings with source provenance: '
-          '${query.isEmpty ? request : query}';
-    }
-
     final activeProject = project;
     final activeModel = model;
     final command = await _perform<PreparedCommand>(
       'Preparing the action',
-      () => runtime.prepare(
+      () => dispatcher.prepare(
         projectId: activeProject.id,
         mode: decision.mode,
-        request: governedRequest,
+        request: request,
         model: activeModel,
       ),
     );
@@ -638,7 +659,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final value = understandingAdjustmentController.text.trim();
     if (history == null || value.isEmpty) return;
 
-    final revisedRequest = '${history.current.originalRequest}\n\nAdjustment: $value';
+    final revisedRequest =
+        '${history.current.originalRequest}\n\nAdjustment: $value';
     final mode = resolveTaskMode(
       request: revisedRequest,
       choice: SimpleTaskMode.auto,
