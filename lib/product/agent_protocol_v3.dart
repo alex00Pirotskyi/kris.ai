@@ -19,7 +19,8 @@ sealed class AgentProtocolV3ExecutionStep {
 }
 
 /// A decision that can continue through the existing synchronous Runner path.
-final class AgentProtocolV3SynchronousStep extends AgentProtocolV3ExecutionStep {
+final class AgentProtocolV3SynchronousStep
+    extends AgentProtocolV3ExecutionStep {
   const AgentProtocolV3SynchronousStep({
     required super.decision,
     required this.action,
@@ -36,22 +37,21 @@ final class AgentProtocolV3SynchronousStep extends AgentProtocolV3ExecutionStep 
 final class AgentProtocolV3DeferredStep extends AgentProtocolV3ExecutionStep {
   const AgentProtocolV3DeferredStep({required super.decision});
 
-  bool get isUserTakeover =>
-      decision.kind == AgentDecisionV3Kind.userTakeover;
+  bool get isUserTakeover => decision.kind == AgentDecisionV3Kind.userTakeover;
   bool get isWait => decision.kind == AgentDecisionV3Kind.wait;
   bool get isDelegation => decision.kind == AgentDecisionV3Kind.delegate;
 
   Map<String, dynamic> toEvidence() => <String, dynamic>{
-        'decisionKind': decision.kind.wireName,
-        'protocolVersion': AgentDecisionV3.protocolVersion,
-        if (decision.question != null) 'question': decision.question,
-        if (decision.waitUntil != null)
-          'waitUntil': decision.waitUntil!.toUtc().toIso8601String(),
-        if (decision.waitHandle != null) 'waitHandle': decision.waitHandle,
-        if (decision.delegateTo != null) 'delegateTo': decision.delegateTo,
-        if (decision.task != null) 'task': decision.task,
-        if (decision.reason.trim().isNotEmpty) 'reason': decision.reason,
-      };
+    'decisionKind': decision.kind.wireName,
+    'protocolVersion': AgentDecisionV3.protocolVersion,
+    if (decision.question != null) 'question': decision.question,
+    if (decision.waitUntil != null)
+      'waitUntil': decision.waitUntil!.toUtc().toIso8601String(),
+    if (decision.waitHandle != null) 'waitHandle': decision.waitHandle,
+    if (decision.delegateTo != null) 'delegateTo': decision.delegateTo,
+    if (decision.task != null) 'task': decision.task,
+    if (decision.reason.trim().isNotEmpty) 'reason': decision.reason,
+  };
 }
 
 class AgentProtocolV3Adapter {
@@ -96,40 +96,40 @@ class AgentProtocolV3Adapter {
       AgentDecisionV3Kind.terminal ||
       AgentDecisionV3Kind.browser ||
       AgentDecisionV3Kind.research ||
-      AgentDecisionV3Kind.data =>
-        AgentProtocolV3SynchronousStep(
-          decision: decision,
-          action: AgentAction(
-            kind: 'tool',
-            tool: _resolveTool(decision, item),
-            arguments: Map<String, dynamic>.from(decision.arguments),
-            reason: <String>[
-              decision.reason.trim(),
-              'Protocol v3 postcondition: ${decision.expectedPostcondition}.',
-            ].where((value) => value.isNotEmpty).join(' '),
-          ),
+      AgentDecisionV3Kind.data => AgentProtocolV3SynchronousStep(
+        decision: decision,
+        action: AgentAction(
+          kind: 'tool',
+          tool: _resolveTool(decision, item),
+          arguments: Map<String, dynamic>.from(decision.arguments),
+          reason: <String>[
+            decision.reason.trim(),
+            'Protocol v3 postcondition: ${decision.expectedPostcondition}.',
+          ].where((value) => value.isNotEmpty).join(' '),
         ),
+      ),
       AgentDecisionV3Kind.complete => AgentProtocolV3SynchronousStep(
-          decision: decision,
-          action: AgentAction(
-            kind: 'complete',
-            summary: decision.summary ?? '',
-            reason: decision.reason,
-          ),
+        decision: decision,
+        action: AgentAction(
+          kind: 'complete',
+          summary: decision.summary ?? '',
+          reason: decision.reason,
         ),
+      ),
       AgentDecisionV3Kind.fail => AgentProtocolV3SynchronousStep(
-          decision: decision,
-          action: AgentAction(
-            kind: 'fail',
-            summary:
-                decision.summary ?? decision.code ?? 'Agent declared failure.',
-            reason: decision.reason,
-          ),
+        decision: decision,
+        action: AgentAction(
+          kind: 'fail',
+          summary:
+              decision.summary ?? decision.code ?? 'Agent declared failure.',
+          reason: decision.reason,
         ),
+      ),
       AgentDecisionV3Kind.wait ||
       AgentDecisionV3Kind.userTakeover ||
-      AgentDecisionV3Kind.delegate =>
-        AgentProtocolV3DeferredStep(decision: decision),
+      AgentDecisionV3Kind.delegate => AgentProtocolV3DeferredStep(
+        decision: decision,
+      ),
     };
   }
 
@@ -258,12 +258,11 @@ class AgentProtocolV3Adapter {
 
   Set<String> _knownAliases(String operation) {
     return switch (operation.toLowerCase()) {
-      'terminal.exec' || 'terminal.run' || 'terminal.finite' => const <String>{
-          'run_command'
-        },
-      'terminal.start' || 'terminal.background' => const <String>{
-          'start_process'
-        },
+      'terminal.exec' ||
+      'terminal.run' ||
+      'terminal.finite' => const <String>{'run_command'},
+      'terminal.start' ||
+      'terminal.background' => const <String>{'start_process'},
       'terminal.status' => const <String>{'process_status'},
       'terminal.stop' || 'terminal.kill' => const <String>{'stop_process'},
       'research.search' => const <String>{'research_search'},
