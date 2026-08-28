@@ -112,11 +112,23 @@ class ChatStudio extends StatefulWidget {
     required this.runtime,
     required this.api,
     this.startupError,
+    this.initialProjectId,
+    this.initialModelId,
   });
 
   final ProductRuntime runtime;
   final GovernedApiServer api;
   final String? startupError;
+
+  /// Project/model selected in the canonical Kristin chat at the moment
+  /// this advanced workspace was opened, so it starts aligned with what
+  /// the user was just doing rather than re-deriving its own default
+  /// selection from scratch. Selections made while this workspace is open
+  /// are local to it -- they are not (yet) carried back to the canonical
+  /// chat on return; see chat_control_plane_studio_actions.dart's
+  /// `_openAdvanced` for the caller side of this boundary.
+  final String? initialProjectId;
+  final String? initialModelId;
 
   @override
   State<ChatStudio> createState() => _ChatStudioState();
@@ -237,6 +249,8 @@ class _ChatStudioState extends State<ChatStudio> {
   @override
   void initState() {
     super.initState();
+    selectedProjectId = widget.initialProjectId;
+    selectedModelId = widget.initialModelId;
     skills = runtime.listBuiltInSkills();
     eventSubscription = runtime.eventStream.listen(_onEvent);
     liveRunSubscription = runtime.liveRunStream.listen(_onLiveRunSignal);

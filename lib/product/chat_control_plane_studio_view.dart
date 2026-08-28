@@ -288,9 +288,16 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final history = understandingHistory!;
     final decision = pendingDecision!;
     final draft = history.current;
+    // Every current decision is deterministic parsing (explicit commands,
+    // target-only mentions, keyword/regex natural-language matching) --
+    // there is no model-backed semantic understanding contract yet. "I
+    // understood" would overstate that; "I interpreted this as" is the
+    // truthful label until a genuine model-backed understanding path
+    // lands (at which point it should say "I understood" only for that
+    // accepted path, per the product's own wording rule).
     return _assistantCard(
       icon: Icons.psychology_alt_outlined,
-      title: 'I understood:',
+      title: 'I interpreted this as:',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[

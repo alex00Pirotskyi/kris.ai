@@ -127,6 +127,24 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         RunState.cancelling,
       }.contains(currentRun!.state);
 
+  /// True whenever a durable run exists and has not reached a terminal
+  /// state -- including [RunState.awaitingApproval] and
+  /// [RunState.interrupted], neither of which [runExecuting] covers. A new
+  /// message arriving while this is true must never silently discard the
+  /// association (clearing `currentRun` as a side effect of starting an
+  /// unrelated request): it must be treated as an informational side
+  /// conversation, a steer/control of this same run, a clarification, or an
+  /// explicit cancel/decline before anything else starts.
+  bool get hasNonterminalRun =>
+      currentRun != null &&
+      const <RunState>{
+        RunState.awaitingApproval,
+        RunState.running,
+        RunState.paused,
+        RunState.cancelling,
+        RunState.interrupted,
+      }.contains(currentRun!.state);
+
   bool get runTerminal =>
       currentRun != null &&
       const <RunState>{
@@ -448,6 +466,30 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       }
     }
 
+    // A durable run that is awaitingApproval or interrupted is not caught
+    // by runExecuting above (it isn't live), but it must still never be
+    // silently abandoned: an unrelated new actionable request must not
+    // clear currentRun and forget it. Informational side conversation and
+    // zero-risk navigation both remain allowed alongside it.
+    if (hasNonterminalRun) {
+      if (_isActiveRunCancellation(request, decision)) {
+        transcript.add(_ChatLine.user(request));
+        composerController.clear();
+        await _controlRun('cancel');
+        return;
+      }
+      final safeAlongsidePendingRun = decision.isInformational ||
+          (decision.capability != null &&
+              decision.capability!.riskClass == ChatRiskClass.none);
+      if (!safeAlongsidePendingRun) {
+        transcript.add(_ChatLine.user(request));
+        transcript.add(_ChatLine.assistant(_pendingRunMessage()));
+        composerController.clear();
+        _mutate(() => status = 'Pending task preserved');
+        return;
+      }
+    }
+
     _archiveFinishedRun();
     transcript.add(_ChatLine.user(request));
     composerController.clear();
@@ -467,6 +509,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (decision.capability?.understandingPolicy ==
         ChatUnderstandingPolicy.never) {
       await _handleImmediateCapability(decision);
+      return;
+    }
+    if (decision.kind == ChatInteractionKind.reference) {
+      await _answerTargetReference(decision);
       return;
     }
     if (decision.isInformational) {
@@ -498,6 +544,19 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     return RegExp(
             r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$')
         .hasMatch(value);
+  }
+
+  String _pendingRunMessage() {
+    final goal = activeRequest.trim();
+    final about = goal.isEmpty ? 'the current task' : '"$goal"';
+    if (currentRun?.state == RunState.awaitingApproval) {
+      return 'There is a pending permission decision on $about. Approve or '
+          'decline it above, or tell me what to change, before I start '
+          'something else.';
+    }
+    return 'There is unfinished work on $about waiting to be resumed or '
+        'stopped. Use Resume or Stop above, or tell me what to change, '
+        'before I start something else.';
   }
 
   void _archiveFinishedRun() {

@@ -565,4 +565,84 @@ void main() {
       expect(decision.capability?.route, ChatExecutionRoute.ownerMode);
     });
   });
+
+  group('target-only input is safe by construction', () {
+    test(
+        'a bare mention naming a navigation capability references it '
+        'directly -- never a fabricated create/mutation decision', () {
+      final decision = compiler.compile(
+        '@project-manager',
+        inferredMode: CommandMode.build,
+      );
+      expect(decision.kind, ChatInteractionKind.action);
+      expect(decision.capability?.id, 'navigation.projects');
+      expect(decision.riskClass, ChatRiskClass.none);
+      expect(decision.needsPlan, isFalse);
+      expect(decision.needsUnderstanding, isFalse);
+      expect(decision.ambiguous, isFalse);
+    });
+
+    test(
+        'a bare project mention is a non-mutating reference, not '
+        'agent.create_project', () {
+      final decision = compiler.compile(
+        '@rome-clock',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(decision.kind, ChatInteractionKind.reference);
+      expect(decision.capability, isNull);
+      expect(decision.riskClass, ChatRiskClass.none);
+      expect(decision.needsPlan, isFalse);
+      expect(decision.needsUnderstanding, isFalse);
+      expect(decision.targets.single.id, 'rome-clock');
+      expect(decision.ambiguous, isFalse);
+    });
+
+    test(
+        'multiple resolved targets in one bare-mention message clarify '
+        'rather than silently picking one', () {
+      final decision = compiler.compile(
+        '@rome-clock @phi4-mini',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(decision.kind, ChatInteractionKind.reference);
+      expect(decision.targets, hasLength(2));
+      expect(decision.ambiguous, isTrue);
+    });
+
+    test(
+        'an unresolved bare mention is a reference with no targets, not '
+        'a fabricated action', () {
+      final decision = compiler.compile(
+        '@does-not-exist',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(decision.kind, ChatInteractionKind.reference);
+      expect(decision.capability, isNull);
+      expect(decision.targets, isEmpty);
+      expect(decision.unresolvedMentions, <String>['does-not-exist']);
+      expect(decision.riskClass, ChatRiskClass.none);
+    });
+
+    test(
+        'target-only detection ignores trailing punctuation but requires '
+        'the mention to be the only content', () {
+      final bareWithPunctuation = compiler.compile(
+        '@rome-clock.',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(bareWithPunctuation.kind, ChatInteractionKind.reference);
+
+      final withRealContent = compiler.compile(
+        'build @rome-clock',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(withRealContent.kind, isNot(ChatInteractionKind.reference));
+    });
+  });
 }
