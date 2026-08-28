@@ -456,81 +456,144 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return;
     }
 
+    // The specification is built at understanding time; falling back to a
+    // deterministic one here keeps the kernel path total even when the
+    // understanding step was skipped (an explicit command, for example).
+    final specification = _specificationFor(decision, request);
+    final routing = routingDecision ??
+        runtime.taskKernel
+            .route(specification: specification, decision: decision);
+    if (!routing.plans) {
+      // The router decided this does not deserve a plan after all.
+      await _executeSmallAction(decision, request);
+      return;
+    }
+
     final activeProject = project;
     final activeModel = model;
-    final outcome =
-        await _perform<({PreparedCommand command, ChatPlanningPath path})>(
-      'Creating the execution plan',
-      () => _planSubstantialTask(
+    final outcome = await _performKernelPlanning(
+      () => runtime.prepareThroughKernel(
+        specification: specification,
+        routing: routing,
         project: activeProject,
+        mode: decision.mode,
         model: activeModel,
-        request: request,
-        decision: decision,
       ),
     );
     if (outcome == null || !mounted) return;
     _mutate(() {
       prepared = outcome.command;
-      planningPath = outcome.path;
+      canonicalPlan = outcome.canonical;
+      routingDecision = outcome.routing;
+      planningFailure = outcome.failure;
+      planningPath = outcome.isConservative
+          ? ChatPlanningPath.fallback
+          : ChatPlanningPath.model;
+      taskSpecification = specification;
       pendingDecision = decision;
       currentRun = null;
       awaitingPermission = false;
       planAdjusting = false;
-      status = outcome.path == ChatPlanningPath.fallback
-          ? 'Plan ready for review (safety-net plan -- the generated task '
-              'graph did not validate)'
+      status = outcome.isConservative
+          ? 'Plan ready for review (safety-net plan -- '
+              '${outcome.failure?.message ?? 'the generated task graph did '
+                  'not validate'})'
           : 'Plan ready for review';
     });
   }
 
-  /// Restores real per-request multi-task decomposition for substantial
-  /// Chat requests (agent.create_project/modify_project/fix_project) by
-  /// reusing the existing PromptPlanningService pipeline -- the same one
-  /// Prompt Studio's tab already uses -- instead of ContractPlanner's fixed
-  /// inspect/implement/verify template. ContractPlanner remains the
-  /// deterministic safety net: PromptPlanningService.generateTaskPlan
-  /// already generates once and repairs once internally; if the model's
-  /// plan still fails schema/dependency/capability/budget validation after
-  /// that, or planning itself throws, this falls back to ContractPlanner
-  /// rather than surfacing a broken plan or fabricating detail that was
-  /// never actually generated.
-  Future<({PreparedCommand command, ChatPlanningPath path})>
-      _planSubstantialTask({
-    required ProjectRecord project,
-    required ModelIdentity model,
-    required String request,
-    required ChatInteractionDecision decision,
-  }) async {
+  /// The canonical specification for [decision], preferring the one real
+  /// understanding produced and deriving a deterministic one otherwise.
+  TaskSpecification _specificationFor(
+    ChatInteractionDecision decision,
+    String acceptedRequest,
+  ) {
+    final existing = taskSpecification;
+    if (existing != null &&
+        existing.originalRequest.trim() ==
+            decision.parsed.originalText.trim()) {
+      // The accepted request can differ from the original once the user
+      // adjusts the interpretation; the adjustment is the operative
+      // objective, and the original stays attached as evidence.
+      return acceptedRequest.trim() == existing.originalRequest.trim()
+          ? existing
+          : existing.copyWith(objective: acceptedRequest.trim());
+    }
+    return const DeterministicUnderstanding()
+        .understand(decision)
+        .specification;
+  }
+
+  /// Runs a kernel planning call under the typed failure taxonomy.
+  ///
+  /// This replaces the broad `catch (_) -> conservative plan` the
+  /// predecessor change used. The kernel itself decides whether a
+  /// conservative plan is an honest answer (it is, for exactly one class
+  /// of failure) and everything else arrives here as a typed
+  /// [PlanningFailure] that must be reported as what it actually is:
+  ///
+  ///   cancelled            -> cancelled, no plan
+  ///   providerUnavailable  -> blocked, explain
+  ///   permissionDenied     -> a governance outcome, shown as one
+  ///   persistenceFailure   -> a real failure, with evidence
+  ///   unexpected           -> a real failure, with evidence
+  ///
+  /// A user who pressed Cancel is never handed a plan they did not ask
+  /// for, and a broken database is never reported as "here is the
+  /// conservative plan".
+  Future<KernelPreparedPlan?> _performKernelPlanning(
+    Future<KernelPreparedPlan> Function() action,
+  ) async {
+    _mutate(() {
+      busy = true;
+      status = 'Creating the execution plan';
+      error = null;
+    });
     try {
-      final draft = await runtime.generatePromptDraft(
-        goal: request,
-        model: model,
-      );
-      final saved = await runtime.saveGeneratedPrompt(
-        goal: request,
-        draft: draft,
-        model: model,
-      );
-      final plan = await runtime.generateTaskPlan(
-        promptVersion: saved.version,
-        projectId: project.id,
-        model: model,
-      );
-      final command = await runtime.prepareTaskPlan(
-        plan: plan,
-        promptVersion: saved.version,
-        projectId: project.id,
-        model: model,
-      );
-      return (command: command, path: ChatPlanningPath.model);
-    } catch (_) {
-      final fallback = await runtime.prepare(
-        projectId: project.id,
-        mode: decision.mode,
-        request: request,
-        model: model,
-      );
-      return (command: fallback, path: ChatPlanningPath.fallback);
+      return await action();
+    } catch (thrown, stackTrace) {
+      final failure = classifyPlanningFailure(thrown, stackTrace: stackTrace);
+      _mutate(() {
+        planningFailure = failure;
+        switch (failure.kind) {
+          case PlanningFailureKind.cancelled:
+            error = null;
+            status = 'Planning cancelled';
+            transcript.add(
+              _ChatLine.assistant(
+                'I stopped planning. Nothing was prepared and nothing ran.',
+              ),
+            );
+          case PlanningFailureKind.providerUnavailable:
+            error = runtime.redactor.redact(
+              'I could not reach the selected model, so I did not plan '
+              'anything: ${failure.message}',
+            );
+            status = 'Blocked: the selected model is unavailable';
+          case PlanningFailureKind.permissionDenied:
+            error = runtime.redactor.redact(
+              'Authority refused this before any plan was made: '
+              '${failure.message}',
+            );
+            status = 'Blocked by governed authority';
+          case PlanningFailureKind.persistenceFailure:
+            error = runtime.redactor.redact(
+              'Kristin could not store the planning state, so no plan is '
+              'trustworthy right now: ${failure.message} '
+              '(${failure.code})',
+            );
+            status = 'Kristin needs your help';
+          case PlanningFailureKind.recoverablePlanning:
+          case PlanningFailureKind.unexpected:
+            error = runtime.redactor.redact(
+              'Planning failed: ${failure.message} (${failure.code})',
+            );
+            status = 'Kristin needs your help';
+        }
+      });
+      return null;
+    } finally {
+      _mutate(() => busy = false);
     }
   }
 
@@ -660,20 +723,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         );
         return;
       case ChatExecutionRoute.diagnose:
-        final report = await _perform<CapabilityDoctorReport>(
-          'Checking Kristin readiness',
-          () => dispatcher.diagnose(
-            projectId: selectedProjectId,
-            discoveredModels: models,
-          ),
-        );
-        if (report != null) {
-          _finishDirectAction(
-            report.coreReady
-                ? 'Kristin readiness is healthy: ${report.readyCount}/${report.checks.length} checks ready.'
-                : 'Kristin readiness needs attention: ${report.readyCount}/${report.checks.length} checks ready.',
-          );
-        }
+        await _runDiagnosticsThroughKernel();
         return;
       case ChatExecutionRoute.open:
         await _openAdvanced();
@@ -702,21 +752,91 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     final effectiveQuery = query.isEmpty ? decision.parsed.originalText : query;
-    final result = await _perform<ChatResearchResult>(
-      'Searching current public sources',
-      () => dispatcher.search(query: effectiveQuery, projectId: project?.id),
-    );
-    if (result == null) return;
-    if (result.results.isEmpty) {
+
+    // The SAME universal kernel plans research. "Weather in Nha Trang and
+    // the time in New York" decomposes into two independent retrievals, a
+    // freshness check and one synthesis -- a real graph that really
+    // executes. It stays behind Details: a two-fact question does not
+    // deserve four task cards, and universal task planning is not the
+    // same thing as always showing a plan.
+    final plan = await _researchPlan(decision);
+    final subjects = plan == null
+        ? <String>[effectiveQuery]
+        : plan.tasks
+            .where((task) => task.phase == 'Retrieval')
+            .map((task) => task.title.replaceFirst('Obtain ', ''))
+            .toList(growable: false);
+    final queries = subjects.isEmpty ? <String>[effectiveQuery] : subjects;
+
+    final merged = <Map<String, String>>[];
+    final seenUrls = <String>{};
+    for (final subject in queries) {
+      final result = await _perform<ChatResearchResult>(
+        queries.length == 1
+            ? 'Searching current public sources'
+            : 'Searching current public sources for $subject',
+        () => dispatcher.search(query: subject, projectId: project?.id),
+      );
+      if (result == null) return;
+      for (final entry in result.results) {
+        if (seenUrls.add(entry['url'] ?? '')) merged.add(entry);
+      }
+    }
+    if (merged.isEmpty) {
       _finishDirectAction(
         'No public sources were found for "$effectiveQuery". There is not '
         'enough evidence to answer.',
       );
       return;
     }
-    final answer = await _synthesizeResearchAnswer(effectiveQuery, result);
+    if (plan != null) {
+      _mutate(() {
+        canonicalPlan = plan;
+        planningPath = ChatPlanningPath.model;
+      });
+    }
+    final answer = await _synthesizeResearchAnswer(
+      effectiveQuery,
+      ChatResearchResult(query: effectiveQuery, results: merged),
+    );
     if (!mounted) return;
     _finishDirectAction(answer);
+  }
+
+  /// The compact research graph for this request, or null when the
+  /// request has no internal structure worth decomposing (one fact, one
+  /// search, one answer -- planning it would be ceremony).
+  Future<UniversalTaskPlan?> _researchPlan(
+    ChatInteractionDecision decision,
+  ) async {
+    final specification = taskSpecification;
+    final routing = routingDecision;
+    if (specification == null ||
+        routing == null ||
+        routing.route == PlanningRoute.direct ||
+        routing.family != TaskFamily.research) {
+      return null;
+    }
+    try {
+      final result = await runtime.taskKernel.plan(
+        specification: specification,
+        routing: routing,
+        context: PlanningContext(
+          project: selectedProject,
+          model: selectedModel,
+          availableCapabilityIds:
+              kKristinCapabilities.map((item) => item.id).toSet(),
+          availableToolNames: runtime.tools.names,
+        ),
+      );
+      return result.plan;
+    } catch (_) {
+      // Research answers the user either way; a planning failure here
+      // costs the internal graph, never the answer. The failure is not
+      // laundered into a conservative software plan -- the kernel
+      // refuses that for non-software families.
+      return null;
+    }
   }
 
   /// Turns raw retrieved candidates into a direct answer -- this is what
@@ -796,6 +916,62 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         .map((entry) => '[${entry['title']}](${entry['url']})')
         .join(', ');
     return '$answer\n\nSources: $sourceList';
+  }
+
+  /// Diagnostics through the SAME kernel: collect real evidence,
+  /// interpret it against the reported symptom, then answer. The graph is
+  /// internal (a health question does not want task cards), but the
+  /// architecture is identical to a software plan's -- specification,
+  /// plan, verification, evidence.
+  Future<void> _runDiagnosticsThroughKernel() async {
+    final specification = taskSpecification;
+    final routing = routingDecision;
+    if (specification != null &&
+        routing != null &&
+        routing.family == TaskFamily.diagnostics &&
+        routing.route != PlanningRoute.direct) {
+      try {
+        final result = await runtime.taskKernel.plan(
+          specification: specification,
+          routing: routing,
+          context: PlanningContext(
+            project: selectedProject,
+            model: selectedModel,
+            availableCapabilityIds:
+                kKristinCapabilities.map((item) => item.id).toSet(),
+            availableToolNames: runtime.tools.names,
+          ),
+        );
+        _mutate(() {
+          canonicalPlan = result.plan;
+          planningPath = ChatPlanningPath.model;
+        });
+      } catch (_) {
+        // The diagnostic still runs; only the internal graph is lost.
+      }
+    }
+    final report = await _perform<CapabilityDoctorReport>(
+      'Checking Kristin readiness',
+      () => dispatcher.diagnose(
+        projectId: selectedProjectId,
+        discoveredModels: models,
+      ),
+    );
+    if (report == null) return;
+    // Evidence-backed: the answer names the checks it is based on rather
+    // than asserting health.
+    final failing = report.checks
+        .where((check) => !check.ready)
+        .map((check) => check.title)
+        .take(4)
+        .toList(growable: false);
+    _finishDirectAction(
+      report.coreReady
+          ? 'Kristin readiness is healthy: ${report.readyCount}/${report.checks.length} checks ready.'
+          : 'Kristin readiness needs attention: '
+              '${report.readyCount}/${report.checks.length} checks ready. '
+              'Not ready: ${failing.join(', ')}.',
+    );
   }
 
   Future<void> _runDiagnosticAction({
@@ -1033,6 +1209,13 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     });
   }
 
+  /// Replans after the user changes their mind ("don't use Firebase").
+  ///
+  /// This is the reconciliation seam, not a regeneration: the previous
+  /// canonical plan and the completed work travel into the new plan, so
+  /// finished, still-valid tasks are preserved and only what the new
+  /// constraint actually contradicts is invalidated. See
+  /// task_kernel/plan_reconciliation.dart.
   Future<void> _adjustPlan() async {
     final command = prepared;
     final decision = pendingDecision;
@@ -1046,9 +1229,60 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     final request =
         '${history.current.acceptedRequest}\n\nPlan adjustment: $adjustment';
+    final previousPlan = canonicalPlan;
+    final previousSpecification = taskSpecification;
     planAdjustmentController.clear();
-    _mutate(() => planAdjusting = false);
+    _mutate(() {
+      planAdjusting = false;
+      understandingHistory = history.adjust(adjustment);
+      // The adjustment is part of the specification, not an afterthought
+      // appended to a request string: a newly-stated hard constraint has
+      // to be a hard constraint for reconciliation to see it as one.
+      if (previousSpecification != null) {
+        taskSpecification = previousSpecification.copyWith(
+          objective: request,
+          hardConstraints: <SpecificationClaim>[
+            ...previousSpecification.hardConstraints,
+            SpecificationClaim.stated(adjustment, source: 'plan_adjustment'),
+          ],
+        );
+      }
+    });
     await _preparePlan(request, decision);
+    if (!mounted) return;
+    final revised = canonicalPlan;
+    if (previousPlan == null || revised == null) return;
+    final reconciliation = runtime.taskKernel.reconcile(
+      previous: previousPlan,
+      revised: revised,
+      completed: completedTasks,
+    );
+    final project = selectedProject;
+    if (project == null) return;
+    // Recompile from the reconciled graph so the plan shown and the plan
+    // executed are still the same object after a replan.
+    final recompiled = await _perform<CompiledTaskPlan>(
+      'Reconciling the plan',
+      () async => runtime.taskKernel.compile(
+        plan: reconciliation.plan,
+        project: project,
+        mode: decision.mode,
+      ),
+    );
+    if (recompiled == null || !mounted) return;
+    _mutate(() {
+      canonicalPlan = reconciliation.plan;
+      lastReconciliation = reconciliation;
+      prepared = PreparedCommand(
+        id: command.id,
+        requestKey: command.requestKey,
+        contract: recompiled.contract,
+        plan: recompiled.plan,
+        model: command.model,
+        createdAt: command.createdAt,
+      );
+      status = 'Plan updated: ${reconciliation.summary}';
+    });
   }
 
   Future<void> _controlRun(String action) async {

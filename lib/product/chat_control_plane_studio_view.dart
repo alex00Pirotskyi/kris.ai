@@ -284,20 +284,99 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     );
   }
 
+  /// Renders the compiled work items grouped by their canonical phase,
+  /// indented by hierarchy depth.
+  ///
+  /// Both the grouping and the indentation read [WorkItem.phase] and
+  /// [WorkItem.parentId] -- fields that now survive compilation instead
+  /// of being flattened into description prose -- so the structure the
+  /// user sees is literally the structure the Runner executes, not a
+  /// re-derivation of it.
+  List<Widget> _planItemRows(List<WorkItem> items) {
+    final byId = <String, WorkItem>{for (final item in items) item.id: item};
+    int depthOf(WorkItem item) {
+      var depth = 0;
+      var parentId = item.parentId;
+      final seen = <String>{item.id};
+      while (parentId != null && seen.add(parentId)) {
+        final parent = byId[parentId];
+        if (parent == null) break;
+        depth += 1;
+        parentId = parent.parentId;
+      }
+      return depth.clamp(0, 3).toInt();
+    }
+
+    final rows = <Widget>[];
+    var index = 0;
+    var currentPhase = '';
+    for (final item in items) {
+      final phase = item.phase.trim();
+      if (phase.isNotEmpty && phase != currentPhase) {
+        currentPhase = phase;
+        rows.add(
+          Padding(
+            padding: EdgeInsets.only(top: rows.isEmpty ? 0 : 6, bottom: 6),
+            child: Text(
+              phase.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ),
+        );
+      }
+      index += 1;
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(bottom: 9, left: depthOf(item) * 16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CircleAvatar(
+                radius: 12,
+                child: Text(
+                  '$index',
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      item.title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    if (item.description.trim().isNotEmpty)
+                      Text(
+                        item.description,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return rows;
+  }
+
   Widget _understandingCard() {
     final history = understandingHistory!;
     final decision = pendingDecision!;
     final draft = history.current;
-    // Every current decision is deterministic parsing (explicit commands,
-    // target-only mentions, keyword/regex natural-language matching) --
-    // there is no model-backed semantic understanding contract yet. "I
-    // understood" would overstate that; "I interpreted this as" is the
-    // truthful label until a genuine model-backed understanding path
-    // lands (at which point it should say "I understood" only for that
-    // accepted path, per the product's own wording rule).
+    final specification = taskSpecification;
+    // The product's wording rule: "I understood" is only truthful when a
+    // model actually read the request through the kernel's structured
+    // understanding contract and deterministic code validated the result.
+    // Explicit commands, bare target mentions and keyword/regex matching
+    // are deterministic parsing, and stay "I interpreted this as".
+    final semantic = understandingPath == UnderstandingPath.model;
     return _assistantCard(
       icon: Icons.psychology_alt_outlined,
-      title: 'I interpreted this as:',
+      title: semantic ? 'I understood:' : 'I interpreted this as:',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
@@ -323,8 +402,71 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
               if (history.revisions.length > 1)
                 Chip(label: Text('Understanding v${draft.revision}')),
+              if (semantic)
+                Chip(
+                  avatar: const Icon(Icons.verified_outlined, size: 16),
+                  label: Text(
+                    'Understood · ${(specification?.confidence ?? 0) >= 0.8 ? 'high' : 'moderate'} confidence',
+                  ),
+                ),
             ],
           ),
+          // Constraints are shown as constraints. Losing "don't touch the
+          // database" between the user saying it and the planner reading
+          // it is exactly what the specification exists to prevent, so it
+          // is visible before anything is planned.
+          if (specification != null &&
+              specification.hardConstraints.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              'Constraints I will not violate:',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            for (final constraint in specification.hardConstraints)
+              Text(
+                '• ${constraint.statement}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
+          if (specification != null &&
+              specification.preferences.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              'Preferences (traded off only if they conflict with the goal):',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            for (final preference in specification.preferences)
+              Text(
+                '• ${preference.statement}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
+          if (specification != null &&
+              specification.assumptions.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              'Assuming (not established — tell me if any of this is wrong):',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            for (final assumption in specification.assumptions)
+              Text(
+                '• ${assumption.statement}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
+          if (specification != null &&
+              specification.unresolvedQuestions.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              'Still open:',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            for (final question in specification.unresolvedQuestions)
+              Text(
+                '• ${question.question}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
           if (decision.ambiguous) ...<Widget>[
             const SizedBox(height: 10),
             Text(
@@ -393,9 +535,13 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         children: <Widget>[
           if (planningPath == ChatPlanningPath.fallback) ...<Widget>[
             Text(
-              'The generated task plan did not validate, so this is the '
-              'conservative safety-net plan rather than a detailed '
-              'breakdown of this specific request.',
+              planningFailure == null
+                  ? 'The generated task plan did not validate, so this is '
+                      'the conservative safety-net plan rather than a '
+                      'detailed breakdown of this specific request.'
+                  : 'This is the conservative safety-net plan, not a '
+                      'breakdown of this specific request: '
+                      '${planningFailure!.message}',
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
@@ -407,40 +553,25 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             Text(command.plan.rationale),
             const SizedBox(height: 12),
           ],
-          ...command.plan.items.indexed.map((entry) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 9),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  CircleAvatar(
-                    radius: 12,
-                    child: Text(
-                      '${entry.$1 + 1}',
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          entry.$2.title,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        if (entry.$2.description.trim().isNotEmpty)
-                          Text(
-                            entry.$2.description,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+          if (lastReconciliation != null) ...<Widget>[
+            Text(
+              'What changed: ${lastReconciliation!.summary}',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+            for (final change in lastReconciliation!.reconciliations)
+              if (change.outcome != TaskReconciliationOutcome.carried)
+                Text(
+                  '• ${change.outcome.name}: ${change.title} — '
+                  '${change.reason}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+            const SizedBox(height: 12),
+          ],
+          // The plan card renders the SAME work items the Runner receives,
+          // grouped by the canonical phase that now survives compilation
+          // (WorkItem.phase / WorkItem.parentId). There is no second,
+          // display-only plan structure to drift from what executes.
+          ..._planItemRows(command.plan.items),
           if (planAdjusting) ...<Widget>[
             const SizedBox(height: 8),
             TextField(

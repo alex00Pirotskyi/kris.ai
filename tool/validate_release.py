@@ -1887,7 +1887,11 @@ def check_v1_product_preview() -> None:
                 "maxLeafTasks.clamp(1, 100)",
                 "revision: plan.revision + 1",
                 "previousPlanId: plan.id",
-                "_withDependencies(selectedTaskIds, all)",
+                # Task selection still pulls in its dependency closure, but
+                # that logic now lives once in UniversalPlanCompiler, which
+                # Prompt Studio and Chat's task kernel both compile through.
+                "UniversalPlanCompiler(tools: tools).compile",
+                "selectedTaskIds: selectedTaskIds",
                 "task_plan.compiled",
             ),
         ),
@@ -2434,7 +2438,12 @@ def check_v1_product_preview() -> None:
             "general grounded-answer nodes must not qualify for deterministic baseline completion"
         )
 
-    if normalized_source(planning).count(
+    # The dependency-closure walk moved into the single universal plan
+    # compiler that Prompt Studio and Chat's task kernel both compile
+    # through. The invariant is unchanged: each selected task is expanded
+    # exactly once, so a diamond dependency cannot be added twice.
+    plan_compiler_source = read(ROOT / "lib/product/task_kernel/plan_compiler.dart")
+    if normalized_source(plan_compiler_source).count(
         normalized_source("if (task == null || !result.add(id))")
     ) != 1:
         failures.append("dependency expansion must add each selected task exactly once")

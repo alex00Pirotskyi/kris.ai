@@ -642,6 +642,8 @@ class WorkItem {
     required this.allowedTools,
     required this.acceptanceCriteria,
     this.maxAttempts = 2,
+    this.phase = '',
+    this.parentId,
   });
 
   final String id;
@@ -652,6 +654,47 @@ class WorkItem {
   final List<String> acceptanceCriteria;
   final int maxAttempts;
 
+  /// The stage this item belongs to, preserved from the canonical task
+  /// plan through compilation instead of being flattened into
+  /// [description] prose. Empty when the producing planner has no notion
+  /// of phases -- every pre-existing caller keeps working unchanged.
+  final String phase;
+
+  /// The parent item in the canonical plan's hierarchy, preserved through
+  /// compilation. Null for a root item or for a flat planner's output.
+  ///
+  /// Hierarchy is metadata for grouping and reasoning: [dependencies]
+  /// alone still determines execution order, so adding a parent never
+  /// silently changes what runs when.
+  final String? parentId;
+
+  /// True when this item carries canonical hierarchy metadata.
+  bool get hasHierarchy => phase.trim().isNotEmpty || parentId != null;
+
+  WorkItem copyWith({
+    String? id,
+    String? title,
+    String? description,
+    Set<String>? dependencies,
+    Set<String>? allowedTools,
+    List<String>? acceptanceCriteria,
+    int? maxAttempts,
+    String? phase,
+    String? parentId,
+    bool clearParentId = false,
+  }) =>
+      WorkItem(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        dependencies: dependencies ?? this.dependencies,
+        allowedTools: allowedTools ?? this.allowedTools,
+        acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+        maxAttempts: maxAttempts ?? this.maxAttempts,
+        phase: phase ?? this.phase,
+        parentId: clearParentId ? null : (parentId ?? this.parentId),
+      );
+
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
         'title': title,
@@ -660,17 +703,26 @@ class WorkItem {
         'allowedTools': allowedTools.toList()..sort(),
         'acceptanceCriteria': acceptanceCriteria,
         'maxAttempts': maxAttempts,
+        // Emitted only when present so existing golden/evidence payloads
+        // for flat planners stay byte-identical.
+        if (phase.trim().isNotEmpty) 'phase': phase,
+        if (parentId != null) 'parentId': parentId,
       };
 
-  factory WorkItem.fromJson(Map<String, dynamic> json) => WorkItem(
-        id: json['id']?.toString() ?? newId('work'),
-        title: json['title']?.toString() ?? 'Work item',
-        description: json['description']?.toString() ?? '',
-        dependencies: stringList(json['dependencies']).toSet(),
-        allowedTools: stringList(json['allowedTools']).toSet(),
-        acceptanceCriteria: stringList(json['acceptanceCriteria']),
-        maxAttempts: int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2,
-      );
+  factory WorkItem.fromJson(Map<String, dynamic> json) {
+    final parentId = json['parentId']?.toString().trim() ?? '';
+    return WorkItem(
+      id: json['id']?.toString() ?? newId('work'),
+      title: json['title']?.toString() ?? 'Work item',
+      description: json['description']?.toString() ?? '',
+      dependencies: stringList(json['dependencies']).toSet(),
+      allowedTools: stringList(json['allowedTools']).toSet(),
+      acceptanceCriteria: stringList(json['acceptanceCriteria']),
+      maxAttempts: int.tryParse(json['maxAttempts']?.toString() ?? '') ?? 2,
+      phase: json['phase']?.toString() ?? '',
+      parentId: parentId.isEmpty ? null : parentId,
+    );
+  }
 }
 
 class ExecutionPlan {
@@ -732,6 +784,44 @@ class ExecutionPlan {
 
     if (items.any((item) => cycle(item.id))) {
       errors.add('The plan contains a dependency cycle.');
+    }
+    // Optional hierarchy metadata must still be structurally sound when
+    // it is present: a compiled plan is allowed to carry no hierarchy at
+    // all, but never a dangling or self-referential one.
+    final parentVisited = <String>{};
+    final parentActive = <String>{};
+    bool parentCycle(String id) {
+      if (parentActive.contains(id)) {
+        return true;
+      }
+      if (parentVisited.contains(id)) {
+        return false;
+      }
+      parentActive.add(id);
+      final parentId = byId[id]?.parentId;
+      if (parentId != null &&
+          byId.containsKey(parentId) &&
+          parentCycle(parentId)) {
+        return true;
+      }
+      parentActive.remove(id);
+      parentVisited.add(id);
+      return false;
+    }
+
+    for (final item in items) {
+      final parentId = item.parentId;
+      if (parentId == null) {
+        continue;
+      }
+      if (parentId == item.id) {
+        errors.add('${item.id} cannot be its own parent.');
+      } else if (!ids.contains(parentId)) {
+        errors.add('${item.id} references missing parent $parentId.');
+      }
+    }
+    if (items.any((item) => parentCycle(item.id))) {
+      errors.add('The plan contains a parent hierarchy cycle.');
     }
     return errors;
   }
