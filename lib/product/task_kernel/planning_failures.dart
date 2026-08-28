@@ -115,6 +115,10 @@ const Set<String> kRecoverablePlanningCodes = <String>{
   // unresolved: both are plan-shape problems, not system problems.
   'task_plan_empty',
   'manual_task_unresolved',
+  // A task that names an orchestration capability the executor cannot
+  // invoke is a plan-shape defect, not a system failure: repair the plan
+  // or fall back to the conservative envelope.
+  'plan_executor_capability_unresolved',
   // The planning model broke the response protocol in a documented way:
   // unreadable JSON, an empty completion, an over-long response, or a
   // structurally invalid completion. The model ran; it answered badly.

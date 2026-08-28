@@ -1801,10 +1801,21 @@ class ProductRuntime {
     required ProjectRecord project,
     required CommandMode mode,
     ModelIdentity? model,
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
     Future<void>? cancellation,
     bool Function()? isCancelled,
   }) async {
     final kernel = taskKernel;
+    // By the time this runs, [project] already exists -- Chat provisioned
+    // it, once, before any planning. Whatever orchestration capability
+    // did that is therefore spent, and must not reappear as something the
+    // executor is told to invoke.
+    final consumed = <String>{
+      ...consumedCoordinatorCapabilities,
+      ...specification.capabilityHints.where(
+        kCoordinatorCapabilityIds.contains,
+      ),
+    };
     final result = await kernel.plan(
       specification: specification,
       routing: routing,
@@ -1814,6 +1825,7 @@ class ProductRuntime {
         availableCapabilityIds:
             kKristinCapabilities.map((item) => item.id).toSet(),
         availableToolNames: tools.names,
+        consumedCoordinatorCapabilities: consumed,
         localOnly: _settings.localOnly,
       ),
       cancellation: cancellation,
@@ -1823,6 +1835,7 @@ class ProductRuntime {
       plan: result.plan,
       project: project,
       mode: mode,
+      consumedCoordinatorCapabilities: consumed,
     );
     final prepared = PreparedCommand(
       id: newId('command'),
@@ -1859,6 +1872,7 @@ class ProductRuntime {
         'family': result.plan.family.name,
         'route': result.plan.route.name,
         'conservative': result.isConservative,
+        'coordinatorCapabilitiesConsumed': consumed.toList()..sort(),
         'specificationSource': specification.source.name,
         'workItems': compiled.plan.items.length,
         'planHash': result.plan.contentHash,

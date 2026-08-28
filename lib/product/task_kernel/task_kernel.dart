@@ -264,6 +264,7 @@ class UniversalTaskKernel {
     Set<String>? selectedTaskIds,
     List<String> additionalConstraints = const <String>[],
     List<String> additionalCriteria = const <String>[],
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
   }) =>
       compiler.compile(
         plan: plan,
@@ -275,6 +276,7 @@ class UniversalTaskKernel {
         selectedTaskIds: selectedTaskIds,
         additionalConstraints: additionalConstraints,
         additionalCriteria: additionalCriteria,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
       );
 
   /// STEP 5 -- reconcile.

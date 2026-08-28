@@ -20,6 +20,7 @@
 //     request text where a planner can quietly lose it.
 import 'dart:math';
 
+import '../chat_control_plane.dart';
 import '../domain.dart';
 import '../storage_security.dart';
 import '../workspace_tools.dart';
@@ -83,6 +84,7 @@ class UniversalPlanCompiler {
     List<String> additionalConstraints = const <String>[],
     List<String> additionalCriteria = const <String>[],
     List<String> researchQuestions = const <String>[],
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
     int contractRevision = 3,
   }) {
     final byId = <String, UniversalTask>{
@@ -106,6 +108,8 @@ class UniversalPlanCompiler {
         'Manual tasks must be completed or disabled before this plan can run.',
       );
     }
+
+    _rejectCoordinatorLeakage(tasks, consumedCoordinatorCapabilities);
 
     final allowedIds = tasks.map((task) => task.id).toSet();
     final workItems = tasks.map((task) {
@@ -244,6 +248,76 @@ class UniversalPlanCompiler {
       canonical: plan,
       selectedTaskIds: selected,
     );
+  }
+
+  /// Fails compilation when a task would hand the executor an
+  /// orchestration capability instead of an executable tool.
+  ///
+  /// The executor can call exactly the names in its allow-list. A task
+  /// that requires `agent.create_project`, or whose instructions tell the
+  /// model to invoke that capability id, describes work no governed tool
+  /// can perform -- so the run would spend slow model calls discovering
+  /// that for itself and then exhaust its protocol budget. Catching it
+  /// here turns a confusing `model_protocol_exhausted` at execution time
+  /// into a precise, actionable planning failure.
+  ///
+  /// This is a plan-shape problem, so the code is in the recoverable
+  /// planning set: the planner repairs or the conservative envelope takes
+  /// over, exactly as for any other invalid graph.
+  void _rejectCoordinatorLeakage(
+    List<UniversalTask> tasks,
+    Set<String> consumed,
+  ) {
+    final coordinatorIds = <String>{
+      ...kCoordinatorCapabilityIds,
+      ...consumed,
+    };
+    if (coordinatorIds.isEmpty) return;
+    for (final task in tasks) {
+      final required = task.requiredCapabilities
+          .where(coordinatorIds.contains)
+          .toList(growable: false)
+        ..sort();
+      if (required.isNotEmpty) {
+        throw ProductException(
+          'plan_executor_capability_unresolved',
+          '${task.id} requires orchestration capability '
+              '${required.join(', ')}, which the executor cannot invoke. '
+              'Coordinator capabilities are discharged before execution '
+              'and are never Runner tools.',
+          details: <String, dynamic>{
+            'taskId': task.id,
+            'capabilityId': required,
+            'allowedTools': task.allowedTools.toList()..sort(),
+            'consumedCoordinatorCapabilities': consumed.toList()..sort(),
+          },
+        );
+      }
+      // An instruction naming a coordinator capability id is the same
+      // defect wearing prose. Matched on the exact id, never fuzzily.
+      final text = <String>[
+        task.title,
+        task.objective,
+        task.instructions,
+      ].join(' ');
+      final named = coordinatorIds.where(text.contains).toList(growable: false)
+        ..sort();
+      if (named.isNotEmpty) {
+        throw ProductException(
+          'plan_executor_capability_unresolved',
+          '${task.id} instructs the executor to use '
+              '${named.join(', ')}, which is an orchestration capability '
+              'rather than an available tool. The active project already '
+              'exists; this task must be expressed with governed tools.',
+          details: <String, dynamic>{
+            'taskId': task.id,
+            'capabilityId': named,
+            'allowedTools': task.allowedTools.toList()..sort(),
+            'consumedCoordinatorCapabilities': consumed.toList()..sort(),
+          },
+        );
+      }
+    }
   }
 
   /// The executable description. Phase and parent are no longer written

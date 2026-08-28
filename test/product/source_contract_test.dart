@@ -271,6 +271,10 @@ void main() {
         'lib/product/performance_cache.dart',
         'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
+        // Progress-aware protocol recovery: bounded corrections plus
+        // repeated-invalid-action detection, so a stuck local model
+        // cannot burn a long sequence of slow calls with no effect.
+        'lib/product/protocol_recovery_policy.dart',
         // The universal task kernel: one semantic task architecture that
         // every product capability plans through.
         'lib/product/task_kernel/task_specification.dart',
@@ -729,8 +733,24 @@ void main() {
         expect(planning, contains("'Respond conversationally'"));
         expect(planning, contains('allowPlainCompletion: conversational'));
         expect(planning, contains("'model.protocol_repair_requested'"));
-        expect(planning, contains('protocolRepairAttempts < 2'));
-        expect(planning, contains('protocolRepairAttempts = 0'));
+        // The bounded protocol-correction streak now lives in
+        // ProtocolRecoveryPolicy, which additionally refuses to pay for a
+        // second model call when the model repeats the same invalid
+        // action. The invariant is unchanged: corrections are bounded and
+        // reset only on real progress.
+        expect(planning, contains('ProtocolRecoveryPolicy()'));
+        expect(planning, contains('protocolRecovery.onInvalidDecision('));
+        expect(planning, contains('protocolRecovery.recordProgress()'));
+        final recovery = source('lib/product/protocol_recovery_policy.dart');
+        expect(recovery, contains('class ProtocolRecoveryPolicy'));
+        expect(recovery, contains('maxCorrectionRequests = 2'));
+        expect(recovery, contains('_attempts >= maxCorrectionRequests'));
+        expect(recovery, contains('maxRecoveryWithoutProgress'));
+        expect(recovery, contains('ProtocolRecoveryAction.requestCorrection'));
+        expect(
+          recovery,
+          contains('ProtocolRecoveryAction.useDeterministicFallback'),
+        );
         expect(planning, contains("'model.protocol_fallback_applied'"));
         expect(planning, contains("'model.protocol_exhausted'"));
         expect(planning, contains("'model_protocol_exhausted'"));

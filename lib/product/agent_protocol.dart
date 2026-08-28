@@ -527,11 +527,57 @@ class AgentProtocolAdapter {
     );
   }
 
+  /// Fails closed when a response declares two different tools at once.
+  ///
+  /// `{"action":{"type":"tool","tool":"apply_patch"},"tool":"write_file"}`
+  /// has no single correct reading, and silently preferring either one
+  /// picks a governed side effect the model did not unambiguously ask
+  /// for. Compatibility normalization is for responses whose meaning is
+  /// clear but whose shape is not; this one's meaning is not clear.
+  void _rejectConflictingToolDeclarations(
+    Map<String, dynamic> candidate,
+    WorkItem item,
+  ) {
+    final nested = mapValue(candidate['action']);
+    if (nested.isEmpty) return;
+    final nestedTool = _token(
+      _firstNonEmpty(<Object?>[nested['tool'], nested['toolName']]),
+    );
+    final outerTool = _token(
+      _firstNonEmpty(<Object?>[
+        candidate['tool'] is String ? candidate['tool'] : null,
+        candidate['toolName'],
+        candidate['tool_name'],
+      ]),
+    );
+    if (nestedTool.isEmpty || outerTool.isEmpty) return;
+    if (nestedTool == outerTool) return;
+    throw ProductException(
+      'model_action_invalid',
+      'The response declared two different tools at once. Return exactly '
+          'one decision naming exactly one allowed tool.',
+      details: <String, dynamic>{
+        'receivedAction': 'conflicting_tool_declarations',
+        'requestedTool': <String>[outerTool, nestedTool]..sort(),
+        'allowedTools': item.allowedTools.toList()..sort(),
+      },
+    );
+  }
+
+  String _firstNonEmpty(List<Object?> values) {
+    for (final value in values) {
+      final text = value?.toString().trim() ?? '';
+      if (text.isNotEmpty) return text;
+    }
+    return '';
+  }
+
   AgentAction _normalizeAction(
     AgentAction action,
     Map<String, dynamic> candidate,
     WorkItem item,
   ) {
+    _rejectConflictingToolDeclarations(candidate, item);
     final allowedTools = item.allowedTools;
     var kind = _token(action.kind);
     var tool = action.tool?.trim();

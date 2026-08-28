@@ -1327,8 +1327,14 @@ def check_execution_reliability() -> None:
             planning,
             (
                 "'model.protocol_repair_requested'",
-                "protocolRepairAttempts < 2",
-                "protocolRepairAttempts = 0",
+                # The bounded protocol-correction streak moved into
+                # ProtocolRecoveryPolicy, which also refuses a second slow
+                # model call when the model repeats the same invalid
+                # action. Corrections stay bounded and reset only on real
+                # progress.
+                "ProtocolRecoveryPolicy()",
+                "protocolRecovery.onInvalidDecision(",
+                "protocolRecovery.recordProgress()",
                 "'model.protocol_fallback_applied'",
                 "'model.protocol_exhausted'",
                 "'model_protocol_exhausted'",
