@@ -12,6 +12,7 @@ import 'extensions_index.dart';
 import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
+import 'protocol_recovery_policy.dart';
 import 'retry_policy.dart';
 import 'run_live_signals.dart';
 import 'run_preflight.dart';
@@ -2837,7 +2838,11 @@ class RunCoordinator {
         priorArtifactInspectionEvidence.lastOrNull == null
             ? null
             : priorObjectiveHash(priorArtifactInspectionEvidence.last);
-    var protocolRepairAttempts = 0;
+    // Progress-aware protocol recovery. A count of corrections alone
+    // cannot distinguish a model that is improving from one restating
+    // the same impossible action in a new shape, and each round trip on
+    // a local model costs ~80 seconds. See ProtocolRecoveryPolicy.
+    final protocolRecovery = ProtocolRecoveryPolicy();
     var toolRepairAttempts = 0;
     var mutationRepairAttempts = 0;
     var artifactRepairAttempts = 0;
@@ -2889,9 +2894,13 @@ class RunCoordinator {
     for (var turn = 0; turn < turnLimit; turn++) {
       await _awaitControl(control, current.budget, started);
       _enforceBudget(current, started);
+      // Executor projection: same shape, no concrete example payloads.
+      // See ToolDescriptorDialect.executor -- a local model copied
+      // apply_patch's README.md / "Old text" / "New text" example while
+      // trying to scaffold an unrelated Flutter app.
       final descriptors = tools.descriptors(
         allowlist: progress.item.allowedTools,
-        dialect: ToolDescriptorDialect.model,
+        dialect: ToolDescriptorDialect.executor,
       );
       final system = _systemPrompt(
         progress.item,
@@ -3076,15 +3085,36 @@ class RunCoordinator {
             'Inspect at least one relevant project resource before completing this work item.',
           );
         }
-        protocolRepairAttempts = 0;
+        // Real progress: a schema-valid decision. This is the ONLY thing
+        // that clears recovery state -- not a new response, not changed
+        // bytes, not a reworded version of the same invalid action.
+        protocolRecovery.recordProgress();
       } on ProductException catch (protocolError) {
         if (!_isAgentProtocolError(protocolError)) {
           rethrow;
         }
-        final canRequestRepair = protocolRepairAttempts < 2 &&
-            current.repairs < phaseRecoveryCeiling;
+        final fallbackCandidate = _safeProtocolFallback(
+          progress.item,
+          request: current.command.contract.request,
+          inspectionEvidence: inspectionEvidence,
+          alreadyUsed: protocolFallbackUsed,
+        );
+        final recovery = protocolRecovery.onInvalidDecision(
+          errorCode: protocolError.code,
+          receivedAction: protocolError.details['receivedAction'],
+          requestedTool: protocolError.details['requestedTool'],
+          elapsed: DateTime.now().toUtc().difference(started),
+          fallbackAvailable: fallbackCandidate != null,
+        );
+        await _publishRunSignal(
+          current.id,
+          progress.item.id,
+          recovery.reason,
+        );
+        final canRequestRepair =
+            recovery.action == ProtocolRecoveryAction.requestCorrection &&
+                current.repairs < phaseRecoveryCeiling;
         if (canRequestRepair) {
-          protocolRepairAttempts++;
           current = current.copyWith(repairs: current.repairs + 1);
           await _save(current);
           final allowedToolNames = progress.item.allowedTools.toList()..sort();
@@ -3095,10 +3125,12 @@ class RunCoordinator {
           history.add(<String, dynamic>{
             'turn': turn + 1,
             'coordinatorCorrection': true,
-            'protocolRepair': protocolRepairAttempts,
+            'protocolRepair': recovery.attempts,
             'errorCode': protocolError.code,
             'error': protocolError.message,
-            'errorDetails': redactor.redactJson(protocolError.details),
+            'errorDetails': redactor.redactJson(
+              _executorSafeErrorDetails(protocolError.details, progress.item),
+            ),
             'invalidResponseHash': Sha256.text(generation.text),
             'invalidResponsePreview': _modelPreview(generation.text),
             'requiredSchema': <String>[
@@ -3107,8 +3139,12 @@ class RunCoordinator {
               'For action=complete or action=fail, summary must be non-empty.',
             ],
             'allowedToolNames': allowedToolNames,
-            'example':
-                protocolError.details['repairExample'] ?? protocolExample,
+            // The TASK-DERIVED example wins. The schema's own
+            // repairExample carries concrete placeholder content
+            // (README.md / "Old text" / "New text") that is unrelated to
+            // this work item, and preferring it -- as this used to --
+            // hands the model a ready-made irrelevant action to echo.
+            'example': protocolExample,
             'antiCopyRule':
                 'Do not copy a work-item title, task ID, cited [K#] text, or prior-run action into the action field.',
           });
@@ -3119,9 +3155,10 @@ class RunCoordinator {
               'runId': current.id,
               'workItemId': progress.item.id,
               'attempt': progress.attempts,
-              'protocolRepairAttempt': protocolRepairAttempts,
+              'protocolRepairAttempt': recovery.attempts,
               'errorCode': protocolError.code,
               'responseHash': Sha256.text(generation.text),
+              ...recovery.toEvidence(),
             },
           );
           await _bestEffortEvent(
@@ -3131,28 +3168,25 @@ class RunCoordinator {
               'runId': current.id,
               'workItemId': progress.item.id,
               'attempt': progress.attempts,
-              'protocolRepairAttempt': protocolRepairAttempts,
+              'protocolRepairAttempt': recovery.attempts,
               'errorCode': protocolError.code,
               'receivedAction': protocolError.details['receivedAction'],
               'requestedTool': protocolError.details['requestedTool'],
+              ...recovery.toEvidence(),
             },
           );
           continue;
         }
 
-        final fallback = _safeProtocolFallback(
-          progress.item,
-          request: current.command.contract.request,
-          inspectionEvidence: inspectionEvidence,
-          alreadyUsed: protocolFallbackUsed,
-        );
+        final fallback = fallbackCandidate;
         if (fallback == null) {
           final diagnostics = <String, dynamic>{
             'runId': current.id,
             'workItemId': progress.item.id,
             'workItemAttempt': progress.attempts,
             'model': current.command.model.toJson(),
-            'repairAttempts': protocolRepairAttempts,
+            'repairAttempts': recovery.attempts,
+            ...recovery.toEvidence(),
             'errorCode': protocolError.code,
             'responseHash': Sha256.text(generation.text),
             'responseCharacters': generation.text.length,
@@ -3172,7 +3206,9 @@ class RunCoordinator {
           );
         }
         protocolFallbackUsed = true;
-        protocolRepairAttempts = 0;
+        // A deterministic recovery action changes real state, so it
+        // counts as progress and clears the recovery streak.
+        protocolRecovery.recordProgress();
         action = fallback;
         history.add(<String, dynamic>{
           'turn': turn + 1,
@@ -3732,7 +3768,9 @@ class RunCoordinator {
           'arguments': redactor.redactJson(action.arguments),
           'errorCode': toolError.code,
           'error': toolError.message,
-          'errorDetails': redactor.redactJson(toolError.details),
+          'errorDetails': redactor.redactJson(
+            _executorSafeErrorDetails(toolError.details, progress.item),
+          ),
           'correction': correction,
         });
         await _bestEffortAudit(
@@ -4929,6 +4967,65 @@ Choose the single safest next action. Return one JSON object only.
       return null;
     }
     return fallback;
+  }
+
+  /// Publishes one truthful, human-readable protocol-recovery status on
+  /// the existing live-signal bus.
+  ///
+  /// Reuses [LiveRunSignal.phase] rather than introducing a second event
+  /// channel. The message is plain language for the user; the raw JSON
+  /// stays in evidence, where it belongs.
+  Future<void> _publishRunSignal(
+    String runId,
+    String workItemId,
+    String message,
+  ) async {
+    if (message.trim().isEmpty) return;
+    try {
+      liveSignals.publish(
+        LiveRunSignal.phase(
+          runId: runId,
+          phase: 'protocol_recovery',
+          workItemId: workItemId,
+          message: message,
+        ),
+      );
+    } catch (_) {
+      // Live status must never change execution.
+    }
+  }
+
+  /// Strips concrete example payloads out of a schema error before it is
+  /// shown to the execution model.
+  ///
+  /// `ToolContract` error details carry `repairExample` with real-looking
+  /// values (`README.md`, `"Old text"`, `"New text"`, `node
+  /// tool/check.js`). Those exist to document the schema, but inside a
+  /// repair turn they read as a ready-made action for the model to echo
+  /// -- which is exactly what a local model did instead of scaffolding
+  /// the app it was asked for. The schema SHAPE is preserved; only the
+  /// invented content is replaced.
+  Map<String, dynamic> _executorSafeErrorDetails(
+    Map<String, dynamic> details,
+    WorkItem item,
+  ) {
+    if (!details.containsKey('repairExample')) {
+      return details;
+    }
+    final sanitized = Map<String, dynamic>.from(details);
+    final toolName = details['tool']?.toString() ?? '';
+    ToolContract? contract;
+    if (toolName.isNotEmpty && item.allowedTools.contains(toolName)) {
+      try {
+        contract = tools.contractFor(toolName);
+      } catch (_) {
+        contract = null;
+      }
+    }
+    sanitized['repairExample'] = contract == null
+        ? '<use the allowed tool names and the required fields above>'
+        : contract.neutralizedRepairExample();
+    return sanitized;
   }
 
   Map<String, dynamic> _protocolRepairExample(

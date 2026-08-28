@@ -118,7 +118,37 @@ class KristinCapability {
       slashCommands.isEmpty ? '' : '/${slashCommands.first}';
 
   bool acceptsTarget(ChatTargetType type) => acceptedTargetTypes.contains(type);
+
+  /// True when this capability describes something Kristin *coordinates*
+  /// rather than something the execution model can *do*.
+  ///
+  /// USER CAPABILITY != EXECUTION TOOL.
+  ///
+  /// `agent.create_project` names an orchestration responsibility: Chat
+  /// provisions a workspace, once, before any Runner work exists. By the
+  /// time work items execute, that responsibility has already been
+  /// discharged -- the project is there. Presenting it to the executor
+  /// afterwards asks the model to invoke an abstraction that has no
+  /// governed tool behind it, which is exactly how a run burns slow model
+  /// calls emitting `{"tool":"create_project"}` against an allow-list that
+  /// contains no such name.
+  ///
+  /// Derived from [route] rather than an id list so a new orchestration
+  /// route cannot silently become executable by being forgotten here.
+  bool get isCoordinatorCapability => const <ChatExecutionRoute>{
+        ChatExecutionRoute.createProject,
+        ChatExecutionRoute.modifyProject,
+        ChatExecutionRoute.fixProject,
+      }.contains(route);
 }
+
+/// The orchestration capability ids: coordinated by Chat, never executed
+/// by the Runner.
+final Set<String> kCoordinatorCapabilityIds = Set<String>.unmodifiable(
+  kKristinCapabilities
+      .where((capability) => capability.isCoordinatorCapability)
+      .map((capability) => capability.id),
+);
 
 const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
   // Architectural Improvement #8: "build a new app" and "build the selected

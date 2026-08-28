@@ -16,7 +16,26 @@ enum ToolIdempotency {
   requestHash,
 }
 
-enum ToolDescriptorDialect { canonical, model, openAiCompatible, mcp }
+enum ToolDescriptorDialect {
+  canonical,
+  model,
+
+  /// The projection handed to the EXECUTION model.
+  ///
+  /// Identical to [model] except that concrete example payloads are
+  /// replaced by type placeholders. A small local model shown
+  /// `{"path":"README.md","hunks":[{"old":"Old text","replacement":"New
+  /// text"}]}` while scaffolding an unrelated Flutter app will copy it
+  /// verbatim -- the example reads as the requested work rather than as
+  /// documentation. Shape is what the executor needs; a plausible-looking
+  /// unrelated payload is actively harmful.
+  ///
+  /// [model] is retained unchanged for documentation and contract
+  /// consumers.
+  executor,
+  openAiCompatible,
+  mcp,
+}
 
 enum ToolSchemaPhase { input, output }
 
@@ -319,6 +338,40 @@ class ToolContract {
         'arguments': _cloneJson(example),
       };
 
+  /// [repairExample] with every concrete value replaced by a type
+  /// placeholder, for anything shown to the execution model.
+  ///
+  /// A repair prompt exists to teach the ENVELOPE, not to supply content.
+  /// Handing a model a complete, syntactically valid, semantically
+  /// unrelated tool call while asking it to try again invites it to send
+  /// that call back.
+  Map<String, dynamic> neutralizedRepairExample() => <String, dynamic>{
+        'action': 'tool',
+        'tool': name,
+        'arguments': neutralizedExample(),
+      };
+
+  /// The example payload with concrete values replaced by `<type>`
+  /// placeholders, preserving structure and key names.
+  Map<String, dynamic> neutralizedExample() =>
+      _neutralize(_cloneJson(example)) as Map<String, dynamic>;
+
+  static Object? _neutralize(Object? value) {
+    if (value is Map) {
+      return <String, dynamic>{
+        for (final entry in value.entries)
+          entry.key.toString(): _neutralize(entry.value),
+      };
+    }
+    if (value is List) {
+      // One element is enough to convey shape; more only invites copying.
+      return <Object?>[if (value.isNotEmpty) _neutralize(value.first)];
+    }
+    if (value is bool) return '<boolean>';
+    if (value is num) return '<number>';
+    return '<string>';
+  }
+
   String repairMessage(Iterable<SchemaIssue> issues) {
     final first = issues.firstOrNull;
     final issue = first == null ? '' : ' ${first.message}';
@@ -329,7 +382,8 @@ class ToolContract {
   Map<String, dynamic> descriptor({
     ToolDescriptorDialect dialect = ToolDescriptorDialect.canonical,
   }) {
-    if (dialect == ToolDescriptorDialect.model) {
+    if (dialect == ToolDescriptorDialect.model ||
+        dialect == ToolDescriptorDialect.executor) {
       return <String, dynamic>{
         'name': name,
         'version': version,
@@ -340,7 +394,10 @@ class ToolContract {
         'argumentSchema': <String, dynamic>{
           'required': requiredArguments,
           'optional': optionalArguments,
-          'example': example,
+          if (dialect == ToolDescriptorDialect.model)
+            'example': example
+          else
+            'exampleShape': neutralizedExample(),
         },
       };
     }

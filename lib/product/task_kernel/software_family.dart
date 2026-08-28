@@ -22,6 +22,7 @@
 // The user does not acquire a Prompt Studio artifact as a side effect of
 // asking Kristin to do something.
 import '../crypto_utils.dart';
+import '../chat_control_plane.dart';
 import '../domain.dart';
 import 'planning_failures.dart';
 import 'task_families.dart';
@@ -172,8 +173,23 @@ class SoftwareTaskFamilyPlanner implements TaskFamilyPlanner {
       cancellation: cancellation,
       isCancelled: isCancelled,
     );
-    final capability = specification.capabilityHints
+    // THE COORDINATOR/EXECUTOR BOUNDARY.
+    //
+    // capabilityHints are ORCHESTRATION metadata: they record what Chat
+    // routed this request to. They are not execution requirements, and
+    // attaching them to every generated task -- which is what this used
+    // to do -- pushed `agent.create_project` into the execution model's
+    // world, where no such tool exists.
+    //
+    // Execution requirements for software work are the task's
+    // allowedTools, governed by the tool registry and the permission
+    // grant. So the only capabilities that survive onto a task here are
+    // those that are both still available AND not an already-discharged
+    // coordinator responsibility.
+    final executorCapabilities = specification.capabilityHints
         .where(context.availableCapabilityIds.contains)
+        .where((id) => !context.consumedCoordinatorCapabilities.contains(id))
+        .where((id) => !kCoordinatorCapabilityIds.contains(id))
         .toSet();
     return UniversalTaskPlan(
       id: newId('universal_plan'),
@@ -188,7 +204,7 @@ class SoftwareTaskFamilyPlanner implements TaskFamilyPlanner {
           .map(
             (task) => UniversalTask.fromPlanTask(
               task,
-              requiredCapabilities: capability,
+              requiredCapabilities: executorCapabilities,
             ),
           )
           .toList(growable: false),

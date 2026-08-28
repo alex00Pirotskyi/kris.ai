@@ -137,8 +137,17 @@ UniversalTaskKernel buildUniversalTaskKernel({
   String ownerCapabilityId = 'owner.mode',
   ModelGenerationDelegate? understandingGenerator,
 }) {
+  // The PLANNING model is briefed on execution-relevant capabilities
+  // only. Orchestration capabilities (agent.create_project and friends)
+  // are excluded deliberately: they are already discharged by the time a
+  // plan exists, and listing them under "AVAILABLE KRISTIN CAPABILITIES"
+  // is what taught the planner to emit tasks whose instructions read
+  // "Use the agent.create_project capability ...". The executor has no
+  // such tool, so that instruction can only ever fail.
   final briefing = UnderstandingContext(
-    availableCapabilities: capabilities,
+    availableCapabilities: capabilities
+        .where((capability) => !capability.isCoordinatorCapability)
+        .toList(growable: false),
   ).describeCapabilities();
   final gateway = PromptPlanningKernelGateway(
     planning: planning,

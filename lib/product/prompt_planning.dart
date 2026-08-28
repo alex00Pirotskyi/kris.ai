@@ -949,6 +949,14 @@ ${capabilityBriefing.trim()}
 
 Plan only against these capabilities. Proposing one is not the same as
 being granted it; Kristin resolves authority separately.
+
+A task is executed by a model that can call ONLY the allowed tool names
+listed above. Write the instructions for every task in terms of those
+tools and concrete project-relative artifacts. The active project already
+exists: never write an instruction telling the executor to create,
+provision, or select a project, and never name a Kristin capability id as
+the thing to invoke. "Use the agent.create_project capability" is not an
+executable instruction and will be rejected.
 '''}
 Generate an appropriately sized plan. The maximum is a ceiling, not a target.
 ''';

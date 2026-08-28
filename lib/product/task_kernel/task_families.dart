@@ -27,6 +27,7 @@ class PlanningContext {
     this.model,
     this.availableCapabilityIds = const <String>{},
     this.availableToolNames = const <String>{},
+    this.consumedCoordinatorCapabilities = const <String>{},
     this.localOnly = false,
     this.maxLeafTasks = 25,
   });
@@ -39,6 +40,17 @@ class PlanningContext {
   final Set<String> availableCapabilityIds;
 
   final Set<String> availableToolNames;
+
+  /// Orchestration capabilities that have ALREADY been discharged before
+  /// planning -- most importantly `agent.create_project`, whose entire
+  /// responsibility (provisioning the active workspace) is complete by
+  /// the time any work item exists.
+  ///
+  /// These must never reach the executor: they are not tools, they have
+  /// no governed handler, and instructing a model to "use
+  /// agent.create_project" produces an action no allow-list can satisfy.
+  final Set<String> consumedCoordinatorCapabilities;
+
   final bool localOnly;
   final int maxLeafTasks;
 
@@ -47,6 +59,7 @@ class PlanningContext {
     ModelIdentity? model,
     Set<String>? availableCapabilityIds,
     Set<String>? availableToolNames,
+    Set<String>? consumedCoordinatorCapabilities,
     bool? localOnly,
     int? maxLeafTasks,
   }) =>
@@ -56,6 +69,8 @@ class PlanningContext {
         availableCapabilityIds:
             availableCapabilityIds ?? this.availableCapabilityIds,
         availableToolNames: availableToolNames ?? this.availableToolNames,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities ??
+            this.consumedCoordinatorCapabilities,
         localOnly: localOnly ?? this.localOnly,
         maxLeafTasks: maxLeafTasks ?? this.maxLeafTasks,
       );
