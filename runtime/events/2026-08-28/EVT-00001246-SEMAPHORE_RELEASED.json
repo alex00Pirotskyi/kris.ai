@@ -1,0 +1,14 @@
+{
+  "eventId": "EVT-00001246-SEMAPHORE_RELEASED",
+  "eventType": "SEMAPHORE_RELEASED",
+  "mission": "MISSION-010",
+  "payload": {
+    "nextStatus": "READY",
+    "semaphoreId": "SEM-QWEN-P11-001-91E3D3EE"
+  },
+  "recordedAt": "2026-08-28T22:49:38Z",
+  "runtimeGeneration": 1246,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260828T222851Z-3860fa33",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-5A7067CA"
+}
