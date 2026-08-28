@@ -400,9 +400,6 @@ void main() {
   Future<List<ModelIdentity>> discover() async => <ModelIdentity>[identity];
 
   @override
-  LanguageModelProvider providerFor(ModelIdentity identity) => this;
-
-  @override
   Future<ModelGenerationResult> generate(ModelGenerationRequest request) async {
     final startedAt = DateTime.now().toUtc();
     String text;
