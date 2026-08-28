@@ -113,6 +113,20 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         RunState.interrupted,
       }.contains(currentRun!.state);
 
+  /// True only while a run is genuinely executing right now. Unlike
+  /// [runActive], this excludes [RunState.interrupted]: an interrupted run
+  /// survived an app restart with nothing currently in flight, so it must
+  /// stay resumable (Resume/Stop remain available wherever [runActive] is
+  /// used for that) without silently absorbing ordinary chat messages as
+  /// steering input into a task the user never asked to continue.
+  bool get runExecuting =>
+      currentRun != null &&
+      const <RunState>{
+        RunState.running,
+        RunState.paused,
+        RunState.cancelling,
+      }.contains(currentRun!.state);
+
   bool get runTerminal =>
       currentRun != null &&
       const <RunState>{
@@ -210,7 +224,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       loading = false;
       status = runAwaitingApproval
           ? 'Permission review required'
-          : runActive
+          : runExecuting
               ? 'Continuing active work'
               : 'Kristin is ready';
     });
@@ -399,7 +413,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       knownTargets: _knownTargets(),
     );
 
-    if (runActive) {
+    if (runExecuting) {
       if (_isActiveRunCancellation(request, decision)) {
         transcript.add(_ChatLine.user(request));
         composerController.clear();

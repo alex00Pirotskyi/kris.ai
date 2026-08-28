@@ -73,7 +73,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
 
   Widget _statusStrip() {
     final startup = widget.startupError;
-    if (startup == null && error == null && !busy && !runActive) {
+    if (startup == null && error == null && !busy && !runExecuting) {
       return const SizedBox.shrink();
     }
     final colors = Theme.of(context).colorScheme;
@@ -84,7 +84,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: Row(
           children: <Widget>[
-            if (busy || runActive)
+            if (busy || runExecuting)
               const SizedBox.square(
                 dimension: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -878,7 +878,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               maxLines: 8,
                               textInputAction: TextInputAction.newline,
                               decoration: InputDecoration(
-                                hintText: runActive
+                                hintText: runExecuting
                                     ? 'Steer the active work…'
                                     : 'Message Kristin…',
                                 filled: false,
