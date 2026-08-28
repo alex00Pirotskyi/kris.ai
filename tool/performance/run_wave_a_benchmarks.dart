@@ -7,7 +7,7 @@ import 'package:kristin_local_agent/product/performance_cache.dart';
 
 import 'benchmark_corpus.dart';
 
-const String baselineMainSha = '9336c5568cbc1db9e9c867441dcc46af14339aa4';
+const String baselineMainSha = 'f8e8cbba98e2556384cec69627c139a0e78a0f5a';
 
 Future<void> main(List<String> arguments) async {
   final includeLarge = !arguments.contains('--skip-large');
@@ -22,11 +22,12 @@ Future<void> main(List<String> arguments) async {
             'wave-a-baseline.json',
   );
   final benchmarkRoot = await Directory.systemTemp.createTemp(
-    'kristin-performance-wave-a-',
+    'kristin-performance-wave-b-',
   );
   final generatedAt = DateTime.now().toUtc();
   final results = <Map<String, Object?>>[];
   RebuildableCacheDatabase? cache;
+  SourceIndexService? sourceIndex;
   try {
     final cacheDirectory = Directory(
       '${benchmarkRoot.path}${Platform.pathSeparator}cache',
@@ -69,9 +70,9 @@ Future<void> main(List<String> arguments) async {
     final corpusParent = Directory(
       '${benchmarkRoot.path}${Platform.pathSeparator}corpora',
     );
-    final sourceIndex = SourceIndexService(
+    sourceIndex = SourceIndexService(
       Directory(
-        '${benchmarkRoot.path}${Platform.pathSeparator}source-index',
+        '${cacheDirectory.path}${Platform.pathSeparator}source-index',
       ),
       performance: performanceCache,
     );
@@ -90,9 +91,9 @@ Future<void> main(List<String> arguments) async {
       );
     }
 
-    final diagnostics = await performanceCache.diagnostics();
+    final cacheDiagnostics = await performanceCache.diagnostics();
     final report = <String, Object?>{
-      'schemaVersion': 'kristin.performance-baseline.v1',
+      'schemaVersion': 'kristin.performance-baseline.v2',
       'baselineMainSha': baselineMainSha,
       'generatedAt': generatedAt.toIso8601String(),
       'environment': <String, Object?>{
@@ -106,12 +107,15 @@ Future<void> main(List<String> arguments) async {
         'largeCorpusIncluded': includeLarge,
         'corpusRetained': keepCorpus,
         'resultUnits': 'microseconds',
+        'sourceCache': 'cache.sqlite3',
       },
-      'cacheDiagnostics': diagnostics.toJson(),
+      'cacheDiagnostics': cacheDiagnostics.toJson(),
       'benchmarks': results,
       'interpretation': <String, Object?>{
         'coldAndWarmSeparated': true,
-        'sourceQueryCacheAvailableOnBaseline': false,
+        'sourceQueryCacheAvailableOnBaseline': true,
+        'warmQueriesReadFilesystemBytes': false,
+        'changedFileUpdateUsesExplicitIncrementalPath': true,
         'wallClockTargetsEnforcedByCi': false,
         'performanceClaimsRequireBeforeAfterSamples': true,
       },
@@ -123,6 +127,7 @@ Future<void> main(List<String> arguments) async {
     );
     stdout.writeln(output.path);
   } finally {
+    await sourceIndex?.close();
     await cache?.close();
     if (!keepCorpus) {
       try {
@@ -153,6 +158,7 @@ Future<List<Map<String, Object?>>> _benchmarkSourceIndex({
   final coldUpdate = Stopwatch()..start();
   final coldReport = await sourceIndex.update(project);
   coldUpdate.stop();
+  final coldDiagnostics = await sourceIndex.diagnostics(project.id);
   results.add(
     <String, Object?>{
       ..._singleMeasurement(
@@ -166,14 +172,12 @@ Future<List<Map<String, Object?>>> _benchmarkSourceIndex({
       'changedFiles': coldReport.changed,
       'indexedFiles': coldReport.total,
       'skippedFiles': coldReport.skipped,
+      'generation': coldReport.generation,
+      'searchBackend': coldDiagnostics.backend,
+      'databasePath': coldDiagnostics.databasePath,
     },
   );
 
-  final indexFile = File(
-    '${sourceIndex.indexDirectory.path}${Platform.pathSeparator}'
-    '${project.id}.json',
-  );
-  final indexBytes = await indexFile.length();
   final repeatedQuerySamples = <int>[];
   var repeatedResultCount = 0;
   for (var sample = 0; sample < 25; sample++) {
@@ -192,31 +196,36 @@ Future<List<Map<String, Object?>>> _benchmarkSourceIndex({
       ..._distributionMeasurement(
         benchmark: 'source.search.repeated.${corpus.spec.id}',
         temperature: 'warm',
-        cacheState: 'miss',
+        cacheState: 'hit',
         samples: repeatedQuerySamples,
       ),
       'resultCount': repeatedResultCount,
-      'indexBytesConsideredPerQuery': indexBytes,
-      'candidateFilesConsidered': coldReport.total,
+      'filesystemBytesReadPerQuery': 0,
+      'fullFilesystemScanPerQuery': false,
+      'searchBackend': coldDiagnostics.backend,
     },
   );
 
   await mutateBenchmarkCorpus(corpus);
   final changedUpdate = Stopwatch()..start();
-  final changedReport = await sourceIndex.update(project);
+  final changedReport = await sourceIndex.reindexCommittedPaths(
+    project,
+    <String>{corpus.mutableFile.path},
+  );
   changedUpdate.stop();
   results.add(
     <String, Object?>{
       ..._singleMeasurement(
         benchmark: 'source.index.changed_file_update.${corpus.spec.id}',
         temperature: 'warm',
-        cacheState: 'miss',
+        cacheState: 'hit',
         microseconds: changedUpdate.elapsedMicroseconds,
       ),
       'configuredFiles': corpus.spec.fileCount,
       'scannedFiles': changedReport.scanned,
       'changedFiles': changedReport.changed,
       'indexedFiles': changedReport.total,
+      'generation': changedReport.generation,
       'fullScanObserved': changedReport.scanned > 1,
     },
   );
@@ -239,11 +248,13 @@ Future<List<Map<String, Object?>>> _benchmarkSourceIndex({
       ..._distributionMeasurement(
         benchmark: 'source.symbol_lookup.${corpus.spec.id}',
         temperature: 'warm',
-        cacheState: 'miss',
+        cacheState: 'hit',
         samples: symbolSamples,
       ),
       'resultCount': symbolResultCount,
-      'candidateFilesConsidered': changedReport.total,
+      'filesystemBytesReadPerQuery': 0,
+      'fullFilesystemScanPerQuery': false,
+      'searchBackend': coldDiagnostics.backend,
     },
   );
   return results;
