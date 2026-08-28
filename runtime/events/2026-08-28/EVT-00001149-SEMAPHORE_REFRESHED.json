@@ -1,0 +1,13 @@
+{
+  "eventId": "EVT-00001149-SEMAPHORE_REFRESHED",
+  "eventType": "SEMAPHORE_REFRESHED",
+  "mission": "MISSION-010",
+  "payload": {
+    "semaphoreId": "SEM-QWEN-P11-001-10B06D83"
+  },
+  "recordedAt": "2026-08-28T08:45:16Z",
+  "runtimeGeneration": 1149,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260828T082828Z-430cee34",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-E9F39E50"
+}
