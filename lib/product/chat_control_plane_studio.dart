@@ -23,6 +23,25 @@ import 'ui_components.dart';
 part 'chat_control_plane_studio_actions.dart';
 part 'chat_control_plane_studio_view.dart';
 
+/// Which planner actually produced the currently prepared command, so the
+/// UI never implies a detailed model-authored decomposition exists when a
+/// deterministic fallback was used instead (see `_planSubstantialTask` in
+/// chat_control_plane_studio_actions.dart).
+enum ChatPlanningPath {
+  /// The tiny/small direct-action path: no multi-task plan was generated
+  /// at all (ContractPlanner's own conversational/direct-action shape).
+  deterministic,
+
+  /// PromptPlanningService generated and validated a request-specific
+  /// task graph (optionally after its own one-shot bounded repair).
+  model,
+
+  /// The model-generated plan failed validation even after repair, or
+  /// planning itself failed; ContractPlanner's fixed conservative
+  /// inspect/implement/verify template was used instead.
+  fallback,
+}
+
 class ChatControlPlaneStudio extends StatefulWidget {
   const ChatControlPlaneStudio({
     super.key,
@@ -78,6 +97,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   ChatInteractionDecision? pendingDecision;
   UnderstandingHistory? understandingHistory;
   PreparedCommand? prepared;
+  ChatPlanningPath planningPath = ChatPlanningPath.deterministic;
   RunRecord? currentRun;
   String activeRequest = '';
   String liveAssistantProtocolText = '';
