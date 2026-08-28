@@ -275,17 +275,6 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
               <Map<String, Object?>>[
             <String, Object?>{
               'action': 'tool',
-              'tool': 'list_directory',
-              'arguments': <String, Object?>{
-                'path': '.',
-                'recursive': false,
-                'maxEntries': 50,
-              },
-              'reason':
-                  'Inspect the selected app root without creating app artifacts.',
-            },
-            <String, Object?>{
-              'action': 'tool',
               'tool': 'inspect_file',
               'arguments': <String, Object?>{
                 'path': '.kristin/blank-root-evidence.txt',
@@ -409,6 +398,9 @@ void main() {
 
   @override
   Future<List<ModelIdentity>> discover() async => <ModelIdentity>[identity];
+
+  @override
+  LanguageModelProvider providerFor(ModelIdentity identity) => this;
 
   @override
   Future<ModelGenerationResult> generate(ModelGenerationRequest request) async {
