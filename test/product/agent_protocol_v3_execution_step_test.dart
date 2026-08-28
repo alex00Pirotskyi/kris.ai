@@ -85,32 +85,35 @@ void main() {
     expect(synchronous.action.arguments['path'], 'README.md');
   });
 
-  test('legacy synchronous boundary still fails closed for deferred actions', () {
-    final payload = jsonEncode(<String, Object?>{
-      'protocolVersion': AgentDecisionV3.protocolVersion,
-      'action': 'user_takeover',
-      'question': 'Please approve the external consent prompt.',
-    });
+  test(
+    'legacy synchronous boundary still fails closed for deferred actions',
+    () {
+      final payload = jsonEncode(<String, Object?>{
+        'protocolVersion': AgentDecisionV3.protocolVersion,
+        'action': 'user_takeover',
+        'question': 'Please approve the external consent prompt.',
+      });
 
-    expect(
-      () => adapter.parseLegacyCompatibleAction(
-        payload,
-        item: item,
-        allowPlainCompletion: false,
-      ),
-      throwsA(
-        isA<ProductException>()
-            .having(
-              (error) => error.code,
-              'code',
-              'agent_decision_v3_deferred_action',
-            )
-            .having(
-              (error) => error.details['decisionKind'],
-              'decisionKind',
-              'user_takeover',
-            ),
-      ),
-    );
-  });
+      expect(
+        () => adapter.parseLegacyCompatibleAction(
+          payload,
+          item: item,
+          allowPlainCompletion: false,
+        ),
+        throwsA(
+          isA<ProductException>()
+              .having(
+                (error) => error.code,
+                'code',
+                'agent_decision_v3_deferred_action',
+              )
+              .having(
+                (error) => error.details['decisionKind'],
+                'decisionKind',
+                'user_takeover',
+              ),
+        ),
+      );
+    },
+  );
 }
