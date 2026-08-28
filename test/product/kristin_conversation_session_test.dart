@@ -74,9 +74,22 @@ void main() {
     );
     expect(session.liveSignals, isEmpty);
 
-    expect(session.recordLiveSignal(_signal('run-a', 1, LiveRunSignalKind.phase)), isTrue);
-    expect(session.recordLiveSignal(_signal('run-a', 2, LiveRunSignalKind.modelProgress)), isTrue);
-    expect(session.recordLiveSignal(_signal('run-a', 3, LiveRunSignalKind.heartbeat)), isTrue);
+    expect(
+      session.recordLiveSignal(_signal('run-a', 1, LiveRunSignalKind.phase)),
+      isTrue,
+    );
+    expect(
+      session.recordLiveSignal(
+        _signal('run-a', 2, LiveRunSignalKind.modelProgress),
+      ),
+      isTrue,
+    );
+    expect(
+      session.recordLiveSignal(
+        _signal('run-a', 3, LiveRunSignalKind.heartbeat),
+      ),
+      isTrue,
+    );
 
     expect(session.liveSignals, hasLength(2));
     expect(session.liveSignals.first.sequence, 2);
@@ -103,11 +116,7 @@ void main() {
   });
 }
 
-LiveRunSignal _signal(
-  String runId,
-  int sequence,
-  LiveRunSignalKind kind,
-) =>
+LiveRunSignal _signal(String runId, int sequence, LiveRunSignalKind kind) =>
     LiveRunSignal(
       sequence: sequence,
       runId: runId,
