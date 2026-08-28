@@ -271,6 +271,19 @@ void main() {
         'lib/product/performance_cache.dart',
         'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
+        // The universal task kernel: one semantic task architecture that
+        // every product capability plans through.
+        'lib/product/task_kernel/task_specification.dart',
+        'lib/product/task_kernel/task_understanding.dart',
+        'lib/product/task_kernel/complexity_router.dart',
+        'lib/product/task_kernel/universal_task_plan.dart',
+        'lib/product/task_kernel/plan_compiler.dart',
+        'lib/product/task_kernel/plan_reconciliation.dart',
+        'lib/product/task_kernel/planning_failures.dart',
+        'lib/product/task_kernel/task_families.dart',
+        'lib/product/task_kernel/software_family.dart',
+        'lib/product/task_kernel/task_kernel.dart',
+        'lib/product/task_kernel/runtime_gateway.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
@@ -903,6 +916,7 @@ void main() {
     test('v1 Prompt-to-Task and path compatibility stay wired', () {
       final domain = source('lib/product/domain.dart');
       final planning = source('lib/product/prompt_planning.dart');
+      final compiler = source('lib/product/task_kernel/plan_compiler.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
       final runtime = source('lib/product/product_runtime.dart');
       final storage = source('lib/product/storage_security.dart');
@@ -922,7 +936,16 @@ void main() {
       expect(planning, contains('class PromptPlanningService'));
       expect(planning, contains('maxLeafTasks.clamp(1, 100)'));
       expect(planning, contains('revision: plan.revision + 1'));
-      expect(planning, contains('_withDependencies(selectedTaskIds, all)'));
+      // Task selection still pulls in its dependency closure, but that
+      // logic now lives once in UniversalPlanCompiler, which Prompt
+      // Studio's compile path and Chat's kernel path both run.
+      expect(planning, contains('UniversalPlanCompiler(tools: tools).compile'));
+      expect(planning, contains('selectedTaskIds: selectedTaskIds'));
+      expect(
+        compiler,
+        contains('_withDependencies(selectedTaskIds, byId)'),
+      );
+      expect(compiler, contains('class UniversalPlanCompiler'));
       expect(coordinator, contains("'tool.repair_requested'"));
       expect(coordinator, contains('_isRecoverableToolInputError'));
       expect(runtime, contains('generatePromptDraft'));

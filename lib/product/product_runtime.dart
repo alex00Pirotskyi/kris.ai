@@ -22,6 +22,12 @@ import 'project_admission.dart';
 import 'project_control_service.dart';
 import 'project_launch_profile_detection.dart';
 import 'prompt_planning.dart';
+import 'chat_control_plane.dart';
+import 'task_kernel/complexity_router.dart';
+import 'task_kernel/runtime_gateway.dart';
+import 'task_kernel/task_families.dart';
+import 'task_kernel/task_kernel.dart';
+import 'task_kernel/task_specification.dart';
 import 'prompt_studio_v2.dart';
 import 'project_diagnostics.dart';
 import 'project_manager_v2.dart';
@@ -278,6 +284,7 @@ class ProductRuntime {
     required this.telemetryBridge,
     required this.support,
     required this.commandService,
+    required this.tools,
     required this.promptPlanning,
     required this.promptStudioV2,
     required this.diagnostics,
@@ -316,6 +323,10 @@ class ProductRuntime {
   final P8ProductTelemetryBridge telemetryBridge;
   final SupportBundleService support;
   final PreparedCommandService commandService;
+
+  /// The governed tool registry. Exposed so the universal task kernel
+  /// can compile plans against exactly the tools the Runner will honor.
+  final ToolRegistry tools;
   final PromptPlanningService promptPlanning;
   final PromptStudioV2Service promptStudioV2;
   final ProjectDiagnosticsService diagnostics;
@@ -773,6 +784,7 @@ class ProductRuntime {
       telemetryBridge: telemetryBridge,
       support: support,
       commandService: commandService,
+      tools: tools,
       promptPlanning: promptPlanning,
       promptStudioV2: promptStudioV2,
       diagnostics: diagnostics,
@@ -1757,6 +1769,117 @@ class ProductRuntime {
         onProgress: onProgress,
         onTextDelta: onTextDelta,
       );
+
+  /// The universal task kernel.
+  ///
+  /// One semantic task architecture for every family Kristin can serve --
+  /// software create/modify/fix, research, diagnostics, and Owner effects
+  /// -- built lazily because most sessions never need it, and rebuilt
+  /// never, so a conversation keeps one kernel.
+  ///
+  /// Prompt Studio is a consumer of this kernel, not its owner:
+  /// [promptPlanning] remains the reused planning engine underneath, but
+  /// ordinary Chat planning no longer has to save a Prompt Studio prompt
+  /// or version to produce an execution plan.
+  UniversalTaskKernel get taskKernel =>
+      _taskKernel ??= buildUniversalTaskKernel(
+        planning: promptPlanning,
+        tools: tools,
+        models: models,
+      );
+  UniversalTaskKernel? _taskKernel;
+
+  /// Plans and compiles a substantial request through the universal task
+  /// kernel, producing a governed [PreparedCommand] without persisting a
+  /// Prompt Studio prompt or prompt version.
+  ///
+  /// Returns the compiled command together with the canonical plan it was
+  /// compiled from, so the caller displays and executes the same graph.
+  Future<KernelPreparedPlan> prepareThroughKernel({
+    required TaskSpecification specification,
+    required RoutingDecision routing,
+    required ProjectRecord project,
+    required CommandMode mode,
+    ModelIdentity? model,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+  }) async {
+    final kernel = taskKernel;
+    final result = await kernel.plan(
+      specification: specification,
+      routing: routing,
+      context: PlanningContext(
+        project: project,
+        model: model,
+        availableCapabilityIds:
+            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableToolNames: tools.names,
+        localOnly: _settings.localOnly,
+      ),
+      cancellation: cancellation,
+      isCancelled: isCancelled,
+    );
+    final compiled = kernel.compile(
+      plan: result.plan,
+      project: project,
+      mode: mode,
+    );
+    final prepared = PreparedCommand(
+      id: newId('command'),
+      requestKey: Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'projectId': project.id,
+          'specification': specification.contentKey,
+          'planHash': result.plan.contentHash,
+          'selectedTaskIds': compiled.selectedTaskIds.toList()..sort(),
+          'mode': mode.name,
+          'model': model?.toJson(),
+        }),
+      ),
+      contract: compiled.contract,
+      plan: compiled.plan,
+      model: model ??
+          ModelIdentity(
+            providerId: 'none',
+            name: 'unselected',
+            digest: '',
+            discoveredAt: DateTime.now().toUtc(),
+          ),
+      createdAt: DateTime.now().toUtc(),
+    );
+    final existing = (await repositories.commands.all())
+        .where((item) => item.requestKey == prepared.requestKey)
+        .firstOrNull;
+    final command = existing ?? prepared;
+    if (existing == null) {
+      await repositories.commands.put(prepared);
+      await audit.append('task_kernel.compiled', prepared.id, <String, dynamic>{
+        'commandId': prepared.id,
+        'projectId': project.id,
+        'family': result.plan.family.name,
+        'route': result.plan.route.name,
+        'conservative': result.isConservative,
+        'specificationSource': specification.source.name,
+        'workItems': compiled.plan.items.length,
+        'planHash': result.plan.contentHash,
+      });
+      await events.publish('command.prepared', prepared.id, <String, dynamic>{
+        'commandId': prepared.id,
+        'projectId': project.id,
+        'mode': compiled.contract.mode.name,
+        'complexity': compiled.plan.complexity,
+        'generatedTaskPlan': !result.isConservative,
+        'taskFamily': result.plan.family.name,
+      });
+    }
+    return KernelPreparedPlan(
+      command: command,
+      canonical: result.plan,
+      origin: result.origin,
+      routing: routing,
+      failure: result.failure,
+    );
+  }
 
   Future<PromptStudioDraft> generatePromptDraft({
     required String goal,

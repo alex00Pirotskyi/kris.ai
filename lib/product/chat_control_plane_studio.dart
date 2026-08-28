@@ -17,6 +17,15 @@ import 'models_research.dart';
 import 'product_error_normalizer.dart';
 import 'product_runtime.dart';
 import 'run_live_signals.dart';
+import 'task_kernel/complexity_router.dart';
+import 'task_kernel/plan_compiler.dart';
+import 'task_kernel/task_families.dart';
+import 'task_kernel/plan_reconciliation.dart';
+import 'task_kernel/planning_failures.dart';
+import 'task_kernel/task_kernel.dart';
+import 'task_kernel/task_specification.dart';
+import 'task_kernel/task_understanding.dart';
+import 'task_kernel/universal_task_plan.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
@@ -25,20 +34,22 @@ part 'chat_control_plane_studio_view.dart';
 
 /// Which planner actually produced the currently prepared command, so the
 /// UI never implies a detailed model-authored decomposition exists when a
-/// deterministic fallback was used instead (see `_planSubstantialTask` in
-/// chat_control_plane_studio_actions.dart).
+/// deterministic fallback was used instead.
+///
+/// Chat plans through [UniversalTaskKernel] now, so this records the
+/// kernel outcome rather than which of two services was called.
 enum ChatPlanningPath {
-  /// The tiny/small direct-action path: no multi-task plan was generated
-  /// at all (ContractPlanner's own conversational/direct-action shape).
+  /// No multi-task plan was generated: the request routed to direct
+  /// conversation or a direct deterministic capability invocation.
   deterministic,
 
-  /// PromptPlanningService generated and validated a request-specific
-  /// task graph (optionally after its own one-shot bounded repair).
+  /// A family planner produced a real, request-specific task graph.
   model,
 
-  /// The model-generated plan failed validation even after repair, or
-  /// planning itself failed; ContractPlanner's fixed conservative
-  /// inspect/implement/verify template was used instead.
+  /// A KNOWN RECOVERABLE planning failure degraded to the deterministic
+  /// conservative inspect/implement/verify envelope. Every other failure
+  /// kind surfaces as a failure instead of arriving here -- see
+  /// task_kernel/planning_failures.dart.
   fallback,
 }
 
@@ -98,6 +109,43 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   UnderstandingHistory? understandingHistory;
   PreparedCommand? prepared;
   ChatPlanningPath planningPath = ChatPlanningPath.deterministic;
+
+  /// The canonical semantic statement of the current request. Everything
+  /// downstream -- routing, planning, compilation -- consumes this rather
+  /// than re-reading the raw request string, so a hard constraint the
+  /// user stated cannot silently stop being a constraint.
+  TaskSpecification? taskSpecification;
+
+  /// Whether the current [taskSpecification] came from real model-backed
+  /// semantic understanding. Drives the understanding card's wording:
+  /// "I understood" is only truthful when this is
+  /// [UnderstandingPath.model]; regex matching stays "I interpreted this
+  /// as".
+  UnderstandingPath understandingPath = UnderstandingPath.deterministic;
+
+  /// What the model proposed and deterministic validation refused
+  /// (invented targets, unknown capabilities, attempts to assert
+  /// authority). Kept visible rather than silently dropped.
+  List<String> understandingRejections = const <String>[];
+
+  /// How much planning the kernel decided this request deserves, and why.
+  RoutingDecision? routingDecision;
+
+  /// The canonical plan the currently prepared command was compiled from.
+  /// The plan card renders this; the Runner executes its compilation.
+  /// They are the same graph by construction.
+  UniversalTaskPlan? canonicalPlan;
+
+  /// The recoverable planning failure that forced a conservative plan,
+  /// so the UI can say specifically what went wrong instead of vaguely.
+  PlanningFailure? planningFailure;
+
+  /// Canonical tasks already completed in this conversation, carried
+  /// across a replan so finished work is preserved rather than redone.
+  List<CompletedTaskRecord> completedTasks = const <CompletedTaskRecord>[];
+
+  /// What the last replan changed, for the plan card to show.
+  PlanReconciliationResult? lastReconciliation;
   RunRecord? currentRun;
   String activeRequest = '';
   String liveAssistantProtocolText = '';
@@ -287,6 +335,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     _mutate(() {
       currentRun = refreshed;
       evidence = loadedEvidence;
+      // Completed work is recorded against the canonical plan as it
+      // happens, so a later replan can preserve it instead of asking the
+      // user to watch finished tasks run a second time.
+      completedTasks = _completedTasksFrom(refreshed);
       awaitingPermission = refreshed.state == RunState.awaitingApproval;
       if (newTerminal) {
         status = refreshed.state == RunState.succeeded
@@ -540,10 +592,30 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       return;
     }
 
+    // UNDERSTANDING. The model reads the human; deterministic code
+    // validates the reading (see task_kernel/task_understanding.dart).
+    // An explicit command, a bare mention or an informational message
+    // never reaches here, so no model call is spent rediscovering what
+    // the user literally typed.
+    final outcome = await _understandRequest(decision);
+    if (outcome == null || !mounted) return;
+
     _mutate(() {
       activeRequest = request;
       pendingDecision = decision;
       understandingHistory = UnderstandingHistory.initial(decision);
+      taskSpecification = outcome.specification;
+      understandingPath = outcome.path;
+      understandingRejections = outcome.rejections;
+      routingDecision = runtime.taskKernel.route(
+        specification: outcome.specification,
+        decision: decision,
+      );
+      canonicalPlan = null;
+      planningFailure = null;
+      lastReconciliation = null;
+      completedTasks = const <CompletedTaskRecord>[];
+      planningPath = ChatPlanningPath.deterministic;
       prepared = null;
       currentRun = null;
       awaitingPermission = false;
@@ -551,8 +623,113 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       planAdjusting = false;
       detailsExpanded = false;
       error = null;
-      status = 'Review what Kristin understood';
+      status = outcome.isSemantic
+          ? 'Review what Kristin understood'
+          : 'Review how Kristin interpreted this';
     });
+  }
+
+  /// Runs the kernel's understanding step, mapping a failure onto the
+  /// typed taxonomy rather than silently continuing with a guess.
+  ///
+  /// A failure that is genuinely about the model's *response* already
+  /// degrades to the deterministic reading inside the kernel (and Chat
+  /// then honestly says "interpreted", not "understood"). What arrives
+  /// here is a real failure -- cancellation, an unreachable provider, a
+  /// denied authority, a broken store -- and it is reported as one.
+  Future<UnderstandingOutcome?> _understandRequest(
+    ChatInteractionDecision decision,
+  ) async {
+    final kernel = runtime.taskKernel;
+    final context = KernelRequestContext(
+      decision: decision,
+      project: selectedProject,
+      model: selectedModel,
+      knownTargets: _knownTargets(),
+      availableToolNames: runtime.tools.names,
+    );
+    if (!kernel.understanding.warrantsModelUnderstanding(decision) ||
+        selectedModel == null) {
+      // Deterministic and synchronous: no spinner, no latency.
+      return kernel.understanding.deterministic.understand(decision);
+    }
+    _mutate(() {
+      busy = true;
+      status = 'Understanding your request';
+      error = null;
+    });
+    try {
+      return await kernel.understand(context);
+    } catch (thrown, stackTrace) {
+      final failure = classifyPlanningFailure(thrown, stackTrace: stackTrace);
+      switch (failure.kind) {
+        case PlanningFailureKind.cancelled:
+          _mutate(() {
+            status = 'Cancelled';
+            error = null;
+          });
+          return null;
+        case PlanningFailureKind.providerUnavailable:
+          // Understanding is the one step with a real deterministic
+          // alternative, and Kristin used it exclusively until now. An
+          // unreachable model must not make Chat unusable: fall back to
+          // the deterministic reading, which is exactly what happens when
+          // no model is connected at all. The card then says "I
+          // interpreted this as", so the degrade is visible rather than
+          // silently passed off as understanding.
+          _mutate(() {
+            status = 'Interpreting without the model '
+                '(${failure.message})';
+            error = null;
+          });
+          return kernel.understanding.deterministic.understand(decision);
+        case PlanningFailureKind.permissionDenied:
+        case PlanningFailureKind.persistenceFailure:
+        case PlanningFailureKind.recoverablePlanning:
+        case PlanningFailureKind.unexpected:
+          // These mean something is genuinely broken or refused.
+          // Proceeding on a guess would hide it.
+          _mutate(() {
+            error = runtime.redactor.redact(
+              'I could not read your request safely: ${failure.message} '
+              '(${failure.code})',
+            );
+            status = 'Kristin needs your help';
+          });
+          return null;
+      }
+    } finally {
+      _mutate(() => busy = false);
+    }
+  }
+
+  /// The canonical tasks this run has actually finished, with their
+  /// evidence, keyed by semantic identity so a replan recognizes the same
+  /// work even when the new plan assigns it a different generated id.
+  List<CompletedTaskRecord> _completedTasksFrom(RunRecord run) {
+    final plan = canonicalPlan;
+    if (plan == null) return const <CompletedTaskRecord>[];
+    final byId = <String, UniversalTask>{
+      for (final task in plan.tasks) task.id: task,
+    };
+    final completed = <CompletedTaskRecord>[];
+    for (final progress in run.items) {
+      if (progress.state != WorkItemState.succeeded) continue;
+      final task = byId[progress.item.id];
+      if (task == null) continue;
+      completed.add(
+        CompletedTaskRecord.of(
+          task,
+          evidence: <String, dynamic>{
+            'runId': run.id,
+            'attempts': progress.attempts,
+            if (progress.completedAt != null)
+              'completedAt': progress.completedAt!.toIso8601String(),
+          },
+        ),
+      );
+    }
+    return List<CompletedTaskRecord>.unmodifiable(completed);
   }
 
   bool _isActiveRunCancellation(
