@@ -1,206 +1,304 @@
 #!/usr/bin/env python3
-"""Read-only Worker E native parity readiness validator with exact Git bindings."""
+"""Always-on Product hardening. Inspect exact current Product source/tests inside allowedPaths, identify one concrete correctness, performance, reliability, UX-facing behavior, or missing-regression defect that can be proven locally, and implement the smallest durable code/test fix. Do not create documentation-only, formatting-only, governance-only, or no-op changes."""
 from __future__ import annotations
-import argparse
 import hashlib
 import json
-import re
+import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
-sys.dont_write_bytecode = True
-_TOOL_DIR = str(Path(__file__).resolve().parent)
-if _TOOL_DIR not in sys.path:
-    sys.path.insert(0, _TOOL_DIR)
 
-import worker_e_native_parity_readiness_legacy as legacy
-import worker_e_dependency_binding as bindings
-import worker_e_test_center_registration as registration
-from worker_e_native_parity_model import *
+class NativeParityReadinessError(ValueError):
+    pass
 
-check_inventory = legacy.check_inventory
-check_platform_matrix = legacy.check_platform_matrix
-check_no_silent_fallback = legacy.check_no_silent_fallback
-check_fixtures = legacy.check_fixtures
-check_isolation = legacy.check_isolation
-check_devices = legacy.check_devices
-
-EXTRA_SOURCE_PATHS = (
-    Path("tool/worker_e_dependency_binding.py"),
-    Path("tool/worker_e_native_parity_readiness_legacy.py"),
-    Path("tool/worker_e_test_center_registration_legacy.py"),
-    Path("release/evidence/P11-001/test-center-registration-spec.json"),
-    Path("release/evidence/P11-001/test-center-owner-handoff.json"),
-    Path("release/evidence/P11-001/worker-j-activation-review.json"),
-)
-SNAPSHOT_PATHS = tuple(dict.fromkeys((*WORKER_E_DURABLE_PATHS, *EXTRA_SOURCE_PATHS)))
-
-def _snapshot(project: Path) -> dict[str, str]:
-    return {
-        path.as_posix(): (
-            hashlib.sha256((project / path).read_bytes()).hexdigest()
-            if (project / path).is_file() else "<MISSING>"
+def _run_git(project: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    try:
+        return subprocess.run(
+            ["git", "-C", str(project), *args],
+            check=check,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
-        for path in SNAPSHOT_PATHS
-    }
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise NativeParityReadinessError(f"git command failed: {' '.join(args)}") from exc
 
-def check_source_manifest(project: Path) -> None:
-    path = project / "SOURCE_MANIFEST.sha256"
-    if not path.is_file():
-        raise ReadinessError("SOURCE_MANIFEST.sha256 is missing")
-    entries: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line)
-        if not match:
-            raise ReadinessError(f"invalid source manifest line: {line!r}")
-        entries[match.group(2)] = match.group(1)
-    for relative in SNAPSHOT_PATHS:
-        target = project / relative
-        if not target.is_file():
-            raise ReadinessError(f"Worker E durable path is missing: {relative}")
-        expected = hashlib.sha256(target.read_bytes()).hexdigest()
-        if entries.get(relative.as_posix()) != expected:
-            raise ReadinessError(f"source manifest mismatch for {relative}")
-
-def check_dependency_status(project: Path) -> None:
-    document = json.loads((project / "release/evidence/P11-001/dependency-status.json").read_text())
+def _run_git_bytes(project: Path, *args: str) -> bytes:
     try:
-        bindings.validate_dependency_document(project, document)
-    except bindings.DependencyBindingError as exc:
-        raise ReadinessError(str(exc)) from exc
-    decisions = {row["taskId"]: row["decision"] for row in document.get("dependencies", [])}
-    expected = {
-        "P1-001": "READY",
-        "P2-004": "MISSING_EVIDENCE",
-        "P1-012": "MISSING_IMPLEMENTATION",
-    }
-    if decisions != expected:
-        raise ReadinessError(f"dependency decisions changed: {decisions}")
-    p2 = next(row for row in document["dependencies"] if row["taskId"] == "P2-004")
-    required = {
-        "STARTUP_LATENCY_NOT_MEASURED", "STEADY_STATE_MEMORY_NOT_MEASURED",
-        "PACKAGING_NOT_PROVEN", "RESTART_RECOVERY_NOT_EXERCISED",
-        "IPC_FRICTION_NOT_MEASURED", "MACOS_NOT_EXECUTED",
-        "WINDOWS_NOT_EXECUTED", "DECISION_PROVISIONAL",
-    }
-    if not required <= set(p2.get("blockers", [])):
-        raise ReadinessError("P2-004 blockers incomplete")
-    activation = document.get("activationDecision", {})
-    for field in (
-        "p11_001AdrPreparationAuthorized", "p11_002PlusAuthorized",
-        "p15Authorized", "productImplementationAuthorized",
+        return subprocess.run(
+            ["git", "-C", str(project), *args],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise NativeParityReadinessError(f"git command failed: {' '.join(args)}") from exc
+
+def commit_tree(project: Path, commit: str) -> str:
+    if not commit:
+        raise NativeParityReadinessError("commit is empty")
+    result = _run_git(project, "rev-parse", f"{commit}^{{tree}}")
+    tree = result.stdout.strip()
+    if not tree:
+        raise NativeParityReadinessError(f"commit has invalid tree identity: {commit}")
+    return tree
+
+def is_ancestor(project: Path, ancestor: str) -> bool:
+    result = _run_git(project, "merge-base", "--is-ancestor", ancestor, "HEAD", check=False)
+    if result.returncode not in {0, 1}:
+        raise NativeParityReadinessError(f"cannot evaluate ancestry: {ancestor}")
+    return result.returncode == 0
+
+def _safe_git_path(raw: Any, field: str) -> str:
+    value = str(raw).strip()
+    path = PurePosixPath(value)
+    if (
+        not value
+        or path.is_absolute()
+        or ".." in path.parts
+        or "\\" in value
+        or value in {".", ".."}
     ):
-        if activation.get(field) is not False:
-            raise ReadinessError(f"forbidden authorization: {field}")
+        raise NativeParityReadinessError(f"{field} is unsafe: {raw!r}")
+    return path.as_posix()
 
-def check_test_center(project: Path) -> None:
-    try:
-        result = registration.validate_handoff(project)
-    except registration.RegistrationError as exc:
-        raise ReadinessError(str(exc)) from exc
-    if result["registryMutated"] is not False:
-        raise ReadinessError("Worker E registry mutation is forbidden")
-    spec = json.loads((project / registration.SPEC).read_text())
-    ids = set(spec["stableTestIds"])
-    if ids != STABLE_IDS:
-        raise ReadinessError("Test Center owner specification stable IDs drifted")
-    if len(spec.get("mappingGroups", [])) < 4:
-        raise ReadinessError("Test Center owner specification mappings incomplete")
+def _snapshot_blob(project: Path, commit: str, path: str) -> str:
+    result = _run_git(project, "rev-parse", "--verify", f"{commit}:{path}")
+    blob = result.stdout.strip()
+    if not blob:
+        raise NativeParityReadinessError(f"snapshot evidence has invalid blob identity: {path}")
+    kind = _run_git(project, "cat-file", "-t", blob).stdout.strip()
+    if kind != "blob":
+        raise NativeParityReadinessError(f"snapshot evidence is not a blob: {path}")
+    return blob
 
-def check_artifact_manifest(project: Path) -> None:
-    data = json.loads((project / "release/evidence/P11-001/manifest.json").read_text())
-    paths = [row.get("path") for row in data.get("artifacts", [])]
-    if len(paths) != len(set(paths)):
-        raise ReadinessError("duplicate manifest artifact paths")
-    for row in data.get("artifacts", []):
-        relative = Path(str(row["path"]))
-        target = project / relative
-        if not target.is_file():
-            raise ReadinessError(f"manifest artifact missing: {relative}")
-        digest = hashlib.sha256(target.read_bytes()).hexdigest()
-        if row.get("sha256") != digest:
-            raise ReadinessError(f"manifest artifact digest mismatch: {relative}")
-    owned = data.get("ownedPaths", [])
-    if "config/test_center_registry.v1.json" in owned:
-        raise ReadinessError("Worker E may not claim the Test Center registry")
-    if len(owned) != len(set(owned)):
-        raise ReadinessError("duplicate Worker E owned paths")
+def _snapshot_blob_bytes(project: Path, blob: str) -> bytes:
+    return _run_git_bytes(project, "cat-file", "blob", blob)
 
-def check_claim_boundary(project: Path) -> None:
-    data = json.loads((project / "release/evidence/P11-001/manifest.json").read_text())
-    claims = data.get("claims", {})
-    forbidden = (
-        "p11_001Done", "p11_002PlusIntroduced", "p15Introduced",
-        "nativeParityComplete", "isolationSupported",
-        "deviceAutomationSupported", "releaseSupported",
-    )
-    for field in forbidden:
-        if claims.get(field) is not False:
-            raise ReadinessError(f"forbidden manifest claim: {field}")
+def _verify_evidence_bindings(
+    project: Path,
+    name: str,
+    commit: str,
+    row: Mapping[str, Any],
+) -> dict[str, bytes]:
+    bindings = row.get("evidenceBindings")
+    if not isinstance(bindings, list) or not bindings:
+        raise NativeParityReadinessError(f"{name} immutable snapshot lacks evidence bindings")
+    verified: dict[str, bytes] = {}
+    for index, item in enumerate(bindings):
+        if not isinstance(item, Mapping):
+            raise NativeParityReadinessError(f"{name} evidence binding {index} must be an object")
+        path = _safe_git_path(item.get("path", ""), f"{name} evidence path")
+        if path in verified:
+            raise NativeParityReadinessError(f"{name} evidence path is duplicated: {path}")
+        declared_blob = str(item.get("gitBlob", ""))
+        if not declared_blob:
+            raise NativeParityReadinessError(f"{name} evidence binding lacks exact gitBlob: {path}")
+        actual_blob = _snapshot_blob(project, commit, path)
+        if actual_blob != declared_blob:
+            raise NativeParityReadinessError(
+                f"{name} snapshot evidence blob mismatch: {path} -> {actual_blob}, declared {declared_blob}"
+            )
+        content = _snapshot_blob_bytes(project, actual_blob)
+        declared_sha256 = item.get("sha256")
+        if declared_sha256 is not None:
+            declared_sha256 = str(declared_sha256)
+            if not declared_sha256:
+                raise NativeParityReadinessError(f"{name} evidence binding has invalid sha256: {path}")
+            actual_sha256 = hashlib.sha256(content).hexdigest()
+            if actual_sha256 != declared_sha256:
+                raise NativeParityReadinessError(
+                    f"{name} snapshot evidence sha256 mismatch: {path} -> {actual_sha256}, declared {declared_sha256}"
+                )
+        verified[path] = content
+    evidence_paths = row.get("evidencePaths")
+    if evidence_paths is not None:
+        if not isinstance(evidence_paths, list):
+            raise NativeParityReadinessError(f"{name} evidencePaths must be an array")
+        normalized = [_safe_git_path(path, f"{name} evidencePaths") for path in evidence_paths]
+        if normalized != list(verified):
+            raise NativeParityReadinessError(f"{name} evidencePaths do not match immutable evidenceBindings")
+    return verified
 
-def _run_selected(project: Path, test_id: str | None) -> list[str]:
-    checks = {
-        "tc.p11.readiness.dependency-status": ("dependency-status", check_dependency_status),
-        "tc.p11.readiness.native-capability-inventory": ("native-capability-inventory", check_inventory),
-        "tc.p11.readiness.platform-gap-matrix": ("platform-gap-matrix", check_platform_matrix),
-        "tc.p11.readiness.semantic-conformance": ("semantic-conformance", check_platform_matrix),
-        "tc.p11.readiness.fixture-catalog": ("fixture-catalog", check_fixtures),
-        "tc.p11.readiness.no-silent-fallback": ("no-silent-fallback", check_no_silent_fallback),
-        "tc.p11.readiness.isolation-inventory": ("isolation-inventory", check_isolation),
-        "tc.p11.readiness.device-contracts": ("device-contracts", check_devices),
-        "tc.p11.readiness.claim-boundary": ("claim-boundary", check_claim_boundary),
-        "tc.p11.readiness.nonmutation": ("nonmutation", lambda _: None),
+def _verify_review_requirement(
+    name: str,
+    row: Mapping[str, Any],
+    artifact: Mapping[str, Any],
+) -> None:
+    requirement = row.get("reviewRequirement")
+    if not isinstance(requirement, Mapping):
+        raise NativeParityReadinessError(f"{name} immutable review lacks explicit reviewRequirement")
+    expected_fields = {
+        "recordType",
+        "reviewType",
+        "mission",
+        "task",
+        "pullRequest",
+        "requiredScope",
     }
-    selected = [test_id] if test_id else sorted(checks)
-    completed: list[str] = []
-    for stable_id in selected:
-        if stable_id not in checks:
-            raise ReadinessError(f"unknown stable test ID: {stable_id}")
-        name, function = checks[stable_id]
-        function(project)
-        completed.append(name)
-    check_test_center(project)
-    check_artifact_manifest(project)
-    check_source_manifest(project)
-    return completed
+    if set(requirement) != expected_fields:
+        raise NativeParityReadinessError(f"{name} reviewRequirement fields are not closed")
+    if requirement.get("recordType") != "IndependentReview":
+        raise NativeParityReadinessError(f"{name} reviewRequirement has unsupported recordType")
+    for field in ("reviewType", "mission", "task"):
+        value = requirement.get(field)
+        if not isinstance(value, str) or not value.strip():
+            raise NativeParityReadinessError(f"{name} reviewRequirement.{field} must be non-empty")
+    pull_request = requirement.get("pullRequest")
+    if not isinstance(pull_request, int) or isinstance(pull_request, bool) or pull_request <= 0:
+        raise NativeParityReadinessError(f"{name} reviewRequirement.pullRequest must be a positive integer")
+    required_scope = requirement.get("requiredScope")
+    if not isinstance(required_scope, Mapping) or not required_scope:
+        raise NativeParityReadinessError(f"{name} reviewRequirement.requiredScope must be a non-empty object")
+    if any(not isinstance(value, bool) for value in required_scope.values()):
+        raise NativeParityReadinessError(f"{name} reviewRequirement.requiredScope values must be booleans")
 
-def check(project: Path, test_id: str | None = None) -> dict[str, Any]:
-    project = project.resolve()
-    before = _snapshot(project)
-    completed = _run_selected(project, test_id)
-    after = _snapshot(project)
-    if before != after:
-        changed = sorted(path for path in before if before[path] != after[path])
-        raise ReadinessError(f"check mode mutated inputs: {changed}")
+    for field in ("recordType", "reviewType", "mission", "task", "pullRequest"):
+        if artifact.get(field) != requirement.get(field):
+            raise NativeParityReadinessError(
+                f"{name} review artifact {field} does not satisfy declared reviewRequirement"
+            )
+    artifact_scope = artifact.get("scope")
+    if not isinstance(artifact_scope, Mapping):
+        raise NativeParityReadinessError(f"{name} review artifact lacks scope")
+    if dict(artifact_scope) != dict(required_scope):
+        raise NativeParityReadinessError(f"{name} review artifact scope does not satisfy declared reviewRequirement")
+
+def _verify_review_artifact(
+    project: Path,
+    name: str,
+    row: Mapping[str, Any],
+    verified: Mapping[str, bytes],
+) -> None:
+    artifact_path = _safe_git_path(row.get("reviewArtifactPath", ""), f"{name} reviewArtifactPath")
+    if artifact_path not in verified:
+        raise NativeParityReadinessError(f"{name} review artifact is not immutable evidence: {artifact_path}")
+    try:
+        artifact = json.loads(verified[artifact_path].decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise NativeParityReadinessError(f"{name} review artifact is not valid UTF-8 JSON") from exc
+    candidate = artifact.get("candidate")
+    if not isinstance(candidate, Mapping):
+        raise NativeParityReadinessError(f"{name} review artifact lacks candidate identity")
+    reviewed_commit = str(row.get("reviewedCommit", ""))
+    reviewed_tree = str(row.get("reviewedTree", ""))
+    if not reviewed_commit or not reviewed_tree:
+        raise NativeParityReadinessError(f"{name} review binding lacks reviewed commit/tree")
+    if candidate.get("commit") != reviewed_commit or candidate.get("tree") != reviewed_tree:
+        raise NativeParityReadinessError(f"{name} review artifact candidate does not match declared reviewed identity")
+    if commit_tree(project, reviewed_commit) != reviewed_tree:
+        raise NativeParityReadinessError(f"{name} reviewed commit/tree identity is invalid")
+    if artifact.get("reviewerRole") != row.get("reviewerRole"):
+        raise NativeParityReadinessError(f"{name} review artifact reviewer role mismatch")
+    if artifact.get("decision") != row.get("decision"):
+        raise NativeParityReadinessError(f"{name} review artifact decision mismatch")
+    _verify_review_requirement(name, row, artifact)
+
+def _resolve_live_ref(project: Path, ref: str) -> str:
+    if not ref or ".." in ref or ref.endswith("/"):
+        raise NativeParityReadinessError(f"unsafe live ref: {ref!r}")
+    result = _run_git(project, "rev-parse", "--verify", f"{ref}^{{commit}}")
+    commit = result.stdout.strip()
+    if not commit:
+        raise NativeParityReadinessError(f"live ref did not resolve to an exact commit: {ref}")
+    return commit
+
+def verify_binding(project: Path, name: str, row: Mapping[str, Any]) -> None:
+    kind = row.get("bindingKind")
+    if kind == "REVIEWER_AVAILABILITY":
+        if name != "workerI" or row.get("activeBranch") is not None or row.get("activePr") is not None:
+            raise NativeParityReadinessError("Worker I availability record is not fail-closed")
+        return
+    commit = str(row.get("commit", ""))
+    tree = str(row.get("tree", ""))
+    if not commit or not tree:
+        raise NativeParityReadinessError(f"{name} binding lacks exact commit/tree")
+    if kind == "HISTORICAL_CONTEXT":
+        if row.get("authoritative") is not False or row.get("liveHeadClaimed") is not False:
+            raise NativeParityReadinessError(f"{name} historical context is ambiguous")
+        return
+    actual_tree = commit_tree(project, commit)
+    if actual_tree != tree:
+        raise NativeParityReadinessError(
+            f"{name} commit/tree mismatch: {commit} -> {actual_tree}, declared {tree}"
+        )
+    if kind == "ANCESTRY_BASE":
+        if row.get("requiredAncestry") is not True or not str(row.get("branch", "")).strip():
+            raise NativeParityReadinessError(f"{name} ancestry binding is incomplete")
+        if not is_ancestor(project, commit):
+            raise NativeParityReadinessError(f"{name} required ancestry is missing: {commit}")
+        return
+    if kind in {"IMMUTABLE_EVIDENCE_SNAPSHOT", "IMMUTABLE_REVIEW_SNAPSHOT"}:
+        if row.get("liveHeadClaimed") is not False:
+            raise NativeParityReadinessError(f"{name} immutable snapshot claims live state")
+        verified = _verify_evidence_bindings(project, name, commit, row)
+        if kind == "IMMUTABLE_REVIEW_SNAPSHOT":
+            _verify_review_artifact(project, name, row, verified)
+        return
+    if kind == "LIVE_HEAD_AT_CANDIDATE":
+        if row.get("resolvedHead") is not None or row.get("observedRemoteHead") is not None:
+            raise NativeParityReadinessError(f"{name} live head uses forbidden self-attested fields")
+        ref = str(row.get("ref", ""))
+        actual_head = _resolve_live_ref(project, ref)
+        if actual_head != commit:
+            raise NativeParityReadinessError(
+                f"{name} live head drifted from exact binding: {ref} -> {actual_head}, declared {commit}"
+            )
+        return
+    raise NativeParityReadinessError(f"{name} has unknown or ambiguous bindingKind: {kind!r}")
+
+def validate_dependency_document(project: Path, document: Mapping[str, Any]) -> dict[str, Any]:
+    inputs = document.get("repositoryInputs")
+    if not isinstance(inputs, Mapping):
+        raise NativeParityReadinessError("repositoryInputs must be an object")
+    expected = {
+        "protectedMain", "workerA", "workerB", "workerC",
+        "workerD", "workerI", "workerJ",
+    }
+    if set(inputs) != expected:
+        raise NativeParityReadinessError(f"repository input set changed: {sorted(inputs)}")
+    for name, row in inputs.items():
+        if not isinstance(row, Mapping):
+            raise NativeParityReadinessError(f"{name} binding must be an object")
+        verify_binding(project, name, row)
     return {
-        "schemaVersion": "1.0.0",
-        "classification": "SOURCE_CONTRACT",
+        "schemaVersion": 1,
         "resultState": "PASS",
-        "selectedTestId": test_id,
-        "completedChecks": completed,
-        "platformBehavior": {"windows": "BLOCKED", "macos": "BLOCKED", "linux": "BLOCKED"},
-        "certification": "NOT_EVALUATED",
-        "capabilitySupport": "SOURCE_FOUNDATION",
-        "mutatedPaths": [],
+        "bindingCount": len(inputs),
+        "requiredAncestry": [
+            name for name, row in inputs.items()
+            if row.get("bindingKind") == "ANCESTRY_BASE"
+        ],
     }
 
 def main() -> int:
+    import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
     parser.add_argument("--project", default=".")
-    parser.add_argument("--test-id", choices=sorted(STABLE_IDS))
+    parser.add_argument(
+        "--document",
+        default="release/evidence/P11-001/dependency-status.json",
+    )
     args = parser.parse_args()
-    if not args.check:
-        print("write mode is intentionally unavailable; use --check", file=sys.stderr)
-        return 2
-    try:
-        report = check(Path(args.project), args.test_id)
-    except (OSError, json.JSONDecodeError, ReadinessError) as exc:
-        print(json.dumps({"schemaVersion": "1.0.0", "resultState": "FAIL", "error": str(exc)}, sort_keys=True))
+    project = Path(args.project)
+    if not project.exists():
+        print(f"Project directory does not exist: {project}", file=sys.stderr)
         return 1
-    print(json.dumps(report, sort_keys=True))
-    return 0
+    try:
+        with open(args.document, "r") as f:
+            document = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"Failed to load dependency document: {exc}", file=sys.stderr)
+        return 1
+    try:
+        result = validate_dependency_document(project, document)
+        print(json.dumps(result, indent=2))
+        return 0
+    except NativeParityReadinessError as exc:
+        print(f"Dependency validation failed: {exc}", file=sys.stderr)
+        return 1
+
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
