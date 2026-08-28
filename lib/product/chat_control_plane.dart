@@ -73,7 +73,11 @@ enum ChatExecutionRoute {
   help,
 }
 
-enum ChatInteractionKind { informational, action, ambiguous }
+/// [reference] is a bare target mention with no verb ("@test8B",
+/// "@project-manager") -- it is always non-mutating and never carries a
+/// plan or permission requirement, regardless of which capability or
+/// target it names. See [ChatIntentCompiler]'s target-only handling.
+enum ChatInteractionKind { informational, action, ambiguous, reference }
 
 enum ChatAutocompleteKind { command, mention }
 
@@ -885,6 +889,19 @@ class ChatIntentCompiler {
       );
     }
 
+    // A message that is only one or more @mentions and nothing else is
+    // deterministic and contextual, never an action: "@test8B" selects
+    // project context, "@project-manager" references that workspace.
+    // Without this branch a bare mention with no verb used to fall all the
+    // way through to the natural-language default at the bottom of this
+    // method, which treats an unrecognized request as an ambiguous
+    // agent.create_project -- showing a fabricated "Create"/mutation-risk
+    // understanding card for a message that never asked to create or
+    // mutate anything.
+    if (!parsed.hasExplicitCommand && _isTargetOnly(parsed)) {
+      return _targetOnlyDecision(parsed, targets, unresolved);
+    }
+
     if (_isInformationalLanguage(parsed.originalText)) {
       return _decision(
         kind: ChatInteractionKind.informational,
@@ -988,6 +1005,64 @@ class ChatIntentCompiler {
       needsUnderstanding: understanding,
       needsPlan: plan,
       ambiguous: ambiguous,
+    );
+  }
+
+  /// True when [parsed] carries at least one mention and nothing else --
+  /// stripping every recognized `@mention` token leaves no remaining
+  /// content. Trailing/interior punctuation around the mentions is
+  /// tolerated so "@test8B, @kris.ai" still counts.
+  bool _isTargetOnly(ParsedChatInput parsed) {
+    if (parsed.mentions.isEmpty) return false;
+    final stripped = parsed.originalText
+        .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+        .replaceAll(RegExp(r'[\s.,!?;:]+'), ' ')
+        .trim();
+    return stripped.isEmpty;
+  }
+
+  ChatInteractionDecision _targetOnlyDecision(
+    ParsedChatInput parsed,
+    List<ChatTarget> targets,
+    List<String> unresolved,
+  ) {
+    // A bare mention that names a known capability alias directly --
+    // e.g. "@project-manager" -- references that capability itself. Route
+    // to it exactly as an explicit command would: this capability's own
+    // risk/understanding/plan policy decides what happens next (a
+    // riskClass.none navigation capability with understandingPolicy.never
+    // proceeds immediately; nothing here grants it more authority than
+    // typing its slash command would).
+    if (unresolved.isEmpty && parsed.mentions.length == 1) {
+      final byCapability = registry.byMention(parsed.mentions.first);
+      if (byCapability != null) {
+        return _decision(
+          kind: ChatInteractionKind.action,
+          parsed: parsed,
+          capability: byCapability,
+          targets: targets,
+          unresolved: unresolved,
+          goal: _goalFor(byCapability, parsed, targets),
+          mode: byCapability.preferredMode,
+          risk: byCapability.riskClass,
+          understanding: policy.needsUnderstanding(byCapability),
+          plan: false,
+          ambiguous: false,
+        );
+      }
+    }
+    return _decision(
+      kind: ChatInteractionKind.reference,
+      parsed: parsed,
+      capability: null,
+      targets: targets,
+      unresolved: unresolved,
+      goal: parsed.originalText,
+      mode: CommandMode.ask,
+      risk: ChatRiskClass.none,
+      understanding: false,
+      plan: false,
+      ambiguous: targets.isEmpty || targets.length > 1,
     );
   }
 
