@@ -1,0 +1,81 @@
+name: P26 Verification Center Governance
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/p26-verification-center.yml"
+      - "docs/roadmap/P26_VERIFICATION_CENTER.md"
+      - "docs/roadmap/p26/**"
+      - "docs/roadmap/decisions/ADR-P26-001-verification-center-architecture.md"
+      - "docs/testing/TEST_CENTER_P26_VERIFICATION_CENTER.md"
+      - "tasks/planned/P26-*.md"
+      - "tool/p26_verification_center_*.py"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/p26-verification-center.yml"
+      - "docs/roadmap/P26_VERIFICATION_CENTER.md"
+      - "docs/roadmap/p26/**"
+      - "docs/roadmap/decisions/ADR-P26-001-verification-center-architecture.md"
+      - "docs/testing/TEST_CENTER_P26_VERIFICATION_CENTER.md"
+      - "tasks/planned/P26-*.md"
+      - "tool/p26_verification_center_*.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p26-verification-center-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance-contract:
+    name: P26 governance contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPYCACHEPREFIX: ${{ runner.temp }}/p26-pyc
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile P26 governance tools
+        run: >-
+          python -m py_compile
+          tool/p26_verification_center_roadmap_test.py
+          tool/p26_verification_center_test_station.py
+
+      - name: Validate P26 roadmap contract
+        run: python tool/p26_verification_center_roadmap_test.py --project . --json
+
+      - name: List P26 Test Station profiles
+        run: python tool/p26_verification_center_test_station.py --project . --list
+
+      - name: Run P26 contract profile
+        run: >-
+          python tool/p26_verification_center_test_station.py
+          --project .
+          --profile contract
+          --check
+
+      - name: Validate shared Test Center contracts
+        run: python tool/test_center_contracts.py check --project .
+
+      - name: Validate shared assurance hierarchy
+        run: python tool/test_center_assurance_hierarchy.py check --project .
+
+      - name: Verify source remained unchanged
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain=v1 --untracked-files=all)" ]]; then
+            git status --short --untracked-files=all
+            exit 1
+          fi
