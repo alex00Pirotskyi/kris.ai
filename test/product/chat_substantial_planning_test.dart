@@ -62,7 +62,28 @@ void main() {
     tearDown(() async {
       await events.close();
       if (await temporary.exists()) {
-        await temporary.delete(recursive: true);
+        // On Windows, SQLite-backed repository handles are not always
+        // released the instant events/audit close, so an immediate
+        // recursive delete can hit a transient sharing violation. Retry
+        // with backoff instead of failing the test on that (matches
+        // v1_product_preview_test.dart's tearDown for the same reason).
+        FileSystemException? lastError;
+        var deleted = false;
+        for (var attempt = 0; attempt < 20; attempt++) {
+          try {
+            await temporary.delete(recursive: true);
+            deleted = true;
+            break;
+          } on FileSystemException catch (error) {
+            lastError = error;
+            await Future<void>.delayed(
+              Duration(milliseconds: 25 * (attempt + 1)),
+            );
+          }
+        }
+        if (!deleted && !Platform.isWindows && lastError != null) {
+          throw lastError;
+        }
       }
     });
 
