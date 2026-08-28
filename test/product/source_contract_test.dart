@@ -142,6 +142,13 @@ void main() {
         'lib/product/browser/web_studio.dart',
         'lib/product/capability_doctor.dart',
         'lib/product/chat_studio.dart',
+        'lib/product/chat_action_dispatcher.dart',
+        'lib/product/chat_control_plane.dart',
+        'lib/product/chat_control_plane_studio.dart',
+        'lib/product/chat_control_plane_studio_actions.dart',
+        'lib/product/chat_control_plane_studio_view.dart',
+        'lib/product/chat_conversation_state.dart',
+        'lib/product/chat_target_resolver.dart',
         'lib/product/crypto_utils.dart',
         'lib/product/deployment_support.dart',
         'lib/product/domain.dart',
@@ -190,6 +197,13 @@ void main() {
         'lib/product/product_error_normalizer.dart',
         'lib/product/project_provisioning.dart',
         'lib/product/process_launch.dart',
+        'lib/product/process_identity.dart',
+        'lib/product/process_identity_linux.dart',
+        'lib/product/process_identity_windows.dart',
+        'lib/product/project_admission.dart',
+        'lib/product/project_launch_profile_detection.dart',
+        'lib/product/project_control_service.dart',
+        'lib/product/git_state_probe.dart',
         'lib/product/run_execution_projection.dart',
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',
@@ -1855,11 +1869,11 @@ void main() {
       expect(coordinator, contains('acquireRunLease'));
       expect(coordinator, contains('recordTaskAttempt'));
       expect(retry, contains('class WorkflowRetryTaxonomy'));
-      expect(migrations, contains('generatedWorkflowSchemaVersion = 6'));
+      expect(migrations, contains('generatedWorkflowSchemaVersion = 7'));
       expect(
         migrations,
         contains(
-          'df7e693bff693d0bf649de4f26ea907ce969456adfbf342d17f40f06b22b6261',
+          '435e2b76b8d7afd8dc99859793d82c3b00eb7581194e874c818151a4f33c9d36',
         ),
       );
       expect(cli, contains('--workflow-kernel'));
@@ -1868,7 +1882,7 @@ void main() {
         kernelGate,
         contains('Crash after idempotent result replays once'),
       );
-      expect(kernel['schemaVersion'], 6);
+      expect(kernel['schemaVersion'], 7);
       expect(kernel['appendOnlyRunEvents'], isTrue);
       expect(kernel['durableIdempotency'], isTrue);
       expect(kernel['startupRollback'], isTrue);

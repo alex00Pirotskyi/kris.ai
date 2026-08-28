@@ -333,7 +333,8 @@ final class _ScriptedRunnerProvider implements LanguageModelProvider {
                 'path': 'tool/generate.dart',
                 'content': _generatorSource,
               },
-              'reason': 'Prepare the deterministic fixture generator before testing completion.',
+              'reason':
+                  'Prepare the deterministic fixture generator before testing completion.',
             },
             <String, Object?>{
               'action': 'complete',

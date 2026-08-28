@@ -30,6 +30,14 @@ enum ConvergenceAction {
   failConvergence,
 }
 
+enum ConvergenceProgressClass {
+  positiveProgress,
+  neutral,
+  regression,
+  oscillation,
+  unknown,
+}
+
 class ModelRouteCandidate {
   const ModelRouteCandidate({
     required this.provider,
@@ -248,6 +256,7 @@ class SemanticProgressDelta {
     required this.newEvidence,
     required this.resolvedErrors,
     required this.newErrors,
+    required this.retainedErrors,
     required this.criteriaSatisfied,
     required this.criteriaRegressed,
     required this.newExternalState,
@@ -263,6 +272,7 @@ class SemanticProgressDelta {
   final List<String> newEvidence;
   final List<String> resolvedErrors;
   final List<String> newErrors;
+  final List<String> retainedErrors;
   final List<String> criteriaSatisfied;
   final List<String> criteriaRegressed;
   final List<String> newExternalState;
@@ -272,14 +282,42 @@ class SemanticProgressDelta {
   final String beforeHash;
   final String afterHash;
 
+  ConvergenceProgressClass get progressClass {
+    final criteriaNet = criteriaSatisfied.length - criteriaRegressed.length;
+    final errorNet = resolvedErrors.length - newErrors.length;
+    if (criteriaRegressed.isNotEmpty && criteriaNet <= 0) {
+      return ConvergenceProgressClass.regression;
+    }
+    if (criteriaNet < 0 || errorNet < 0) {
+      return ConvergenceProgressClass.regression;
+    }
+    if (newErrors.isNotEmpty && resolvedErrors.isEmpty) {
+      return ConvergenceProgressClass.regression;
+    }
+    final objectiveAdvance =
+        criteriaNet > 0 || errorNet > 0 || newExternalState.isNotEmpty;
+    if (objectiveAdvance) {
+      return ConvergenceProgressClass.positiveProgress;
+    }
+    if (retainedErrors.isNotEmpty) {
+      return ConvergenceProgressClass.neutral;
+    }
+    if (newArtifacts.isNotEmpty) {
+      return ConvergenceProgressClass.positiveProgress;
+    }
+    if (changedArtifactHashes.isNotEmpty ||
+        newEvidence.isNotEmpty ||
+        planRevised ||
+        beforeHash == afterHash ||
+        repeatedAction ||
+        repeatedResult) {
+      return ConvergenceProgressClass.neutral;
+    }
+    return ConvergenceProgressClass.unknown;
+  }
+
   bool get semanticProgress =>
-      newArtifacts.isNotEmpty ||
-      changedArtifactHashes.isNotEmpty ||
-      newEvidence.isNotEmpty ||
-      resolvedErrors.isNotEmpty ||
-      criteriaSatisfied.isNotEmpty ||
-      newExternalState.isNotEmpty ||
-      planRevised;
+      progressClass == ConvergenceProgressClass.positiveProgress;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'newArtifacts': newArtifacts,
@@ -287,10 +325,12 @@ class SemanticProgressDelta {
         'newEvidence': newEvidence,
         'resolvedErrors': resolvedErrors,
         'newErrors': newErrors,
+        'retainedErrors': retainedErrors,
         'criteriaSatisfied': criteriaSatisfied,
         'criteriaRegressed': criteriaRegressed,
         'newExternalState': newExternalState,
         'planRevised': planRevised,
+        'progressClass': progressClass.name,
         'semanticProgress': semanticProgress,
         'repeatedAction': repeatedAction,
         'repeatedResult': repeatedResult,
@@ -299,8 +339,37 @@ class SemanticProgressDelta {
       };
 }
 
+class _ConvergenceTrackerState {
+  String? lastAfterHash;
+  String? lastFailureSignature;
+  int sameFailureCount = 0;
+  int sameActionSameStateCount = 0;
+  final List<String> recentStates = <String>[];
+
+  void reset() {
+    lastAfterHash = null;
+    lastFailureSignature = null;
+    sameFailureCount = 0;
+    sameActionSameStateCount = 0;
+    recentStates.clear();
+  }
+}
+
 class SemanticProgressEngine {
-  const SemanticProgressEngine();
+  SemanticProgressEngine();
+
+  final Map<String, _ConvergenceTrackerState> _trackerStates =
+      <String, _ConvergenceTrackerState>{};
+  ConvergenceProgressClass _lastProgressClass =
+      ConvergenceProgressClass.unknown;
+  int _lastSameFailureCount = 0;
+  int _lastSameActionSameStateCount = 0;
+  bool _lastOscillating = false;
+
+  ConvergenceProgressClass get lastProgressClass => _lastProgressClass;
+  int get lastSameFailureCount => _lastSameFailureCount;
+  int get lastSameActionSameStateCount => _lastSameActionSameStateCount;
+  bool get lastOscillating => _lastOscillating;
 
   SemanticProgressDelta compare(
     SemanticProgressSnapshot before,
@@ -320,12 +389,14 @@ class SemanticProgressEngine {
       ..sort();
     List<String> added(Set<String> oldValues, Set<String> newValues) =>
         (newValues.difference(oldValues).toList()..sort());
-    return SemanticProgressDelta(
+    final delta = SemanticProgressDelta(
       newArtifacts: newArtifacts,
       changedArtifactHashes: changed,
       newEvidence: added(before.evidenceIds, after.evidenceIds),
       resolvedErrors: added(after.errorCodes, before.errorCodes),
       newErrors: added(before.errorCodes, after.errorCodes),
+      retainedErrors: before.errorCodes.intersection(after.errorCodes).toList()
+        ..sort(),
       criteriaSatisfied: added(
         before.satisfiedCriteria,
         after.satisfiedCriteria,
@@ -345,6 +416,94 @@ class SemanticProgressEngine {
       beforeHash: before.hash,
       afterHash: after.hash,
     );
+    _observe(before, after, delta);
+    return delta;
+  }
+
+  void _observe(
+    SemanticProgressSnapshot before,
+    SemanticProgressSnapshot after,
+    SemanticProgressDelta delta,
+  ) {
+    final streamKey = after.planHash ?? before.planHash ?? '__default__';
+    final state = _trackerStates.putIfAbsent(
+      streamKey,
+      _ConvergenceTrackerState.new,
+    );
+    if (state.lastAfterHash != null && state.lastAfterHash != before.hash) {
+      state.reset();
+    }
+    if (state.recentStates.isEmpty) {
+      state.recentStates.add(_materialStateHash(before));
+    }
+
+    if (delta.semanticProgress) {
+      state.lastFailureSignature = null;
+      state.sameFailureCount = 0;
+      state.sameActionSameStateCount = 0;
+    } else {
+      final failureSignature = after.errorCodes.isEmpty
+          ? ''
+          : Sha256.text(
+              canonicalJson(after.errorCodes.toList()..sort()),
+            );
+      if (failureSignature.isNotEmpty) {
+        if (state.lastFailureSignature == failureSignature) {
+          state.sameFailureCount++;
+        } else {
+          state.lastFailureSignature = failureSignature;
+          state.sameFailureCount = 1;
+        }
+      }
+      if (delta.repeatedAction &&
+          _materialStateHash(before) == _materialStateHash(after)) {
+        state.sameActionSameStateCount++;
+      } else {
+        state.sameActionSameStateCount = 0;
+      }
+    }
+
+    state.recentStates.add(_materialStateHash(after));
+    while (state.recentStates.length > 8) {
+      state.recentStates.removeAt(0);
+    }
+    final oscillating = hasOscillation(state.recentStates);
+    state.lastAfterHash = after.hash;
+    _lastOscillating = oscillating;
+    _lastSameFailureCount = state.sameFailureCount;
+    _lastSameActionSameStateCount = state.sameActionSameStateCount;
+    _lastProgressClass = oscillating && !delta.semanticProgress
+        ? ConvergenceProgressClass.oscillation
+        : delta.progressClass;
+  }
+
+  String _materialStateHash(SemanticProgressSnapshot snapshot) => Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'artifacts': snapshot.artifacts,
+          'errorCodes': snapshot.errorCodes.toList()..sort(),
+          'satisfiedCriteria': snapshot.satisfiedCriteria.toList()..sort(),
+          'externalState': snapshot.externalState.toList()..sort(),
+        }),
+      );
+
+  bool hasOscillation(Iterable<String> recentStates) {
+    final states = recentStates.toList(growable: false);
+    if (states.length < 4) return false;
+    final tail = states.sublist(max(0, states.length - 8));
+    for (var cycle = 2; cycle <= min(3, tail.length ~/ 2); cycle++) {
+      final start = tail.length - cycle * 2;
+      var same = true;
+      for (var index = 0; index < cycle; index++) {
+        if (tail[start + index] != tail[start + cycle + index]) {
+          same = false;
+          break;
+        }
+      }
+      if (same && tail.sublist(start, start + cycle).toSet().length > 1) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
@@ -353,31 +512,98 @@ class ConvergenceDecision {
     required this.action,
     required this.reason,
     required this.stalledTurns,
+    this.stopReason = '',
     this.requiresApproval = false,
   });
 
   final ConvergenceAction action;
   final String reason;
   final int stalledTurns;
+  final String stopReason;
   final bool requiresApproval;
   bool get terminal => action == ConvergenceAction.failConvergence;
   bool get permissionsUnchanged => true;
 }
 
 class ConvergenceController {
-  const ConvergenceController();
+  const ConvergenceController({
+    this.progressTracker,
+    this.consecutiveNoProgressLimit = 3,
+    this.sameFailureLimit = 3,
+    this.sameActionSameStateLimit = 3,
+  });
+
+  final SemanticProgressEngine? progressTracker;
+  final int consecutiveNoProgressLimit;
+  final int sameFailureLimit;
+  final int sameActionSameStateLimit;
 
   ConvergenceDecision decide({
     required int stalledTurns,
     required bool semanticProgress,
     required bool strongerModelAvailable,
     required bool strongerModelApproved,
+    ConvergenceProgressClass? progressClass,
+    int? sameFailureCount,
+    int? sameActionSameStateCount,
+    bool? oscillating,
   }) {
-    if (semanticProgress) {
+    final classification = progressClass ??
+        progressTracker?.lastProgressClass ??
+        (semanticProgress
+            ? ConvergenceProgressClass.positiveProgress
+            : ConvergenceProgressClass.neutral);
+    final repeatedFailureCount =
+        sameFailureCount ?? progressTracker?.lastSameFailureCount ?? 0;
+    final repeatedActionCount = sameActionSameStateCount ??
+        progressTracker?.lastSameActionSameStateCount ??
+        0;
+    final oscillationDetected =
+        oscillating ?? progressTracker?.lastOscillating ?? false;
+    if (classification == ConvergenceProgressClass.positiveProgress) {
       return const ConvergenceDecision(
         action: ConvergenceAction.continueExecution,
-        reason: 'Durable semantic progress was observed.',
+        reason: 'Objective progress was observed.',
         stalledTurns: 0,
+      );
+    }
+    if (oscillationDetected ||
+        classification == ConvergenceProgressClass.oscillation) {
+      return ConvergenceDecision(
+        action: ConvergenceAction.failConvergence,
+        reason:
+            'Work stopped because execution oscillated between previously seen states without net improvement.',
+        stopReason: 'oscillation',
+        stalledTurns: stalledTurns,
+      );
+    }
+    if (repeatedFailureCount >= sameFailureLimit) {
+      return ConvergenceDecision(
+        action: ConvergenceAction.failConvergence,
+        reason:
+            'Work stopped because the same verification failure remained unchanged across $repeatedFailureCount recovery attempts.',
+        stopReason: 'repeated_failure_no_progress',
+        stalledTurns: stalledTurns,
+      );
+    }
+    if (repeatedActionCount >= sameActionSameStateLimit) {
+      return ConvergenceDecision(
+        action: ConvergenceAction.failConvergence,
+        reason:
+            'Work stopped because execution repeated the same action without changing project state.',
+        stopReason: 'repeated_action_same_state',
+        stalledTurns: stalledTurns,
+      );
+    }
+    if (stalledTurns >= consecutiveNoProgressLimit) {
+      final regression = classification == ConvergenceProgressClass.regression;
+      return ConvergenceDecision(
+        action: ConvergenceAction.failConvergence,
+        reason: regression
+            ? 'Work stopped because repeated recovery attempts produced regressions without net objective improvement.'
+            : 'Work stopped because $stalledTurns consecutive recovery attempts produced no objective progress.',
+        stopReason: regression ? 'regression_no_progress' : 'no_progress',
+        stalledTurns: stalledTurns,
       );
     }
     if (stalledTurns <= 1) {
@@ -387,49 +613,17 @@ class ConvergenceController {
         stalledTurns: stalledTurns,
       );
     }
-    if (stalledTurns == 2) {
-      return ConvergenceDecision(
-        action: ConvergenceAction.requireDifferentAction,
-        reason: 'Repeated action or result is not progress.',
-        stalledTurns: stalledTurns,
-      );
-    }
-    if (stalledTurns == 3) {
-      return ConvergenceDecision(
-        action: ConvergenceAction.routeToVerifier,
-        reason: 'Use independent verification to resolve the state.',
-        stalledTurns: stalledTurns,
-      );
-    }
-    if (stalledTurns == 4) {
-      return ConvergenceDecision(
-        action: ConvergenceAction.splitTask,
-        reason:
-            'Split the blocked objective into independently verifiable work.',
-        stalledTurns: stalledTurns,
-      );
-    }
-    if (stalledTurns == 5) {
-      return ConvergenceDecision(
-        action: ConvergenceAction.askUser,
-        reason: 'One bounded user decision is required.',
-        stalledTurns: stalledTurns,
-      );
-    }
-    if (stalledTurns == 6 && strongerModelAvailable) {
+    if (strongerModelAvailable && strongerModelApproved) {
       return ConvergenceDecision(
         action: ConvergenceAction.offerStrongerModel,
-        reason: strongerModelApproved
-            ? 'Use the already approved fallback policy.'
-            : 'Offer a stronger model without selecting it silently.',
+        reason: 'Use the already approved fallback policy.',
         stalledTurns: stalledTurns,
-        requiresApproval: !strongerModelApproved,
       );
     }
     return ConvergenceDecision(
-      action: ConvergenceAction.failConvergence,
+      action: ConvergenceAction.requireDifferentAction,
       reason:
-          'Bounded convergence strategies were exhausted without semantic progress.',
+          'Repeated no-progress requires a materially different governed action.',
       stalledTurns: stalledTurns,
     );
   }
@@ -587,7 +781,7 @@ class PhaseBudget {
           phase: 'execution',
           maxModelRequests: 8,
           maxToolCalls: 16,
-          maxRepairs: 4,
+          maxRepairs: 24,
           maxOutputTokens: 2048,
           maxContextCharacters: 36000,
           deadlineSeconds: 900,
@@ -639,9 +833,9 @@ class PhaseBudget {
 
   static PhaseBudget localExecution() => const PhaseBudget(
         phase: 'execution',
-        maxModelRequests: 4,
-        maxToolCalls: 12,
-        maxRepairs: 2,
+        maxModelRequests: 8,
+        maxToolCalls: 16,
+        maxRepairs: 24,
         maxOutputTokens: 1280,
         maxContextCharacters: 16000,
         deadlineSeconds: 600,
@@ -655,6 +849,8 @@ class PhaseBudget {
         'maxOutputTokens': maxOutputTokens,
         'maxContextCharacters': maxContextCharacters,
         'deadlineSeconds': deadlineSeconds,
+        'repairBudgetSemantic': 'outer_recovery_fuse',
+        'consecutiveNoProgressLimit': 3,
       };
 }
 
@@ -686,12 +882,14 @@ class ContextCompactor {
 }
 
 class ExecutionIntelligenceService {
-  ExecutionIntelligenceService({required this.workflow});
+  ExecutionIntelligenceService({required this.workflow}) {
+    convergence = ConvergenceController(progressTracker: progress);
+  }
 
   final DurableWorkflowStore workflow;
   final RoleBasedModelRouter router = const RoleBasedModelRouter();
-  final SemanticProgressEngine progress = const SemanticProgressEngine();
-  final ConvergenceController convergence = const ConvergenceController();
+  final SemanticProgressEngine progress = SemanticProgressEngine();
+  late final ConvergenceController convergence;
   final IndependentVerifier verifier = const IndependentVerifier();
   final ContextCompactor compactor = const ContextCompactor();
 
@@ -710,7 +908,14 @@ class ExecutionIntelligenceService {
         turn: turn,
         beforeSha256: delta.beforeHash,
         afterSha256: delta.afterHash,
-        delta: delta.toJson(),
+        delta: <String, dynamic>{
+          ...delta.toJson(),
+          'trackedProgressClass': progress.lastProgressClass.name,
+          'sameFailureCount': progress.lastSameFailureCount,
+          'sameActionSameStateCount': progress.lastSameActionSameStateCount,
+          'oscillating': progress.lastOscillating,
+          'stopReason': decision.stopReason,
+        },
         semanticProgress: delta.semanticProgress,
         strategyAction: decision.action.name,
       );

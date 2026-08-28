@@ -7,15 +7,17 @@ import 'package:kristin_local_agent/product/prompt_planning.dart';
 
 void main() {
   group('P25 focused fast path', () {
-    test('local execution uses a bounded model budget', () {
+    test('local execution uses bounded progress-aware resources', () {
       final budget = PhaseBudget.localExecution();
       expect(budget.phase, 'execution');
-      expect(budget.maxModelRequests, 4);
-      expect(budget.maxToolCalls, 12);
-      expect(budget.maxRepairs, 2);
+      expect(budget.maxModelRequests, 8);
+      expect(budget.maxToolCalls, 16);
+      expect(budget.maxRepairs, 24);
       expect(budget.maxOutputTokens, 1280);
       expect(budget.maxContextCharacters, 16000);
       expect(budget.deadlineSeconds, 600);
+      expect(budget.toJson()['repairBudgetSemantic'], 'outer_recovery_fuse');
+      expect(budget.toJson()['consecutiveNoProgressLimit'], 3);
     });
 
     test(

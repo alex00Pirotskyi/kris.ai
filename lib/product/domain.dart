@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'crypto_utils.dart';
+
 const String kristinVersion = '1.9.0+190';
 const String kristinReleaseChannel = 'preview';
 
@@ -143,6 +145,80 @@ Map<String, dynamic> mapValue(Object? value) => value is Map
     ? value.map((key, item) => MapEntry(key.toString(), item))
     : <String, dynamic>{};
 
+/// Why a project was admitted into the durable Project Manager registry.
+/// A folder becomes a project when there is meaningful project intent or
+/// evidence, not merely because Kristin happened to read a directory.
+enum ProjectAdmissionReason {
+  userAdded,
+  userCreated,
+  builtByKristin,
+  modifiedByKristin,
+  successfullyAnalyzed,
+  successfullyTested,
+  successfullyVerified,
+  imported;
+
+  String get storageValue => switch (this) {
+        ProjectAdmissionReason.userAdded => 'user_added',
+        ProjectAdmissionReason.userCreated => 'user_created',
+        ProjectAdmissionReason.builtByKristin => 'built_by_kristin',
+        ProjectAdmissionReason.modifiedByKristin => 'modified_by_kristin',
+        ProjectAdmissionReason.successfullyAnalyzed => 'successfully_analyzed',
+        ProjectAdmissionReason.successfullyTested => 'successfully_tested',
+        ProjectAdmissionReason.successfullyVerified => 'successfully_verified',
+        ProjectAdmissionReason.imported => 'imported',
+      };
+
+  static ProjectAdmissionReason? fromStorageValue(String? value) {
+    for (final candidate in ProjectAdmissionReason.values) {
+      if (candidate.storageValue == value) {
+        return candidate;
+      }
+    }
+    return null;
+  }
+}
+
+/// The outcome of one Analyze/Test/Build run, recorded at the moment it
+/// completed. [sourceGitSha] is the project's git HEAD at that moment (empty
+/// if the project is not a git repository or git state could not be
+/// determined) — it is the cheap comparison signal `ProjectControlService`
+/// uses to decide staleness, deliberately not a full source-tree hash (see
+/// `git_state_probe.dart`).
+class ProjectQualityResult {
+  const ProjectQualityResult({
+    required this.passed,
+    required this.at,
+    required this.sourceGitSha,
+  });
+
+  final bool passed;
+  final DateTime at;
+  final String sourceGitSha;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'passed': passed,
+        'at': at.toUtc().toIso8601String(),
+        'sourceGitSha': sourceGitSha,
+      };
+
+  static ProjectQualityResult? fromJson(Object? json) {
+    if (json is! Map) {
+      return null;
+    }
+    final map = mapValue(json);
+    final at = map['at'];
+    if (at == null) {
+      return null;
+    }
+    return ProjectQualityResult(
+      passed: map['passed'] == true,
+      at: parseUtc(at, fallback: DateTime.now()),
+      sourceGitSha: map['sourceGitSha']?.toString() ?? '',
+    );
+  }
+}
+
 class ProjectRecord {
   const ProjectRecord({
     required this.id,
@@ -150,6 +226,12 @@ class ProjectRecord {
     required this.rootPath,
     required this.createdAt,
     required this.updatedAt,
+    this.admissionReason,
+    this.admittedAt,
+    this.lastMeaningfulActivityAt,
+    this.lastAnalyzeResult,
+    this.lastTestResult,
+    this.lastBuildResult,
   });
 
   final String id;
@@ -157,6 +239,37 @@ class ProjectRecord {
   final String rootPath;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final ProjectAdmissionReason? admissionReason;
+  final DateTime? admittedAt;
+  final DateTime? lastMeaningfulActivityAt;
+  final ProjectQualityResult? lastAnalyzeResult;
+  final ProjectQualityResult? lastTestResult;
+  final ProjectQualityResult? lastBuildResult;
+
+  ProjectRecord copyWith({
+    String? name,
+    DateTime? updatedAt,
+    ProjectAdmissionReason? admissionReason,
+    DateTime? admittedAt,
+    DateTime? lastMeaningfulActivityAt,
+    ProjectQualityResult? lastAnalyzeResult,
+    ProjectQualityResult? lastTestResult,
+    ProjectQualityResult? lastBuildResult,
+  }) =>
+      ProjectRecord(
+        id: id,
+        name: name ?? this.name,
+        rootPath: rootPath,
+        createdAt: createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        admissionReason: admissionReason ?? this.admissionReason,
+        admittedAt: admittedAt ?? this.admittedAt,
+        lastMeaningfulActivityAt:
+            lastMeaningfulActivityAt ?? this.lastMeaningfulActivityAt,
+        lastAnalyzeResult: lastAnalyzeResult ?? this.lastAnalyzeResult,
+        lastTestResult: lastTestResult ?? this.lastTestResult,
+        lastBuildResult: lastBuildResult ?? this.lastBuildResult,
+      );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
@@ -164,6 +277,13 @@ class ProjectRecord {
         'rootPath': rootPath,
         'createdAt': createdAt.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
+        'admissionReason': admissionReason?.storageValue,
+        'admittedAt': admittedAt?.toUtc().toIso8601String(),
+        'lastMeaningfulActivityAt':
+            lastMeaningfulActivityAt?.toUtc().toIso8601String(),
+        'lastAnalyzeResult': lastAnalyzeResult?.toJson(),
+        'lastTestResult': lastTestResult?.toJson(),
+        'lastBuildResult': lastBuildResult?.toJson(),
       };
 
   factory ProjectRecord.fromJson(Map<String, dynamic> json) => ProjectRecord(
@@ -172,6 +292,25 @@ class ProjectRecord {
         rootPath: json['rootPath']?.toString() ?? '',
         createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
         updatedAt: parseUtc(json['updatedAt'], fallback: DateTime.now()),
+        admissionReason: ProjectAdmissionReason.fromStorageValue(
+          json['admissionReason']?.toString(),
+        ),
+        lastAnalyzeResult: ProjectQualityResult.fromJson(
+          json['lastAnalyzeResult'],
+        ),
+        lastTestResult: ProjectQualityResult.fromJson(json['lastTestResult']),
+        lastBuildResult: ProjectQualityResult.fromJson(
+          json['lastBuildResult'],
+        ),
+        admittedAt: json['admittedAt'] == null
+            ? null
+            : parseUtc(json['admittedAt'], fallback: DateTime.now()),
+        lastMeaningfulActivityAt: json['lastMeaningfulActivityAt'] == null
+            ? null
+            : parseUtc(
+                json['lastMeaningfulActivityAt'],
+                fallback: DateTime.now(),
+              ),
       );
 }
 
@@ -2488,6 +2627,247 @@ class ProjectProcessStatus {
         'completedAt': completedAt?.toUtc().toIso8601String(),
         'outputTail': outputTail,
         'logFileName': logFileName,
+      };
+}
+
+/// Whether a managed process should be terminated with Kristin
+/// ([ManagedProcessLifecycle.ephemeral], the default for every existing
+/// caller) or left running until it is explicitly stopped or fails on its
+/// own ([ManagedProcessLifecycle.persistUntilStopped], used only by
+/// Project Manager Run).
+enum ManagedProcessLifecycle {
+  ephemeral,
+  persistUntilStopped;
+
+  String get storageValue => switch (this) {
+        ManagedProcessLifecycle.ephemeral => 'ephemeral',
+        ManagedProcessLifecycle.persistUntilStopped => 'persist_until_stopped',
+      };
+
+  static ManagedProcessLifecycle fromStorageValue(String? value) =>
+      value == 'persist_until_stopped'
+          ? ManagedProcessLifecycle.persistUntilStopped
+          : ManagedProcessLifecycle.ephemeral;
+}
+
+/// Lifecycle state of a durable [ProjectRuntimeSession], matching the
+/// `managed_project_processes.state` CHECK constraint
+/// (migrations/workflow/005_project_manager_execution_intelligence.sql).
+enum ProjectRuntimeState {
+  starting,
+  running,
+  stopping,
+  succeeded,
+  failed,
+  stopped,
+  interrupted;
+
+  String get storageValue => name;
+
+  static ProjectRuntimeState fromStorageValue(String? value) =>
+      ProjectRuntimeState.values.firstWhere(
+        (candidate) => candidate.storageValue == value,
+        orElse: () => ProjectRuntimeState.interrupted,
+      );
+}
+
+/// The kind of thing a [ProjectLaunchProfile] launches, controlling how the
+/// Project Manager surfaces and opens it once running.
+enum ProjectLaunchKind {
+  desktop,
+  web,
+  server,
+  command,
+  other;
+
+  String get storageValue => name;
+
+  static ProjectLaunchKind fromStorageValue(String? value) =>
+      ProjectLaunchKind.values.firstWhere(
+        (candidate) => candidate.storageValue == value,
+        orElse: () => ProjectLaunchKind.other,
+      );
+}
+
+/// What the Project Manager should do once a launch profile's process is
+/// observed to be running/healthy.
+enum ProjectLaunchOpenBehavior {
+  focusNativeApp,
+  openWebStudio,
+  openExternalBrowser,
+  none;
+
+  String get storageValue => switch (this) {
+        ProjectLaunchOpenBehavior.focusNativeApp => 'focus_native_app',
+        ProjectLaunchOpenBehavior.openWebStudio => 'open_web_studio',
+        ProjectLaunchOpenBehavior.openExternalBrowser =>
+          'open_external_browser',
+        ProjectLaunchOpenBehavior.none => 'none',
+      };
+
+  static ProjectLaunchOpenBehavior fromStorageValue(String? value) =>
+      ProjectLaunchOpenBehavior.values.firstWhere(
+        (candidate) => candidate.storageValue == value,
+        orElse: () => ProjectLaunchOpenBehavior.none,
+      );
+}
+
+/// Where a [ProjectLaunchProfile] came from: automatically detected from
+/// toolchain conventions, learned from a successful Project Manager run, or
+/// entered by the user via Configure Run.
+enum ProjectLaunchProfileSource {
+  detected,
+  learned,
+  manual;
+
+  String get storageValue => name;
+
+  static ProjectLaunchProfileSource fromStorageValue(String? value) =>
+      ProjectLaunchProfileSource.values.firstWhere(
+        (candidate) => candidate.storageValue == value,
+        orElse: () => ProjectLaunchProfileSource.detected,
+      );
+}
+
+/// A durable, first-class description of how to launch a project, backed by
+/// the `project_launch_profiles` table
+/// (migrations/workflow/007_project_control_center.sql). A project may have
+/// several; at most one is [preferred] at a time.
+class ProjectLaunchProfile {
+  const ProjectLaunchProfile({
+    required this.id,
+    required this.projectId,
+    required this.kind,
+    required this.label,
+    required this.executable,
+    required this.arguments,
+    required this.workingDirectory,
+    required this.openBehavior,
+    required this.preferred,
+    required this.source,
+    required this.identityHash,
+    required this.createdAt,
+    required this.updatedAt,
+    this.ports = const <int>[],
+    this.healthChecks = const <String>[],
+  });
+
+  final String id;
+  final String projectId;
+  final ProjectLaunchKind kind;
+  final String label;
+  final String executable;
+  final List<String> arguments;
+  final String workingDirectory;
+  final ProjectLaunchOpenBehavior openBehavior;
+  final bool preferred;
+  final ProjectLaunchProfileSource source;
+  final String identityHash;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final List<int> ports;
+  final List<String> healthChecks;
+
+  static String computeIdentityHash({
+    required String executable,
+    required List<String> arguments,
+    required String workingDirectory,
+  }) =>
+      Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'executable': executable,
+          'arguments': arguments,
+          'workingDirectory': workingDirectory,
+        }),
+      );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'projectId': projectId,
+        'kind': kind.storageValue,
+        'label': label,
+        'executable': executable,
+        'arguments': arguments,
+        'workingDirectory': workingDirectory,
+        'openBehavior': openBehavior.storageValue,
+        'preferred': preferred,
+        'source': source.storageValue,
+        'identityHash': identityHash,
+        'createdAt': createdAt.toUtc().toIso8601String(),
+        'updatedAt': updatedAt.toUtc().toIso8601String(),
+        'ports': ports,
+        'healthChecks': healthChecks,
+      };
+}
+
+/// A durable, restart-survivable record of a Project Manager-managed
+/// process, backed by the `managed_project_processes` table
+/// (migrations/workflow/005 + 007). This is the persistence layer behind a
+/// project's "Run" action; it is distinct from ordinary ephemeral managed
+/// processes (agent tool calls, Analyze/Test/Build), which are never
+/// recorded here.
+class ProjectRuntimeSession {
+  const ProjectRuntimeSession({
+    required this.id,
+    required this.projectId,
+    required this.state,
+    required this.lifecycle,
+    required this.commandSha256,
+    required this.startedAt,
+    required this.updatedAt,
+    this.launchProfileId,
+    this.pid,
+    this.processIdentity,
+    this.kind,
+    this.port,
+    this.healthState,
+    this.logReference,
+    this.completedAt,
+    this.exitCode,
+    this.failureCode,
+  });
+
+  final String id;
+  final String projectId;
+  final String? launchProfileId;
+  final ProjectRuntimeState state;
+  final ManagedProcessLifecycle lifecycle;
+  final int? pid;
+  final String? processIdentity;
+  final ProjectLaunchKind? kind;
+  final String commandSha256;
+  final int? port;
+  final String? healthState;
+  final String? logReference;
+  final DateTime startedAt;
+  final DateTime updatedAt;
+  final DateTime? completedAt;
+  final int? exitCode;
+  final String? failureCode;
+
+  bool get running =>
+      state == ProjectRuntimeState.starting ||
+      state == ProjectRuntimeState.running ||
+      state == ProjectRuntimeState.stopping;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'projectId': projectId,
+        'launchProfileId': launchProfileId,
+        'state': state.storageValue,
+        'lifecycle': lifecycle.storageValue,
+        'pid': pid,
+        'processIdentity': processIdentity,
+        'kind': kind?.storageValue,
+        'commandSha256': commandSha256,
+        'port': port,
+        'healthState': healthState,
+        'logReference': logReference,
+        'startedAt': startedAt.toUtc().toIso8601String(),
+        'updatedAt': updatedAt.toUtc().toIso8601String(),
+        'completedAt': completedAt?.toUtc().toIso8601String(),
+        'exitCode': exitCode,
+        'failureCode': failureCode,
       };
 }
 

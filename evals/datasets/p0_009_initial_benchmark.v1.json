@@ -214,7 +214,7 @@
         "$.database.integrity": "ok",
         "$.failed": 0,
         "$.passed": 14,
-        "$.schemaVersion": 6
+        "$.schemaVersion": 7
       },
       "id": "crash_recovery.sqlite_workflow_kernel",
       "kind": "command_json_stdout",

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'chat_control_plane.dart';
 import 'domain.dart';
 
 enum StudioSection { newTask, activity, projects, templates }
@@ -140,71 +141,22 @@ const List<StudioTemplate> studioTemplates = <StudioTemplate>[
 ];
 
 CommandMode inferCommandMode(String request) {
-  final lower = request.trim().toLowerCase();
-  if (lower.isEmpty) {
-    return CommandMode.build;
-  }
-  if (isConversationalRequest(request)) {
-    return CommandMode.ask;
-  }
+  final normalized = request.trim();
+  if (normalized.isEmpty) return CommandMode.build;
 
-  bool hasAny(Iterable<String> values) => values.any(lower.contains);
+  final semantic = const ChatIntentCompiler().compile(
+    normalized,
+    inferredMode: CommandMode.build,
+  );
+  if (semantic.isInformational) return CommandMode.ask;
+  if (semantic.isAction && semantic.capability != null) return semantic.mode;
 
-  if (hasAny(<String>[
-    'fix ',
-    'repair ',
-    'debug ',
-    'broken',
-    'error',
-    'failing',
-  ])) {
-    return CommandMode.fix;
-  }
-  if (hasAny(<String>[
-    'review ',
-    'audit ',
-    'assess ',
-    'inspect ',
-    'critique ',
-  ])) {
-    return CommandMode.review;
-  }
-  if (hasAny(<String>['run ', 'launch ', 'start the ', 'execute ']) &&
-      !hasAny(<String>['build ', 'create ', 'implement ', 'make '])) {
-    return CommandMode.run;
-  }
-  if (hasAny(<String>[
-    'analyze ',
-    'analyse ',
-    'investigate ',
-    'compare ',
-    'examine ',
-  ])) {
-    return CommandMode.analyze;
-  }
-  if (hasAny(<String>['plan ', 'roadmap', 'architecture', 'design a plan']) &&
-      !hasAny(<String>['build ', 'create ', 'implement ', 'make '])) {
+  final lower = normalized.toLowerCase();
+  if (RegExp(r'^(?:please\s+)?(?:plan|design a plan)\b').hasMatch(lower)) {
     return CommandMode.plan;
   }
-  if ((lower.endsWith('?') ||
-          hasAny(<String>[
-            'what ',
-            'why ',
-            'how ',
-            'explain ',
-            'tell me ',
-            'where ',
-            'when ',
-          ])) &&
-      !hasAny(<String>[
-        'build ',
-        'create ',
-        'implement ',
-        'make ',
-        'change ',
-        'add ',
-      ])) {
-    return CommandMode.ask;
+  if (RegExp(r'^(?:please\s+)?(?:review|audit|assess)\b').hasMatch(lower)) {
+    return CommandMode.review;
   }
   return CommandMode.build;
 }
