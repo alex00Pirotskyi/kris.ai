@@ -13,7 +13,7 @@ import 'storage_security.dart';
 /// this sealed result and persist/defer the request without inventing a fake
 /// synchronous tool action.
 sealed class AgentProtocolV3ExecutionStep {
-  const AgentProtocolV3ExecutionStep(this.decision);
+  const AgentProtocolV3ExecutionStep({required this.decision});
 
   final AgentDecisionV3 decision;
 }
