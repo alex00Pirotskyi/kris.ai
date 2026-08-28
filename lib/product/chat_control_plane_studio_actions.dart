@@ -458,24 +458,80 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
     final activeProject = project;
     final activeModel = model;
-    final result = await _perform<PreparedCommand>(
+    final outcome =
+        await _perform<({PreparedCommand command, ChatPlanningPath path})>(
       'Creating the execution plan',
-      () => runtime.prepare(
-        projectId: activeProject.id,
-        mode: decision.mode,
-        request: request,
+      () => _planSubstantialTask(
+        project: activeProject,
         model: activeModel,
+        request: request,
+        decision: decision,
       ),
     );
-    if (result == null || !mounted) return;
+    if (outcome == null || !mounted) return;
     _mutate(() {
-      prepared = result;
+      prepared = outcome.command;
+      planningPath = outcome.path;
       pendingDecision = decision;
       currentRun = null;
       awaitingPermission = false;
       planAdjusting = false;
-      status = 'Plan ready for review';
+      status = outcome.path == ChatPlanningPath.fallback
+          ? 'Plan ready for review (safety-net plan -- the generated task '
+              'graph did not validate)'
+          : 'Plan ready for review';
     });
+  }
+
+  /// Restores real per-request multi-task decomposition for substantial
+  /// Chat requests (agent.create_project/modify_project/fix_project) by
+  /// reusing the existing PromptPlanningService pipeline -- the same one
+  /// Prompt Studio's tab already uses -- instead of ContractPlanner's fixed
+  /// inspect/implement/verify template. ContractPlanner remains the
+  /// deterministic safety net: PromptPlanningService.generateTaskPlan
+  /// already generates once and repairs once internally; if the model's
+  /// plan still fails schema/dependency/capability/budget validation after
+  /// that, or planning itself throws, this falls back to ContractPlanner
+  /// rather than surfacing a broken plan or fabricating detail that was
+  /// never actually generated.
+  Future<({PreparedCommand command, ChatPlanningPath path})>
+      _planSubstantialTask({
+    required ProjectRecord project,
+    required ModelIdentity model,
+    required String request,
+    required ChatInteractionDecision decision,
+  }) async {
+    try {
+      final draft = await runtime.generatePromptDraft(
+        goal: request,
+        model: model,
+      );
+      final saved = await runtime.saveGeneratedPrompt(
+        goal: request,
+        draft: draft,
+        model: model,
+      );
+      final plan = await runtime.generateTaskPlan(
+        promptVersion: saved.version,
+        projectId: project.id,
+        model: model,
+      );
+      final command = await runtime.prepareTaskPlan(
+        plan: plan,
+        promptVersion: saved.version,
+        projectId: project.id,
+        model: model,
+      );
+      return (command: command, path: ChatPlanningPath.model);
+    } catch (_) {
+      final fallback = await runtime.prepare(
+        projectId: project.id,
+        mode: decision.mode,
+        request: request,
+        model: model,
+      );
+      return (command: fallback, path: ChatPlanningPath.fallback);
+    }
   }
 
   Future<void> _executeSmallAction(

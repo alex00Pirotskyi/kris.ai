@@ -391,6 +391,18 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
+          if (planningPath == ChatPlanningPath.fallback) ...<Widget>[
+            Text(
+              'The generated task plan did not validate, so this is the '
+              'conservative safety-net plan rather than a detailed '
+              'breakdown of this specific request.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+          ],
           if (command.plan.rationale.trim().isNotEmpty) ...<Widget>[
             Text(command.plan.rationale),
             const SizedBox(height: 12),
