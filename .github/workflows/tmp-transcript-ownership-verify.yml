@@ -1,0 +1,72 @@
+name: Temporary Transcript Ownership Verify
+
+on:
+  pull_request:
+    branches:
+      - feat/one-kristin-convergence
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  patch-and-verify:
+    runs-on: macos-15
+    steps:
+      - name: Checkout verifier branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+
+      - name: Apply transcript ownership patch
+        run: python tool/tmp_transcript_ownership_patch.py
+
+      - name: Resolve package and format affected files
+        run: |
+          flutter pub get
+          dart format \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            lib/product/chat_control_plane_studio_view.dart \
+            test/product/chat_deferred_takeover_bridge_test.dart
+          git diff --check
+
+      - name: Fatal analyze affected surface
+        run: |
+          flutter analyze --fatal-infos --fatal-warnings \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            lib/product/chat_control_plane_studio_view.dart \
+            test/product/chat_deferred_takeover_bridge_test.dart
+
+      - name: Run focused transcript and session contracts
+        run: |
+          flutter test \
+            test/product/chat_deferred_takeover_bridge_test.dart \
+            test/product/kristin_conversation_session_test.dart
+
+      - name: Remove verifier files and refresh exact source manifest
+        run: |
+          rm .github/workflows/tmp-transcript-ownership-verify.yml
+          rm tool/tmp_transcript_ownership_patch.py
+          python tool/p1a_refresh_source_manifest.py .
+          git diff --check
+          git status --short
+
+      - name: Commit and push clean candidate
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "refactor: move Chat transcript into session"
+          git push origin "HEAD:${HEAD_REF}"
