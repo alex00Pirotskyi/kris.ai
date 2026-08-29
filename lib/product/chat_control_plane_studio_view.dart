@@ -258,7 +258,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     composerFocus.requestFocus();
   }
 
-  Widget _messageBubble(_ChatLine line) {
+  Widget _messageBubble(KristinConversationMessage line) {
     final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment:

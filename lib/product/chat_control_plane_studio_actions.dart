@@ -11,7 +11,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     if (id == 'system.help') {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(_capabilityHelpText()));
+        conversationSession.addAssistantMessage(_capabilityHelpText());
         status = 'Kristin is ready';
       });
       return;
@@ -54,7 +54,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final local = await _tryLocalAnswer(decision);
     if (local != null) {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(local));
+        conversationSession.addAssistantMessage(local);
         status = 'Kristin is ready';
       });
       return;
@@ -128,7 +128,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     if (visible.isEmpty) visible = 'The model returned an empty answer.';
     _mutate(() {
-      transcript.add(_ChatLine.assistant(visible));
+      conversationSession.addAssistantMessage(visible);
       status = 'Kristin is ready';
     });
   }
@@ -141,13 +141,13 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
   Future<void> _answerTargetReference(ChatInteractionDecision decision) async {
     if (decision.targets.isEmpty) {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(
+        conversationSession.addAssistantMessage(
           decision.unresolvedMentions.isEmpty
               ? "I'm not sure what that refers to. Type @ to see projects, "
                   'models, providers, and workspaces I know about.'
               : "I don't have a match for "
                   '${decision.unresolvedMentions.map((value) => '@$value').join(', ')}.',
-        ));
+        );
         status = 'Kristin is ready';
       });
       return;
@@ -156,7 +156,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       final names =
           decision.targets.map((target) => target.displayName).join(', ');
       _mutate(() {
-        transcript.add(_ChatLine.assistant('Which one did you mean: $names?'));
+        conversationSession
+            .addAssistantMessage('Which one did you mean: $names?');
         status = 'Kristin is ready';
       });
       return;
@@ -171,27 +172,27 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           if (projects.any((item) => item.id == target.id)) {
             selectedProjectId = target.id;
           }
-          transcript.add(_ChatLine.assistant(
+          conversationSession.addAssistantMessage(
             "We're talking about ${target.displayName}. It is currently "
             '$state.',
-          ));
+          );
           status = 'Kristin is ready';
         });
         return;
       case ChatTargetType.model:
         _mutate(() {
-          transcript.add(_ChatLine.assistant(
+          conversationSession.addAssistantMessage(
             '${target.displayName} is available'
             '${target.id == selectedModelId ? ' and currently selected' : ''}. '
             'Say "use ${target.displayName}" or `/use @${_slug(target.displayName)}` to switch to it.',
-          ));
+          );
           status = 'Kristin is ready';
         });
         return;
       case ChatTargetType.provider:
         _mutate(() {
-          transcript.add(
-              _ChatLine.assistant('${target.displayName}: ${target.status}.'));
+          conversationSession
+              .addAssistantMessage('${target.displayName}: ${target.status}.');
           status = 'Kristin is ready';
         });
         return;
@@ -199,8 +200,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       case ChatTargetType.capability:
       case ChatTargetType.runtime:
         _mutate(() {
-          transcript
-              .add(_ChatLine.assistant('Referencing ${target.displayName}.'));
+          conversationSession
+              .addAssistantMessage('Referencing ${target.displayName}.');
           status = 'Kristin is ready';
         });
         return;
@@ -559,10 +560,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           case PlanningFailureKind.cancelled:
             error = null;
             status = 'Planning cancelled';
-            transcript.add(
-              _ChatLine.assistant(
-                'I stopped planning. Nothing was prepared and nothing ran.',
-              ),
+            conversationSession.addAssistantMessage(
+              'I stopped planning. Nothing was prepared and nothing ran.',
             );
           case PlanningFailureKind.providerUnavailable:
             error = runtime.redactor.redact(
@@ -1010,7 +1009,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
   void _finishDirectAction(String message) {
     _mutate(() {
-      transcript.add(_ChatLine.assistant(message));
+      conversationSession.addAssistantMessage(message);
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
@@ -1111,7 +1110,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       );
     }
     _mutate(() {
-      transcript.add(_ChatLine.assistant('I did not execute the action.'));
+      conversationSession.addAssistantMessage('I did not execute the action.');
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
@@ -1389,7 +1388,6 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return;
     }
     _mutate(() {
-      transcript.clear();
       conversationSession.resetForNewConversation();
       pendingDecision = null;
       understandingHistory = null;
