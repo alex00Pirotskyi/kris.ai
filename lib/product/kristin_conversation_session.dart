@@ -1,3 +1,4 @@
+import 'agent_deferred_interaction.dart';
 import 'chat_control_plane.dart';
 import 'chat_conversation_state.dart';
 import 'conversation_orchestrator.dart';
@@ -90,6 +91,7 @@ class KristinConversationSession {
   PlanReconciliationResult? _lastReconciliation;
   PreparedCommand? _prepared;
   RunRecord? _currentRun;
+  AgentDeferredInteraction? _deferredInteraction;
   bool _awaitingPermission = false;
   String _activeRequest = '';
 
@@ -118,6 +120,7 @@ class KristinConversationSession {
   PlanReconciliationResult? get lastReconciliation => _lastReconciliation;
   PreparedCommand? get prepared => _prepared;
   RunRecord? get currentRun => _currentRun;
+  AgentDeferredInteraction? get deferredInteraction => _deferredInteraction;
   bool get awaitingPermission => _awaitingPermission;
   String get activeRequest => _activeRequest;
 
@@ -137,6 +140,20 @@ class KristinConversationSession {
 
   bool get runAwaitingApproval =>
       _currentRun?.state == RunState.awaitingApproval;
+
+  bool get awaitingUserInput =>
+      _deferredInteraction?.awaitingUserResponse ?? false;
+
+  String? get deferredUserPrompt {
+    final interaction = _deferredInteraction;
+    if (interaction == null || !interaction.awaitingUserResponse) return null;
+    final question = interaction.decision.question?.trim() ?? '';
+    if (question.isNotEmpty) return question;
+    final reason = interaction.decision.reason.trim();
+    return reason.isEmpty
+        ? 'Kristin needs your input before continuing.'
+        : reason;
+  }
 
   bool get runExecuting =>
       _currentRun != null &&
@@ -224,6 +241,7 @@ class KristinConversationSession {
     _lastReconciliation = null;
     _prepared = null;
     _currentRun = null;
+    _deferredInteraction = null;
     _awaitingPermission = false;
     clearLiveExecution();
   }
@@ -291,6 +309,41 @@ class KristinConversationSession {
 
   void setAwaitingPermission(bool value) {
     _awaitingPermission = value;
+  }
+
+  void setDeferredInteraction(AgentDeferredInteraction? interaction) {
+    if (interaction == null) {
+      _deferredInteraction = null;
+      return;
+    }
+    final run = _currentRun;
+    if (run == null) {
+      throw const KristinConversationSessionException(
+        'conversation_deferred_run_missing',
+        'A deferred interaction requires an attached durable run.',
+      );
+    }
+    if (interaction.runId != run.id) {
+      throw KristinConversationSessionException(
+        'conversation_deferred_run_mismatch',
+        'Deferred interaction ${interaction.id} belongs to run ${interaction.runId}, not ${run.id}.',
+      );
+    }
+    if (!run.items.any(
+      (progress) => progress.item.id == interaction.workItemId,
+    )) {
+      throw KristinConversationSessionException(
+        'conversation_deferred_work_item_mismatch',
+        'Deferred interaction ${interaction.id} references work item ${interaction.workItemId} outside run ${run.id}.',
+      );
+    }
+    if (interaction.pending && runTerminal) {
+      throw const KristinConversationSessionException(
+        'conversation_deferred_run_terminal',
+        'A terminal run cannot await a deferred interaction.',
+      );
+    }
+    _deferredInteraction = interaction;
   }
 
   /// Records one live execution signal and updates the compact live
@@ -393,6 +446,7 @@ class KristinConversationSession {
     _lastReconciliation = null;
     _prepared = null;
     _currentRun = null;
+    _deferredInteraction = null;
     _awaitingPermission = false;
     _activeRequest = '';
     clearLiveExecution();
@@ -444,6 +498,7 @@ class KristinConversationSession {
     _selectedModelId = run.command.model.exactId;
     _awaitingPermission = run.state == RunState.awaitingApproval;
     if (existing == null || existing.id != run.id) {
+      _deferredInteraction = null;
       clearLiveExecution();
     }
   }
