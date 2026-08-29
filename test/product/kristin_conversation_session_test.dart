@@ -127,6 +127,24 @@ void main() {
     expect(session.deferredUserPrompt, isNull);
   });
 
+  test('terminal run refresh clears attached deferred interaction', () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.paused));
+    session.setDeferredInteraction(
+      _interaction(
+        runId: 'run-a',
+        status: AgentDeferredInteractionStatus.pending,
+      ),
+    );
+
+    session.updateRun(_run(id: 'run-a', state: RunState.succeeded));
+
+    expect(session.currentRun?.state, RunState.succeeded);
+    expect(session.deferredInteraction, isNull);
+    expect(session.awaitingUserInput, isFalse);
+    expect(session.deferredUserPrompt, isNull);
+  });
+
   test('awaiting approval run projects to the permission state', () {
     final session = KristinConversationSession();
     session.restoreRun(_run(id: 'run-a', state: RunState.awaitingApproval));

@@ -497,8 +497,11 @@ class KristinConversationSession {
     _selectedProjectId = run.command.contract.projectId;
     _selectedModelId = run.command.model.exactId;
     _awaitingPermission = run.state == RunState.awaitingApproval;
-    if (existing == null || existing.id != run.id) {
+    final replacingRun = existing == null || existing.id != run.id;
+    if (runTerminal || replacingRun) {
       _deferredInteraction = null;
+    }
+    if (replacingRun) {
       clearLiveExecution();
     }
   }
