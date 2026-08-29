@@ -1,0 +1,47 @@
+name: Temporary Source Inventory Fix
+
+on:
+  push:
+    branches:
+      - feat/one-kristin-convergence
+    paths:
+      - .github/workflows/tmp-source-inventory-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/one-kristin-convergence
+          fetch-depth: 1
+      - name: Add canonical session to governed source inventory
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('test/product/source_contract_test.dart')
+          text = path.read_text()
+          marker = "        'lib/product/mcp_protocol.dart',\n"
+          insertion = marker + "        'lib/product/kristin_conversation_session.dart',\n"
+          if text.count(marker) != 1:
+              raise SystemExit(f'expected exactly one inventory marker, found {text.count(marker)}')
+          if "'lib/product/kristin_conversation_session.dart'" in text:
+              raise SystemExit('session source is already present in inventory')
+          path.write_text(text.replace(marker, insertion, 1))
+          PY
+          git diff --check
+          git diff -- test/product/source_contract_test.dart
+      - name: Commit inventory contract
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add test/product/source_contract_test.dart
+          git commit -m "test(product): register canonical conversation source"
+          git push origin HEAD:feat/one-kristin-convergence
