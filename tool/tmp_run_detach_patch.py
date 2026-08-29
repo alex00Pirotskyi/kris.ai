@@ -48,4 +48,9 @@ insertion = """  test('Chat detaches finished runs without resetting conversatio
 if text.count(marker) != 1:
     raise SystemExit('unexpected Chat bridge test insertion point')
 text = text.replace(marker, insertion)
+old_live_reset_contract = """    expect(actions, contains('conversationSession.beginLiveExecution();'));\n    expect(actions, contains('conversationSession.clearLiveExecution();'));\n"""
+new_live_reset_contract = """    expect(actions, contains('conversationSession.beginLiveExecution();'));\n    expect(chat, contains('conversationSession.clearLiveExecution();'));\n"""
+if text.count(old_live_reset_contract) != 1:
+    raise SystemExit('unexpected live projection reset contract source shape')
+text = text.replace(old_live_reset_contract, new_live_reset_contract)
 bridge_test.write_text(text, encoding='utf-8', newline='\n')
