@@ -1,0 +1,97 @@
+name: Temporary Session Nonterminal Fix
+
+on:
+  push:
+    branches:
+      - feat/one-kristin-convergence
+    paths:
+      - .github/workflows/tmp-session-nonterminal-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/one-kristin-convergence
+          fetch-depth: 1
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Resolve project dependencies
+        run: flutter pub get
+      - name: Protect every non-terminal durable run
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          session = Path('lib/product/kristin_conversation_session.dart')
+          text = session.read_text()
+          old = """  bool get hasNonterminalRun =>
+      _currentRun != null &&
+      const <RunState>{
+        RunState.awaitingApproval,
+        RunState.running,
+        RunState.paused,
+        RunState.cancelling,
+        RunState.interrupted,
+      }.contains(_currentRun!.state);
+"""
+          new = """  bool get hasNonterminalRun => _currentRun != null && !runTerminal;
+"""
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one nonterminal getter, found {text.count(old)}')
+          session.write_text(text.replace(old, new, 1))
+
+          test = Path('test/product/kristin_conversation_session_test.dart')
+          text = test.read_text()
+          marker = """  test('different run cannot replace unfinished run in one conversation', () {
+"""
+          addition = """  test('prepared and queued runs remain protected as unfinished work', () {
+    for (final state in <RunState>[RunState.prepared, RunState.queued]) {
+      final session = KristinConversationSession();
+      session.restoreRun(_run(id: 'run-${state.name}', state: state));
+
+      expect(session.hasNonterminalRun, isTrue, reason: state.name);
+      expect(
+        session.resetForNewConversation,
+        throwsA(
+          isA<KristinConversationSessionException>().having(
+            (error) => error.code,
+            'code',
+            'conversation_run_active',
+          ),
+        ),
+        reason: state.name,
+      );
+    }
+  });
+
+"""
+          if text.count(marker) != 1:
+              raise SystemExit(f'expected one test marker, found {text.count(marker)}')
+          if "prepared and queued runs remain protected" in text:
+              raise SystemExit('nonterminal regression test already present')
+          test.write_text(text.replace(marker, addition + marker, 1))
+          PY
+          dart format lib/product/kristin_conversation_session.dart test/product/kristin_conversation_session_test.dart
+          git diff --check
+          git diff -- lib/product/kristin_conversation_session.dart test/product/kristin_conversation_session_test.dart
+      - name: Run session regression
+        run: flutter test test/product/kristin_conversation_session_test.dart
+      - name: Commit session invariant
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add lib/product/kristin_conversation_session.dart test/product/kristin_conversation_session_test.dart
+          git commit -m "fix(product): protect queued conversation runs"
+          git push origin HEAD:feat/one-kristin-convergence
