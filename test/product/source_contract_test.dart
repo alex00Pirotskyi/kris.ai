@@ -271,6 +271,7 @@ void main() {
         'lib/product/performance_cache.dart',
         'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
+        'lib/product/kristin_conversation_session.dart',
         // Progress-aware protocol recovery: bounded corrections plus
         // repeated-invalid-action detection, so a stuck local model
         // cannot burn a long sequence of slow calls with no effect.
