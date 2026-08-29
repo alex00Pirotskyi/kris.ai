@@ -40,6 +40,18 @@ jobs:
         run: |
           set -euo pipefail
           python tool/tmp_live_projection_patch.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('test/product/chat_deferred_takeover_bridge_test.dart')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace(
+              "RegExp(r'(?m)^\\\\s*liveProgressText\\\\s*=').hasMatch(chat),",
+              "chat.split('\\n').any((line) => line.trimLeft().startsWith('liveProgressText =')),")
+          text = text.replace(
+              "RegExp(r'(?m)^\\\\s*liveProgressText\\\\s*=').hasMatch(actions),",
+              "actions.split('\\n').any((line) => line.trimLeft().startsWith('liveProgressText =')),")
+          path.write_text(text, encoding='utf-8', newline='\n')
+          PY
 
       - name: Resolve package context and format
         shell: bash
