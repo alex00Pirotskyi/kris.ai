@@ -18,10 +18,11 @@ jobs:
         with:
           ref: feat/one-kristin-convergence
           fetch-depth: 0
-      - name: Refresh exact source manifest
+      - name: Refresh exact source manifest and remove helper
         shell: bash
         run: |
           set -euo pipefail
+          rm -f .github/workflows/tmp-source-manifest-refresh.yml
           python - <<'PY'
           from __future__ import annotations
           import hashlib
@@ -66,16 +67,18 @@ jobs:
           for relative in paths:
               digest = hashlib.sha256(canonical((root / relative).read_bytes())).hexdigest()
               rows.append(f'{digest}  {relative}')
-          (root / 'SOURCE_MANIFEST.sha256').write_text('\n'.join(rows) + '\n', encoding='utf-8', newline='\n')
+          (root / 'SOURCE_MANIFEST.sha256').write_text(
+              '\n'.join(rows) + '\n', encoding='utf-8', newline='\n'
+          )
           PY
-          git diff --check -- SOURCE_MANIFEST.sha256
-          git diff -- SOURCE_MANIFEST.sha256
+          git diff --check -- SOURCE_MANIFEST.sha256 .github/workflows/tmp-source-manifest-refresh.yml
+          git diff -- SOURCE_MANIFEST.sha256 .github/workflows/tmp-source-manifest-refresh.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add SOURCE_MANIFEST.sha256
+          git add -A -- SOURCE_MANIFEST.sha256 .github/workflows/tmp-source-manifest-refresh.yml
           if git diff --cached --quiet; then
-            echo "Source manifest already current."
+            echo "Source manifest already current and helper absent."
             exit 0
           fi
-          git commit -m "chore: refresh exact source manifest"
+          git commit -m "chore: finalize exact source manifest"
           git push origin HEAD:feat/one-kristin-convergence
