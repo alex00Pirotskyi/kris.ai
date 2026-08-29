@@ -21,7 +21,6 @@ e704fab75d485010e6d4437dfa8a23fe35177fbc3f199795c3612e0ea6a781ec  .github/workfl
 9b7aeba6fbf1a70ef7d7c29fe3f2b9e4001a08be398b80648f48e500bfe71065  .github/workflows/p5-ui-quality.yml
 dedb3f29defcc32a742f9fc4b8ac28ba6570dce752b3ff52c2b656ab61d228eb  .github/workflows/p6-p8-production-gates.yml
 995980ba9e15cfbca77f30e66d0a7fa923a5484d59d470e87d3daecb14fa5721  .github/workflows/p8-workflow-chaos.yml
-4a28037dbc34abdfc6ba37480f2d87c5401a8a2c7b986b936a52664496a6cc81  .github/workflows/tmp-source-manifest-refresh.yml
 091c97c98c95df8ded7bfe7131ef90ee2f28f75e664d0c30b1e7af314102ec73  .github/workflows/worker-b-p8-001-formal-test-hierarchy.yml
 8885280575181df9b9d4aba63604cdbdac84e6915acc6aa87332eac0971545ee  .github/workflows/workflow-integrity.yml
 dca717e07b1531a67258d3dc09c3ba42e245f450b2b75942da150d96863cd89f  .gitignore
