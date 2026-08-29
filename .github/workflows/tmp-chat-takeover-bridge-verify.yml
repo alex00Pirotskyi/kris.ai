@@ -64,6 +64,7 @@ jobs:
           rm tool/tmp_chat_takeover_bridge_patch.py
           rm tool/tmp_chat_takeover_contract_fix.py
           python tool/tmp_source_manifest_refresh.py
+          rm tool/tmp_source_manifest_refresh.py
           git diff --check
           git status --short
 
