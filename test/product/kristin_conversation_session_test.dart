@@ -37,6 +37,26 @@ void main() {
     expect(session.currentRun?.id, 'run-a');
   });
 
+  test('prepared and queued runs remain protected as unfinished work', () {
+    for (final state in <RunState>[RunState.prepared, RunState.queued]) {
+      final session = KristinConversationSession();
+      session.restoreRun(_run(id: 'run-${state.name}', state: state));
+
+      expect(session.hasNonterminalRun, isTrue, reason: state.name);
+      expect(
+        session.resetForNewConversation,
+        throwsA(
+          isA<KristinConversationSessionException>().having(
+            (error) => error.code,
+            'code',
+            'conversation_run_active',
+          ),
+        ),
+        reason: state.name,
+      );
+    }
+  });
+
   test('different run cannot replace unfinished run in one conversation', () {
     final session = KristinConversationSession();
     session.restoreRun(_run(id: 'run-a', state: RunState.paused));
