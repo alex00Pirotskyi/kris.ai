@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'browser/browser_runtime.dart';
+import 'agent_deferred_interaction.dart';
 import 'capability_doctor.dart';
 import 'crypto_utils.dart';
 import 'deployment_support.dart';
@@ -1566,6 +1567,21 @@ class ProductRuntime {
   Future<void> pause(String runId) => runs.pause(runId);
   Future<void> resume(String runId) => runs.resume(runId);
   Future<void> cancel(String runId) => runs.cancel(runId);
+
+  Future<AgentDeferredInteraction?> latestDeferredInteraction(String runId) =>
+      AgentDeferredInteractionStore(repositories.workflow).latestForRun(runId);
+
+  Future<AgentDeferredInteraction?> pendingDeferredInteraction(String runId) =>
+      AgentDeferredInteractionStore(repositories.workflow).pendingForRun(runId);
+
+  Future<AgentDeferredInteraction> recordDeferredUserResponse({
+    required String runId,
+    required String response,
+  }) =>
+      AgentDeferredInteractionStore(repositories.workflow).recordUserResponse(
+        runId: runId,
+        response: response,
+      );
 
   Future<List<RunRecord>> listRuns({String? projectId, int limit = 100}) async {
     var runs = await repositories.runs.all();

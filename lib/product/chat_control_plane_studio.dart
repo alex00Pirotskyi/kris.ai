@@ -13,6 +13,7 @@ import 'chat_target_resolver.dart';
 import 'chat_studio.dart';
 import 'conversation_orchestrator.dart';
 import 'domain.dart';
+import 'kristin_conversation_session.dart';
 import 'models_research.dart';
 import 'product_error_normalizer.dart';
 import 'product_runtime.dart';
@@ -76,6 +77,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   final TextEditingController planAdjustmentController =
       TextEditingController();
   final FocusNode composerFocus = FocusNode();
+  final KristinConversationSession conversationSession =
+      KristinConversationSession();
 
   final List<_ChatLine> transcript = <_ChatLine>[];
   final List<LiveRunSignal> liveSignals = <LiveRunSignal>[];
@@ -92,7 +95,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   bool busy = false;
   bool understandingAdjusting = false;
   bool planAdjusting = false;
-  bool awaitingPermission = false;
   bool detailsExpanded = false;
   String status = 'Kristin is ready';
   String? error;
@@ -146,7 +148,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
   /// What the last replan changed, for the plan card to show.
   PlanReconciliationResult? lastReconciliation;
-  RunRecord? currentRun;
   String activeRequest = '';
   String liveAssistantProtocolText = '';
   String liveAssistantText = '';
@@ -160,6 +161,36 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
   ProductRuntime get runtime => widget.runtime;
 
+  RunRecord? get currentRun => conversationSession.currentRun;
+  set currentRun(RunRecord? value) {
+    final existing = conversationSession.currentRun;
+    if (value == null) {
+      // Transitional compatibility for the remaining Chat fields: a legacy
+      // null assignment may clear a finished/no-run association, but it can
+      // never orphan unfinished durable work.
+      if (!conversationSession.hasNonterminalRun) {
+        conversationSession.resetForNewConversation();
+      }
+      return;
+    }
+    if (existing != null && existing.id == value.id) {
+      conversationSession.updateRun(value);
+    } else {
+      conversationSession.restoreRun(value);
+    }
+  }
+
+  bool get awaitingPermission => conversationSession.awaitingPermission;
+  set awaitingPermission(bool value) {
+    // A legacy side-action cleanup may request `false`, but durable run state
+    // remains authoritative. Only a refreshed non-awaiting run (or no run)
+    // may clear the permission projection.
+    if (!value && conversationSession.runAwaitingApproval) {
+      return;
+    }
+    conversationSession.setAwaitingPermission(value);
+  }
+
   ChatActionDispatcher get dispatcher =>
       ChatActionDispatcher(ProductRuntimeChatGateway(runtime));
 
@@ -169,8 +200,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   ModelIdentity? get selectedModel =>
       models.where((model) => model.exactId == selectedModelId).firstOrNull;
 
-  bool get runAwaitingApproval =>
-      currentRun?.state == RunState.awaitingApproval;
+  bool get runAwaitingApproval => conversationSession.runAwaitingApproval;
 
   bool get runActive =>
       currentRun != null &&
@@ -187,13 +217,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   /// stay resumable (Resume/Stop remain available wherever [runActive] is
   /// used for that) without silently absorbing ordinary chat messages as
   /// steering input into a task the user never asked to continue.
-  bool get runExecuting =>
-      currentRun != null &&
-      const <RunState>{
-        RunState.running,
-        RunState.paused,
-        RunState.cancelling,
-      }.contains(currentRun!.state);
+  bool get runExecuting => conversationSession.runExecuting;
 
   /// True whenever a durable run exists and has not reached a terminal
   /// state -- including [RunState.awaitingApproval] and
@@ -203,23 +227,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   /// unrelated request): it must be treated as an informational side
   /// conversation, a steer/control of this same run, a clarification, or an
   /// explicit cancel/decline before anything else starts.
-  bool get hasNonterminalRun =>
-      currentRun != null &&
-      const <RunState>{
-        RunState.awaitingApproval,
-        RunState.running,
-        RunState.paused,
-        RunState.cancelling,
-        RunState.interrupted,
-      }.contains(currentRun!.state);
+  bool get hasNonterminalRun => conversationSession.hasNonterminalRun;
 
-  bool get runTerminal =>
-      currentRun != null &&
-      const <RunState>{
-        RunState.succeeded,
-        RunState.failed,
-        RunState.cancelled,
-      }.contains(currentRun!.state);
+  bool get runTerminal => conversationSession.runTerminal;
 
   @override
   void initState() {
@@ -285,15 +295,17 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       selectedModelId ??= models.firstOrNull?.exactId;
 
       final durable = runs.where((run) {
-        return const <RunState>{
-          RunState.awaitingApproval,
-          RunState.running,
-          RunState.paused,
-          RunState.interrupted,
+        return !const <RunState>{
+          RunState.succeeded,
+          RunState.failed,
+          RunState.cancelled,
         }.contains(run.state);
       }).firstOrNull;
       if (durable != null) {
         currentRun = durable;
+        conversationSession.setDeferredInteraction(
+          await runtime.latestDeferredInteraction(durable.id),
+        );
         prepared = durable.command;
         activeRequest = durable.command.contract.request;
         selectedProjectId = durable.command.contract.projectId;
@@ -308,11 +320,14 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     });
     _mutate(() {
       loading = false;
-      status = runAwaitingApproval
-          ? 'Permission review required'
-          : runExecuting
-              ? 'Continuing active work'
-              : 'Kristin is ready';
+      status = conversationSession.awaitingUserInput
+          ? conversationSession.deferredUserPrompt ??
+              'Kristin needs your input before continuing.'
+          : runAwaitingApproval
+              ? 'Permission review required'
+              : runExecuting
+                  ? 'Continuing active work'
+                  : 'Kristin is ready';
     });
   }
 
@@ -332,15 +347,22 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     }.contains(refreshed.state);
     final loadedEvidence =
         newTerminal ? await runtime.evidenceForRun(refreshed.id) : evidence;
+    final deferred = newTerminal
+        ? null
+        : await runtime.latestDeferredInteraction(refreshed.id);
     _mutate(() {
       currentRun = refreshed;
+      conversationSession.setDeferredInteraction(deferred);
       evidence = loadedEvidence;
       // Completed work is recorded against the canonical plan as it
       // happens, so a later replan can preserve it instead of asking the
       // user to watch finished tasks run a second time.
       completedTasks = _completedTasksFrom(refreshed);
       awaitingPermission = refreshed.state == RunState.awaitingApproval;
-      if (newTerminal) {
+      if (conversationSession.awaitingUserInput) {
+        status = conversationSession.deferredUserPrompt ??
+            'Kristin needs your input before continuing.';
+      } else if (newTerminal) {
         status = refreshed.state == RunState.succeeded
             ? 'Finished and verified'
             : 'Execution stopped safely';
@@ -502,6 +524,40 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       inferredMode: mode,
       knownTargets: _knownTargets(),
     );
+
+    if (conversationSession.awaitingUserInput) {
+      final run = currentRun;
+      if (run == null) {
+        conversationSession.setDeferredInteraction(null);
+      } else if (_isActiveRunCancellation(request, decision)) {
+        transcript.add(_ChatLine.user(request));
+        composerController.clear();
+        await _controlRun('cancel');
+        return;
+      } else {
+        transcript.add(_ChatLine.user(request));
+        composerController.clear();
+        final resolved = await _perform(
+          'Recording your answer',
+          () => runtime.recordDeferredUserResponse(
+            runId: run.id,
+            response: request,
+          ),
+        );
+        if (resolved == null || !mounted) return;
+        _mutate(() {
+          conversationSession.setDeferredInteraction(resolved);
+          liveProgressText = 'Continuing with your answer.';
+          status = 'Continuing with your answer';
+        });
+        await _perform<void>(
+          'Continuing with your answer',
+          () => runtime.resume(run.id),
+        );
+        await _refreshCurrentRun();
+        return;
+      }
+    }
 
     if (runExecuting) {
       if (_isActiveRunCancellation(request, decision)) {

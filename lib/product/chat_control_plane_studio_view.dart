@@ -73,7 +73,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
 
   Widget _statusStrip() {
     final startup = widget.startupError;
-    if (startup == null && error == null && !busy && !runExecuting) {
+    final waitingForInput = conversationSession.awaitingUserInput;
+    if (startup == null &&
+        error == null &&
+        !busy &&
+        !runExecuting &&
+        !waitingForInput) {
       return const SizedBox.shrink();
     }
     final colors = Theme.of(context).colorScheme;
@@ -84,7 +89,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: Row(
           children: <Widget>[
-            if (busy || runExecuting)
+            if ((busy || runExecuting) && !waitingForInput)
               const SizedBox.square(
                 dimension: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -93,7 +98,15 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               Icon(failing ? Icons.error_outline : Icons.info_outline,
                   size: 18),
             const SizedBox(width: 9),
-            Expanded(child: Text(startup ?? error ?? status)),
+            Expanded(
+              child: Text(
+                startup ??
+                    error ??
+                    (waitingForInput
+                        ? conversationSession.deferredUserPrompt ?? status
+                        : status),
+              ),
+            ),
             if (error != null)
               IconButton(
                 tooltip: 'Dismiss',
@@ -684,6 +697,19 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 : (done / total).clamp(0, 1).toDouble(),
           ),
           const SizedBox(height: 12),
+          if (conversationSession.awaitingUserInput) ...<Widget>[
+            Text(
+              conversationSession.deferredUserPrompt ??
+                  'Kristin needs your input before continuing.',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Reply in the composer. Your answer supplies intent context only and does not grant new permissions or authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+          ],
           if (showModelAnswer)
             SelectableText(liveAssistantText)
           else ...<Widget>[
@@ -760,8 +786,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   icon: const Icon(Icons.pause),
                   label: const Text('Pause'),
                 ),
-              if (run.state == RunState.paused ||
-                  run.state == RunState.interrupted)
+              if ((run.state == RunState.paused ||
+                      run.state == RunState.interrupted) &&
+                  !conversationSession.awaitingUserInput)
                 FilledButton.icon(
                   onPressed: busy ? null : () => _controlRun('resume'),
                   icon: const Icon(Icons.play_arrow),
