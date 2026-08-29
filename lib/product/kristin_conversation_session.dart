@@ -146,15 +146,7 @@ class KristinConversationSession {
         RunState.cancelling,
       }.contains(_currentRun!.state);
 
-  bool get hasNonterminalRun =>
-      _currentRun != null &&
-      const <RunState>{
-        RunState.awaitingApproval,
-        RunState.running,
-        RunState.paused,
-        RunState.cancelling,
-        RunState.interrupted,
-      }.contains(_currentRun!.state);
+  bool get hasNonterminalRun => _currentRun != null && !runTerminal;
 
   bool get runTerminal =>
       _currentRun != null &&
