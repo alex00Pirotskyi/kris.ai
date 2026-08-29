@@ -81,7 +81,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       KristinConversationSession();
 
   final List<_ChatLine> transcript = <_ChatLine>[];
-  final List<LiveRunSignal> liveSignals = <LiveRunSignal>[];
+  List<LiveRunSignal> get liveSignals => conversationSession.liveSignals;
   final ChatIntentCompiler intentCompiler = const ChatIntentCompiler(
     policy: _StudioInteractionPolicy(),
   );
@@ -157,11 +157,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   /// What the last replan changed, for the plan card to show.
   PlanReconciliationResult? lastReconciliation;
   String activeRequest = '';
-  String liveAssistantProtocolText = '';
-  String liveAssistantText = '';
-  String liveProgressText = '';
-  String liveToolName = '';
-  String liveToolOutput = '';
+  String get liveAssistantProtocolText =>
+      conversationSession.liveAssistantProtocolText;
+  String get liveAssistantText => conversationSession.liveAssistantText;
+  String get liveProgressText => conversationSession.liveProgressText;
+  String get liveToolName => conversationSession.liveToolName;
+  String get liveToolOutput => conversationSession.liveToolOutput;
 
   List<ChatAutocompleteSuggestion> suggestions =
       const <ChatAutocompleteSuggestion>[];
@@ -394,60 +395,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   void _onLiveSignal(LiveRunSignal signal) {
     if (!mounted || signal.runId != currentRun?.id) return;
     _mutate(() {
-      liveSignals.add(signal);
-      if (liveSignals.length > 600) {
-        liveSignals.removeRange(0, liveSignals.length - 600);
-      }
-      switch (signal.kind) {
-        case LiveRunSignalKind.modelTextDelta:
-          final delta = signal.data['delta']?.toString() ?? '';
-          liveAssistantProtocolText = '$liveAssistantProtocolText$delta';
-          if (liveAssistantProtocolText.length > 18000) {
-            liveAssistantProtocolText = liveAssistantProtocolText.substring(
-              liveAssistantProtocolText.length - 18000,
-            );
-          }
-          liveAssistantText = ConversationStreamProjector.visibleText(
-            liveAssistantProtocolText,
-          );
-          break;
-        case LiveRunSignalKind.modelProgress:
-        case LiveRunSignalKind.phase:
-        case LiveRunSignalKind.preflight:
-          liveProgressText = signal.data['message']?.toString() ?? '';
-          break;
-        case LiveRunSignalKind.toolStarted:
-          liveToolName = signal.data['tool']?.toString() ?? 'tool';
-          liveToolOutput = '';
-          break;
-        case LiveRunSignalKind.toolOutput:
-          liveToolName = signal.data['tool']?.toString() ?? liveToolName;
-          final delta = signal.data['delta']?.toString() ?? '';
-          liveToolOutput = '$liveToolOutput$delta';
-          if (liveToolOutput.length > 12000) {
-            liveToolOutput =
-                liveToolOutput.substring(liveToolOutput.length - 12000);
-          }
-          break;
-        case LiveRunSignalKind.toolCompleted:
-          liveToolName = signal.data['tool']?.toString() ?? liveToolName;
-          final output = signal.data['output']?.toString() ?? '';
-          if (output.isNotEmpty) liveToolOutput = output;
-          break;
-        case LiveRunSignalKind.toolFailed:
-          liveToolName = signal.data['tool']?.toString() ?? liveToolName;
-          liveToolOutput = signal.data['detail']?.toString() ?? '';
-          break;
-        case LiveRunSignalKind.steeringQueued:
-          liveProgressText =
-              'Your new direction is queued for the next safe step.';
-          break;
-        case LiveRunSignalKind.steeringApplied:
-          liveProgressText = 'Your new direction was applied.';
-          break;
-        case LiveRunSignalKind.heartbeat:
-          break;
-      }
+      conversationSession.recordLiveSignal(signal);
     });
   }
 
@@ -555,7 +503,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         if (resolved == null || !mounted) return;
         _mutate(() {
           conversationSession.setDeferredInteraction(resolved);
-          liveProgressText = 'Continuing with your answer.';
+          conversationSession.showLiveProgress(
+            'Continuing with your answer.',
+          );
           status = 'Continuing with your answer';
         });
         await _perform<void>(
@@ -583,8 +533,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         );
         if (steered != null) {
           _mutate(() {
-            liveProgressText =
-                'Your new direction is queued for the next safe step.';
+            conversationSession.showLiveProgress(
+              'Your new direction is queued for the next safe step.',
+            );
           });
         }
         return;
@@ -831,12 +782,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     currentRun = null;
     awaitingPermission = false;
     activeRequest = '';
-    liveSignals.clear();
-    liveAssistantProtocolText = '';
-    liveAssistantText = '';
-    liveProgressText = '';
-    liveToolName = '';
-    liveToolOutput = '';
+    conversationSession.clearLiveExecution();
   }
 
   String _resultText(RunRecord run) {

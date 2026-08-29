@@ -1151,12 +1151,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     _mutate(() {
       currentRun = started;
       awaitingPermission = false;
-      liveSignals.clear();
-      liveAssistantProtocolText = '';
-      liveAssistantText = '';
-      liveProgressText = 'Starting the first safe step.';
-      liveToolName = '';
-      liveToolOutput = '';
+      conversationSession.beginLiveExecution();
       status = 'Kristin is working';
     });
   }
@@ -1401,12 +1396,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       currentRun = null;
       awaitingPermission = false;
       activeRequest = '';
-      liveSignals.clear();
-      liveAssistantProtocolText = '';
-      liveAssistantText = '';
-      liveProgressText = '';
-      liveToolName = '';
-      liveToolOutput = '';
+      conversationSession.clearLiveExecution();
       suggestions = const <ChatAutocompleteSuggestion>[];
       understandingAdjusting = false;
       planAdjusting = false;
