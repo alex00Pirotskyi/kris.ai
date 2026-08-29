@@ -416,6 +416,23 @@ class KristinConversationSession {
     return true;
   }
 
+  /// Starts a fresh UI projection for the currently attached execution.
+  ///
+  /// This is projection state only: it grants no execution authority and does
+  /// not change the durable run. Incoming [LiveRunSignal] values remain the
+  /// source of truth once execution begins emitting them.
+  void beginLiveExecution() {
+    clearLiveExecution();
+    _liveProgressText = 'Starting the first safe step.';
+  }
+
+  /// Updates an optimistic user-visible execution message without changing
+  /// durable run state or execution authority. Live signals may subsequently
+  /// replace this projection with runtime-reported progress.
+  void showLiveProgress(String message) {
+    _liveProgressText = message;
+  }
+
   void clearLiveExecution() {
     _liveSignals.clear();
     _liveAssistantProtocolText = '';

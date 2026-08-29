@@ -4,12 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late String chat;
+  late String actions;
   late String view;
   late String runtime;
 
   setUpAll(() {
     chat =
         File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
+    actions = File('lib/product/chat_control_plane_studio_actions.dart')
+        .readAsStringSync();
     view = File('lib/product/chat_control_plane_studio_view.dart')
         .readAsStringSync();
     runtime = File('lib/product/product_runtime.dart').readAsStringSync();
@@ -50,6 +53,43 @@ void main() {
     );
     expect(chat, contains('conversationSession.selectProject(value);'));
     expect(chat, contains('conversationSession.selectModel(value);'));
+  });
+
+  test('Chat live execution projection is owned by the canonical session', () {
+    expect(chat, isNot(contains('final List<LiveRunSignal> liveSignals')));
+    expect(chat, isNot(contains("String liveAssistantProtocolText = '';")));
+    expect(chat, isNot(contains("String liveAssistantText = '';")));
+    expect(chat, isNot(contains("String liveProgressText = '';")));
+    expect(chat, isNot(contains("String liveToolName = '';")));
+    expect(chat, isNot(contains("String liveToolOutput = '';")));
+    expect(chat, isNot(contains('liveSignals.clear();')));
+    expect(
+      chat.split('\n').any(
+            (line) => line.trimLeft().startsWith('liveProgressText ='),
+          ),
+      isFalse,
+    );
+    expect(actions, isNot(contains('liveSignals.clear();')));
+    expect(
+      actions.split('\n').any(
+            (line) => line.trimLeft().startsWith('liveProgressText ='),
+          ),
+      isFalse,
+    );
+    expect(
+      chat,
+      contains(
+        'List<LiveRunSignal> get liveSignals => conversationSession.liveSignals;',
+      ),
+    );
+    expect(
+      chat,
+      contains('conversationSession.recordLiveSignal(signal);'),
+    );
+    expect(chat, contains('conversationSession.showLiveProgress('));
+    expect(chat, contains('conversationSession.clearLiveExecution();'));
+    expect(actions, contains('conversationSession.beginLiveExecution();'));
+    expect(actions, contains('conversationSession.clearLiveExecution();'));
   });
 
   test('startup and refresh restore the durable deferred interaction', () {

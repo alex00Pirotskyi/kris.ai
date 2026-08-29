@@ -187,6 +187,30 @@ void main() {
     expect(session.liveSignals.last.sequence, 3);
   });
 
+  test('beginning live execution resets and primes the canonical projection',
+      () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.running));
+    session.recordLiveSignal(
+      _signal('run-a', 1, LiveRunSignalKind.modelProgress),
+    );
+
+    expect(session.liveSignals, isNotEmpty);
+    expect(session.liveProgressText, 'progress');
+
+    session.beginLiveExecution();
+
+    expect(session.liveSignals, isEmpty);
+    expect(session.liveAssistantProtocolText, isEmpty);
+    expect(session.liveAssistantText, isEmpty);
+    expect(session.liveProgressText, 'Starting the first safe step.');
+    expect(session.liveToolName, isEmpty);
+    expect(session.liveToolOutput, isEmpty);
+
+    session.showLiveProgress('Continuing with your answer.');
+    expect(session.liveProgressText, 'Continuing with your answer.');
+  });
+
   test('visible transcript is bounded and never accepts blank messages', () {
     final session = KristinConversationSession(maxMessages: 2);
     session.addUserMessage('one');
