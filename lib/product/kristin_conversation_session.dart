@@ -62,10 +62,10 @@ class KristinConversationSession {
     this.maxLiveSignals = 600,
     this.maxProtocolCharacters = 18000,
     this.maxToolOutputCharacters = 12000,
-  }) : assert(maxMessages > 0),
-       assert(maxLiveSignals > 0),
-       assert(maxProtocolCharacters > 0),
-       assert(maxToolOutputCharacters > 0);
+  })  : assert(maxMessages > 0),
+        assert(maxLiveSignals > 0),
+        assert(maxProtocolCharacters > 0),
+        assert(maxToolOutputCharacters > 0);
 
   final int maxMessages;
   final int maxLiveSignals;
@@ -128,12 +128,12 @@ class KristinConversationSession {
   String get liveToolOutput => _liveToolOutput;
 
   ChatConversationState get state => chatConversationSnapshot(
-    hasPendingDecision: _pendingDecision != null,
-    ambiguous: _pendingDecision?.ambiguous ?? false,
-    hasPreparedCommand: _prepared != null,
-    awaitingPermission: _awaitingPermission,
-    currentRunState: _currentRun?.state,
-  );
+        hasPendingDecision: _pendingDecision != null,
+        ambiguous: _pendingDecision?.ambiguous ?? false,
+        hasPreparedCommand: _prepared != null,
+        awaitingPermission: _awaitingPermission,
+        currentRunState: _currentRun?.state,
+      );
 
   bool get runAwaitingApproval =>
       _currentRun?.state == RunState.awaitingApproval;
@@ -185,20 +185,22 @@ class KristinConversationSession {
   KristinConversationMessage addAssistantMessage(
     String text, {
     DateTime? createdAt,
-  }) => _addMessage(
-    KristinConversationSpeaker.assistant,
-    text,
-    createdAt: createdAt,
-  );
+  }) =>
+      _addMessage(
+        KristinConversationSpeaker.assistant,
+        text,
+        createdAt: createdAt,
+      );
 
   KristinConversationMessage addSystemMessage(
     String text, {
     DateTime? createdAt,
-  }) => _addMessage(
-    KristinConversationSpeaker.system,
-    text,
-    createdAt: createdAt,
-  );
+  }) =>
+      _addMessage(
+        KristinConversationSpeaker.system,
+        text,
+        createdAt: createdAt,
+      );
 
   /// Begins a new governed objective in this conversation.
   ///
