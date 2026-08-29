@@ -631,6 +631,7 @@ class RunControl {
   RunControl(this.cancellation);
   final CancellationSignal cancellation;
   bool paused = false;
+  bool deferredSuspension = false;
 }
 
 class ProjectResourceLocks {
@@ -1910,6 +1911,7 @@ class RunCoordinator {
       () => RunControl(CancellationSignal()),
     );
     control.paused = false;
+    control.deferredSuspension = false;
     final execution = _locks.runExclusive(
       run.command.contract.projectId,
       () => _executeLocked(run!, control, leaseOwner),
@@ -1975,6 +1977,14 @@ class RunCoordinator {
   Future<void> resume(String runId) async {
     await _throwIfDeferredInteractionPending(runId);
     final control = _controls[runId];
+    if (control != null && control.deferredSuspension) {
+      final active = _active[runId];
+      if (active != null) {
+        await active;
+      }
+      unawaited(execute(runId));
+      return;
+    }
     if (control != null) {
       control.paused = false;
       final run = await repositories.runs.get(runId);
@@ -3172,13 +3182,20 @@ class RunCoordinator {
               details: executionStep.toEvidence(),
             );
           }
-          final interaction = await AgentDeferredInteractionStore(
-            repositories.workflow,
-          ).persist(
-            runId: current.id,
-            workItemId: progress.item.id,
-            step: executionStep,
-          );
+          control.deferredSuspension = true;
+          late final AgentDeferredInteraction interaction;
+          try {
+            interaction = await AgentDeferredInteractionStore(
+              repositories.workflow,
+            ).persist(
+              runId: current.id,
+              workItemId: progress.item.id,
+              step: executionStep,
+            );
+          } catch (_) {
+            control.deferredSuspension = false;
+            rethrow;
+          }
           throw _DeferredInteractionSuspension(interaction);
         }
         action = (executionStep as AgentProtocolV3SynchronousStep).action;

@@ -42,6 +42,20 @@ void main() {
         source, contains('await _throwIfDeferredInteractionPending(runId);'));
   });
 
+  test('resume waits for deferred stack release before re-entering execute',
+      () {
+    expect(source, contains('bool deferredSuspension = false;'));
+    expect(source, contains('control.deferredSuspension = true;'));
+    expect(
+      source,
+      contains('if (control != null && control.deferredSuspension) {'),
+    );
+    expect(source, contains('final active = _active[runId];'));
+    expect(source, contains('await active;'));
+    expect(source, contains('unawaited(execute(runId));'));
+    expect(source, contains('control.deferredSuspension = false;'));
+  });
+
   test('resolved response is reintroduced as non-authority user intent', () {
     expect(source, contains('_resolvedDeferredUserResponseEnvelope('));
     expect(source, contains('trust: AgentContextTrust.userIntent,'));
