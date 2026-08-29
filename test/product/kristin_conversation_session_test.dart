@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kristin_local_agent/product/agent_decision_v3.dart';
+import 'package:kristin_local_agent/product/agent_deferred_interaction.dart';
 import 'package:kristin_local_agent/product/chat_conversation_state.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/kristin_conversation_session.dart';
@@ -74,6 +76,57 @@ void main() {
     expect(session.currentRun?.id, 'run-a');
   });
 
+  test('pending user takeover is projected through the canonical session', () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.paused));
+    session.setDeferredInteraction(
+      _interaction(
+        runId: 'run-a',
+        status: AgentDeferredInteractionStatus.pending,
+      ),
+    );
+
+    expect(session.awaitingUserInput, isTrue);
+    expect(session.deferredUserPrompt, 'Which target should I use?');
+    expect(session.deferredInteraction?.userResponseGrantsAuthority, isFalse);
+  });
+
+  test('deferred interaction cannot cross durable run identity', () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.paused));
+
+    expect(
+      () => session.setDeferredInteraction(
+        _interaction(
+          runId: 'run-b',
+          status: AgentDeferredInteractionStatus.pending,
+        ),
+      ),
+      throwsA(
+        isA<KristinConversationSessionException>().having(
+          (error) => error.code,
+          'code',
+          'conversation_deferred_run_mismatch',
+        ),
+      ),
+    );
+  });
+
+  test('resolved takeover no longer projects as awaiting user input', () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.paused));
+    session.setDeferredInteraction(
+      _interaction(
+        runId: 'run-a',
+        status: AgentDeferredInteractionStatus.resolved,
+        userResponse: 'Use staging.',
+      ),
+    );
+
+    expect(session.awaitingUserInput, isFalse);
+    expect(session.deferredUserPrompt, isNull);
+  });
+
   test('awaiting approval run projects to the permission state', () {
     final session = KristinConversationSession();
     session.restoreRun(_run(id: 'run-a', state: RunState.awaitingApproval));
@@ -135,6 +188,27 @@ void main() {
     );
   });
 }
+
+AgentDeferredInteraction _interaction({
+  required String runId,
+  required AgentDeferredInteractionStatus status,
+  String? userResponse,
+}) =>
+    AgentDeferredInteraction(
+      id: 'interaction-a',
+      runId: runId,
+      workItemId: 'work-a',
+      decision: AgentDecisionV3(
+        kind: AgentDecisionV3Kind.userTakeover,
+        question: 'Which target should I use?',
+        reason: 'The target is ambiguous.',
+      ),
+      status: status,
+      createdAt: DateTime.utc(2026, 8, 29),
+      updatedAt: DateTime.utc(2026, 8, 29),
+      checkpointId: 'checkpoint-a',
+      userResponse: userResponse,
+    );
 
 LiveRunSignal _signal(String runId, int sequence, LiveRunSignalKind kind) =>
     LiveRunSignal(
