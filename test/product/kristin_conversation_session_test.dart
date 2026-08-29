@@ -22,6 +22,56 @@ void main() {
     expect(session.state, isA<ChatIdle>());
   });
 
+  test('finished run detach preserves transcript and selected context', () {
+    final session = KristinConversationSession();
+    session.addUserMessage('hello');
+    session.addAssistantMessage('done');
+    session.restoreRun(_run(id: 'run-a', state: RunState.running));
+    session.recordLiveSignal(
+      _signal('run-a', 1, LiveRunSignalKind.modelProgress),
+    );
+    session.updateRun(_run(id: 'run-a', state: RunState.succeeded));
+    session.selectProject('project-after');
+    session.selectModel('model-after');
+    session.setComposerDraft('draft');
+
+    expect(session.state, isA<ChatCompleted>());
+    expect(session.detachFinishedRun(), isTrue);
+
+    expect(session.messages.map((message) => message.text),
+        <String>['hello', 'done']);
+    expect(session.selectedProjectId, 'project-after');
+    expect(session.selectedModelId, 'model-after');
+    expect(session.composerDraft, isEmpty);
+    expect(session.currentRun, isNull);
+    expect(session.prepared, isNull);
+    expect(session.deferredInteraction, isNull);
+    expect(session.awaitingPermission, isFalse);
+    expect(session.activeRequest, isEmpty);
+    expect(session.liveSignals, isEmpty);
+    expect(session.liveProgressText, isEmpty);
+    expect(session.state, isA<ChatIdle>());
+  });
+
+  test('unfinished run detach fails closed without partial clearing', () {
+    final session = KristinConversationSession();
+    session.addUserMessage('keep this');
+    session.restoreRun(_run(id: 'run-a', state: RunState.running));
+    session.setComposerDraft('keep draft');
+    session.recordLiveSignal(
+      _signal('run-a', 1, LiveRunSignalKind.modelProgress),
+    );
+
+    expect(session.detachFinishedRun(), isFalse);
+
+    expect(session.currentRun?.id, 'run-a');
+    expect(session.messages.single.text, 'keep this');
+    expect(session.composerDraft, 'keep draft');
+    expect(session.prepared, isNotNull);
+    expect(session.liveSignals, isNotEmpty);
+    expect(session.state, isA<ChatExecuting>());
+  });
+
   test('new governed request cannot orphan a non-terminal run', () {
     final session = KristinConversationSession();
     session.restoreRun(_run(id: 'run-a', state: RunState.running));

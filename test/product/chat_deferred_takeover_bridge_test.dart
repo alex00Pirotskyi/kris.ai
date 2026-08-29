@@ -55,6 +55,19 @@ void main() {
     expect(chat, contains('conversationSession.selectModel(value);'));
   });
 
+  test('Chat detaches finished runs without resetting conversation history',
+      () {
+    expect(chat, contains('conversationSession.detachFinishedRun();'));
+    expect(
+      chat,
+      isNot(contains('conversationSession.resetForNewConversation();')),
+    );
+    expect(
+      actions,
+      contains('conversationSession.resetForNewConversation();'),
+    );
+  });
+
   test('Chat live execution projection is owned by the canonical session', () {
     expect(chat, isNot(contains('final List<LiveRunSignal> liveSignals')));
     expect(chat, isNot(contains("String liveAssistantProtocolText = '';")));
@@ -89,7 +102,7 @@ void main() {
     expect(chat, contains('conversationSession.showLiveProgress('));
     expect(chat, contains('conversationSession.clearLiveExecution();'));
     expect(actions, contains('conversationSession.beginLiveExecution();'));
-    expect(actions, contains('conversationSession.clearLiveExecution();'));
+    expect(chat, contains('conversationSession.clearLiveExecution();'));
   });
 
   test('startup and refresh restore the durable deferred interaction', () {
