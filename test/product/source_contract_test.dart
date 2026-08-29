@@ -264,6 +264,7 @@ void main() {
         'lib/product/agent_context_v2.dart',
         'lib/product/agent_decision_v3.dart',
         'lib/product/agent_protocol_v3.dart',
+        'lib/product/agent_deferred_interaction.dart',
         'lib/product/mcp_registry_v2.dart',
         'lib/product/p8_effect_journal_adapter.dart',
         'lib/product/p8_external_effects.dart',
