@@ -1,0 +1,82 @@
+name: Temporary Live Projection Verify
+
+on:
+  pull_request:
+    branches:
+      - feat/one-kristin-convergence
+    paths:
+      - .github/workflows/tmp-live-projection-verify.yml
+      - tool/tmp_live_projection_patch.py
+      - lib/product/chat_control_plane_studio.dart
+      - lib/product/chat_control_plane_studio_actions.dart
+      - lib/product/kristin_conversation_session.dart
+      - test/product/chat_deferred_takeover_bridge_test.dart
+      - test/product/kristin_conversation_session_test.dart
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tmp-live-projection-verify
+  cancel-in-progress: true
+
+jobs:
+  patch-and-verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: automation/one-kristin-live-projection-20260829
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Patch live projection ownership
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/tmp_live_projection_patch.py
+
+      - name: Resolve package context and format
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart format lib/product/chat_control_plane_studio.dart lib/product/chat_control_plane_studio_actions.dart lib/product/kristin_conversation_session.dart test/product/chat_deferred_takeover_bridge_test.dart test/product/kristin_conversation_session_test.dart
+          git diff --check -- lib/product/chat_control_plane_studio.dart lib/product/chat_control_plane_studio_actions.dart lib/product/kristin_conversation_session.dart test/product/chat_deferred_takeover_bridge_test.dart test/product/kristin_conversation_session_test.dart
+
+      - name: Analyze live projection seam
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter analyze --fatal-infos --fatal-warnings lib/product/chat_control_plane_studio.dart lib/product/chat_control_plane_studio_actions.dart lib/product/kristin_conversation_session.dart test/product/chat_deferred_takeover_bridge_test.dart test/product/kristin_conversation_session_test.dart
+
+      - name: Run focused contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test test/product/kristin_conversation_session_test.dart test/product/chat_deferred_takeover_bridge_test.dart
+
+      - name: Remove helpers and refresh exact manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/tmp-live-projection-verify.yml
+          rm tool/tmp_live_projection_patch.py
+          python tool/p1a_refresh_source_manifest.py .
+          git diff --check
+          git status --short
+
+      - name: Commit verified live projection convergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "refactor: move Chat live projection into session"
+          git push origin HEAD:automation/one-kristin-live-projection-20260829
