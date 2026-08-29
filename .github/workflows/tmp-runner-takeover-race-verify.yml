@@ -1,0 +1,122 @@
+name: Temporary Runner Takeover Race Verify
+
+on:
+  push:
+    branches:
+      - feat/one-kristin-convergence
+    paths:
+      - .github/workflows/tmp-runner-takeover-race-verify.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-and-verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/one-kristin-convergence
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.44.8"
+          channel: stable
+          cache: true
+
+      - name: Patch deferred resume handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/tmp_runner_takeover_race_patch.py
+
+      - name: Resolve package context and format
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          dart format lib/product/planning_runtime.dart test/product/runner_deferred_takeover_contract_test.dart
+          git diff --check -- lib/product/planning_runtime.dart test/product/runner_deferred_takeover_contract_test.dart
+
+      - name: Analyze changed race seam
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter analyze --fatal-infos --fatal-warnings lib/product/planning_runtime.dart test/product/runner_deferred_takeover_contract_test.dart
+
+      - name: Run focused takeover contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test test/product/agent_deferred_interaction_test.dart test/product/runner_deferred_takeover_contract_test.dart
+
+      - name: Remove helpers and refresh exact manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/tmp-runner-takeover-race-verify.yml
+          rm tool/tmp_runner_takeover_race_patch.py
+          python - <<'PY'
+          from __future__ import annotations
+          import hashlib
+          import importlib.util
+          from pathlib import Path
+          import subprocess
+          import sys
+
+          root = Path('.').resolve()
+          policy_path = root / 'tool/source_tree_policy.py'
+          spec = importlib.util.spec_from_file_location('tmp_source_policy', policy_path)
+          if spec is None or spec.loader is None:
+              raise SystemExit('cannot load source-tree policy')
+          policy = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = policy
+          spec.loader.exec_module(policy)
+
+          raw = subprocess.check_output([
+              'git', '-C', str(root), 'ls-files', '--cached', '--others', '--exclude-standard', '-z'
+          ])
+          values = sorted({
+              item.decode('utf-8', errors='surrogateescape').replace('\\', '/')
+              for item in raw.split(b'\0') if item
+          })
+          excluded = {
+              'SOURCE_MANIFEST.sha256',
+              '.github/workflows/tmp-runner-takeover-race-verify.yml',
+              'tool/tmp_runner_takeover_race_patch.py',
+          }
+          paths = [
+              relative for relative in values
+              if relative not in excluded
+              and not policy.is_generated_path(relative)
+              and (root / relative).is_file()
+          ]
+
+          def canonical(data: bytes) -> bytes:
+              if b'\0' in data:
+                  return data
+              try:
+                  data.decode('utf-8')
+              except UnicodeDecodeError:
+                  return data
+              return data.replace(b'\r\n', b'\n')
+
+          rows = []
+          for relative in paths:
+              digest = hashlib.sha256(canonical((root / relative).read_bytes())).hexdigest()
+              rows.append(f'{digest}  {relative}')
+          (root / 'SOURCE_MANIFEST.sha256').write_text('\n'.join(rows) + '\n', encoding='utf-8', newline='\n')
+          PY
+          git diff --check
+          git status --short
+
+      - name: Commit verified resume-race fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: serialize deferred takeover resume"
+          git push origin HEAD:feat/one-kristin-convergence
