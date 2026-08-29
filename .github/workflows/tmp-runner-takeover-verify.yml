@@ -30,6 +30,9 @@ jobs:
         run: |
           set -euo pipefail
           python tool/tmp_runner_takeover_patch.py
+          sed -i "s/suspension\.interaction\.decision\.kind\.wireName/suspension.interaction.decision.toJson()['action']?.toString() ?? ''/g" lib/product/planning_runtime.dart
+          sed -i "s/pending\.decision\.kind\.wireName/pending.decision.toJson()['action']?.toString() ?? ''/g" lib/product/planning_runtime.dart
+          sed -i "s/interaction\.decision\.kind\.wireName/interaction.decision.toJson()['action']?.toString() ?? ''/g" lib/product/planning_runtime.dart
 
       - name: Resolve package context and format
         shell: bash
