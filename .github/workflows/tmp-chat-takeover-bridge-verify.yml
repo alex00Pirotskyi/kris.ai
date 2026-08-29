@@ -35,6 +35,7 @@ jobs:
           set -euo pipefail
           python tool/tmp_chat_takeover_bridge_patch.py
           python tool/tmp_chat_takeover_contract_fix.py
+          python tool/tmp_chat_session_projection_fix.py
 
       - name: Resolve package context and format
         shell: bash
@@ -63,6 +64,7 @@ jobs:
           rm .github/workflows/tmp-chat-takeover-bridge-verify.yml
           rm tool/tmp_chat_takeover_bridge_patch.py
           rm tool/tmp_chat_takeover_contract_fix.py
+          rm tool/tmp_chat_session_projection_fix.py
           python tool/tmp_source_manifest_refresh.py
           rm tool/tmp_source_manifest_refresh.py
           git diff --check
