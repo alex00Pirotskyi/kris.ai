@@ -56,6 +56,33 @@ void main() {
     expect(source, contains('control.deferredSuspension = false;'));
   });
 
+  test('durably paused cancellation rolls back before terminal state', () {
+    expect(
+      source,
+      contains('if (control == null && run.state == RunState.paused) {'),
+    );
+    expect(source, contains('await _cancelDurablyPausedRun(run);'));
+    expect(source, contains('Future<void> _cancelDurablyPausedRun('));
+    expect(source, contains('await WorkspaceTransaction.begin('));
+    expect(source, contains('await transaction.rollback();'));
+    expect(source, contains('state: RunState.cancelled,'));
+    expect(source, contains('state: WorkItemState.cancelled,'));
+    expect(source, contains("state: 'cancelled',"));
+    expect(source, contains("'durablePausedCancellation': true,"));
+    expect(source, contains("'rolledBackWorkspace': true,"));
+  });
+
+  test('cancel waits for a deferred stack to unwind before rollback', () {
+    expect(
+      source,
+      contains('if (control != null && control.deferredSuspension) {'),
+    );
+    expect(source, contains('control.cancellation.cancel();'));
+    expect(source, contains('final active = _active[runId];'));
+    expect(source, contains('await active;'));
+    expect(source, contains('control = _controls[runId];'));
+  });
+
   test('resolved response is reintroduced as non-authority user intent', () {
     expect(source, contains('_resolvedDeferredUserResponseEnvelope('));
     expect(source, contains('trust: AgentContextTrust.userIntent,'));
