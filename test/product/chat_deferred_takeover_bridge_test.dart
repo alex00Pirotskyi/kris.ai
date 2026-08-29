@@ -68,6 +68,27 @@ void main() {
     );
   });
 
+  test('Chat visible transcript is owned by the canonical session', () {
+    expect(chat, isNot(contains('final List<_ChatLine> transcript')));
+    expect(chat, isNot(contains('class _ChatLine')));
+    expect(
+      RegExp(
+        r'List<KristinConversationMessage>\s+get\s+transcript\s*=>\s*conversationSession\.messages\s*;',
+      ).hasMatch(chat),
+      isTrue,
+    );
+    final mutationPattern = RegExp(r'transcript\s*\.\s*(?:add|clear)\s*\(');
+    expect(mutationPattern.hasMatch(chat), isFalse);
+    expect(mutationPattern.hasMatch(actions), isFalse);
+    expect(chat, contains('conversationSession.addUserMessage(request);'));
+    expect(chat, contains('conversationSession.addAssistantMessage('));
+    expect(actions, contains('conversationSession.addAssistantMessage('));
+    expect(
+      view,
+      contains('Widget _messageBubble(KristinConversationMessage line)'),
+    );
+  });
+
   test('Chat live execution projection is owned by the canonical session', () {
     expect(chat, isNot(contains('final List<LiveRunSignal> liveSignals')));
     expect(chat, isNot(contains("String liveAssistantProtocolText = '';")));

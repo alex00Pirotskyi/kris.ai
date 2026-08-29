@@ -80,7 +80,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   final KristinConversationSession conversationSession =
       KristinConversationSession();
 
-  final List<_ChatLine> transcript = <_ChatLine>[];
+  List<KristinConversationMessage> get transcript =>
+      conversationSession.messages;
   List<LiveRunSignal> get liveSignals => conversationSession.liveSignals;
   final ChatIntentCompiler intentCompiler = const ChatIntentCompiler(
     policy: _StudioInteractionPolicy(),
@@ -484,12 +485,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       if (run == null) {
         conversationSession.setDeferredInteraction(null);
       } else if (_isActiveRunCancellation(request, decision)) {
-        transcript.add(_ChatLine.user(request));
+        conversationSession.addUserMessage(request);
         composerController.clear();
         await _controlRun('cancel');
         return;
       } else {
-        transcript.add(_ChatLine.user(request));
+        conversationSession.addUserMessage(request);
         composerController.clear();
         final resolved = await _perform(
           'Recording your answer',
@@ -517,13 +518,13 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
     if (runExecuting) {
       if (_isActiveRunCancellation(request, decision)) {
-        transcript.add(_ChatLine.user(request));
+        conversationSession.addUserMessage(request);
         composerController.clear();
         await _controlRun('cancel');
         return;
       }
       if (!decision.explicitCommand && !decision.isInformational) {
-        transcript.add(_ChatLine.user(request));
+        conversationSession.addUserMessage(request);
         composerController.clear();
         final steered = await _perform<dynamic>(
           'Applying your direction',
@@ -539,11 +540,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         return;
       }
       if (decision.explicitCommand && !decision.isInformational) {
-        transcript.add(_ChatLine.user(request));
-        transcript.add(
-          _ChatLine.assistant(
-            'A governed task is already active. Pause or stop it before starting a separate command, or describe a steering change in plain language.',
-          ),
+        conversationSession.addUserMessage(request);
+        conversationSession.addAssistantMessage(
+          'A governed task is already active. Pause or stop it before starting a separate command, or describe a steering change in plain language.',
         );
         composerController.clear();
         _mutate(() => status = 'Active task preserved');
@@ -558,7 +557,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     // zero-risk navigation both remain allowed alongside it.
     if (hasNonterminalRun) {
       if (_isActiveRunCancellation(request, decision)) {
-        transcript.add(_ChatLine.user(request));
+        conversationSession.addUserMessage(request);
         composerController.clear();
         await _controlRun('cancel');
         return;
@@ -567,8 +566,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           (decision.capability != null &&
               decision.capability!.riskClass == ChatRiskClass.none);
       if (!safeAlongsidePendingRun) {
-        transcript.add(_ChatLine.user(request));
-        transcript.add(_ChatLine.assistant(_pendingRunMessage()));
+        conversationSession.addUserMessage(request);
+        conversationSession.addAssistantMessage(_pendingRunMessage());
         composerController.clear();
         _mutate(() => status = 'Pending task preserved');
         return;
@@ -576,15 +575,13 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     }
 
     _archiveFinishedRun();
-    transcript.add(_ChatLine.user(request));
+    conversationSession.addUserMessage(request);
     composerController.clear();
 
     if (decision.explicitCommand && decision.capability == null) {
       _mutate(() {
-        transcript.add(
-          _ChatLine.assistant(
-            'I do not know /${decision.parsed.commandToken}. Type / to see the available actions.',
-          ),
+        conversationSession.addAssistantMessage(
+          'I do not know /${decision.parsed.commandToken}. Type / to see the available actions.',
         );
         status = 'Kristin is ready';
       });
@@ -773,7 +770,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     final run = currentRun;
     if (run == null || !runTerminal) return;
     final text = _resultText(run);
-    if (text.trim().isNotEmpty) transcript.add(_ChatLine.assistant(text));
+    if (text.trim().isNotEmpty) conversationSession.addAssistantMessage(text);
     pendingDecision = null;
     understandingHistory = null;
     prepared = null;
@@ -814,18 +811,6 @@ class _StudioInteractionPolicy extends ChatInteractionPolicy {
       naturalLanguage: naturalLanguage,
     );
   }
-}
-
-class _ChatLine {
-  const _ChatLine({required this.assistant, required this.text});
-
-  factory _ChatLine.user(String text) =>
-      _ChatLine(assistant: false, text: text);
-  factory _ChatLine.assistant(String text) =>
-      _ChatLine(assistant: true, text: text);
-
-  final bool assistant;
-  final String text;
 }
 
 String _slug(String value) => value
