@@ -3,7 +3,7 @@ name: Temporary Chat Takeover Bridge Verify
 on:
   push:
     branches:
-      - feat/one-kristin-convergence
+      - tmp/chat-takeover-verify
     paths:
       - .github/workflows/tmp-chat-takeover-bridge-verify.yml
 
@@ -16,11 +16,11 @@ concurrency:
 
 jobs:
   patch-and-verify:
-    runs-on: macos-15
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: feat/one-kristin-convergence
+          ref: tmp/chat-takeover-verify
           fetch-depth: 0
 
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
@@ -78,4 +78,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "feat: bridge Chat durable user takeover"
-          git push origin HEAD:feat/one-kristin-convergence
+          git push origin HEAD:tmp/chat-takeover-verify
