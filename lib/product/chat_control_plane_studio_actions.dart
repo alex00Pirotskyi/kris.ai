@@ -1390,13 +1390,12 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     _mutate(() {
       transcript.clear();
+      conversationSession.resetForNewConversation();
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
-      currentRun = null;
       awaitingPermission = false;
       activeRequest = '';
-      conversationSession.clearLiveExecution();
       suggestions = const <ChatAutocompleteSuggestion>[];
       understandingAdjusting = false;
       planAdjusting = false;

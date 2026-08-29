@@ -307,6 +307,31 @@ class KristinConversationSession {
     _attachRun(run, restoring: false);
   }
 
+  /// Detaches a finished/no-run governed turn without erasing conversation
+  /// history or the user's selected project/model context.
+  ///
+  /// This is the compatibility boundary for legacy Chat `currentRun = null`
+  /// assignments. It fails closed while unfinished durable work is attached.
+  bool detachFinishedRun() {
+    if (hasNonterminalRun) return false;
+    _composerDraft = '';
+    _pendingDecision = null;
+    _understandingHistory = null;
+    _taskSpecification = null;
+    _routingDecision = null;
+    _canonicalPlan = null;
+    _planningFailure = null;
+    _completedTasks = const <CompletedTaskRecord>[];
+    _lastReconciliation = null;
+    _prepared = null;
+    _currentRun = null;
+    _deferredInteraction = null;
+    _awaitingPermission = false;
+    _activeRequest = '';
+    clearLiveExecution();
+    return true;
+  }
+
   void setAwaitingPermission(bool value) {
     _awaitingPermission = value;
   }
@@ -445,28 +470,13 @@ class KristinConversationSession {
   /// Starts a genuinely new conversation while preserving the user's selected
   /// project/model context. A non-terminal durable run must be resolved first.
   void resetForNewConversation() {
-    if (hasNonterminalRun) {
+    if (!detachFinishedRun()) {
       throw const KristinConversationSessionException(
         'conversation_run_active',
         'A new conversation cannot orphan an unfinished governed run.',
       );
     }
     _messages.clear();
-    _composerDraft = '';
-    _pendingDecision = null;
-    _understandingHistory = null;
-    _taskSpecification = null;
-    _routingDecision = null;
-    _canonicalPlan = null;
-    _planningFailure = null;
-    _completedTasks = const <CompletedTaskRecord>[];
-    _lastReconciliation = null;
-    _prepared = null;
-    _currentRun = null;
-    _deferredInteraction = null;
-    _awaitingPermission = false;
-    _activeRequest = '';
-    clearLiveExecution();
   }
 
   KristinConversationMessage _addMessage(

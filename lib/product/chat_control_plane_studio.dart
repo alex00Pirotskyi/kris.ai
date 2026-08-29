@@ -175,11 +175,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     final existing = conversationSession.currentRun;
     if (value == null) {
       // Transitional compatibility for the remaining Chat fields: a legacy
-      // null assignment may clear a finished/no-run association, but it can
-      // never orphan unfinished durable work.
-      if (!conversationSession.hasNonterminalRun) {
-        conversationSession.resetForNewConversation();
-      }
+      // null assignment may detach a finished/no-run association, but the
+      // canonical session fails closed if unfinished durable work exists.
+      conversationSession.detachFinishedRun();
       return;
     }
     if (existing != null && existing.id == value.id) {
