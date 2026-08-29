@@ -103,8 +103,16 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   List<ModelIdentity> models = <ModelIdentity>[];
   List<RunRecord> runs = <RunRecord>[];
   List<EvidenceRecord> evidence = <EvidenceRecord>[];
-  String? selectedProjectId;
-  String? selectedModelId;
+  String? get selectedProjectId => conversationSession.selectedProjectId;
+  set selectedProjectId(String? value) {
+    conversationSession.selectProject(value);
+  }
+
+  String? get selectedModelId => conversationSession.selectedModelId;
+  set selectedModelId(String? value) {
+    conversationSession.selectModel(value);
+  }
+
   ProjectProcessStatus? projectProcessStatus;
 
   ChatInteractionDecision? pendingDecision;

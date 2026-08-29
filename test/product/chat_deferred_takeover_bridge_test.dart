@@ -34,6 +34,22 @@ void main() {
         chat,
         contains(
             'bool get hasNonterminalRun => conversationSession.hasNonterminalRun;'));
+    expect(chat, isNot(contains('String? selectedProjectId;')));
+    expect(chat, isNot(contains('String? selectedModelId;')));
+    expect(
+      chat,
+      contains(
+        'String? get selectedProjectId => conversationSession.selectedProjectId;',
+      ),
+    );
+    expect(
+      chat,
+      contains(
+        'String? get selectedModelId => conversationSession.selectedModelId;',
+      ),
+    );
+    expect(chat, contains('conversationSession.selectProject(value);'));
+    expect(chat, contains('conversationSession.selectModel(value);'));
   });
 
   test('startup and refresh restore the durable deferred interaction', () {
