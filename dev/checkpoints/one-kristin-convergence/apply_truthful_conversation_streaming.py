@@ -100,6 +100,7 @@ def session(src: str) -> str:
 '''
     src = rep(src, anchor, methods + anchor, 'conversation stream methods')
 
+    # Both turn-reset paths must discard any transient partial assistant output.
     src = rep(
         src,
         "    _awaitingPermission = false;\n"
