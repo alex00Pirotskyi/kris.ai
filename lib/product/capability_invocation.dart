@@ -57,6 +57,12 @@ class CapabilityAuthorityResolver {
         '${capability.id} is a coordinator capability and cannot be granted to an execution model.',
       );
     }
+    if (capability.route == ChatExecutionRoute.ownerMode && invocation.modelProposed) {
+      throw ProductException(
+        'owner_full_host_not_implemented',
+        'This release does not implement unrestricted full-host Owner authority. Owner Mode may be inspected, but an execution model cannot be granted full-host control.',
+      );
+    }
 
     final required = _requiredScopes(capability);
     if (!required.containsAll(invocation.requestedScopes)) {
