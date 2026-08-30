@@ -426,7 +426,10 @@ class KristinConversationSession {
         break;
       case LiveRunSignalKind.toolFailed:
         _liveToolName = signal.data['tool']?.toString() ?? _liveToolName;
-        _liveToolOutput = signal.data['detail']?.toString() ?? '';
+        final detail = signal.data['detail']?.toString() ?? '';
+        _liveToolOutput = detail.length <= maxToolOutputCharacters
+            ? detail
+            : detail.substring(detail.length - maxToolOutputCharacters);
         break;
       case LiveRunSignalKind.steeringQueued:
         _liveProgressText =
