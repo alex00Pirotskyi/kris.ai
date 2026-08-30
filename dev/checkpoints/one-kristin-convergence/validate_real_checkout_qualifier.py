@@ -122,6 +122,7 @@ def make_repo(
     subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
     subprocess.run(["git", "-C", str(repo), "commit", "-qm", "seed"], check=True)
 
+    # Create one changed Dart path so the qualifier exercises its scoped format path.
     with (repo / "lib/product/run_steering_record.dart").open("a", encoding="utf-8") as handle:
         handle.write("// changed\n")
 
