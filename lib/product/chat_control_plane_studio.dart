@@ -40,17 +40,8 @@ part 'chat_control_plane_studio_view.dart';
 /// Chat plans through [UniversalTaskKernel] now, so this records the
 /// kernel outcome rather than which of two services was called.
 enum ChatPlanningPath {
-  /// No multi-task plan was generated: the request routed to direct
-  /// conversation or a direct deterministic capability invocation.
   deterministic,
-
-  /// A family planner produced a real, request-specific task graph.
   model,
-
-  /// A KNOWN RECOVERABLE planning failure degraded to the deterministic
-  /// conservative inspect/implement/verify envelope. Every other failure
-  /// kind surfaces as a failure instead of arriving here -- see
-  /// task_kernel/planning_failures.dart.
   fallback,
 }
 
@@ -116,48 +107,71 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
   ProjectProcessStatus? projectProcessStatus;
 
-  ChatInteractionDecision? pendingDecision;
-  UnderstandingHistory? understandingHistory;
-  PreparedCommand? prepared;
+  ChatInteractionDecision? get pendingDecision =>
+      conversationSession.pendingDecision;
+  set pendingDecision(ChatInteractionDecision? value) {
+    conversationSession.setPendingDecision(value);
+  }
+
+  UnderstandingHistory? get understandingHistory =>
+      conversationSession.understandingHistory;
+  set understandingHistory(UnderstandingHistory? value) {
+    conversationSession.setUnderstandingHistory(value);
+  }
+
+  PreparedCommand? get prepared => conversationSession.prepared;
+  set prepared(PreparedCommand? value) {
+    conversationSession.setPrepared(value);
+  }
+
   ChatPlanningPath planningPath = ChatPlanningPath.deterministic;
 
-  /// The canonical semantic statement of the current request. Everything
-  /// downstream -- routing, planning, compilation -- consumes this rather
-  /// than re-reading the raw request string, so a hard constraint the
-  /// user stated cannot silently stop being a constraint.
-  TaskSpecification? taskSpecification;
+  TaskSpecification? get taskSpecification =>
+      conversationSession.taskSpecification;
+  set taskSpecification(TaskSpecification? value) {
+    conversationSession.setTaskSpecification(value);
+  }
 
-  /// Whether the current [taskSpecification] came from real model-backed
-  /// semantic understanding. Drives the understanding card's wording:
-  /// "I understood" is only truthful when this is
-  /// [UnderstandingPath.model]; regex matching stays "I interpreted this
-  /// as".
   UnderstandingPath understandingPath = UnderstandingPath.deterministic;
 
-  /// What the model proposed and deterministic validation refused
-  /// (invented targets, unknown capabilities, attempts to assert
-  /// authority). Kept visible rather than silently dropped.
   List<String> understandingRejections = const <String>[];
 
-  /// How much planning the kernel decided this request deserves, and why.
-  RoutingDecision? routingDecision;
+  RoutingDecision? get routingDecision => conversationSession.routingDecision;
+  set routingDecision(RoutingDecision? value) {
+    conversationSession.setRoutingDecision(value);
+  }
 
-  /// The canonical plan the currently prepared command was compiled from.
-  /// The plan card renders this; the Runner executes its compilation.
-  /// They are the same graph by construction.
-  UniversalTaskPlan? canonicalPlan;
+  UniversalTaskPlan? get canonicalPlan => conversationSession.canonicalPlan;
+  set canonicalPlan(UniversalTaskPlan? value) {
+    conversationSession.setCanonicalPlan(
+      value,
+      failure: conversationSession.planningFailure,
+      reconciliation: conversationSession.lastReconciliation,
+    );
+  }
 
-  /// The recoverable planning failure that forced a conservative plan,
-  /// so the UI can say specifically what went wrong instead of vaguely.
-  PlanningFailure? planningFailure;
+  PlanningFailure? get planningFailure => conversationSession.planningFailure;
+  set planningFailure(PlanningFailure? value) {
+    conversationSession.setPlanningFailure(value);
+  }
 
-  /// Canonical tasks already completed in this conversation, carried
-  /// across a replan so finished work is preserved rather than redone.
-  List<CompletedTaskRecord> completedTasks = const <CompletedTaskRecord>[];
+  List<CompletedTaskRecord> get completedTasks =>
+      conversationSession.completedTasks;
+  set completedTasks(List<CompletedTaskRecord> value) {
+    conversationSession.setCompletedTasks(value);
+  }
 
-  /// What the last replan changed, for the plan card to show.
-  PlanReconciliationResult? lastReconciliation;
-  String activeRequest = '';
+  PlanReconciliationResult? get lastReconciliation =>
+      conversationSession.lastReconciliation;
+  set lastReconciliation(PlanReconciliationResult? value) {
+    conversationSession.setLastReconciliation(value);
+  }
+
+  String get activeRequest => conversationSession.activeRequest;
+  set activeRequest(String value) {
+    conversationSession.setActiveRequest(value);
+  }
+
   String get liveAssistantProtocolText =>
       conversationSession.liveAssistantProtocolText;
   String get liveAssistantText => conversationSession.liveAssistantText;
@@ -175,9 +189,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   set currentRun(RunRecord? value) {
     final existing = conversationSession.currentRun;
     if (value == null) {
-      // Transitional compatibility for the remaining Chat fields: a legacy
-      // null assignment may detach a finished/no-run association, but the
-      // canonical session fails closed if unfinished durable work exists.
       conversationSession.detachFinishedRun();
       return;
     }
@@ -190,9 +201,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
 
   bool get awaitingPermission => conversationSession.awaitingPermission;
   set awaitingPermission(bool value) {
-    // A legacy side-action cleanup may request `false`, but durable run state
-    // remains authoritative. Only a refreshed non-awaiting run (or no run)
-    // may clear the permission projection.
     if (!value && conversationSession.runAwaitingApproval) {
       return;
     }
@@ -219,22 +227,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         RunState.interrupted,
       }.contains(currentRun!.state);
 
-  /// True only while a run is genuinely executing right now. Unlike
-  /// [runActive], this excludes [RunState.interrupted]: an interrupted run
-  /// survived an app restart with nothing currently in flight, so it must
-  /// stay resumable (Resume/Stop remain available wherever [runActive] is
-  /// used for that) without silently absorbing ordinary chat messages as
-  /// steering input into a task the user never asked to continue.
   bool get runExecuting => conversationSession.runExecuting;
 
-  /// True whenever a durable run exists and has not reached a terminal
-  /// state -- including [RunState.awaitingApproval] and
-  /// [RunState.interrupted], neither of which [runExecuting] covers. A new
-  /// message arriving while this is true must never silently discard the
-  /// association (clearing `currentRun` as a side effect of starting an
-  /// unrelated request): it must be treated as an informational side
-  /// conversation, a steer/control of this same run, a clarification, or an
-  /// explicit cancel/decline before anything else starts.
   bool get hasNonterminalRun => conversationSession.hasNonterminalRun;
 
   bool get runTerminal => conversationSession.runTerminal;
@@ -362,9 +356,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       currentRun = refreshed;
       conversationSession.setDeferredInteraction(deferred);
       evidence = loadedEvidence;
-      // Completed work is recorded against the canonical plan as it
-      // happens, so a later replan can preserve it instead of asking the
-      // user to watch finished tasks run a second time.
       completedTasks = _completedTasksFrom(refreshed);
       awaitingPermission = refreshed.state == RunState.awaitingApproval;
       if (conversationSession.awaitingUserInput) {
@@ -398,9 +389,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     });
   }
 
-  /// Adding a future target type (a filesystem location, a terminal, a
-  /// browser window, ...) means writing one new [ChatTargetProvider] and
-  /// listing it here -- see Architectural Improvement #5.
   List<ChatTarget> _knownTargets() {
     final providerIds =
         runtime.models.providers().map((item) => item.id).toSet();
@@ -550,11 +538,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       }
     }
 
-    // A durable run that is awaitingApproval or interrupted is not caught
-    // by runExecuting above (it isn't live), but it must still never be
-    // silently abandoned: an unrelated new actionable request must not
-    // clear currentRun and forget it. Informational side conversation and
-    // zero-risk navigation both remain allowed alongside it.
     if (hasNonterminalRun) {
       if (_isActiveRunCancellation(request, decision)) {
         conversationSession.addUserMessage(request);
@@ -602,11 +585,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       return;
     }
 
-    // UNDERSTANDING. The model reads the human; deterministic code
-    // validates the reading (see task_kernel/task_understanding.dart).
-    // An explicit command, a bare mention or an informational message
-    // never reaches here, so no model call is spent rediscovering what
-    // the user literally typed.
     final outcome = await _understandRequest(decision);
     if (outcome == null || !mounted) return;
 
@@ -639,14 +617,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     });
   }
 
-  /// Runs the kernel's understanding step, mapping a failure onto the
-  /// typed taxonomy rather than silently continuing with a guess.
-  ///
-  /// A failure that is genuinely about the model's *response* already
-  /// degrades to the deterministic reading inside the kernel (and Chat
-  /// then honestly says "interpreted", not "understood"). What arrives
-  /// here is a real failure -- cancellation, an unreachable provider, a
-  /// denied authority, a broken store -- and it is reported as one.
   Future<UnderstandingOutcome?> _understandRequest(
     ChatInteractionDecision decision,
   ) async {
@@ -660,7 +630,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     );
     if (!kernel.understanding.warrantsModelUnderstanding(decision) ||
         selectedModel == null) {
-      // Deterministic and synchronous: no spinner, no latency.
       return kernel.understanding.deterministic.understand(decision);
     }
     _mutate(() {
@@ -680,13 +649,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           });
           return null;
         case PlanningFailureKind.providerUnavailable:
-          // Understanding is the one step with a real deterministic
-          // alternative, and Kristin used it exclusively until now. An
-          // unreachable model must not make Chat unusable: fall back to
-          // the deterministic reading, which is exactly what happens when
-          // no model is connected at all. The card then says "I
-          // interpreted this as", so the degrade is visible rather than
-          // silently passed off as understanding.
           _mutate(() {
             status = 'Interpreting without the model '
                 '(${failure.message})';
@@ -697,8 +659,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         case PlanningFailureKind.persistenceFailure:
         case PlanningFailureKind.recoverablePlanning:
         case PlanningFailureKind.unexpected:
-          // These mean something is genuinely broken or refused.
-          // Proceeding on a guess would hide it.
           _mutate(() {
             error = runtime.redactor.redact(
               'I could not read your request safely: ${failure.message} '
@@ -713,9 +673,6 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     }
   }
 
-  /// The canonical tasks this run has actually finished, with their
-  /// evidence, keyed by semantic identity so a replan recognizes the same
-  /// work even when the new plan assigns it a different generated id.
   List<CompletedTaskRecord> _completedTasksFrom(RunRecord run) {
     final plan = canonicalPlan;
     if (plan == null) return const <CompletedTaskRecord>[];
