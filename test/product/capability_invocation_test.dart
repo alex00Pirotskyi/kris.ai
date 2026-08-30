@@ -32,4 +32,22 @@ void main() {
       ),
     );
   });
+
+  test('model cannot receive full-host Owner authority in this release', () {
+    expect(
+      () => const CapabilityAuthorityResolver().resolve(
+        const CapabilityInvocation(
+          capabilityId: 'owner.mode',
+          modelProposed: true,
+        ),
+      ),
+      throwsA(
+        isA<ProductException>().having(
+          (error) => error.code,
+          'code',
+          'owner_full_host_not_implemented',
+        ),
+      ),
+    );
+  });
 }
