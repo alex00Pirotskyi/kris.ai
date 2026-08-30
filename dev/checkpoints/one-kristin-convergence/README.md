@@ -86,3 +86,4 @@ During qualification the synthetic composition check found and fixed an overly b
 
 There is intentionally no Git mutation step in this bundle. Branch creation, commits, push, PR/merge work, and clean-commit-only gates begin only after the real checkout has applied and qualified the development bundle. In particular, `tool/v71r12_exact_source_gate.py` requires a clean tracked tree, so it belongs after the checkpoint commit rather than on the intentionally dirty development worktree.
 The checkpoint tooling is itself guarded: the top-level validator AST-parses the literal 20-slice order, verifies the exact 34 payload files and their SHA-256 digests, and the synthetic worktree smoke distinguishes genuinely new files from recovered-head files that are replaced wholesale. The latest type-closure audit also pins direct imports required by steering continuation (`plan_reconciliation.dart` and `universal_task_plan.dart`) so Dart does not depend on transitive imports.
+
