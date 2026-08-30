@@ -47,16 +47,9 @@ class KristinConversationSessionException implements Exception {
 
 /// The canonical owner of one Kristin conversation.
 ///
-/// Before this type existed, ChatControlPlaneStudio held transcript, selected
-/// context, understanding, plan, prepared command, run, and live execution
-/// projection as unrelated widget fields. That makes it too easy for a second
-/// surface to accidentally create a second truth, or for a new message to
-/// orphan a durable run.
-///
-/// This class is intentionally plain Dart rather than a Widget/ChangeNotifier.
-/// UI surfaces may project it however they want, but semantic ownership stays
-/// here. ProductRuntime remains the authority for durable execution; this
-/// session only owns the conversation-level association with that execution.
+/// ProductRuntime remains the authority for durable execution; this session
+/// owns the conversation association, semantic state and user-visible
+/// projection around that execution.
 class KristinConversationSession {
   KristinConversationSession({
     this.maxMessages = 400,
@@ -94,6 +87,7 @@ class KristinConversationSession {
   AgentDeferredInteraction? _deferredInteraction;
   bool _awaitingPermission = false;
   String _activeRequest = '';
+  ChatConversationState _state = const ChatIdle();
 
   String _liveAssistantProtocolText = '';
   String _liveAssistantText = '';
@@ -130,13 +124,10 @@ class KristinConversationSession {
   String get liveToolName => _liveToolName;
   String get liveToolOutput => _liveToolOutput;
 
-  ChatConversationState get state => chatConversationSnapshot(
-        hasPendingDecision: _pendingDecision != null,
-        ambiguous: _pendingDecision?.ambiguous ?? false,
-        hasPreparedCommand: _prepared != null,
-        awaitingPermission: _awaitingPermission,
-        currentRunState: _currentRun?.state,
-      );
+  /// Authoritative conversation state. Mutation boundaries below update this
+  /// value; UI consumers should read it rather than reconstructing state from
+  /// individual fields.
+  ChatConversationState get state => _state;
 
   bool get runAwaitingApproval =>
       _currentRun?.state == RunState.awaitingApproval;
@@ -187,6 +178,7 @@ class KristinConversationSession {
 
   void setPendingDecision(ChatInteractionDecision? decision) {
     _pendingDecision = decision;
+    _synchronizeConversationState();
   }
 
   void setUnderstandingHistory(UnderstandingHistory? history) {
@@ -263,6 +255,7 @@ class KristinConversationSession {
     _currentRun = null;
     _deferredInteraction = null;
     _awaitingPermission = false;
+    _state = const ChatInterpreting();
     clearLiveExecution();
   }
 
@@ -274,6 +267,9 @@ class KristinConversationSession {
     _pendingDecision = decision;
     _understandingHistory = history;
     _taskSpecification = specification;
+    _state = decision.ambiguous
+        ? const ChatClarificationNeeded()
+        : const ChatUnderstanding();
   }
 
   void setTaskSpecification(TaskSpecification? specification) {
@@ -311,6 +307,7 @@ class KristinConversationSession {
     } else {
       _awaitingPermission = awaitingPermission ?? false;
     }
+    _synchronizeConversationState();
   }
 
   /// Restores the durable run association after startup/navigation.
@@ -329,9 +326,6 @@ class KristinConversationSession {
 
   /// Detaches a finished/no-run governed turn without erasing conversation
   /// history or the user's selected project/model context.
-  ///
-  /// This is the compatibility boundary for legacy Chat `currentRun = null`
-  /// assignments. It fails closed while unfinished durable work is attached.
   bool detachFinishedRun() {
     if (hasNonterminalRun) return false;
     _composerDraft = '';
@@ -348,12 +342,14 @@ class KristinConversationSession {
     _deferredInteraction = null;
     _awaitingPermission = false;
     _activeRequest = '';
+    _state = const ChatIdle();
     clearLiveExecution();
     return true;
   }
 
   void setAwaitingPermission(bool value) {
     _awaitingPermission = value;
+    _synchronizeConversationState();
   }
 
   void setDeferredInteraction(AgentDeferredInteraction? interaction) {
@@ -465,18 +461,13 @@ class KristinConversationSession {
   }
 
   /// Starts a fresh UI projection for the currently attached execution.
-  ///
-  /// This is projection state only: it grants no execution authority and does
-  /// not change the durable run. Incoming [LiveRunSignal] values remain the
-  /// source of truth once execution begins emitting them.
   void beginLiveExecution() {
     clearLiveExecution();
     _liveProgressText = 'Starting the first safe step.';
   }
 
   /// Updates an optimistic user-visible execution message without changing
-  /// durable run state or execution authority. Live signals may subsequently
-  /// replace this projection with runtime-reported progress.
+  /// durable run state or execution authority.
   void showLiveProgress(String message) {
     _liveProgressText = message;
   }
@@ -554,6 +545,17 @@ class KristinConversationSession {
     if (replacingRun) {
       clearLiveExecution();
     }
+    _synchronizeConversationState();
+  }
+
+  void _synchronizeConversationState() {
+    _state = chatConversationSnapshot(
+      hasPendingDecision: _pendingDecision != null,
+      ambiguous: _pendingDecision?.ambiguous ?? false,
+      hasPreparedCommand: _prepared != null,
+      awaitingPermission: _awaitingPermission,
+      currentRunState: _currentRun?.state,
+    );
   }
 
   String? _normalizedOptional(String? value) {
