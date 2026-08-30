@@ -13,11 +13,6 @@ import 'task_kernel/universal_task_plan.dart';
 /// Who produced a visible message in the one Kristin conversation.
 enum KristinConversationSpeaker { user, assistant, system }
 
-/// A visible conversation message owned by [KristinConversationSession].
-///
-/// This deliberately contains only user-visible content. Model protocol JSON,
-/// hidden planning state, tool traces, and evidence remain separate typed state
-/// on the session instead of being smuggled into the transcript.
 class KristinConversationMessage {
   const KristinConversationMessage({
     required this.id,
@@ -34,7 +29,6 @@ class KristinConversationMessage {
   bool get assistant => speaker == KristinConversationSpeaker.assistant;
 }
 
-/// Stable, machine-readable failure for conversation ownership invariants.
 class KristinConversationSessionException implements Exception {
   const KristinConversationSessionException(this.code, this.message);
 
@@ -45,11 +39,7 @@ class KristinConversationSessionException implements Exception {
   String toString() => '$code: $message';
 }
 
-/// The canonical owner of one Kristin conversation.
-///
-/// ProductRuntime remains the authority for durable execution; this session
-/// owns the conversation association, semantic state and user-visible
-/// projection around that execution.
+/// Canonical owner of one Kristin conversation.
 class KristinConversationSession {
   KristinConversationSession({
     this.maxMessages = 400,
@@ -95,6 +85,10 @@ class KristinConversationSession {
   String _liveToolName = '';
   String _liveToolOutput = '';
 
+  bool _assistantResponseActive = false;
+  String _assistantResponseProtocolText = '';
+  String? _streamingAssistantMessageId;
+
   List<KristinConversationMessage> get messages =>
       List<KristinConversationMessage>.unmodifiable(_messages);
   List<LiveRunSignal> get liveSignals =>
@@ -123,10 +117,9 @@ class KristinConversationSession {
   String get liveProgressText => _liveProgressText;
   String get liveToolName => _liveToolName;
   String get liveToolOutput => _liveToolOutput;
+  bool get assistantResponseStreaming => _assistantResponseActive;
 
-  /// Authoritative conversation state. Mutation boundaries below update this
-  /// value; UI consumers should read it rather than reconstructing state from
-  /// individual fields.
+  /// Authoritative conversation state.
   ChatConversationState get state => _state;
 
   bool get runAwaitingApproval =>
@@ -223,11 +216,74 @@ class KristinConversationSession {
         createdAt: createdAt,
       );
 
-  /// Begins a new governed objective in this conversation.
-  ///
-  /// Informational side-conversation may still append visible messages while a
-  /// run is active, but starting a second governed objective would orphan the
-  /// first run's approvals/evidence association. That is rejected here.
+  /// Starts a provisional assistant transcript message backed by actual model
+  /// deltas. Until a visible delta arrives no placeholder is inserted; the UI
+  /// may truthfully show its ordinary busy/Thinking state instead.
+  void beginAssistantResponse() {
+    cancelAssistantResponse();
+    _assistantResponseActive = true;
+  }
+
+  /// Appends a real provider delta and updates the same visible transcript
+  /// message. JSON protocol envelopes are projected incrementally through the
+  /// same projector used for Runner model output.
+  void recordAssistantResponseDelta(String delta) {
+    if (delta.isEmpty) return;
+    if (!_assistantResponseActive) beginAssistantResponse();
+    _assistantResponseProtocolText = '$_assistantResponseProtocolText$delta';
+    if (_assistantResponseProtocolText.length > maxProtocolCharacters) {
+      _assistantResponseProtocolText = _assistantResponseProtocolText.substring(
+        _assistantResponseProtocolText.length - maxProtocolCharacters,
+      );
+    }
+    final visible = ConversationStreamProjector.visibleText(
+      _assistantResponseProtocolText,
+    ).trim();
+    if (visible.isEmpty) return;
+    final messageId = _streamingAssistantMessageId;
+    if (messageId == null) {
+      final message = _addMessage(
+        KristinConversationSpeaker.assistant,
+        visible,
+      );
+      _streamingAssistantMessageId = message.id;
+      return;
+    }
+    _replaceMessageText(messageId, visible);
+  }
+
+  /// Seals the provisional response as one ordinary assistant transcript
+  /// message. A non-streaming provider reaches this method with no provisional
+  /// message, so it simply appends the final answer once.
+  void finishAssistantResponse(String visibleText) {
+    final normalized = visibleText.trim();
+    final messageId = _streamingAssistantMessageId;
+    if (normalized.isNotEmpty) {
+      if (messageId == null) {
+        _addMessage(KristinConversationSpeaker.assistant, normalized);
+      } else {
+        _replaceMessageText(messageId, normalized);
+      }
+    } else if (messageId != null) {
+      _messages.removeWhere((message) => message.id == messageId);
+    }
+    _assistantResponseActive = false;
+    _assistantResponseProtocolText = '';
+    _streamingAssistantMessageId = null;
+  }
+
+  /// Removes an incomplete provisional answer after a failed/cancelled model
+  /// call rather than leaving partial JSON or a half sentence as final truth.
+  void cancelAssistantResponse() {
+    final messageId = _streamingAssistantMessageId;
+    if (messageId != null) {
+      _messages.removeWhere((message) => message.id == messageId);
+    }
+    _assistantResponseActive = false;
+    _assistantResponseProtocolText = '';
+    _streamingAssistantMessageId = null;
+  }
+
   void beginGovernedRequest(String request) {
     if (hasNonterminalRun) {
       throw const KristinConversationSessionException(
@@ -242,6 +298,7 @@ class KristinConversationSession {
         'A governed request must not be empty.',
       );
     }
+    cancelAssistantResponse();
     _activeRequest = normalized;
     _pendingDecision = null;
     _understandingHistory = null;
@@ -310,24 +367,17 @@ class KristinConversationSession {
     _synchronizeConversationState();
   }
 
-  /// Restores the durable run association after startup/navigation.
-  ///
-  /// A different non-terminal run cannot silently replace the one already
-  /// attached to this conversation. That protects permission prompts,
-  /// steering, and evidence from becoming associated with the wrong task.
   void restoreRun(RunRecord run) {
     _attachRun(run, restoring: true);
   }
 
-  /// Applies a refreshed record for the currently attached durable run.
   void updateRun(RunRecord run) {
     _attachRun(run, restoring: false);
   }
 
-  /// Detaches a finished/no-run governed turn without erasing conversation
-  /// history or the user's selected project/model context.
   bool detachFinishedRun() {
     if (hasNonterminalRun) return false;
+    cancelAssistantResponse();
     _composerDraft = '';
     _pendingDecision = null;
     _understandingHistory = null;
@@ -387,9 +437,6 @@ class KristinConversationSession {
     _deferredInteraction = interaction;
   }
 
-  /// Records one live execution signal and updates the compact live
-  /// projection used by Chat. Returns false for signals belonging to a
-  /// different run, preventing cross-run UI contamination.
   bool recordLiveSignal(LiveRunSignal signal) {
     final run = _currentRun;
     if (run == null || signal.runId != run.id) return false;
@@ -460,14 +507,11 @@ class KristinConversationSession {
     return true;
   }
 
-  /// Starts a fresh UI projection for the currently attached execution.
   void beginLiveExecution() {
     clearLiveExecution();
     _liveProgressText = 'Starting the first safe step.';
   }
 
-  /// Updates an optimistic user-visible execution message without changing
-  /// durable run state or execution authority.
   void showLiveProgress(String message) {
     _liveProgressText = message;
   }
@@ -481,8 +525,6 @@ class KristinConversationSession {
     _liveToolOutput = '';
   }
 
-  /// Starts a genuinely new conversation while preserving the user's selected
-  /// project/model context. A non-terminal durable run must be resolved first.
   void resetForNewConversation() {
     if (!detachFinishedRun()) {
       throw const KristinConversationSessionException(
@@ -516,6 +558,25 @@ class KristinConversationSession {
       _messages.removeRange(0, _messages.length - maxMessages);
     }
     return message;
+  }
+
+  void _replaceMessageText(String messageId, String text) {
+    final index = _messages.indexWhere((message) => message.id == messageId);
+    if (index < 0) {
+      final replacement = _addMessage(
+        KristinConversationSpeaker.assistant,
+        text,
+      );
+      _streamingAssistantMessageId = replacement.id;
+      return;
+    }
+    final current = _messages[index];
+    _messages[index] = KristinConversationMessage(
+      id: current.id,
+      speaker: current.speaker,
+      text: text.trim(),
+      createdAt: current.createdAt,
+    );
   }
 
   void _attachRun(RunRecord run, {required bool restoring}) {
