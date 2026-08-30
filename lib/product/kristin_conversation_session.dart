@@ -185,6 +185,26 @@ class KristinConversationSession {
     _composerDraft = value;
   }
 
+  void setPendingDecision(ChatInteractionDecision? decision) {
+    _pendingDecision = decision;
+  }
+
+  void setUnderstandingHistory(UnderstandingHistory? history) {
+    _understandingHistory = history;
+  }
+
+  void setPlanningFailure(PlanningFailure? failure) {
+    _planningFailure = failure;
+  }
+
+  void setLastReconciliation(PlanReconciliationResult? reconciliation) {
+    _lastReconciliation = reconciliation;
+  }
+
+  void setActiveRequest(String request) {
+    _activeRequest = request.trim();
+  }
+
   KristinConversationMessage addUserMessage(
     String text, {
     DateTime? createdAt,
