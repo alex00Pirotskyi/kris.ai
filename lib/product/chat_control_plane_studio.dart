@@ -30,15 +30,10 @@ import 'task_kernel/universal_task_plan.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
 
+part 'chat_control_plane_streaming.dart';
 part 'chat_control_plane_studio_actions.dart';
 part 'chat_control_plane_studio_view.dart';
 
-/// Which planner actually produced the currently prepared command, so the
-/// UI never implies a detailed model-authored decomposition exists when a
-/// deterministic fallback was used instead.
-///
-/// Chat plans through [UniversalTaskKernel] now, so this records the
-/// kernel outcome rather than which of two services was called.
 enum ChatPlanningPath {
   deterministic,
   model,
@@ -581,7 +576,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       return;
     }
     if (decision.isInformational) {
-      await _answerInformational(decision);
+      await _answerInformationalStreaming(decision);
       return;
     }
 
