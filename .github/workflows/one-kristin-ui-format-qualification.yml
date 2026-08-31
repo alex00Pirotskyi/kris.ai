@@ -17,7 +17,7 @@ concurrency:
 jobs:
   qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -29,21 +29,14 @@ jobs:
           channel: stable
           cache: true
           pub-cache: true
-      - name: Apply exact UI formatting repair
+      - name: Apply canonical handwritten Dart formatting
         shell: bash
         run: |
           set -euo pipefail
           rm -f .github/workflows/one-kristin-ui-format-qualification.yml
-          dart format lib/product/ui_advanced.dart
-          dart format --output=none --set-exit-if-changed \
-            lib/product/ui_advanced.dart \
-            lib/product/ui_components.dart \
-            lib/product/ui_core.dart \
-            test/product/ui_quality_test.dart \
-            test/product/product_app_crash_recovery_test.dart \
-            test/product/product_app_theme_integration_test.dart \
-            test/product/chat_deferred_takeover_bridge_test.dart
+          python tool/dart_format_scope.py --write
           python tool/dart_format_scope.py --check
+          git diff --check
       - name: Resolve package
         shell: bash
         run: flutter pub get
@@ -55,9 +48,12 @@ jobs:
         run: |
           set -euo pipefail
           flutter test --no-pub --concurrency=1 test/product/one_kristin_advanced_source_contract_test.dart
-          flutter test --no-pub --concurrency=1 test/product/ui_quality_test.dart
-          flutter test --no-pub --concurrency=1 test/product/product_app_crash_recovery_test.dart
-          flutter test --no-pub --concurrency=1 test/product/product_app_theme_integration_test.dart
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/p5_design_tokens_test.dart \
+            test/product/p5_accessibility_compliance_test.dart \
+            test/product/p5_ui_performance_test.dart \
+            test/product/p5_ux_regression_gate_test.dart \
+            test/product/p5_information_architecture
           flutter test --no-pub --concurrency=1 test/product/chat_deferred_takeover_bridge_test.dart
           flutter test --no-pub --concurrency=1 test/product/source_contract_test.dart
       - name: Freeze deterministic source manifest
@@ -78,5 +74,5 @@ jobs:
           git add -A
           git diff --cached --check
           git diff --cached --stat
-          git commit -m "style(kristin): format advanced shared-session UI"
+          git commit -m "style(kristin): normalize qualified Dart formatting"
           git push origin HEAD:draft/one-kristin-development
