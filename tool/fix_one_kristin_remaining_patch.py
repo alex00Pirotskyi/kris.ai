@@ -50,4 +50,35 @@ if unused_import in semantic:
     semantic = semantic.replace(unused_import, '', 1)
 semantic_path.write_text(semantic, encoding='utf-8')
 
-print('Normalized time regex and cleared focused analyzer findings.')
+# Capability authorization rejects unknown IDs synchronously, before a Future
+# is returned. The contract test must therefore wrap the call in a closure
+# rather than evaluating it as the argument to expectLater.
+test_path = root / 'test/product/chat_action_dispatcher_test.dart'
+test_text = test_path.read_text(encoding='utf-8')
+old = """      await expectLater(
+        dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
+        throwsA(
+          isA<ProductException>().having(
+            (error) => error.code,
+            'code',
+            'capability_unknown',
+          ),
+        ),
+      );
+"""
+new = """      expect(
+        () => dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
+        throwsA(
+          isA<ProductException>().having(
+            (error) => error.code,
+            'code',
+            'capability_unknown',
+          ),
+        ),
+      );
+"""
+if test_text.count(old) != 1:
+    raise SystemExit('dispatcher synchronous authority-test marker is not unique')
+test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
+
+print('Normalized time regex, analyzer imports, and synchronous authority test.')
