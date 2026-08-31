@@ -18,9 +18,12 @@ import 'models_research.dart';
 import 'product_error_normalizer.dart';
 import 'product_runtime.dart';
 import 'run_live_signals.dart';
+import 'storage_security.dart';
 import 'task_kernel/complexity_router.dart';
 import 'task_kernel/plan_compiler.dart';
 import 'task_kernel/task_families.dart';
+import 'task_kernel/task_family_executor.dart';
+import 'task_kernel/semantic_steering.dart';
 import 'task_kernel/plan_reconciliation.dart';
 import 'task_kernel/planning_failures.dart';
 import 'task_kernel/semantic_slash_understanding.dart';
@@ -30,6 +33,7 @@ import 'task_kernel/task_understanding.dart';
 import 'task_kernel/universal_task_plan.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
+import 'utility_time.dart';
 
 part 'chat_control_plane_streaming.dart';
 part 'chat_control_plane_studio_actions.dart';
@@ -129,7 +133,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     conversationSession.setTaskSpecification(value);
   }
 
-  UnderstandingPath get understandingPath => conversationSession.understandingPath;
+  UnderstandingPath get understandingPath =>
+      conversationSession.understandingPath;
   set understandingPath(UnderstandingPath value) {
     conversationSession.setUnderstandingMetadata(
       path: value,
@@ -326,20 +331,21 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         awaitingPermission = durable.state == RunState.awaitingApproval;
       }
       if (selectedProjectId != null) {
-        projectProcessStatus =
-            await runtime.projectProcessStatus(selectedProjectId!);
+        projectProcessStatus = await runtime.projectProcessStatus(
+          selectedProjectId!,
+        );
       }
     });
     _mutate(() {
       loading = false;
       status = conversationSession.awaitingUserInput
           ? conversationSession.deferredUserPrompt ??
-              'Kristin needs your input before continuing.'
+                'Kristin needs your input before continuing.'
           : runAwaitingApproval
-              ? 'Permission review required'
-              : runExecuting
-                  ? 'Continuing active work'
-                  : 'Kristin is ready';
+          ? 'Permission review required'
+          : runExecuting
+          ? 'Continuing active work'
+          : 'Kristin is ready';
     });
   }
 
@@ -357,8 +363,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       RunState.failed,
       RunState.cancelled,
     }.contains(refreshed.state);
-    final loadedEvidence =
-        newTerminal ? await runtime.evidenceForRun(refreshed.id) : evidence;
+    final loadedEvidence = newTerminal
+        ? await runtime.evidenceForRun(refreshed.id)
+        : evidence;
     final deferred = newTerminal
         ? null
         : await runtime.latestDeferredInteraction(refreshed.id);
@@ -369,7 +376,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       completedTasks = _completedTasksFrom(refreshed);
       awaitingPermission = refreshed.state == RunState.awaitingApproval;
       if (conversationSession.awaitingUserInput) {
-        status = conversationSession.deferredUserPrompt ??
+        status =
+            conversationSession.deferredUserPrompt ??
             'Kristin needs your input before continuing.';
       } else if (newTerminal) {
         status = refreshed.state == RunState.succeeded
@@ -400,8 +408,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   }
 
   List<ChatTarget> _knownTargets() {
-    final providerIds =
-        runtime.models.providers().map((item) => item.id).toSet();
+    final providerIds = runtime.models
+        .providers()
+        .map((item) => item.id)
+        .toSet();
     return ChatTargetResolver(<ChatTargetProvider>[
       ProjectTargetProvider(
         projects: projects,
@@ -436,8 +446,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (suggestion.kind == ChatAutocompleteKind.command) {
       composerController.value = TextEditingValue(
         text: suggestion.insertText,
-        selection:
-            TextSelection.collapsed(offset: suggestion.insertText.length),
+        selection: TextSelection.collapsed(
+          offset: suggestion.insertText.length,
+        ),
       );
     } else {
       final match = RegExp(r'@[A-Za-z0-9._:-]*$').firstMatch(prefix);
@@ -508,9 +519,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         if (resolved == null || !mounted) return;
         _mutate(() {
           conversationSession.setDeferredInteraction(resolved);
-          conversationSession.showLiveProgress(
-            'Continuing with your answer.',
-          );
+          conversationSession.showLiveProgress('Continuing with your answer.');
           status = 'Continuing with your answer';
         });
         await _perform<void>(
@@ -530,19 +539,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         return;
       }
       if (!decision.explicitCommand && !decision.isInformational) {
-        conversationSession.addUserMessage(request);
-        composerController.clear();
-        final steered = await _perform<dynamic>(
-          'Applying your direction',
-          () => runtime.steerRun(currentRun!.id, request),
-        );
-        if (steered != null) {
-          _mutate(() {
-            conversationSession.showLiveProgress(
-              'Your new direction is queued for the next safe step.',
-            );
-          });
-        }
+        await _applySemanticSteering(request);
         return;
       }
       if (decision.explicitCommand && !decision.isInformational) {
@@ -563,7 +560,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         await _controlRun('cancel');
         return;
       }
-      final safeAlongsidePendingRun = decision.isInformational ||
+      final safeAlongsidePendingRun =
+          decision.isInformational ||
           (decision.capability != null &&
               decision.capability!.riskClass == ChatRiskClass.none);
       if (!safeAlongsidePendingRun) {
@@ -632,13 +630,14 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       planAdjusting = false;
       detailsExpanded = false;
       error = null;
-      final needsClarification = routingDecision?.requiresClarification == true &&
+      final needsClarification =
+          routingDecision?.requiresClarification == true &&
           outcome.specification.blockingQuestions.isNotEmpty;
       status = needsClarification
           ? 'Kristin needs one clarification'
           : outcome.isSemantic
-              ? 'Review what Kristin understood'
-              : 'Review how Kristin interpreted this';
+          ? 'Review what Kristin understood'
+          : 'Review how Kristin interpreted this';
       if (needsClarification) {
         conversationSession.addAssistantMessage(
           outcome.specification.blockingQuestions.first.question,
@@ -671,11 +670,11 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       try {
         return await (kernel.understanding as SemanticSlashUnderstandingService)
             .understandWithSemanticContext(
-          decision: decision,
-          context: context.understandingContext,
-          modelIdentity: selectedModel!,
-          semanticRequest: semanticRequestOverride,
-        );
+              decision: decision,
+              context: context.understandingContext,
+              modelIdentity: selectedModel!,
+              semanticRequest: semanticRequestOverride,
+            );
       } catch (thrown, stackTrace) {
         final failure = classifyPlanningFailure(thrown, stackTrace: stackTrace);
         _mutate(() {
@@ -712,7 +711,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           return null;
         case PlanningFailureKind.providerUnavailable:
           _mutate(() {
-            status = 'Interpreting without the model '
+            status =
+                'Interpreting without the model '
                 '(${failure.message})';
             error = null;
           });
@@ -781,7 +781,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       );
       routingDecision = routing;
       error = null;
-      final stillBlocked = routing.requiresClarification &&
+      final stillBlocked =
+          routing.requiresClarification &&
           outcome.specification.blockingQuestions.isNotEmpty;
       status = stillBlocked
           ? 'Kristin needs one clarification'
@@ -827,8 +828,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (decision.explicitCommand) return false;
     final value = request.trim().toLowerCase();
     return RegExp(
-            r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$')
-        .hasMatch(value);
+      r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$',
+    ).hasMatch(value);
   }
 
   String _pendingRunMessage() {

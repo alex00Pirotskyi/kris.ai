@@ -1,3 +1,4 @@
+import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 abstract interface class KristinClock {
@@ -52,13 +53,13 @@ class UtilityTimeResult {
   String get abbreviation => localTime.timeZoneName;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'requestedLocation': requestedLocation,
-        'timeZoneId': timeZoneId,
-        'instantUtc': instantUtc.toUtc().toIso8601String(),
-        'localTime': localTime.toIso8601String(),
-        'utcOffsetMinutes': utcOffset.inMinutes,
-        'abbreviation': abbreviation,
-      };
+    'requestedLocation': requestedLocation,
+    'timeZoneId': timeZoneId,
+    'instantUtc': instantUtc.toUtc().toIso8601String(),
+    'localTime': localTime.toIso8601String(),
+    'utcOffsetMinutes': utcOffset.inMinutes,
+    'abbreviation': abbreviation,
+  };
 }
 
 /// Deterministic utility.time implementation.
@@ -67,16 +68,18 @@ class UtilityTimeResult {
 /// bootstrap. This class never uses the host's local timezone and never
 /// guesses between ambiguous place names.
 class UtilityTimeService {
+  static bool _timeZonesInitialized = false;
+
   UtilityTimeService({
     this.clock = const SystemKristinClock(),
     Map<String, List<String>> aliases = const <String, List<String>>{},
     tz.Location Function(String id)? locationLoader,
-  })  : aliases = <String, List<String>>{
-          ..._defaultAliases,
-          for (final entry in aliases.entries)
-            _normalize(entry.key): List<String>.unmodifiable(entry.value),
-        },
-        _locationLoader = locationLoader ?? tz.getLocation;
+  }) : aliases = <String, List<String>>{
+         ..._defaultAliases,
+         for (final entry in aliases.entries)
+           _normalize(entry.key): List<String>.unmodifiable(entry.value),
+       },
+       _locationLoader = locationLoader ?? tz.getLocation;
 
   final KristinClock clock;
   final Map<String, List<String>> aliases;
@@ -84,23 +87,28 @@ class UtilityTimeService {
 
   static const Map<String, List<String>> _defaultAliases =
       <String, List<String>>{
-    'new york': <String>['America/New_York'],
-    'nyc': <String>['America/New_York'],
-    'los angeles': <String>['America/Los_Angeles'],
-    'san francisco': <String>['America/Los_Angeles'],
-    'london': <String>['Europe/London'],
-    'paris': <String>['Europe/Paris'],
-    'berlin': <String>['Europe/Berlin'],
-    'tokyo': <String>['Asia/Tokyo'],
-    'seoul': <String>['Asia/Seoul'],
-    'ho chi minh city': <String>['Asia/Ho_Chi_Minh'],
-    'saigon': <String>['Asia/Ho_Chi_Minh'],
-    'nha trang': <String>['Asia/Ho_Chi_Minh'],
-    'sydney': <String>['Australia/Sydney'],
-    'cst': <String>['America/Chicago', 'Asia/Shanghai'],
-  };
+        'new york': <String>['America/New_York'],
+        'nyc': <String>['America/New_York'],
+        'los angeles': <String>['America/Los_Angeles'],
+        'san francisco': <String>['America/Los_Angeles'],
+        'london': <String>['Europe/London'],
+        'paris': <String>['Europe/Paris'],
+        'berlin': <String>['Europe/Berlin'],
+        'tokyo': <String>['Asia/Tokyo'],
+        'seoul': <String>['Asia/Seoul'],
+        'ho chi minh city': <String>['Asia/Ho_Chi_Minh'],
+        'saigon': <String>['Asia/Ho_Chi_Minh'],
+        'nha trang': <String>['Asia/Ho_Chi_Minh'],
+        'bangkok': <String>['Asia/Bangkok'],
+        'thailand': <String>['Asia/Bangkok'],
+        'utc': <String>['Etc/UTC'],
+        'gmt': <String>['Etc/UTC'],
+        'sydney': <String>['Australia/Sydney'],
+        'cst': <String>['America/Chicago', 'Asia/Shanghai'],
+      };
 
   UtilityTimeResult currentTime(String requestedLocation) {
+    _ensureTimeZonesInitialized();
     final requested = requestedLocation.trim();
     if (requested.isEmpty) {
       throw const UtilityTimeException(
@@ -123,12 +131,13 @@ class UtilityTimeService {
     final requested = requestedLocation.trim();
     final candidates = aliases[_normalize(requested)];
     if (candidates != null) {
-      final unique = candidates
-          .map((item) => item.trim())
-          .where((item) => item.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
+      final unique =
+          candidates
+              .map((item) => item.trim())
+              .where((item) => item.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort();
       if (unique.length != 1) {
         throw UtilityTimeException(
           'time_location_ambiguous',
@@ -158,6 +167,12 @@ class UtilityTimeService {
         'Unknown IANA timezone id: $id',
       );
     }
+  }
+
+  static void _ensureTimeZonesInitialized() {
+    if (_timeZonesInitialized) return;
+    tzdata.initializeTimeZones();
+    _timeZonesInitialized = true;
   }
 
   static String _normalize(String value) => value

@@ -159,8 +159,8 @@ void main() {
       final gateway = _FakeGateway();
       final dispatcher = ChatActionDispatcher(gateway);
 
-      await expectLater(
-        dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
+      expect(
+        () => dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
         throwsA(
           isA<ProductException>().having(
             (error) => error.code,
