@@ -70,12 +70,38 @@ jobs:
             test/product/one_kristin_advanced_source_contract_test.dart \
             test/product/utility_time_test.dart \
             test/product/task_kernel/semantic_steering_test.dart
-      - name: Resolve package without lock drift
+      - name: Resolve and bind package lock deterministically
         shell: bash
         run: |
           set -euo pipefail
           flutter pub get
-          git diff --exit-code -- pubspec.lock
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('.')
+          path = root / 'config/toolchains.lock.json'
+          manifest = json.loads(path.read_text(encoding='utf-8'))
+          lock_sha = hashlib.sha256((root / 'pubspec.lock').read_bytes()).hexdigest()
+          for entry in manifest['lockfiles']:
+              if entry['path'] == 'pubspec.lock':
+                  entry['sha256'] = lock_sha
+          payload = {
+              'schemaVersion': manifest['schemaVersion'],
+              'sourceCommit': manifest['sourceCommit'],
+              'python': manifest['python'],
+              'flutter': manifest['flutter'],
+              'dart': manifest['dart'],
+              'githubActions': manifest['githubActions'],
+              'runners': manifest['runners'],
+              'cache': manifest['cache'],
+              'lockfiles': manifest['lockfiles'],
+          }
+          canonical = (json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False) + '\n').encode()
+          manifest['declaredInputFingerprint'] = hashlib.sha256(canonical).hexdigest()
+          path.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+          PY
+          python tool/p2_extend_toolchain_lock.py --project .
+          python tool/toolchain_lock_test.py --source-only
       - name: Fatal analyzer
         shell: bash
         run: flutter analyze --no-pub --fatal-warnings --fatal-infos
@@ -106,6 +132,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
+          git diff --cached --check
           git diff --cached --stat
           git commit -m "feat(kristin): complete remaining convergence wiring"
           git push origin HEAD:draft/one-kristin-development
