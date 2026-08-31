@@ -1,0 +1,78 @@
+name: temporary-one-kristin-full-qualification
+
+on:
+  push:
+    branches:
+      - draft/one-kristin-convergence-checkpoint
+    paths:
+      - .github/workflows/temporary-one-kristin-full-qualification.yml
+
+permissions:
+  contents: write
+
+jobs:
+  full-qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout qualified draft candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Remove temporary qualification workflow from candidate tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/temporary-one-kristin-full-qualification.yml
+          git diff --check
+
+      - name: Run full governed qualification and refresh source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python dev/checkpoints/one-kristin-convergence/qualify_real_checkout.py \
+            . \
+            --already-applied \
+            --allow-head-mismatch \
+            --allow-dirty \
+            --format \
+            --repo-gates \
+            --focused \
+            --full-flutter \
+            --refresh-source-manifest \
+            --report-dir "$RUNNER_TEMP/one-kristin-full-qualification"
+          git diff --check
+
+      - name: Commit fully qualified candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'checkpoint: full qualify One-Kristin candidate'
+          git push origin HEAD:draft/one-kristin-convergence-checkpoint
+
+      - name: Upload full qualification report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-full-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/one-kristin-full-qualification
+          if-no-files-found: warn
+          retention-days: 7
