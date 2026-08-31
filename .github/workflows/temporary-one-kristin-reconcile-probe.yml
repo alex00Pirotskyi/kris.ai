@@ -1,0 +1,47 @@
+name: temporary-one-kristin-reconcile-probe
+
+on:
+  push:
+    branches:
+      - automation/one-kristin-reconcile-probe-20260901
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout current integration base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: bbb8cbdb52844f868abf9916c9bb77446c2809cf
+          fetch-depth: 0
+
+      - name: Probe exact final commit onto current base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin d9e92c44c4f3fbcc21c60b1592dfd52dc71ddfb1
+          git config user.name probe
+          git config user.email probe@example.invalid
+          set +e
+          git cherry-pick --no-commit d9e92c44c4f3fbcc21c60b1592dfd52dc71ddfb1
+          rc=$?
+          set -e
+          echo "cherry_pick_rc=$rc"
+          echo '=== unresolved files ==='
+          git diff --name-only --diff-filter=U | LC_ALL=C sort
+          echo '=== staged paths ==='
+          git diff --cached --name-status | LC_ALL=C sort
+          echo '=== worktree paths ==='
+          git diff --name-status | LC_ALL=C sort
+          echo '=== conflict marker counts ==='
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            count=$(grep -c '^<<<<<<< ' "$f" || true)
+            printf '%s\t%s\n' "$count" "$f"
+          done < <(git diff --name-only --diff-filter=U | LC_ALL=C sort)
+          git cherry-pick --abort >/dev/null 2>&1 || true
+          exit 0
