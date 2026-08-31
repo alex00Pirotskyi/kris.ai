@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/capability_doctor.dart';
+import 'package:kristin_local_agent/product/task_kernel/kernel_task_graph_executor.dart';
 import 'package:kristin_local_agent/product/task_kernel/task_families.dart';
 import 'package:kristin_local_agent/product/task_kernel/task_family_executor.dart';
 import 'package:kristin_local_agent/product/task_kernel/task_specification.dart';
