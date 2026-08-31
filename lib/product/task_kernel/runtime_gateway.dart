@@ -11,6 +11,7 @@ import '../prompt_planning.dart';
 import '../workspace_tools.dart';
 import 'complexity_router.dart';
 import 'plan_compiler.dart';
+import 'semantic_slash_understanding.dart';
 import 'software_family.dart';
 import 'task_families.dart';
 import 'task_specification.dart';
@@ -154,7 +155,7 @@ UniversalTaskKernel buildUniversalTaskKernel({
     capabilityBriefing: briefing,
   );
   return UniversalTaskKernel(
-    understanding: UnderstandingService(
+    understanding: SemanticSlashUnderstandingService(
       model: ModelBackedUnderstanding(
         generate: understandingGenerator ??
             (request) => models.providerFor(request.identity).generate(request),
