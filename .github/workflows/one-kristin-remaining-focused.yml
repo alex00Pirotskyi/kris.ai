@@ -1,0 +1,92 @@
+name: One Kristin Remaining Focused
+
+on:
+  push:
+    branches:
+      - draft/one-kristin-development
+    paths:
+      - tool/apply_one_kristin_remaining.py
+      - tool/fix_one_kristin_remaining_patch.py
+      - .github/workflows/one-kristin-remaining-focused.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-kristin-remaining-focused-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Apply remaining One Kristin integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/apply_one_kristin_remaining.py
+          python tool/fix_one_kristin_remaining_patch.py
+      - name: Format focused Dart surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/chat_control_plane.dart \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            lib/product/chat_studio.dart \
+            lib/product/utility_time.dart \
+            lib/product/task_kernel/semantic_steering.dart \
+            test/product/chat_time_capability_test.dart \
+            test/product/one_kristin_advanced_source_contract_test.dart \
+            test/product/utility_time_test.dart \
+            test/product/task_kernel/semantic_steering_test.dart
+      - name: Resolve package without lock drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+      - name: Fatal analyzer
+        shell: bash
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Focused One Kristin contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test --no-pub --concurrency=1 \
+            test/product/chat_time_capability_test.dart \
+            test/product/one_kristin_advanced_source_contract_test.dart \
+            test/product/utility_time_test.dart \
+            test/product/chat_action_dispatcher_test.dart \
+            test/product/kernel_task_graph_executor_test.dart \
+            test/product/kristin_conversation_session_test.dart \
+            test/product/task_kernel/capability_authority_compile_test.dart \
+            test/product/task_kernel/task_family_executor_test.dart \
+            test/product/task_kernel/task_specification_patch_test.dart \
+            test/product/task_kernel/task_specification_patch_classifier_test.dart \
+            test/product/task_kernel/semantic_steering_test.dart
+      - name: Commit verified source and self-clean verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f tool/apply_one_kristin_remaining.py
+          rm -f tool/fix_one_kristin_remaining_patch.py
+          rm -f .github/workflows/one-kristin-remaining-focused.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --stat
+          git commit -m "feat(kristin): complete remaining convergence wiring"
+          git push origin HEAD:draft/one-kristin-development
