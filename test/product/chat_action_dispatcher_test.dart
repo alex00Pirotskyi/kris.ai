@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/capability_doctor.dart';
 import 'package:kristin_local_agent/product/chat_action_dispatcher.dart';
 import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 
 final DateTime _fixedTime = DateTime.utc(2026, 1, 1);
 
@@ -153,6 +154,50 @@ class _FakeGateway implements ChatRuntimeGateway {
 }
 
 void main() {
+  group('ChatActionDispatcher authority boundary', () {
+    test('direct project action resolves authority before touching runtime', () async {
+      final gateway = _FakeGateway();
+      final dispatcher = ChatActionDispatcher(gateway);
+
+      await expectLater(
+        dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
+        throwsA(
+          isA<ProductException>().having(
+            (error) => error.code,
+            'code',
+            'capability_unknown',
+          ),
+        ),
+      );
+
+      expect(gateway.calls, isEmpty);
+    });
+
+    test('button/slash/natural-language source cannot change run authority', () {
+      final dispatcher = ChatActionDispatcher(_FakeGateway());
+      final fromSlash = dispatcher.authorize(
+        capabilityId: 'project.run',
+        targetIds: const <String>{'p1'},
+        reason: 'slash',
+      );
+      final fromNaturalLanguage = dispatcher.authorize(
+        capabilityId: 'project.run',
+        targetIds: const <String>{'p1'},
+        reason: 'natural_language',
+      );
+      final fromButton = dispatcher.authorize(
+        capabilityId: 'project.run',
+        targetIds: const <String>{'p1'},
+        reason: 'button',
+      );
+
+      expect(fromSlash.requiredScopes, fromNaturalLanguage.requiredScopes);
+      expect(fromSlash.requiredScopes, fromButton.requiredScopes);
+      expect(fromSlash.requiredScopes, contains(PermissionScope.projectRead));
+      expect(fromSlash.requiredScopes, contains(PermissionScope.executeManaged));
+    });
+  });
+
   group('ChatActionDispatcher.search', () {
     test('research.search never requires a project', () async {
       final gateway = _FakeGateway();
