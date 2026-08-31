@@ -1,4 +1,4 @@
-name: temporary-one-kristin-reconcile-probe
+name: temporary-one-kristin-hybrid-probe
 
 on:
   push:
@@ -9,17 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  qualify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 45
     steps:
-      - name: Checkout current integration base
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: bbb8cbdb52844f868abf9916c9bb77446c2809cf
           fetch-depth: 0
 
-      - name: Capture exact three-way conflict surface
+      - name: Build ours-biased three-way candidate
         shell: bash
         run: |
           set -euo pipefail
@@ -31,26 +30,46 @@ jobs:
           rc=$?
           set -e
           test "$rc" -ne 0
-          mkdir -p "$RUNNER_TEMP/reconcile"
-          : > "$RUNNER_TEMP/reconcile/conflicts.txt"
-          git diff --name-only --diff-filter=U | LC_ALL=C sort > "$RUNNER_TEMP/reconcile/files.txt"
-          while IFS= read -r f; do
-            [ -n "$f" ] || continue
-            printf '\n===== %s =====\n' "$f" >> "$RUNNER_TEMP/reconcile/conflicts.txt"
-            git diff --cc -- "$f" >> "$RUNNER_TEMP/reconcile/conflicts.txt" || true
-            safe="$RUNNER_TEMP/reconcile/stages/$f"
-            mkdir -p "$(dirname "$safe")"
-            git show ":1:$f" > "${safe}.base" 2>/dev/null || true
-            git show ":2:$f" > "${safe}.current-base" 2>/dev/null || true
-            git show ":3:$f" > "${safe}.qualified" 2>/dev/null || true
-          done < "$RUNNER_TEMP/reconcile/files.txt"
-          git diff --cached --name-status | LC_ALL=C sort > "$RUNNER_TEMP/reconcile/cleanly-applied.txt"
-          git cherry-pick --abort >/dev/null 2>&1 || true
+          mapfile -t files < <(git diff --name-only --diff-filter=U | LC_ALL=C sort)
+          test "${#files[@]}" -eq 13
+          git checkout --ours -- "${files[@]}"
+          git add "${files[@]}"
+          test -z "$(git diff --name-only --diff-filter=U)"
 
-      - name: Upload reconciliation evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          name: one-kristin-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/reconcile
-          if-no-files-found: error
-          retention-days: 7
+          python-version: '3.12.10'
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Normalize and analyze
+        shell: bash
+        run: |
+          flutter pub get
+          python tool/dart_format_scope.py --write
+          python tool/p1a_refresh_source_manifest.py .
+          python tool/dart_format_scope.py --check
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Run cross-lineage contracts
+        shell: bash
+        run: |
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/advanced_same_conversation_contract_test.dart \
+            test/product/authority_convergence_contract_test.dart \
+            test/product/chat_continuation_activity_contract_test.dart \
+            test/product/research_archive_degradation_contract_test.dart \
+            test/product/runner_bounded_delegate_contract_test.dart \
+            test/product/semantic_durable_steering_test.dart \
+            test/product/steering_scope_continuation_contract_test.dart \
+            test/product/truthful_conversation_streaming_test.dart \
+            test/product/kristin_conversation_session_authoritative_state_test.dart \
+            test/product/task_kernel/semantic_steering_test.dart \
+            test/product/utility_time_test.dart
