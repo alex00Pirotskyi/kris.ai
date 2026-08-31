@@ -381,6 +381,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final decision = pendingDecision!;
     final draft = history.current;
     final specification = taskSpecification;
+    final blockingClarification = routingDecision?.requiresClarification == true &&
+        specification?.blockingQuestions.isNotEmpty == true;
     // The product's wording rule: "I understood" is only truthful when a
     // model actually read the request through the kernel's structured
     // understanding contract and deterministic code validated the result.
@@ -424,10 +426,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             ],
           ),
-          // Constraints are shown as constraints. Losing "don't touch the
-          // database" between the user saying it and the planner reading
-          // it is exactly what the specification exists to prevent, so it
-          // is visible before anything is planned.
           if (specification != null &&
               specification.hardConstraints.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
@@ -480,6 +478,13 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
+          if (blockingClarification) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              'Reply to the question in Chat before continuing. Your answer updates this same task; it does not create a new request or grant authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           if (decision.ambiguous) ...<Widget>[
             const SizedBox(height: 10),
             Text(
@@ -517,7 +522,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               children: <Widget>[
                 FilledButton(
                   key: const Key('chat-understanding-continue'),
-                  onPressed: busy ? null : _continueUnderstanding,
+                  onPressed: busy || blockingClarification
+                      ? null
+                      : _continueUnderstanding,
                   child: const Text('Continue'),
                 ),
                 OutlinedButton(
@@ -580,10 +587,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             const SizedBox(height: 12),
           ],
-          // The plan card renders the SAME work items the Runner receives,
-          // grouped by the canonical phase that now survives compilation
-          // (WorkItem.phase / WorkItem.parentId). There is no second,
-          // display-only plan structure to drift from what executes.
           ..._planItemRows(command.plan.items),
           if (planAdjusting) ...<Widget>[
             const SizedBox(height: 8),
