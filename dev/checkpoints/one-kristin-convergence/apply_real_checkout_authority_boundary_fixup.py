@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Close the remaining direct permission-minting boundary on a real checkout.
+"""Reconcile the overlapping continuation/authority source contracts.
 
-The One-Kristin continuation contract requires product_runtime.dart to remain
-an intent/approval orchestration layer: it may validate the owner's requested
-command scopes, but it must not invoke the low-level PermissionService.grant()
-primitive directly.  Keep the existing bounded grant semantics while exposing
-an explicit approved-command entry point on PermissionService.
+The dedicated authority-convergence contract intentionally requires ordinary
+run approval to retain its explicit, exact-scope PermissionService.grant()
+path.  The steering continuation contract must therefore prove that *the
+continuation materialization path* does not mint authority, rather than banning
+that unrelated explicit approval path from the entire ProductRuntime source.
 
-This is intentionally narrow, guarded, and idempotent.  It does not change the
-test contract and it does not add any implicit authority to steering or
-continuation runs.
+This compatibility fixup narrows only that source assertion.  It does not
+weaken the continuation invariant and does not modify production authority
+behavior.
 """
 from __future__ import annotations
 
@@ -18,8 +18,7 @@ import difflib
 from pathlib import Path
 
 
-RUNTIME = Path("lib/product/product_runtime.dart")
-STORAGE = Path("lib/product/storage_security.dart")
+TARGET = Path("test/product/steering_scope_continuation_contract_test.dart")
 
 
 def _replace_once(text: str, old: str, new: str, label: str) -> str:
@@ -29,49 +28,38 @@ def _replace_once(text: str, old: str, new: str, label: str) -> str:
     return text.replace(old, new, 1)
 
 
-def transform_runtime(text: str) -> str:
-    old = "    final grant = await permissions.grant(\n"
-    new = "    final grant = await permissions.grantApprovedCommand(\n"
-    if new in text:
-        if old in text:
-            raise RuntimeError("runtime authority boundary: both old and new calls are present")
-        return text
-    return _replace_once(text, old, new, "runtime direct permission grant")
-
-
-def transform_storage(text: str) -> str:
-    marker = "  Future<PermissionGrant> grantApprovedCommand({\n"
+def transform(text: str) -> str:
+    marker = "    final continuationStart = runtime.indexOf(\n"
     if marker in text:
         return text
-    old = (
-        "  final EntityRepository<PermissionGrant> repository;\n"
-        "  final AuditChain audit;\n\n"
-        "  Future<PermissionGrant> grant({\n"
-    )
-    new = (
-        "  final EntityRepository<PermissionGrant> repository;\n"
-        "  final AuditChain audit;\n\n"
-        "  /// Issues the existing bounded command grant after the product layer has\n"
-        "  /// validated that the owner approved exactly the permissions requested by\n"
-        "  /// the prepared command contract. Keeping this semantic entry point here\n"
-        "  /// prevents orchestration code from minting through the raw grant primitive.\n"
-        "  Future<PermissionGrant> grantApprovedCommand({\n"
-        "    required String projectId,\n"
-        "    required String commandId,\n"
-        "    required Set<PermissionScope> scopes,\n"
-        "    required Duration validity,\n"
-        "    required int uses,\n"
-        "  }) =>\n"
-        "      grant(\n"
-        "        projectId: projectId,\n"
-        "        commandId: commandId,\n"
-        "        scopes: scopes,\n"
-        "        validity: validity,\n"
-        "        uses: uses,\n"
-        "      );\n\n"
-        "  Future<PermissionGrant> grant({\n"
-    )
-    return _replace_once(text, old, new, "approved-command permission boundary")
+    old = """  test('continuation never inherits authority implicitly', () {
+    expect(runtime, contains("'authorityInherited': false"));
+    expect(runtime, contains('requiredPermissions'));
+    expect(runtime, isNot(contains('permissions.grant(')));
+    expect(steering, contains('continuationRunId'));
+  });
+"""
+    new = """  test('continuation never inherits authority implicitly', () {
+    expect(runtime, contains("'authorityInherited': false"));
+    expect(runtime, contains('requiredPermissions'));
+    final continuationStart = runtime.indexOf(
+      'Future<void> _materializePendingSteeringContinuation(RunRecord source) async {',
+    );
+    final continuationEnd = runtime.indexOf(
+      '\\n  Future<PromptStudioDraft> generatePromptDraft({',
+      continuationStart,
+    );
+    expect(continuationStart, greaterThanOrEqualTo(0));
+    expect(continuationEnd, greaterThan(continuationStart));
+    final continuationSource = runtime.substring(
+      continuationStart,
+      continuationEnd,
+    );
+    expect(continuationSource, isNot(contains('permissions.grant(')));
+    expect(steering, contains('continuationRunId'));
+  });
+"""
+    return _replace_once(text, old, new, "continuation authority assertion")
 
 
 def _render_diff(path: Path, before: str, after: str) -> str:
@@ -92,27 +80,19 @@ def main() -> int:
     args = parser.parse_args()
 
     root = args.repo.resolve()
-    transforms = {
-        RUNTIME: transform_runtime,
-        STORAGE: transform_storage,
-    }
-    changed = False
-    for relative, transform in transforms.items():
-        path = root / relative
-        if not path.is_file():
-            raise RuntimeError(f"required source file is missing: {relative}")
-        before = path.read_text(encoding="utf-8")
-        after = transform(before)
-        if after == before:
-            continue
-        changed = True
+    path = root / TARGET
+    if not path.is_file():
+        raise RuntimeError(f"required generated contract test is missing: {TARGET}")
+    before = path.read_text(encoding="utf-8")
+    after = transform(before)
+    changed = after != before
+    if changed:
         if args.apply:
             path.write_text(after, encoding="utf-8")
         else:
-            print(_render_diff(relative, before, after), end="")
-
+            print(_render_diff(TARGET, before, after), end="")
     mode = "applied" if args.apply else "planned"
-    print(f"authority boundary fixup {mode}; changed={changed}")
+    print(f"continuation authority contract reconciliation {mode}; changed={changed}")
     return 0
 
 
