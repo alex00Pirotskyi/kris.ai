@@ -38,4 +38,18 @@ if time_handler not in text:
     text = text.replace(help_marker, time_handler + help_marker, 1)
 
 path.write_text(text, encoding='utf-8')
-print('Prepared unique Advanced marker and deterministic utility.time handler.')
+
+# The earlier hand-carried timezone lock repair truncated http_parser's
+# hosted package SHA. Restore the exact pub-generated checksum so `pub get`
+# can validate the lock and then own any remaining dependency normalization.
+lock_path = root / 'pubspec.lock'
+lock = lock_path.read_text(encoding='utf-8')
+bad = '178d74305e786601377d3d8726205dc5a4dd935297175b19a23a2e66571'
+good = '178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571'
+if bad in lock:
+    lock = lock.replace(bad, good, 1)
+elif good not in lock:
+    raise SystemExit('http_parser 4.1.2 checksum was neither expected bad nor canonical value')
+lock_path.write_text(lock, encoding='utf-8')
+
+print('Prepared unique Advanced marker, utility.time handler, and canonical package checksum.')
