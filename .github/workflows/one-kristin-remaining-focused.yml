@@ -5,6 +5,7 @@ on:
     branches:
       - draft/one-kristin-development
     paths:
+      - tool/prep_one_kristin_remaining.py
       - tool/apply_one_kristin_remaining.py
       - tool/fix_one_kristin_remaining_patch.py
       - .github/workflows/one-kristin-remaining-focused.yml
@@ -35,8 +36,13 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          python tool/apply_one_kristin_remaining.py 2>&1 | tee /tmp/one-kristin-apply.log
+          : > /tmp/one-kristin-apply.log
+          python tool/prep_one_kristin_remaining.py 2>&1 | tee -a /tmp/one-kristin-apply.log
           status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            python tool/apply_one_kristin_remaining.py 2>&1 | tee -a /tmp/one-kristin-apply.log
+            status=${PIPESTATUS[0]}
+          fi
           if [ "$status" -eq 0 ]; then
             python tool/fix_one_kristin_remaining_patch.py 2>&1 | tee -a /tmp/one-kristin-apply.log
             status=${PIPESTATUS[0]}
@@ -93,6 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rm -f tool/prep_one_kristin_remaining.py
           rm -f tool/apply_one_kristin_remaining.py
           rm -f tool/fix_one_kristin_remaining_patch.py
           rm -f .github/workflows/one-kristin-remaining-focused.yml
