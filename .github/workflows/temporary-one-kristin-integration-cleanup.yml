@@ -1,0 +1,66 @@
+name: temporary-one-kristin-integration-cleanup
+
+on:
+  push:
+    branches:
+      - integration/one-kristin-convergence-qualified
+    paths:
+      - .github/workflows/temporary-one-kristin-integration-cleanup.yml
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  clean-and-dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Remove checkpoint scaffolding and refresh governed source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dev/checkpoints/one-kristin-convergence
+          rm -f .github/workflows/temporary-one-kristin-integration-cleanup.yml
+          python tool/p2_refresh_source_manifest.py .
+          python tool/source_tree_policy_test.py
+          python tool/generated_state_guard_test.py
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+
+      - name: Commit clean integration tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'integration: strip One-Kristin checkpoint scaffolding'
+          git push origin HEAD:integration/one-kristin-convergence-qualified
+          remote_head="$(git ls-remote origin refs/heads/integration/one-kristin-convergence-qualified | awk '{print $1}')"
+          test "$remote_head" = "$(git rev-parse HEAD)"
+
+      - name: Dispatch protected tri-platform product gates
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/dispatches" \
+            -d '{"ref":"integration/one-kristin-convergence-qualified"}'
