@@ -33,6 +33,18 @@ jobs:
           cache: true
           pub-cache: true
 
+      - name: Reconcile legacy full-suite contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            dev/checkpoints/one-kristin-convergence/apply_full_suite_contract_fixups.py
+          python dev/checkpoints/one-kristin-convergence/apply_full_suite_contract_fixups.py \
+            . \
+            --apply
+          rm -f dev/checkpoints/one-kristin-convergence/apply_full_suite_contract_fixups.py
+          git diff --check
+
       - name: Remove temporary qualification workflow from candidate tree
         shell: bash
         run: |
