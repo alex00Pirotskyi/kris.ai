@@ -119,6 +119,22 @@ jobs:
             --report-dir "$RUNNER_TEMP/one-kristin-qualification"
           git diff --check
 
+      - name: Capture focused continuation failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          set +e
+          out="$RUNNER_TEMP/one-kristin-qualification/diagnostics"
+          mkdir -p "$out"
+          cp test/product/steering_scope_continuation_contract_test.dart "$out/" 2>/dev/null || true
+          cp dev/checkpoints/one-kristin-convergence/apply_scope_changing_steering_continuation.py "$out/" 2>/dev/null || true
+          flutter test test/product/steering_scope_continuation_contract_test.dart \
+            --reporter expanded > "$out/continuation-contract-test.log" 2>&1 || true
+          git diff -- test/product/steering_scope_continuation_contract_test.dart > "$out/continuation-contract-test.diff" 2>&1 || true
+          git diff -- lib > "$out/candidate-lib.diff" 2>&1 || true
+          find /tmp/one-kristin-qualification -type f -name '*failure.txt' \
+            -exec cp {} "$out/" \; 2>/dev/null || true
+
       - name: Commit qualified product source
         shell: bash
         run: |
