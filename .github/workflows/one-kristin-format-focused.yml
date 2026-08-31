@@ -1,0 +1,69 @@
+name: One Kristin Format Focused
+
+on:
+  push:
+    branches:
+      - draft/one-kristin-development
+    paths:
+      - .github/workflows/one-kristin-format-focused.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: one-kristin-format-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  format-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Format repaired Chat contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/one-kristin-format-focused.yml
+          dart format test/product/chat_deferred_takeover_bridge_test.dart
+          dart format --output=none --set-exit-if-changed \
+            test/product/chat_deferred_takeover_bridge_test.dart
+      - name: Resolve package
+        shell: bash
+        run: flutter pub get
+      - name: Verify repaired Chat intent and takeover contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter test --no-pub --concurrency=1 test/product/chat_control_plane_test.dart
+          flutter test --no-pub --concurrency=1 test/product/chat_deferred_takeover_bridge_test.dart
+          flutter test --no-pub --concurrency=1 test/product/source_contract_test.dart
+      - name: Freeze deterministic source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 /tmp/one-kristin-source-manifest.sha256
+          python tool/p1a_refresh_source_manifest.py .
+          diff -u /tmp/one-kristin-source-manifest.sha256 SOURCE_MANIFEST.sha256
+          git diff --check
+      - name: Commit qualified format repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git diff --cached --stat
+          git commit -m "test(kristin): format qualified takeover repair"
+          git push origin HEAD:draft/one-kristin-development
