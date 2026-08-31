@@ -19,7 +19,7 @@ jobs:
           ref: bbb8cbdb52844f868abf9916c9bb77446c2809cf
           fetch-depth: 0
 
-      - name: Probe exact final commit onto current base
+      - name: Capture exact three-way conflict surface
         shell: bash
         run: |
           set -euo pipefail
@@ -30,18 +30,27 @@ jobs:
           git cherry-pick --no-commit d9e92c44c4f3fbcc21c60b1592dfd52dc71ddfb1
           rc=$?
           set -e
-          echo "cherry_pick_rc=$rc"
-          echo '=== unresolved files ==='
-          git diff --name-only --diff-filter=U | LC_ALL=C sort
-          echo '=== staged paths ==='
-          git diff --cached --name-status | LC_ALL=C sort
-          echo '=== worktree paths ==='
-          git diff --name-status | LC_ALL=C sort
-          echo '=== conflict marker counts ==='
+          test "$rc" -ne 0
+          mkdir -p "$RUNNER_TEMP/reconcile"
+          : > "$RUNNER_TEMP/reconcile/conflicts.txt"
+          git diff --name-only --diff-filter=U | LC_ALL=C sort > "$RUNNER_TEMP/reconcile/files.txt"
           while IFS= read -r f; do
             [ -n "$f" ] || continue
-            count=$(grep -c '^<<<<<<< ' "$f" || true)
-            printf '%s\t%s\n' "$count" "$f"
-          done < <(git diff --name-only --diff-filter=U | LC_ALL=C sort)
+            printf '\n===== %s =====\n' "$f" >> "$RUNNER_TEMP/reconcile/conflicts.txt"
+            git diff --cc -- "$f" >> "$RUNNER_TEMP/reconcile/conflicts.txt" || true
+            safe="$RUNNER_TEMP/reconcile/stages/$f"
+            mkdir -p "$(dirname "$safe")"
+            git show ":1:$f" > "${safe}.base" 2>/dev/null || true
+            git show ":2:$f" > "${safe}.current-base" 2>/dev/null || true
+            git show ":3:$f" > "${safe}.qualified" 2>/dev/null || true
+          done < "$RUNNER_TEMP/reconcile/files.txt"
+          git diff --cached --name-status | LC_ALL=C sort > "$RUNNER_TEMP/reconcile/cleanly-applied.txt"
           git cherry-pick --abort >/dev/null 2>&1 || true
-          exit 0
+
+      - name: Upload reconciliation evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-reconcile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/reconcile
+          if-no-files-found: error
+          retention-days: 7
