@@ -192,6 +192,7 @@ void main() {
         'lib/product/ui.dart',
         'lib/product/ui_advanced.dart',
         'lib/product/ui_components.dart',
+        'lib/product/utility_time.dart',
         'lib/product/workspace_tools.dart',
         'lib/product/conversation_orchestrator.dart',
         'lib/product/product_error_normalizer.dart',
@@ -208,6 +209,7 @@ void main() {
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',
         'lib/product/run_steering.dart',
+        'lib/product/run_steering_record.dart',
         'lib/product/access_profile_v2.dart',
         'lib/product/capability_grant_v2.dart',
         'lib/product/deterministic_policy_engine.dart',
@@ -262,6 +264,7 @@ void main() {
         'lib/product/p5_information_architecture/p5_task_workspaces.dart',
         'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
         'lib/product/agent_context_v2.dart',
+        'lib/product/agent_delegation_record.dart',
         'lib/product/agent_decision_v3.dart',
         'lib/product/agent_protocol_v3.dart',
         'lib/product/agent_deferred_interaction.dart',
@@ -282,6 +285,7 @@ void main() {
         'lib/product/task_kernel/task_specification.dart',
         'lib/product/task_kernel/task_understanding.dart',
         'lib/product/task_kernel/complexity_router.dart',
+        'lib/product/task_kernel/command_planning_context.dart',
         'lib/product/task_kernel/universal_task_plan.dart',
         'lib/product/task_kernel/plan_compiler.dart',
         'lib/product/task_kernel/plan_reconciliation.dart',
@@ -290,6 +294,8 @@ void main() {
         'lib/product/task_kernel/software_family.dart',
         'lib/product/task_kernel/task_kernel.dart',
         'lib/product/task_kernel/runtime_gateway.dart',
+        'lib/product/task_kernel/task_family_execution.dart',
+        'lib/product/task_kernel/research_task_family_executor.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))

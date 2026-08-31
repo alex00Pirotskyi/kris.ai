@@ -87,32 +87,72 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
       color: failing ? colors.errorContainer : colors.surfaceContainerHighest,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            if ((busy || runExecuting) && !waitingForInput)
-              const SizedBox.square(
-                dimension: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(failing ? Icons.error_outline : Icons.info_outline,
-                  size: 18),
-            const SizedBox(width: 9),
-            Expanded(
-              child: Text(
-                startup ??
-                    error ??
-                    (waitingForInput
-                        ? conversationSession.deferredUserPrompt ?? status
-                        : status),
-              ),
+            Row(
+              children: <Widget>[
+                if ((busy || runExecuting) && !waitingForInput)
+                  const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  Icon(failing ? Icons.error_outline : Icons.info_outline,
+                      size: 18),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    startup ??
+                        error ??
+                        (waitingForInput
+                            ? conversationSession.deferredUserPrompt ?? status
+                            : status),
+                  ),
+                ),
+                if (error != null && technicalError != null)
+                  IconButton(
+                    tooltip: 'Error details',
+                    onPressed: () => _mutate(
+                      () => errorDetailsExpanded = !errorDetailsExpanded,
+                    ),
+                    icon: Icon(
+                      errorDetailsExpanded
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                    ),
+                  ),
+                if (error != null)
+                  IconButton(
+                    tooltip: 'Dismiss',
+                    onPressed: () => _mutate(() {
+                      error = null;
+                      technicalError = null;
+                      errorDetailsExpanded = false;
+                    }),
+                    icon: const Icon(Icons.close),
+                  ),
+              ],
             ),
-            if (error != null)
-              IconButton(
-                tooltip: 'Dismiss',
-                onPressed: () => _mutate(() => error = null),
-                icon: const Icon(Icons.close),
+            if (technicalError != null && errorDetailsExpanded) ...<Widget>[
+              const SizedBox(height: 8),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: colors.outlineVariant),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: SelectableText(
+                    technicalError!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                        ),
+                  ),
+                ),
               ),
+            ],
           ],
         ),
       ),
@@ -140,6 +180,11 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     }
     for (final line in transcript) {
       children.add(_messageBubble(line));
+      children.add(const SizedBox(height: 14));
+    }
+    final streamingText = conversationSession.conversationAssistantText.trim();
+    if (streamingText.isNotEmpty) {
+      children.add(_streamingAssistantBubble(streamingText));
       children.add(const SizedBox(height: 14));
     }
     switch (state) {
@@ -291,6 +336,38 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   : null,
             ),
             child: SelectableText(line.text),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _streamingAssistantBubble(String text) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: colors.primaryContainer,
+          child: Icon(
+            Icons.auto_awesome,
+            size: 16,
+            color: colors.onPrimaryContainer,
+          ),
+        ),
+        const SizedBox(width: 9),
+        Flexible(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 700),
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: colors.outlineVariant),
+            ),
+            child: SelectableText(text),
           ),
         ),
       ],
@@ -517,7 +594,11 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               children: <Widget>[
                 FilledButton(
                   key: const Key('chat-understanding-continue'),
-                  onPressed: busy ? null : _continueUnderstanding,
+                  onPressed: busy ||
+                          routingDecision?.requiresClarification == true ||
+                          specification?.blockingQuestions.isNotEmpty == true
+                      ? null
+                      : _continueUnderstanding,
                   child: const Text('Continue'),
                 ),
                 OutlinedButton(
@@ -683,6 +764,14 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final total = run.items.isEmpty ? 1 : run.items.length;
     final showModelAnswer = run.command.contract.mode == CommandMode.ask &&
         liveAssistantText.trim().isNotEmpty;
+    final activitySignals = liveSignals
+        .where((signal) =>
+            signal.kind != LiveRunSignalKind.modelTextDelta &&
+            signal.kind != LiveRunSignalKind.heartbeat)
+        .toList(growable: false);
+    final recentActivity = activitySignals.length <= 10
+        ? activitySignals
+        : activitySignals.sublist(activitySignals.length - 10);
     return _assistantCard(
       icon: run.state == RunState.succeeded
           ? Icons.check_circle_outline
@@ -758,6 +847,30 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   ],
                 ),
               ),
+              if (recentActivity.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Recent activity',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                ...recentActivity.map(
+                  (signal) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(_activityIcon(signal), size: 18),
+                    title: Text(_activityLabel(signal)),
+                    subtitle: Text(
+                      signal.workItemId == null
+                          ? _activityTimestamp(signal)
+                          : '${_activityTimestamp(signal)} · ${signal.workItemId}',
+                    ),
+                  ),
+                ),
+              ],
               if (liveToolOutput.trim().isNotEmpty) ...<Widget>[
                 const SizedBox(height: 8),
                 _technicalBox(liveToolOutput),
@@ -931,6 +1044,58 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
       },
       size: 18,
     );
+  }
+
+  String _activityLabel(LiveRunSignal signal) {
+    final message = signal.data['message']?.toString().trim() ?? '';
+    final tool = signal.data['tool']?.toString().trim() ?? '';
+    return switch (signal.kind) {
+      LiveRunSignalKind.phase ||
+      LiveRunSignalKind.preflight ||
+      LiveRunSignalKind.modelProgress =>
+        message.isEmpty ? 'Kristin advanced to the next safe step.' : message,
+      LiveRunSignalKind.toolStarted =>
+        tool.isEmpty ? 'Started a governed tool.' : 'Using $tool',
+      LiveRunSignalKind.toolOutput => tool.isEmpty
+          ? 'Receiving governed tool output.'
+          : 'Receiving output from $tool',
+      LiveRunSignalKind.toolCompleted =>
+        tool.isEmpty ? 'Governed tool completed.' : '$tool completed',
+      LiveRunSignalKind.toolFailed => tool.isEmpty
+          ? 'A governed tool needs attention.'
+          : '$tool needs attention',
+      LiveRunSignalKind.steeringQueued =>
+        'Your direction was queued for the next safe boundary.',
+      LiveRunSignalKind.steeringApplied =>
+        'Your direction was applied to future work.',
+      LiveRunSignalKind.modelTextDelta => 'Model response streaming',
+      LiveRunSignalKind.heartbeat => 'Execution heartbeat',
+    };
+  }
+
+  IconData _activityIcon(LiveRunSignal signal) => switch (signal.kind) {
+        LiveRunSignalKind.toolStarted ||
+        LiveRunSignalKind.toolOutput ||
+        LiveRunSignalKind.toolCompleted =>
+          Icons.build_outlined,
+        LiveRunSignalKind.toolFailed => Icons.error_outline,
+        LiveRunSignalKind.steeringQueued ||
+        LiveRunSignalKind.steeringApplied =>
+          Icons.alt_route,
+        LiveRunSignalKind.preflight => Icons.fact_check_outlined,
+        LiveRunSignalKind.modelProgress ||
+        LiveRunSignalKind.modelTextDelta =>
+          Icons.psychology_outlined,
+        LiveRunSignalKind.phase => Icons.timeline_outlined,
+        LiveRunSignalKind.heartbeat => Icons.monitor_heart_outlined,
+      };
+
+  String _activityTimestamp(LiveRunSignal signal) {
+    final value = signal.timestamp.toLocal();
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    final second = value.second.toString().padLeft(2, '0');
+    return '$hour:$minute:$second';
   }
 
   Widget _technicalBox(String value) {

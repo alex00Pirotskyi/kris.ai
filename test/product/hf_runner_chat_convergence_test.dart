@@ -4,10 +4,54 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/conversation_orchestrator.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/run_execution_projection.dart';
+import 'package:kristin_local_agent/product/repository.dart';
 import 'package:kristin_local_agent/product/run_live_signals.dart';
 import 'package:kristin_local_agent/product/run_preflight.dart';
 import 'package:kristin_local_agent/product/run_steering.dart';
+import 'package:kristin_local_agent/product/run_steering_record.dart';
 import 'package:kristin_local_agent/product/storage_security.dart';
+
+class _MemoryRunSteeringRepository
+    implements EntityRepository<RunSteeringRecord> {
+  final Map<String, RunSteeringRecord> values = <String, RunSteeringRecord>{};
+
+  @override
+  Future<List<RunSteeringRecord>> all() async => values.values.toList();
+
+  @override
+  Future<RunSteeringRecord?> get(String id) async => values[id];
+
+  @override
+  Future<void> put(RunSteeringRecord item) async {
+    values[item.id] = item;
+  }
+
+  @override
+  Future<void> putAll(Iterable<RunSteeringRecord> items) async {
+    for (final item in items) {
+      values[item.id] = item;
+    }
+  }
+
+  @override
+  Future<void> remove(String id) async {
+    values.remove(id);
+  }
+
+  @override
+  Future<void> removeWhere(
+    bool Function(RunSteeringRecord item) predicate,
+  ) async {
+    values.removeWhere((_, value) => predicate(value));
+  }
+
+  @override
+  Future<void> replaceAll(Iterable<RunSteeringRecord> items) async {
+    values
+      ..clear()
+      ..addEntries(items.map((item) => MapEntry(item.id, item)));
+  }
+}
 
 void main() {
   test('conversation orchestrator keeps hello on the fast chat path', () {
@@ -69,16 +113,25 @@ void main() {
     expect(received[0].sequence, lessThan(received[1].sequence));
   });
 
-  test('steering is queued then consumed exactly once', () async {
+  test('steering remains durable until explicitly acknowledged once', () async {
     final bus = LiveRunSignalBus();
     addTearDown(bus.close);
-    final steering = RunSteeringService(liveSignals: bus);
-    final queued = steering.queue('run-a', 'keep everything local');
+    final steering = RunSteeringService(
+      liveSignals: bus,
+      repository: _MemoryRunSteeringRepository(),
+    );
+    final queued = await steering.queue('run-a', 'keep everything local');
     expect(queued.text, 'keep everything local');
-    final first = steering.takePending('run-a');
-    final second = steering.takePending('run-a');
+
+    final first = await steering.takePending('run-a');
+    final replayBeforeAck = await steering.takePending('run-a');
     expect(first, hasLength(1));
-    expect(second, isEmpty);
+    expect(replayBeforeAck, hasLength(1));
+    expect(replayBeforeAck.single.id, first.single.id);
+
+    await steering.applied('run-a', first);
+    final afterAck = await steering.takePending('run-a');
+    expect(afterAck, isEmpty);
   });
 
   test('capability resolver does not infer browser from web-app wording', () {

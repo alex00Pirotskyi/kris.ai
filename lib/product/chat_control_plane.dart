@@ -52,6 +52,9 @@ enum ChatExecutionRoute {
   /// Architectural Improvement #9: research must not require a project.
   researchSearch,
 
+  /// Deterministic IANA timezone lookup; never delegated to a model.
+  utilityTime,
+
   projectAnalyze,
   projectTest,
 
@@ -217,6 +220,21 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     route: ChatExecutionRoute.projectBuild,
     preferredMode: CommandMode.build,
     availableWithoutTarget: false,
+  ),
+  KristinCapability(
+    id: 'utility.time',
+    displayName: 'Time',
+    description: 'Report deterministic current time from IANA timezone data.',
+    category: ChatCapabilityCategory.understand,
+    slashCommands: <String>['time'],
+    mentionAliases: <String>['time'],
+    acceptedTargetTypes: <ChatTargetType>{},
+    actionClass: ChatActionClass.informational,
+    riskClass: ChatRiskClass.none,
+    understandingPolicy: ChatUnderstandingPolicy.never,
+    planningPolicy: ChatPlanningPolicy.never,
+    route: ChatExecutionRoute.utilityTime,
+    preferredMode: CommandMode.ask,
   ),
   // Architectural Improvement #9: research must not require a project.
   // research.search never routes through ProductRuntime.prepare (which
@@ -850,25 +868,36 @@ class ChatIntentCompiler {
     List<ChatTarget> knownTargets = const <ChatTarget>[],
   }) {
     final parsed = parser.parse(input);
+    final explicitCapability = parsed.hasExplicitCommand
+        ? registry.bySlash(parsed.commandToken)
+        : null;
     final targets = <ChatTarget>[];
     final unresolved = <String>[];
     for (final mention in parsed.mentions) {
-      ChatTarget? resolved;
-      for (final target in knownTargets) {
-        if (target.matches(mention)) {
-          resolved = target;
-          break;
+      final matches = knownTargets.where((target) {
+        if (!target.matches(mention)) return false;
+        // An explicit slash command already fixed the capability. A matching
+        // target of a type that capability cannot consume is not a valid
+        // resolution candidate. This is filtering, not authority.
+        if (explicitCapability != null &&
+            !explicitCapability.acceptsTarget(target.type)) {
+          return false;
         }
-      }
-      if (resolved != null) {
-        targets.add(resolved);
+        return true;
+      }).toList(growable: false);
+      if (matches.length == 1) {
+        targets.add(matches.single);
+      } else if (matches.length > 1) {
+        // Never let provider ordering choose meaning. The normal structured
+        // ambiguity path asks the user to disambiguate instead.
+        unresolved.add(mention);
       } else if (registry.byMention(mention) == null) {
         unresolved.add(mention);
       }
     }
 
     if (parsed.hasExplicitCommand) {
-      final capability = registry.bySlash(parsed.commandToken);
+      final capability = explicitCapability;
       if (capability == null) {
         return _decision(
           kind: ChatInteractionKind.ambiguous,
@@ -1242,6 +1271,10 @@ class ChatIntentCompiler {
         return argument.isEmpty
             ? 'Search current public sources.'
             : 'Search current public sources for "$argument" and summarize what is found.';
+      case 'utility.time':
+        return argument.isEmpty
+            ? 'Report the current device-local time.'
+            : 'Report the current time in $argument.';
       case 'project.run':
         return target.isEmpty ? 'Run the selected project.' : 'Run $target.';
       case 'project.stop':
