@@ -1,3 +1,4 @@
+import '../capability_invocation.dart';
 import '../storage_security.dart';
 import 'universal_task_plan.dart';
 
@@ -43,17 +44,45 @@ typedef KernelTaskNodeExecutor = Future<KernelTaskNodeResult> Function(
   Map<String, KernelTaskNodeResult> dependencyResults,
 );
 
+typedef KernelAuthorizedTaskNodeExecutor = Future<KernelTaskNodeResult> Function(
+  UniversalTask task,
+  Map<String, KernelTaskNodeResult> dependencyResults,
+  Map<String, CapabilityAuthorityDecision> authorityDecisions,
+);
+
+typedef KernelTaskNodeStateListener = void Function(KernelTaskNodeResult result);
+
 /// Executes non-Runner task families from the same canonical DAG used by
 /// planning and UI projection. Research/diagnostics/utilities bind their own
 /// capability executor here instead of manually looping over plan titles.
+///
+/// Capability requirements are resolved through the canonical authority
+/// resolver immediately before a graph node can execute. Model-authored
+/// [UniversalTask.requiredCapabilities] therefore remain requirements rather
+/// than presentation metadata: unknown capabilities, coordinator leakage,
+/// scope escalation and unsupported Owner authority fail closed before the
+/// family adapter is called.
 class KernelTaskGraphExecutor {
-  const KernelTaskGraphExecutor();
+  const KernelTaskGraphExecutor({
+    this.authorityResolver = const CapabilityAuthorityResolver(),
+  });
+
+  final CapabilityAuthorityResolver authorityResolver;
 
   Future<KernelTaskGraphResult> execute({
     required UniversalTaskPlan plan,
-    required KernelTaskNodeExecutor executeNode,
+    KernelTaskNodeExecutor? executeNode,
+    KernelAuthorizedTaskNodeExecutor? executeAuthorizedNode,
+    KernelTaskNodeStateListener? onStateChanged,
     bool Function()? isCancelled,
   }) async {
+    if ((executeNode == null) == (executeAuthorizedNode == null)) {
+      throw ProductException(
+        'kernel_task_executor_invalid',
+        'Provide exactly one task-node executor.',
+      );
+    }
+
     final validationErrors = plan.validate();
     if (validationErrors.isNotEmpty) {
       throw ProductException('task_plan_invalid', validationErrors.join(' '));
@@ -64,6 +93,12 @@ class KernelTaskGraphExecutor {
     };
     final pending = enabled.keys.toSet();
     final results = <String, KernelTaskNodeResult>{};
+
+    for (final task in enabled.values) {
+      onStateChanged?.call(
+        KernelTaskNodeResult(taskId: task.id, state: KernelTaskNodeState.queued),
+      );
+    }
 
     while (pending.isNotEmpty) {
       if (isCancelled?.call() == true) {
@@ -98,20 +133,48 @@ class KernelTaskGraphExecutor {
           (result) => result.state != KernelTaskNodeState.succeeded,
         );
         if (task.manual || blockedByFailure) {
-          results[task.id] = KernelTaskNodeResult(
+          final skipped = KernelTaskNodeResult(
             taskId: task.id,
             state: KernelTaskNodeState.skipped,
             summary: task.manual
                 ? 'Manual task not executed by the kernel executor.'
                 : 'Skipped because a dependency did not succeed.',
           );
+          results[task.id] = skipped;
           pending.remove(task.id);
+          onStateChanged?.call(skipped);
           continue;
         }
 
+        onStateChanged?.call(
+          KernelTaskNodeResult(
+            taskId: task.id,
+            state: KernelTaskNodeState.running,
+          ),
+        );
+
         KernelTaskNodeResult result;
         try {
-          result = await executeNode(task, dependencies);
+          final authority = <String, CapabilityAuthorityDecision>{};
+          final capabilityIds = task.requiredCapabilities.toList()..sort();
+          for (final capabilityId in capabilityIds) {
+            authority[capabilityId] = authorityResolver.resolve(
+              CapabilityInvocation(
+                capabilityId: capabilityId,
+                modelProposed: true,
+                reason: 'kernel_task:${task.id}',
+              ),
+            );
+          }
+          result = executeAuthorizedNode != null
+              ? await executeAuthorizedNode(
+                  task,
+                  dependencies,
+                  Map<String, CapabilityAuthorityDecision>.unmodifiable(
+                    authority,
+                  ),
+                )
+              : await executeNode!(task, dependencies);
         } catch (error) {
           result = KernelTaskNodeResult(
             taskId: task.id,
@@ -130,6 +193,7 @@ class KernelTaskGraphExecutor {
         }
         results[task.id] = result;
         pending.remove(task.id);
+        onStateChanged?.call(result);
       }
     }
 
