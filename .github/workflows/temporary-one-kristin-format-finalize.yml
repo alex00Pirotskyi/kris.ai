@@ -1,4 +1,4 @@
-name: temporary-one-kristin-format-finalize
+name: temporary-one-kristin-final-dispatch
 
 on:
   push:
@@ -6,104 +6,33 @@ on:
       - automation/one-kristin-format-finalize-20260901
 
 permissions:
-  contents: write
+  actions: write
+  contents: read
 
 jobs:
-  finalize:
+  dispatch:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 10
     steps:
-      - name: Checkout exact final candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: a047e52a66a0e73a4c6e2e27271ebfc2c57f05ce
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12.10'
-
-      - name: Set up locked Flutter
-        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          flutter-version: '3.44.8'
-          channel: stable
-          cache: true
-          pub-cache: true
-
-      - name: Resolve Flutter dependencies
-        run: flutter pub get
-
-      - name: Apply governed Dart formatter
-        run: |
-          python tool/dart_format_scope.py --write
-          python tool/dart_format_scope.py --check
-
-      - name: Regenerate authoritative source manifest
-        shell: bash
-        run: |
-          python - <<'PY'
-          import importlib.util
-          import pathlib
-          import sys
-
-          project = pathlib.Path('.').resolve()
-          path = project / 'tool' / 'v71r12_exact_source_gate.py'
-          spec = importlib.util.spec_from_file_location('one_kristin_source_gate', path)
-          if spec is None or spec.loader is None:
-              raise SystemExit('cannot load exact source gate')
-          module = importlib.util.module_from_spec(spec)
-          sys.modules[spec.name] = module
-          spec.loader.exec_module(module)
-          rows = [
-              f"{module.source_sha256(project / relative)}  {relative}\n"
-              for relative in module.source_paths(project)
-          ]
-          (project / 'SOURCE_MANIFEST.sha256').write_text(
-              ''.join(rows), encoding='utf-8', newline='\n'
-          )
-          module.verify_source_manifest(project)
-          PY
-
-      - name: Prove amendment scope
-        shell: bash
-        run: |
-          set -euo pipefail
-          mapfile -t changed < <(git diff --name-only | LC_ALL=C sort)
-          printf 'Changed tracked files:\n%s\n' "${changed[*]}"
-          test "${#changed[@]}" -eq 2
-          test "${changed[0]}" = 'SOURCE_MANIFEST.sha256'
-          test "${changed[1]}" = 'lib/product/chat_control_plane_studio.dart'
-          python tool/generated_state_guard.py audit --project . --strict
-
-      - name: Qualify formatted continuation projection
-        shell: bash
-        run: |
-          flutter analyze --no-pub --fatal-warnings --fatal-infos
-          flutter test --no-pub --concurrency=1 \
-            test/product/chat_continuation_activity_contract_test.dart \
-            test/product/kristin_conversation_session_test.dart \
-            test/product/steering_scope_continuation_contract_test.dart
-          python tool/dart_format_scope.py --check
-
-      - name: Rewrite final branch as one integration commit
+      - name: Verify and dispatch exact final head
         shell: bash
         env:
-          OLD_HEAD: a047e52a66a0e73a4c6e2e27271ebfc2c57f05ce
-          BASE: dd2f46ba6df3fb25adc2c8c927e807147b8f16f2
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA: d9e92c44c4f3fbcc21c60b1592dfd52dc71ddfb1
           FINAL_BRANCH: feat/one-kristin-convergence-qualified
         run: |
           set -euo pipefail
-          git fetch origin "$FINAL_BRANCH"
-          test "$(git rev-parse FETCH_HEAD)" = "$OLD_HEAD"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SOURCE_MANIFEST.sha256 lib/product/chat_control_plane_studio.dart
-          tree="$(git write-tree)"
-          new_commit="$(printf '%s\n' 'feat: converge One-Kristin runtime and tests' | git commit-tree "$tree" -p "$BASE")"
-          test "$(git rev-list --count "$BASE..$new_commit")" -eq 1
-          git push --force-with-lease="refs/heads/$FINAL_BRANCH:$OLD_HEAD" \
-            origin "$new_commit:refs/heads/$FINAL_BRANCH"
-          echo "new_commit=$new_commit" >> "$GITHUB_OUTPUT"
+          actual="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/branches/$FINAL_BRANCH" \
+            | python -c 'import json,sys; print(json.load(sys.stdin)["commit"]["sha"])')"
+          test "$actual" = "$EXPECTED_SHA"
+          curl --fail --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/dispatches" \
+            -d "{\"ref\":\"$FINAL_BRANCH\"}"
