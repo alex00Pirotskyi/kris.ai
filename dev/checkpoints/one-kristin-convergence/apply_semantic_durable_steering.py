@@ -527,7 +527,7 @@ def transform_task_spec(source: str) -> str:
         return source
     if not source.rstrip().endswith('}'):
         raise RuntimeError('task specification: unexpected file ending')
-    return source.rstrip() + PATCH_SOURCE + '\n'
+    return source.rstrip() + PATCH_SOURCE
 
 
 def transform_storage(source: str) -> str:

@@ -100,16 +100,33 @@ def session(src: str) -> str:
 '''
     src = rep(src, anchor, methods + anchor, 'conversation stream methods')
 
-    # Both turn-reset paths must discard any transient partial assistant output.
+    # Both semantic turn-reset paths must discard transient ordinary-chat output.
+    # Earlier convergence slices make their surrounding state intentionally
+    # different, so guard each boundary independently rather than assuming the
+    # two blocks remain text-identical.
     src = rep(
         src,
+        "    _deferredInteraction = null;\n"
         "    _awaitingPermission = false;\n"
         "    clearLiveExecution();\n",
+        "    _deferredInteraction = null;\n"
         "    _awaitingPermission = false;\n"
         "    clearConversationResponse();\n"
         "    clearLiveExecution();\n",
-        'turn stream reset',
-        count=2,
+        'governed turn stream reset',
+    )
+    src = rep(
+        src,
+        "    _deferredInteraction = null;\n"
+        "    _awaitingPermission = false;\n"
+        "    _activeRequest = '';\n"
+        "    clearLiveExecution();\n",
+        "    _deferredInteraction = null;\n"
+        "    _awaitingPermission = false;\n"
+        "    _activeRequest = '';\n"
+        "    clearConversationResponse();\n"
+        "    clearLiveExecution();\n",
+        'detached run stream reset',
     )
     return src
 

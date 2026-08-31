@@ -563,3 +563,209 @@ class TaskSpecification {
     );
   }
 }
+
+/// A user-authored, authority-neutral change to an existing task specification.
+///
+/// Steering is not a second raw-prompt channel. The user's words are retained,
+/// but safe in-flight changes are projected into the same semantic vocabulary
+/// used by Understanding and Planning. Scope expansion is explicitly marked as
+/// requiring a reviewed replan instead of being smuggled into a running graph.
+class TaskSpecificationPatch {
+  const TaskSpecificationPatch({
+    required this.sourceText,
+    this.addedHardConstraints = const <SpecificationClaim>[],
+    this.addedPreferences = const <SpecificationClaim>[],
+    this.addedSuccessCriteria = const <SpecificationClaim>[],
+    this.addedProhibitedEffects = const <String>[],
+    this.scopeDirectives = const <String>[],
+    this.authorityClaimRejected = false,
+    this.requiresReplan = false,
+  });
+
+  final String sourceText;
+  final List<SpecificationClaim> addedHardConstraints;
+  final List<SpecificationClaim> addedPreferences;
+  final List<SpecificationClaim> addedSuccessCriteria;
+  final List<String> addedProhibitedEffects;
+  final List<String> scopeDirectives;
+  final bool authorityClaimRejected;
+  final bool requiresReplan;
+
+  bool get grantsAuthority => false;
+
+  factory TaskSpecificationPatch.fromUserSteering(String text) {
+    final value = text.trim();
+    if (value.length < 2) {
+      throw ArgumentError.value(text, 'text', 'Steering text is too short.');
+    }
+    final lower = value.toLowerCase();
+    final authorityClaim = RegExp(
+      r'\b(?:grant(?:ed)?|authori[sz](?:e|ed|ation)|approv(?:e|ed|al)|permission(?:s)?|full access|root access|admin access)\b',
+    ).hasMatch(lower);
+    if (authorityClaim) {
+      // The text remains evidence, but it can never become authority or a
+      // constraint that tells the executor permission was granted.
+      return TaskSpecificationPatch(
+        sourceText: value,
+        authorityClaimRejected: true,
+      );
+    }
+
+    final negative = RegExp(
+      r"\b(?:do not|don't|dont|never|must not|without|avoid|stop using|no longer use)\b",
+    ).hasMatch(lower);
+    if (negative) {
+      return TaskSpecificationPatch(
+        sourceText: value,
+        addedHardConstraints: <SpecificationClaim>[
+          SpecificationClaim.stated(value, source: 'steering'),
+        ],
+        addedProhibitedEffects: <String>[value],
+        requiresReplan: true,
+      );
+    }
+
+    final preference = RegExp(
+      r'\b(?:prefer|ideally|if possible|keep|favor|favour|would rather)\b',
+    ).hasMatch(lower);
+    if (preference) {
+      return TaskSpecificationPatch(
+        sourceText: value,
+        addedPreferences: <SpecificationClaim>[
+          SpecificationClaim.stated(value, source: 'steering'),
+        ],
+      );
+    }
+
+    final criterion = RegExp(
+      r'\b(?:make sure|ensure|must still|should still|verify|needs to|has to)\b',
+    ).hasMatch(lower);
+    if (criterion) {
+      return TaskSpecificationPatch(
+        sourceText: value,
+        addedSuccessCriteria: <SpecificationClaim>[
+          SpecificationClaim.stated(value, source: 'steering'),
+        ],
+      );
+    }
+
+    // An unclassified imperative can change topology or deliverables. It
+    // becomes explicit user-stated scope for a reviewed replan, never an
+    // opaque executor hint.
+    return TaskSpecificationPatch(
+      sourceText: value,
+      scopeDirectives: <String>[value],
+      requiresReplan: true,
+    );
+  }
+
+  TaskSpecification applyTo(TaskSpecification specification) {
+    if (requiresReplan) {
+      return specification;
+    }
+    return specification.copyWith(
+      hardConstraints: _mergeClaims(
+        specification.hardConstraints,
+        addedHardConstraints,
+      ),
+      preferences: _mergeClaims(
+        specification.preferences,
+        addedPreferences,
+      ),
+      successCriteria: _mergeClaims(
+        specification.successCriteria,
+        addedSuccessCriteria,
+      ),
+      prohibitedEffects: <String>{
+        ...specification.prohibitedEffects,
+        ...addedProhibitedEffects,
+      }.toList(growable: false),
+      contextRefs: <String>{
+        ...specification.contextRefs,
+        'steering:${Sha256.text(sourceText)}',
+      }.toList(growable: false),
+    );
+  }
+
+  TaskSpecification applyForReplan(TaskSpecification specification) {
+    final safe = TaskSpecificationPatch(
+      sourceText: sourceText,
+      addedHardConstraints: addedHardConstraints,
+      addedPreferences: addedPreferences,
+      addedSuccessCriteria: addedSuccessCriteria,
+      addedProhibitedEffects: addedProhibitedEffects,
+    ).applyTo(specification);
+    if (scopeDirectives.isEmpty) return safe;
+    return safe.copyWith(
+      subObjectives: <String>{
+        ...safe.subObjectives,
+        ...scopeDirectives,
+      }.toList(growable: false),
+      contextRefs: <String>{
+        ...safe.contextRefs,
+        'steering-scope:${Sha256.text(sourceText)}',
+      }.toList(growable: false),
+    );
+  }
+
+  String renderForExecutor() {
+    final sections = <String>[
+      for (final constraint in addedHardConstraints)
+        'Hard constraint: ${constraint.statement}',
+      for (final preference in addedPreferences)
+        'Preference: ${preference.statement}',
+      for (final criterion in addedSuccessCriteria)
+        'Success criterion: ${criterion.statement}',
+      for (final effect in addedProhibitedEffects) 'Prohibited effect: $effect',
+    ];
+    return sections.join('\n');
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'sourceText': sourceText,
+        'addedHardConstraints':
+            addedHardConstraints.map((value) => value.toJson()).toList(),
+        'addedPreferences':
+            addedPreferences.map((value) => value.toJson()).toList(),
+        'addedSuccessCriteria':
+            addedSuccessCriteria.map((value) => value.toJson()).toList(),
+        'addedProhibitedEffects': addedProhibitedEffects,
+        'scopeDirectives': scopeDirectives,
+        'authorityClaimRejected': authorityClaimRejected,
+        'requiresReplan': requiresReplan,
+        'grantsAuthority': false,
+      };
+
+  factory TaskSpecificationPatch.fromJson(Map<String, dynamic> json) {
+    List<SpecificationClaim> claims(Object? raw) =>
+        (raw is List ? raw : const <Object>[])
+            .whereType<Map>()
+            .map((value) => SpecificationClaim.fromJson(mapValue(value)))
+            .toList(growable: false);
+    return TaskSpecificationPatch(
+      sourceText: json['sourceText']?.toString() ?? '',
+      addedHardConstraints: claims(json['addedHardConstraints']),
+      addedPreferences: claims(json['addedPreferences']),
+      addedSuccessCriteria: claims(json['addedSuccessCriteria']),
+      addedProhibitedEffects: stringList(json['addedProhibitedEffects']),
+      scopeDirectives: stringList(json['scopeDirectives']),
+      authorityClaimRejected: json['authorityClaimRejected'] == true,
+      requiresReplan: json['requiresReplan'] == true,
+    );
+  }
+
+  static List<SpecificationClaim> _mergeClaims(
+    List<SpecificationClaim> existing,
+    List<SpecificationClaim> additions,
+  ) {
+    final result = <SpecificationClaim>[...existing];
+    final seen =
+        existing.map((value) => value.statement.trim().toLowerCase()).toSet();
+    for (final claim in additions) {
+      if (seen.add(claim.statement.trim().toLowerCase())) {
+        result.add(claim);
+      }
+    }
+    return List<SpecificationClaim>.unmodifiable(result);
+  }
+}

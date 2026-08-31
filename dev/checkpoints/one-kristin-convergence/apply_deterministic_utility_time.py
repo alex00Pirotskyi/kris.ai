@@ -395,8 +395,13 @@ void main() {
 def source_contract(source: str) -> str:
     return rep(
         source,
-        "        'lib/product/ui_components.dart',\n",
-        "        'lib/product/ui_components.dart',\n        'lib/product/utility_time.dart',\n",
+        "        'lib/product/ui_advanced.dart',\n"
+        "        'lib/product/ui_components.dart',\n"
+        "        'lib/product/workspace_tools.dart',\n",
+        "        'lib/product/ui_advanced.dart',\n"
+        "        'lib/product/ui_components.dart',\n"
+        "        'lib/product/utility_time.dart',\n"
+        "        'lib/product/workspace_tools.dart',\n",
         'source contract utility time',
     )
 

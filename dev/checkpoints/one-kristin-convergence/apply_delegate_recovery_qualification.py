@@ -135,7 +135,7 @@ def transform_planning(src):
     await repositories.agentDelegations.put(activeRecord);
 '''
     src=rep(src,old,new,"delegate increment attempts")
-    src=rep(src,"          'delegationDepth': 1,\n      },\n    );\n\n    var updatedRun = run.copyWith(modelRequests: run.modelRequests + 1);\n","          'delegationDepth': 1,\n          'delegationAttempt': activeRecord.attempts,\n      },\n    );\n\n    var updatedRun = run.copyWith(modelRequests: run.modelRequests + 1);\n","delegate audit attempt")
+    src=rep(src,"        'delegationDepth': 1,\n      },\n    );\n\n    var updatedRun = run.copyWith(modelRequests: run.modelRequests + 1);\n","        'delegationDepth': 1,\n        'delegationAttempt': activeRecord.attempts,\n      },\n    );\n\n    var updatedRun = run.copyWith(modelRequests: run.modelRequests + 1);\n","delegate audit attempt")
     # copies after generation/failure should originate from activeRecord to preserve attempts.
     src=src.replace("        record.copyWith(\n          state: AgentDelegationState.succeeded,", "        activeRecord.copyWith(\n          state: AgentDelegationState.succeeded,",1)
     src=src.replace("        record.copyWith(\n          state: AgentDelegationState.failed,", "        activeRecord.copyWith(\n          state: AgentDelegationState.failed,",1)
