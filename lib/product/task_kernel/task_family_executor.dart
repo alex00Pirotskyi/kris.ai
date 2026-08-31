@@ -1,4 +1,5 @@
 import '../capability_doctor.dart';
+import '../domain.dart';
 import '../storage_security.dart';
 import 'kernel_task_graph_executor.dart';
 import 'universal_task_plan.dart';
