@@ -24,7 +24,7 @@
     "pinnedBy": "flutter-sdk",
     "version": "3.12.2"
   },
-  "declaredInputFingerprint": "55067bf5999d091b2768b52ad9de654b99c72b1c30a4ec6a7a55acf9d5b47bc0",
+  "declaredInputFingerprint": "6d774e37875d6c502b75c9b4c966cc5e94e8d8559685a01a822ad2ffe6ae7c19",
   "flutter": {
     "channel": "stable",
     "version": "3.44.8"
@@ -50,7 +50,7 @@
   "lockfiles": [
     {
       "path": "pubspec.lock",
-      "sha256": "7360cdeb687a037cdee287eefa34a4d730e1df1894f50956b9b02e940d969809"
+      "sha256": "2933c376a7cf426dde35f3fbf87057336e1169b45f8882e9659b8fb80679667b"
     }
   ],
   "milestone": "P0-004",
