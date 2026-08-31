@@ -32,8 +32,10 @@
 //   * It never converts an arbitrary error into a conservative plan. See
 //     planning_failures.dart -- only a known recoverable planning failure
 //     may degrade, and the result says so.
+import '../capability_invocation.dart';
 import '../chat_control_plane.dart';
 import '../domain.dart';
+import '../storage_security.dart';
 import 'complexity_router.dart';
 import 'plan_compiler.dart';
 import 'plan_reconciliation.dart';
@@ -125,6 +127,7 @@ class UniversalTaskKernel {
     this.router = const ComplexityRouter(),
     this.conservative = const ConservativeSoftwarePlanner(),
     this.reconciler = const PlanReconciler(),
+    this.authorityResolver = const CapabilityAuthorityResolver(),
   }) : _planners = List<TaskFamilyPlanner>.unmodifiable(planners);
 
   final UnderstandingService understanding;
@@ -132,6 +135,7 @@ class UniversalTaskKernel {
   final ComplexityRouter router;
   final ConservativeSoftwarePlanner conservative;
   final PlanReconciler reconciler;
+  final CapabilityAuthorityResolver authorityResolver;
   final List<TaskFamilyPlanner> _planners;
 
   List<TaskFamilyPlanner> get planners => _planners;
@@ -255,7 +259,12 @@ class UniversalTaskKernel {
   /// STEP 4 -- compile.
   ///
   /// The single compiler. What the user is shown and what the Runner
-  /// receives are both projections of [plan].
+  /// receives are both projections of [plan]. Model-authored capability
+  /// requirements are resolved after the compiler has performed its precise
+  /// coordinator-leakage checks, and every resulting scope must already be
+  /// represented in the Runner contract. A capability id can therefore
+  /// narrow/validate authority, but can never silently grant a scope the
+  /// compiled tools did not request.
   CompiledTaskPlan compile({
     required UniversalTaskPlan plan,
     required ProjectRecord project,
@@ -265,19 +274,62 @@ class UniversalTaskKernel {
     List<String> additionalConstraints = const <String>[],
     List<String> additionalCriteria = const <String>[],
     Set<String> consumedCoordinatorCapabilities = const <String>{},
-  }) =>
-      compiler.compile(
-        plan: plan,
-        project: project,
-        mode: mode,
-        request: request.trim().isEmpty
-            ? plan.specification.originalRequest
-            : request,
-        selectedTaskIds: selectedTaskIds,
-        additionalConstraints: additionalConstraints,
-        additionalCriteria: additionalCriteria,
-        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+  }) {
+    final compiled = compiler.compile(
+      plan: plan,
+      project: project,
+      mode: mode,
+      request:
+          request.trim().isEmpty ? plan.specification.originalRequest : request,
+      selectedTaskIds: selectedTaskIds,
+      additionalConstraints: additionalConstraints,
+      additionalCriteria: additionalCriteria,
+      consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+    );
+    _validateCompiledCapabilityAuthority(compiled);
+    return compiled;
+  }
+
+  void _validateCompiledCapabilityAuthority(CompiledTaskPlan compiled) {
+    final authorityScopes = <PermissionScope>{};
+    final capabilityIds = <String>{};
+    for (final task in compiled.canonical.tasks) {
+      if (!task.enabled || !compiled.selectedTaskIds.contains(task.id)) continue;
+      final required = task.requiredCapabilities.toList()..sort();
+      for (final capabilityId in required) {
+        final decision = authorityResolver.resolve(
+          CapabilityInvocation(
+            capabilityId: capabilityId,
+            modelProposed: true,
+            targetIds: <String>{compiled.contract.projectId},
+            reason: 'compiled_task:${task.id}',
+          ),
+        );
+        capabilityIds.add(capabilityId);
+        authorityScopes.addAll(decision.requiredScopes);
+      }
+    }
+    final missing = authorityScopes
+        .difference(compiled.contract.requiredPermissions)
+        .toList(growable: false)
+      ..sort((a, b) => a.name.compareTo(b.name));
+    if (missing.isNotEmpty) {
+      throw ProductException(
+        'capability_authority_not_compiled',
+        'The executable plan requires capability authority that is absent '
+            'from its permission contract: '
+            '${missing.map((scope) => scope.name).join(', ')}.',
+        details: <String, dynamic>{
+          'capabilityIds': capabilityIds.toList()..sort(),
+          'missingScopes': missing.map((scope) => scope.name).toList(),
+          'contractScopes': compiled.contract.requiredPermissions
+              .map((scope) => scope.name)
+              .toList()
+            ..sort(),
+        },
       );
+    }
+  }
 
   /// STEP 5 -- reconcile.
   ///
