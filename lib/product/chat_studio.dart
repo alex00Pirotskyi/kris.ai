@@ -10,6 +10,7 @@ import 'capability_doctor.dart';
 import 'domain.dart';
 import 'extensions_index.dart';
 import 'models_research.dart';
+import 'kristin_conversation_session.dart';
 import 'product_runtime.dart';
 import 'conversation_orchestrator.dart';
 import 'product_error_normalizer.dart';
@@ -112,6 +113,7 @@ class ChatStudio extends StatefulWidget {
     required this.runtime,
     required this.api,
     this.startupError,
+    this.conversationSession,
     this.initialProjectId,
     this.initialModelId,
   });
@@ -119,6 +121,13 @@ class ChatStudio extends StatefulWidget {
   final ProductRuntime runtime;
   final GovernedApiServer api;
   final String? startupError;
+
+  /// When Advanced is opened from the canonical Kristin surface this is
+  /// the SAME semantic conversation owner. Advanced may inspect and operate
+  /// project/run tooling, but it must not create a second normal-user Chat
+  /// transcript, task association, permission projection, or pending-question
+  /// owner. A null value preserves the legacy standalone Studio entrypoint.
+  final KristinConversationSession? conversationSession;
 
   /// Project/model selected in the canonical Kristin chat at the moment
   /// this advanced workspace was opened, so it starts aligned with what
@@ -224,6 +233,7 @@ class _ChatStudioState extends State<ChatStudio> {
   final Set<PermissionScope> approvedScopes = <PermissionScope>{};
 
   ProductRuntime get runtime => widget.runtime;
+  bool get projectsCanonicalKristin => widget.conversationSession != null;
 
   bool get promptGenerationActive => promptGenerationCancellation != null;
 
@@ -249,8 +259,10 @@ class _ChatStudioState extends State<ChatStudio> {
   @override
   void initState() {
     super.initState();
-    selectedProjectId = widget.initialProjectId;
-    selectedModelId = widget.initialModelId;
+    selectedProjectId = widget.conversationSession?.selectedProjectId ??
+        widget.initialProjectId;
+    selectedModelId =
+        widget.conversationSession?.selectedModelId ?? widget.initialModelId;
     skills = runtime.listBuiltInSkills();
     eventSubscription = runtime.eventStream.listen(_onEvent);
     liveRunSubscription = runtime.liveRunStream.listen(_onLiveRunSignal);
@@ -626,6 +638,7 @@ class _ChatStudioState extends State<ChatStudio> {
     if (projectId == selectedProjectId) {
       return;
     }
+    widget.conversationSession?.selectProject(projectId);
     setState(() {
       selectedProjectId = projectId;
       currentRun = null;
@@ -647,6 +660,7 @@ class _ChatStudioState extends State<ChatStudio> {
 
   Future<void> _selectRun(RunRecord run, {bool openChat = false}) async {
     final projectId = run.command.contract.projectId;
+    widget.conversationSession?.selectProject(projectId);
     setState(() {
       selectedProjectId = projectId;
       selectedRunId = run.id;
@@ -681,6 +695,10 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   void _newChat() {
+    if (projectsCanonicalKristin) {
+      Navigator.of(context).pop();
+      return;
+    }
     setState(() {
       area = _StudioArea.chat;
       prepared = null;
@@ -709,6 +727,11 @@ class _ChatStudioState extends State<ChatStudio> {
   }
 
   Future<void> _submitComposer() async {
+    if (projectsCanonicalKristin) {
+      // The canonical Kristin composer is the only normal-user input owner.
+      Navigator.of(context).pop();
+      return;
+    }
     final request = composerController.text.trim();
     if (request.isEmpty || busy) {
       return;
@@ -1174,9 +1197,11 @@ class _ChatStudioState extends State<ChatStudio> {
     if (result != null) {
       if (projects.any((project) => project.id == result.projectId)) {
         selectedProjectId = result.projectId;
+        widget.conversationSession?.selectProject(result.projectId);
       }
       if (models.any((model) => model.exactId == result.modelId)) {
         selectedModelId = result.modelId;
+        widget.conversationSession?.selectModel(result.modelId);
       }
     }
     await _refreshRuns(silent: true);
@@ -1252,9 +1277,14 @@ class _ChatStudioState extends State<ChatStudio> {
       floatingActionButton: area == _StudioArea.chat
           ? null
           : FloatingActionButton.extended(
-              onPressed: _newChat,
-              icon: const Icon(Icons.add_comment_outlined),
-              label: const Text('New chat'),
+              onPressed: projectsCanonicalKristin
+                  ? () => Navigator.of(context).pop()
+                  : _newChat,
+              icon: Icon(projectsCanonicalKristin
+                  ? Icons.arrow_back
+                  : Icons.add_comment_outlined),
+              label: Text(
+                  projectsCanonicalKristin ? 'Back to Kristin' : 'New chat'),
             ),
     );
   }
@@ -1309,13 +1339,19 @@ class _ChatStudioState extends State<ChatStudio> {
             const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: () {
+                if (projectsCanonicalKristin) {
+                  Navigator.of(context).pop();
+                  return;
+                }
                 if (compact) {
                   Navigator.of(context).pop();
                 }
                 _newChat();
               },
-              icon: const Icon(Icons.add),
-              label: const Text('New chat'),
+              icon:
+                  Icon(projectsCanonicalKristin ? Icons.arrow_back : Icons.add),
+              label: Text(
+                  projectsCanonicalKristin ? 'Back to Kristin' : 'New chat'),
             ),
             const SizedBox(height: 12),
             ..._primaryItems.map((item) => _navTile(item, compact: compact)),
@@ -1562,7 +1598,122 @@ class _ChatStudioState extends State<ChatStudio> {
         _StudioArea.logs => _logsPage(),
       };
 
+  Widget _canonicalKristinProjection() {
+    final session = widget.conversationSession!;
+    final run = session.currentRun;
+    return Column(
+      children: <Widget>[
+        Material(
+          color: Theme.of(context).colorScheme.surface,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      _selectorChip(
+                        icon: Icons.folder_outlined,
+                        label: selectedProject?.name ?? 'Choose project',
+                        onTap: () =>
+                            setState(() => area = _StudioArea.projects),
+                      ),
+                      _selectorChip(
+                        icon: Icons.memory_outlined,
+                        label: selectedModel?.name ?? 'Connect model',
+                        onTap: () => _openSettings(initialSection: 1),
+                      ),
+                    ],
+                  ),
+                ),
+                FilledButton.tonalIcon(
+                  key: const Key('advanced-back-to-kristin'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Back to Kristin'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Divider(height: 1),
+        Expanded(
+          child: SelectionArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+              children: <Widget>[
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        if (session.messages.isEmpty)
+                          const Center(
+                            child: Text(
+                              'This is the same Kristin conversation. Return to Kristin to send a message.',
+                            ),
+                          ),
+                        for (final message in session.messages) ...<Widget>[
+                          _messageBubble(
+                            assistant: message.speaker !=
+                                KristinConversationSpeaker.user,
+                            child: Text(message.text),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+                        if (run != null)
+                          Card(
+                            child: ListTile(
+                              leading: _runStateIcon(run.state),
+                              title: Text(friendlyRunState(run.state)),
+                              subtitle: Text(run.command.contract.request),
+                              trailing: TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    selectedRunId = run.id;
+                                    currentRun = run;
+                                    prepared = run.command;
+                                    area = _StudioArea.runs;
+                                  });
+                                },
+                                child: const Text('Open run'),
+                              ),
+                            ),
+                          ),
+                        if (session.awaitingUserInput)
+                          Card(
+                            child: ListTile(
+                              leading:
+                                  const Icon(Icons.question_answer_outlined),
+                              title: Text(
+                                session.deferredUserPrompt ??
+                                    'Kristin needs your input.',
+                              ),
+                              subtitle: const Text(
+                                'Return to Kristin to answer in the canonical conversation.',
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _chatPage() {
+    if (projectsCanonicalKristin) {
+      return _canonicalKristinProjection();
+    }
     return Column(
       children: <Widget>[
         _chatHeader(),

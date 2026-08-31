@@ -8,7 +8,15 @@ import 'task_kernel/complexity_router.dart';
 import 'task_kernel/plan_reconciliation.dart';
 import 'task_kernel/planning_failures.dart';
 import 'task_kernel/task_specification.dart';
+import 'task_kernel/task_understanding.dart';
 import 'task_kernel/universal_task_plan.dart';
+
+/// Which planning path produced the current canonical plan.
+enum ChatPlanningPath {
+  deterministic,
+  model,
+  fallback,
+}
 
 /// Who produced a visible message in the one Kristin conversation.
 enum KristinConversationSpeaker { user, assistant, system }
@@ -83,6 +91,12 @@ class KristinConversationSession {
 
   ChatInteractionDecision? _pendingDecision;
   UnderstandingHistory? _understandingHistory;
+  UnderstandingPath _understandingPath = UnderstandingPath.deterministic;
+  List<String> _understandingRejections = const <String>[];
+  final List<String> _clarificationEvidence = <String>[];
+  ChatPlanningPath _planningPath = ChatPlanningPath.deterministic;
+  ProjectProcessStatus? _projectProcessStatus;
+  String? _projectProcessProjectId;
   TaskSpecification? _taskSpecification;
   RoutingDecision? _routingDecision;
   UniversalTaskPlan? _canonicalPlan;
@@ -94,6 +108,12 @@ class KristinConversationSession {
   AgentDeferredInteraction? _deferredInteraction;
   bool _awaitingPermission = false;
   String _activeRequest = '';
+
+  // Transient projection for an ordinary, non-Runner assistant turn.
+  // The protocol buffer is only used to derive user-visible text; the
+  // completed transcript message remains the durable visible owner.
+  String _conversationAssistantProtocolText = '';
+  String _conversationAssistantText = '';
 
   String _liveAssistantProtocolText = '';
   String _liveAssistantText = '';
@@ -112,6 +132,17 @@ class KristinConversationSession {
 
   ChatInteractionDecision? get pendingDecision => _pendingDecision;
   UnderstandingHistory? get understandingHistory => _understandingHistory;
+  UnderstandingPath get understandingPath => _understandingPath;
+  List<String> get understandingRejections =>
+      List<String>.unmodifiable(_understandingRejections);
+  List<String> get clarificationEvidence =>
+      List<String>.unmodifiable(_clarificationEvidence);
+  String get clarificationEvidenceText => _clarificationEvidence.join('\n\n');
+  ChatPlanningPath get planningPath => _planningPath;
+  ProjectProcessStatus? get projectProcessStatus =>
+      _projectProcessProjectId == _selectedProjectId
+          ? _projectProcessStatus
+          : null;
   TaskSpecification? get taskSpecification => _taskSpecification;
   RoutingDecision? get routingDecision => _routingDecision;
   UniversalTaskPlan? get canonicalPlan => _canonicalPlan;
@@ -123,6 +154,12 @@ class KristinConversationSession {
   AgentDeferredInteraction? get deferredInteraction => _deferredInteraction;
   bool get awaitingPermission => _awaitingPermission;
   String get activeRequest => _activeRequest;
+
+  String get conversationAssistantProtocolText =>
+      _conversationAssistantProtocolText;
+  String get conversationAssistantText => _conversationAssistantText;
+  bool get conversationResponseStreaming =>
+      _conversationAssistantProtocolText.isNotEmpty;
 
   String get liveAssistantProtocolText => _liveAssistantProtocolText;
   String get liveAssistantText => _liveAssistantText;
@@ -174,7 +211,14 @@ class KristinConversationSession {
       }.contains(_currentRun!.state);
 
   void selectProject(String? projectId) {
-    _selectedProjectId = _normalizedOptional(projectId);
+    final normalized = _normalizedOptional(projectId);
+    if (_selectedProjectId == normalized) return;
+    _selectedProjectId = normalized;
+    // Project-process state is a projection of one selected project.
+    // Never let an async result from the previous project leak into
+    // the newly selected conversation context.
+    _projectProcessProjectId = null;
+    _projectProcessStatus = null;
   }
 
   void selectModel(String? modelId) {
@@ -211,6 +255,41 @@ class KristinConversationSession {
         createdAt: createdAt,
       );
 
+  /// Starts a transient ordinary-Chat model response projection.
+  ///
+  /// This is not a Run and grants no execution authority. Real provider deltas
+  /// may update it; a provider that does not stream simply leaves it empty
+  /// while the UI truthfully says Kristin is thinking.
+  void beginConversationResponse() {
+    _conversationAssistantProtocolText = '';
+    _conversationAssistantText = '';
+  }
+
+  void appendConversationAssistantDelta(String delta) {
+    if (delta.isEmpty) return;
+    _conversationAssistantProtocolText =
+        '$_conversationAssistantProtocolText$delta';
+    if (_conversationAssistantProtocolText.length > maxProtocolCharacters) {
+      _conversationAssistantProtocolText = _conversationAssistantProtocolText
+          .substring(_conversationAssistantProtocolText.length -
+              maxProtocolCharacters);
+    }
+    _conversationAssistantText = ConversationStreamProjector.visibleText(
+      _conversationAssistantProtocolText,
+    );
+  }
+
+  KristinConversationMessage completeConversationResponse(String visibleText) {
+    final message = addAssistantMessage(visibleText);
+    clearConversationResponse();
+    return message;
+  }
+
+  void clearConversationResponse() {
+    _conversationAssistantProtocolText = '';
+    _conversationAssistantText = '';
+  }
+
   /// Begins a new governed objective in this conversation.
   ///
   /// Informational side-conversation may still append visible messages while a
@@ -233,17 +312,61 @@ class KristinConversationSession {
     _activeRequest = normalized;
     _pendingDecision = null;
     _understandingHistory = null;
+    _understandingPath = UnderstandingPath.deterministic;
+    _understandingRejections = const <String>[];
+    _clarificationEvidence.clear();
     _taskSpecification = null;
     _routingDecision = null;
     _canonicalPlan = null;
     _planningFailure = null;
     _completedTasks = const <CompletedTaskRecord>[];
     _lastReconciliation = null;
+    _planningPath = ChatPlanningPath.deterministic;
     _prepared = null;
     _currentRun = null;
     _deferredInteraction = null;
     _awaitingPermission = false;
+    clearConversationResponse();
     clearLiveExecution();
+  }
+
+  void setPendingDecision(ChatInteractionDecision? decision) {
+    _pendingDecision = decision;
+  }
+
+  void setUnderstandingHistory(UnderstandingHistory? history) {
+    _understandingHistory = history;
+  }
+
+  void setUnderstandingMetadata({
+    required UnderstandingPath path,
+    required Iterable<String> rejections,
+  }) {
+    _understandingPath = path;
+    _understandingRejections = List<String>.unmodifiable(rejections);
+  }
+
+  void recordClarificationAnswer({
+    required String question,
+    required String answer,
+  }) {
+    final normalizedQuestion = question.trim();
+    final normalizedAnswer = answer.trim();
+    if (normalizedQuestion.isEmpty || normalizedAnswer.isEmpty) {
+      throw const KristinConversationSessionException(
+        'conversation_clarification_empty',
+        'A clarification question and answer must both be non-empty.',
+      );
+    }
+    _clarificationEvidence.add(
+      'Question: $normalizedQuestion\nUser answer: $normalizedAnswer',
+    );
+    if (_clarificationEvidence.length > 12) {
+      _clarificationEvidence.removeRange(
+        0,
+        _clarificationEvidence.length - 12,
+      );
+    }
   }
 
   void setUnderstanding({
@@ -274,6 +397,40 @@ class KristinConversationSession {
     _lastReconciliation = reconciliation;
   }
 
+  void setPlanningFailure(PlanningFailure? failure) {
+    _planningFailure = failure;
+  }
+
+  void setLastReconciliation(PlanReconciliationResult? reconciliation) {
+    _lastReconciliation = reconciliation;
+  }
+
+  void setPlanningPath(ChatPlanningPath path) {
+    _planningPath = path;
+  }
+
+  void setActiveRequest(String request) {
+    _activeRequest = request.trim();
+  }
+
+  void setProjectProcessStatus({
+    required String projectId,
+    required ProjectProcessStatus? status,
+  }) {
+    final normalizedProjectId = _normalizedOptional(projectId);
+    if (normalizedProjectId == null ||
+        normalizedProjectId != _selectedProjectId) {
+      return;
+    }
+    _projectProcessProjectId = normalizedProjectId;
+    _projectProcessStatus = status;
+  }
+
+  void clearProjectProcessStatus() {
+    _projectProcessProjectId = null;
+    _projectProcessStatus = null;
+  }
+
   void setCompletedTasks(Iterable<CompletedTaskRecord> completed) {
     _completedTasks = List<CompletedTaskRecord>.unmodifiable(completed);
   }
@@ -284,8 +441,8 @@ class KristinConversationSession {
       if (_activeRequest.isEmpty) {
         _activeRequest = command.contract.request;
       }
-      _selectedProjectId = command.contract.projectId;
-      _selectedModelId = command.model.exactId;
+      selectProject(command.contract.projectId);
+      selectModel(command.model.exactId);
       _awaitingPermission =
           awaitingPermission ?? command.contract.requiredPermissions.isNotEmpty;
     } else {
@@ -307,6 +464,40 @@ class KristinConversationSession {
     _attachRun(run, restoring: false);
   }
 
+  /// Replaces a retired steering source run with its linked continuation.
+  ///
+  /// This is the only conversation-level exception to the normal rule that a
+  /// different non-terminal run cannot replace the attached run. It is narrow:
+  /// the source must already be interrupted, the continuation must name that
+  /// exact source through [RunRecord.sourceRunId], and no authority is copied.
+  void replaceRunWithContinuation({
+    required RunRecord source,
+    required RunRecord continuation,
+  }) {
+    final attached = _currentRun;
+    if (attached == null || attached.id != source.id) {
+      throw const KristinConversationSessionException(
+        'conversation_continuation_source_mismatch',
+        'The steering continuation can replace only the currently attached source run.',
+      );
+    }
+    if (source.state != RunState.interrupted ||
+        continuation.sourceRunId != source.id) {
+      throw const KristinConversationSessionException(
+        'conversation_continuation_link_invalid',
+        'A steering continuation must be linked to an interrupted source run.',
+      );
+    }
+    _currentRun = continuation;
+    _prepared = continuation.command;
+    _activeRequest = continuation.command.contract.request;
+    selectProject(continuation.command.contract.projectId);
+    selectModel(continuation.command.model.exactId);
+    _deferredInteraction = null;
+    _awaitingPermission = continuation.state == RunState.awaitingApproval;
+    clearLiveExecution();
+  }
+
   /// Detaches a finished/no-run governed turn without erasing conversation
   /// history or the user's selected project/model context.
   ///
@@ -317,17 +508,22 @@ class KristinConversationSession {
     _composerDraft = '';
     _pendingDecision = null;
     _understandingHistory = null;
+    _understandingPath = UnderstandingPath.deterministic;
+    _understandingRejections = const <String>[];
+    _clarificationEvidence.clear();
     _taskSpecification = null;
     _routingDecision = null;
     _canonicalPlan = null;
     _planningFailure = null;
     _completedTasks = const <CompletedTaskRecord>[];
     _lastReconciliation = null;
+    _planningPath = ChatPlanningPath.deterministic;
     _prepared = null;
     _currentRun = null;
     _deferredInteraction = null;
     _awaitingPermission = false;
     _activeRequest = '';
+    clearConversationResponse();
     clearLiveExecution();
     return true;
   }
@@ -521,8 +717,8 @@ class KristinConversationSession {
     _currentRun = run;
     _prepared = run.command;
     _activeRequest = run.command.contract.request;
-    _selectedProjectId = run.command.contract.projectId;
-    _selectedModelId = run.command.model.exactId;
+    selectProject(run.command.contract.projectId);
+    selectModel(run.command.model.exactId);
     _awaitingPermission = run.state == RunState.awaitingApproval;
     final replacingRun = existing == null || existing.id != run.id;
     if (runTerminal || replacingRun) {

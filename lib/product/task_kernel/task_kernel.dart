@@ -85,6 +85,8 @@ class KernelRequestContext {
     this.availableToolNames = const <String>{},
     this.localOnly = false,
     this.maxLeafTasks = 25,
+    this.semanticRequestOverride,
+    this.userEvidenceText = '',
   });
 
   final ChatInteractionDecision decision;
@@ -95,11 +97,20 @@ class KernelRequestContext {
   final Set<String> availableToolNames;
   final bool localOnly;
   final int maxLeafTasks;
+  final String? semanticRequestOverride;
+  final String userEvidenceText;
 
   UnderstandingContext get understandingContext => UnderstandingContext(
         availableCapabilities: availableCapabilities,
         knownTargets: knownTargets,
         hasSelectedProject: project != null,
+        semanticRequest: semanticRequestOverride ??
+            (decision.parsed.hasExplicitCommand
+                ? decision.parsed.arguments
+                : null),
+        lockedCapabilityId:
+            decision.parsed.hasExplicitCommand ? decision.capability?.id : null,
+        userEvidenceText: userEvidenceText,
       );
 
   PlanningContext get planningContext => PlanningContext(

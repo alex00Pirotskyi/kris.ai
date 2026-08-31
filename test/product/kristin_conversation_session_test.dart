@@ -5,6 +5,7 @@ import 'package:kristin_local_agent/product/chat_conversation_state.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/kristin_conversation_session.dart';
 import 'package:kristin_local_agent/product/run_live_signals.dart';
+import 'package:kristin_local_agent/product/task_kernel/task_understanding.dart';
 
 void main() {
   test('selected project and model survive a genuinely new conversation', () {
@@ -278,6 +279,66 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('turn-scoped understanding and planning metadata reset canonically', () {
+    final session = KristinConversationSession();
+    session.setUnderstandingMetadata(
+      path: UnderstandingPath.model,
+      rejections: const <String>['invented target'],
+    );
+    session.setPlanningPath(ChatPlanningPath.model);
+    session.setActiveRequest('  stale request  ');
+
+    expect(session.understandingPath, UnderstandingPath.model);
+    expect(session.understandingRejections, <String>['invented target']);
+    expect(session.planningPath, ChatPlanningPath.model);
+    expect(session.activeRequest, 'stale request');
+
+    session.beginGovernedRequest('  next request  ');
+
+    expect(session.understandingPath, UnderstandingPath.deterministic);
+    expect(session.understandingRejections, isEmpty);
+    expect(session.planningPath, ChatPlanningPath.deterministic);
+    expect(session.activeRequest, 'next request');
+
+    session.setUnderstandingMetadata(
+      path: UnderstandingPath.model,
+      rejections: const <String>['second rejection'],
+    );
+    session.setPlanningPath(ChatPlanningPath.fallback);
+    expect(session.detachFinishedRun(), isTrue);
+
+    expect(session.understandingPath, UnderstandingPath.deterministic);
+    expect(session.understandingRejections, isEmpty);
+    expect(session.planningPath, ChatPlanningPath.deterministic);
+    expect(session.activeRequest, isEmpty);
+  });
+
+  test('project-process projection cannot leak across project selection', () {
+    final session = KristinConversationSession();
+    final process = ProjectProcessStatus(
+      projectId: 'project-a',
+      processId: 'process-a',
+      label: 'Dev server',
+      command: 'run-dev',
+      pid: 4242,
+      running: true,
+      startedAt: DateTime.utc(2026, 8, 29),
+      outputTail: 'ready',
+      logFileName: 'process-a.log',
+    );
+
+    session.selectProject('project-a');
+    session.setProjectProcessStatus(projectId: 'project-a', status: process);
+    expect(session.projectProcessStatus, same(process));
+
+    session.selectProject('project-b');
+    expect(session.projectProcessStatus, isNull);
+
+    // A stale async completion for the previous project is ignored.
+    session.setProjectProcessStatus(projectId: 'project-a', status: process);
+    expect(session.projectProcessStatus, isNull);
   });
 }
 

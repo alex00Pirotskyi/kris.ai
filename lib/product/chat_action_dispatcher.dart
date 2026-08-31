@@ -13,6 +13,7 @@
 // invents a parallel permission model, or bypasses
 // ProductRuntime.prepare's governed plan/permission/execution pipeline.
 import 'capability_doctor.dart';
+import 'crypto_utils.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
 
@@ -178,12 +179,34 @@ class ProductRuntimeChatGateway implements ChatRuntimeGateway {
     required List<Map<String, String>> results,
   }) async {
     if (projectId == null) return;
-    await runtime.knowledge.addResearchSearch(
-      projectId: projectId,
-      query: query,
-      results: results,
-      provider: 'duckduckgo',
-    );
+    // A project is archive/enrichment context only. It may disappear while
+    // the network request is in flight; that must not retroactively make the
+    // project-free Research result invalid or pretend the project still exists.
+    final project = await runtime.getProject(projectId);
+    if (project == null) return;
+    try {
+      await runtime.knowledge.addResearchSearch(
+        projectId: project.id,
+        query: query,
+        results: results,
+        provider: 'duckduckgo',
+      );
+    } catch (failure) {
+      // Archiving is optional enrichment. Preserve the grounded web result and
+      // record the storage failure for inspection instead of turning Research
+      // itself into a failure.
+      await runtime.audit.append(
+        'research.optional_archive_failed',
+        project.id,
+        <String, dynamic>{
+          'projectId': project.id,
+          'queryHash': Sha256.text(query),
+          'resultCount': results.length,
+          'error': runtime.redactor.redact('$failure'),
+          'answerPreserved': true,
+        },
+      );
+    }
   }
 
   @override

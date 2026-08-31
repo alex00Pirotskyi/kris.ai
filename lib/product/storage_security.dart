@@ -6,7 +6,11 @@ import 'crypto_utils.dart';
 import 'domain.dart';
 import 'knowledge_memory_v2.dart';
 import 'durable_workflow.dart';
+import 'task_kernel/task_family_execution.dart';
 import 'repository.dart';
+import 'agent_delegation_record.dart';
+import 'run_steering_record.dart';
+import 'task_kernel/command_planning_context.dart';
 
 class ProductException implements Exception {
   ProductException(
@@ -404,6 +408,10 @@ class ProductRepositories {
     required this.secretReferences,
     required this.tokens,
     required this.evidence,
+    required this.agentDelegations,
+    required this.runSteeringRecords,
+    required this.commandPlanningContexts,
+    required this.taskFamilyExecutions,
     required this.settingsFile,
     required this.eventFile,
     required this.auditFile,
@@ -425,6 +433,10 @@ class ProductRepositories {
   final EntityRepository<SecretReference> secretReferences;
   final EntityRepository<ApiTokenRecord> tokens;
   final EntityRepository<EvidenceRecord> evidence;
+  final EntityRepository<AgentDelegationRecord> agentDelegations;
+  final EntityRepository<RunSteeringRecord> runSteeringRecords;
+  final EntityRepository<CommandPlanningContextRecord> commandPlanningContexts;
+  final EntityRepository<TaskFamilyExecutionRecord> taskFamilyExecutions;
   final JsonDocumentRepository settingsFile;
   final File eventFile;
   final File auditFile;
@@ -562,6 +574,30 @@ class ProductRepositories {
       evidence: collection<EvidenceRecord>(
         name: 'evidence',
         fromJson: EvidenceRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      agentDelegations: collection<AgentDelegationRecord>(
+        name: 'agent_delegations',
+        fromJson: AgentDelegationRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      runSteeringRecords: collection<RunSteeringRecord>(
+        name: 'run_steering_records',
+        fromJson: RunSteeringRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      commandPlanningContexts: collection<CommandPlanningContextRecord>(
+        name: 'command_planning_contexts',
+        fromJson: CommandPlanningContextRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      taskFamilyExecutions: collection<TaskFamilyExecutionRecord>(
+        name: 'task_family_executions',
+        fromJson: TaskFamilyExecutionRecord.fromJson,
         toJson: (value) => value.toJson(),
         idOf: (value) => value.id,
       ),

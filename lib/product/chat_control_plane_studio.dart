@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'agent_context_v2.dart';
 import 'api_server.dart';
 import 'capability_doctor.dart';
 import 'chat_action_dispatcher.dart';
@@ -23,36 +24,17 @@ import 'task_kernel/plan_compiler.dart';
 import 'task_kernel/task_families.dart';
 import 'task_kernel/plan_reconciliation.dart';
 import 'task_kernel/planning_failures.dart';
+import 'task_kernel/research_task_family_executor.dart';
 import 'task_kernel/task_kernel.dart';
 import 'task_kernel/task_specification.dart';
 import 'task_kernel/task_understanding.dart';
 import 'task_kernel/universal_task_plan.dart';
 import 'ui_advanced.dart';
 import 'ui_components.dart';
+import 'utility_time.dart';
 
 part 'chat_control_plane_studio_actions.dart';
 part 'chat_control_plane_studio_view.dart';
-
-/// Which planner actually produced the currently prepared command, so the
-/// UI never implies a detailed model-authored decomposition exists when a
-/// deterministic fallback was used instead.
-///
-/// Chat plans through [UniversalTaskKernel] now, so this records the
-/// kernel outcome rather than which of two services was called.
-enum ChatPlanningPath {
-  /// No multi-task plan was generated: the request routed to direct
-  /// conversation or a direct deterministic capability invocation.
-  deterministic,
-
-  /// A family planner produced a real, request-specific task graph.
-  model,
-
-  /// A KNOWN RECOVERABLE planning failure degraded to the deterministic
-  /// conservative inspect/implement/verify envelope. Every other failure
-  /// kind surfaces as a failure instead of arriving here -- see
-  /// task_kernel/planning_failures.dart.
-  fallback,
-}
 
 class ChatControlPlaneStudio extends StatefulWidget {
   const ChatControlPlaneStudio({
@@ -97,8 +79,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   bool understandingAdjusting = false;
   bool planAdjusting = false;
   bool detailsExpanded = false;
+  bool errorDetailsExpanded = false;
   String status = 'Kristin is ready';
   String? error;
+  String? technicalError;
 
   List<ProjectRecord> projects = <ProjectRecord>[];
   List<ModelIdentity> models = <ModelIdentity>[];
@@ -114,50 +98,129 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     conversationSession.selectModel(value);
   }
 
-  ProjectProcessStatus? projectProcessStatus;
+  ProjectProcessStatus? get projectProcessStatus =>
+      conversationSession.projectProcessStatus;
+  set projectProcessStatus(ProjectProcessStatus? value) {
+    final projectId = selectedProjectId;
+    if (projectId == null) {
+      conversationSession.clearProjectProcessStatus();
+      return;
+    }
+    conversationSession.setProjectProcessStatus(
+      projectId: projectId,
+      status: value,
+    );
+  }
 
-  ChatInteractionDecision? pendingDecision;
-  UnderstandingHistory? understandingHistory;
-  PreparedCommand? prepared;
-  ChatPlanningPath planningPath = ChatPlanningPath.deterministic;
+  ChatInteractionDecision? get pendingDecision =>
+      conversationSession.pendingDecision;
+  set pendingDecision(ChatInteractionDecision? value) {
+    conversationSession.setPendingDecision(value);
+  }
+
+  UnderstandingHistory? get understandingHistory =>
+      conversationSession.understandingHistory;
+  set understandingHistory(UnderstandingHistory? value) {
+    conversationSession.setUnderstandingHistory(value);
+  }
+
+  PreparedCommand? get prepared => conversationSession.prepared;
+  set prepared(PreparedCommand? value) {
+    final run = conversationSession.currentRun;
+    conversationSession.setPrepared(
+      value,
+      awaitingPermission: run != null
+          ? run.state == RunState.awaitingApproval
+          : (value?.contract.requiredPermissions.isNotEmpty ?? false),
+    );
+  }
+
+  ChatPlanningPath get planningPath => conversationSession.planningPath;
+  set planningPath(ChatPlanningPath value) {
+    conversationSession.setPlanningPath(value);
+  }
 
   /// The canonical semantic statement of the current request. Everything
   /// downstream -- routing, planning, compilation -- consumes this rather
   /// than re-reading the raw request string, so a hard constraint the
   /// user stated cannot silently stop being a constraint.
-  TaskSpecification? taskSpecification;
+  TaskSpecification? get taskSpecification =>
+      conversationSession.taskSpecification;
+  set taskSpecification(TaskSpecification? value) {
+    conversationSession.setTaskSpecification(value);
+  }
 
   /// Whether the current [taskSpecification] came from real model-backed
   /// semantic understanding. Drives the understanding card's wording:
   /// "I understood" is only truthful when this is
   /// [UnderstandingPath.model]; regex matching stays "I interpreted this
   /// as".
-  UnderstandingPath understandingPath = UnderstandingPath.deterministic;
+  UnderstandingPath get understandingPath =>
+      conversationSession.understandingPath;
+  set understandingPath(UnderstandingPath value) {
+    conversationSession.setUnderstandingMetadata(
+      path: value,
+      rejections: conversationSession.understandingRejections,
+    );
+  }
 
   /// What the model proposed and deterministic validation refused
   /// (invented targets, unknown capabilities, attempts to assert
   /// authority). Kept visible rather than silently dropped.
-  List<String> understandingRejections = const <String>[];
+  List<String> get understandingRejections =>
+      conversationSession.understandingRejections;
+  set understandingRejections(List<String> value) {
+    conversationSession.setUnderstandingMetadata(
+      path: conversationSession.understandingPath,
+      rejections: value,
+    );
+  }
 
   /// How much planning the kernel decided this request deserves, and why.
-  RoutingDecision? routingDecision;
+  RoutingDecision? get routingDecision => conversationSession.routingDecision;
+  set routingDecision(RoutingDecision? value) {
+    conversationSession.setRoutingDecision(value);
+  }
 
   /// The canonical plan the currently prepared command was compiled from.
   /// The plan card renders this; the Runner executes its compilation.
   /// They are the same graph by construction.
-  UniversalTaskPlan? canonicalPlan;
+  UniversalTaskPlan? get canonicalPlan => conversationSession.canonicalPlan;
+  set canonicalPlan(UniversalTaskPlan? value) {
+    conversationSession.setCanonicalPlan(
+      value,
+      failure: conversationSession.planningFailure,
+      reconciliation: conversationSession.lastReconciliation,
+    );
+  }
 
   /// The recoverable planning failure that forced a conservative plan,
   /// so the UI can say specifically what went wrong instead of vaguely.
-  PlanningFailure? planningFailure;
+  PlanningFailure? get planningFailure => conversationSession.planningFailure;
+  set planningFailure(PlanningFailure? value) {
+    conversationSession.setPlanningFailure(value);
+  }
 
   /// Canonical tasks already completed in this conversation, carried
   /// across a replan so finished work is preserved rather than redone.
-  List<CompletedTaskRecord> completedTasks = const <CompletedTaskRecord>[];
+  List<CompletedTaskRecord> get completedTasks =>
+      conversationSession.completedTasks;
+  set completedTasks(List<CompletedTaskRecord> value) {
+    conversationSession.setCompletedTasks(value);
+  }
 
   /// What the last replan changed, for the plan card to show.
-  PlanReconciliationResult? lastReconciliation;
-  String activeRequest = '';
+  PlanReconciliationResult? get lastReconciliation =>
+      conversationSession.lastReconciliation;
+  set lastReconciliation(PlanReconciliationResult? value) {
+    conversationSession.setLastReconciliation(value);
+  }
+
+  String get activeRequest => conversationSession.activeRequest;
+  set activeRequest(String value) {
+    conversationSession.setActiveRequest(value);
+  }
+
   String get liveAssistantProtocolText =>
       conversationSession.liveAssistantProtocolText;
   String get liveAssistantText => conversationSession.liveAssistantText;
@@ -277,15 +340,23 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         busy = true;
         status = activity;
         error = null;
+        technicalError = null;
+        errorDetailsExpanded = false;
       });
     }
     try {
       return await action();
     } catch (failure) {
+      final friendly = runtime.redactor.redact(
+        ProductErrorNormalizer.userMessage(failure),
+      );
+      final technical = runtime.redactor.redact('$failure').trim();
       _mutate(() {
-        error = runtime.redactor.redact(
-          ProductErrorNormalizer.userMessage(failure),
-        );
+        error = friendly;
+        technicalError = technical.isEmpty || technical == friendly.trim()
+            ? null
+            : technical;
+        errorDetailsExpanded = false;
         status = 'Kristin needs your help';
       });
       return null;
@@ -322,8 +393,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         awaitingPermission = durable.state == RunState.awaitingApproval;
       }
       if (selectedProjectId != null) {
-        projectProcessStatus =
-            await runtime.projectProcessStatus(selectedProjectId!);
+        projectProcessStatus = await runtime.projectProcessStatus(
+          selectedProjectId!,
+        );
       }
     });
     _mutate(() {
@@ -348,30 +420,78 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       silent: true,
     );
     if (refreshed == null || !mounted) return;
+
+    // Scope-changing steering retires the source only at a verified task
+    // boundary and creates a linked awaiting-approval continuation. Follow
+    // that durable link instead of leaving Chat attached to the interrupted
+    // source plan. The session validates the source/continuation relationship.
+    final continuation = refreshed.state == RunState.interrupted
+        ? await runtime.steeringContinuationForSourceRun(refreshed.id)
+        : null;
+    final continuationContext = continuation == null
+        ? null
+        : await runtime.repositories.commandPlanningContexts.get(
+            continuation.command.id,
+          );
+    final visibleRun = continuation ?? refreshed;
     final newTerminal = const <RunState>{
       RunState.succeeded,
       RunState.failed,
       RunState.cancelled,
-    }.contains(refreshed.state);
-    final loadedEvidence =
-        newTerminal ? await runtime.evidenceForRun(refreshed.id) : evidence;
+    }.contains(visibleRun.state);
+    final loadedEvidence = continuation != null
+        ? await runtime.evidenceForRun(visibleRun.id)
+        : newTerminal
+            ? await runtime.evidenceForRun(visibleRun.id)
+            : evidence;
     final deferred = newTerminal
         ? null
-        : await runtime.latestDeferredInteraction(refreshed.id);
+        : await runtime.latestDeferredInteraction(visibleRun.id);
     _mutate(() {
-      currentRun = refreshed;
+      if (continuation != null) {
+        // Refresh the source first so the session sees its durable interrupted
+        // state, then perform the narrow linked-run handoff.
+        conversationSession.updateRun(refreshed);
+        conversationSession.replaceRunWithContinuation(
+          source: refreshed,
+          continuation: continuation,
+        );
+        prepared = continuation.command;
+        activeRequest = continuation.command.contract.request;
+        selectedProjectId = continuation.command.contract.projectId;
+        selectedModelId = continuation.command.model.exactId;
+        planningFailure = null;
+        lastReconciliation = null;
+        if (continuationContext == null) {
+          taskSpecification = null;
+          routingDecision = null;
+          canonicalPlan = null;
+          planningPath = ChatPlanningPath.deterministic;
+        } else {
+          taskSpecification = continuationContext.specification;
+          routingDecision = RoutingDecision(
+            route: continuationContext.route,
+            family: continuationContext.family,
+            rationale: continuationContext.routingRationale,
+          );
+          canonicalPlan = continuationContext.canonicalPlan;
+        }
+      } else {
+        currentRun = visibleRun;
+      }
       conversationSession.setDeferredInteraction(deferred);
       evidence = loadedEvidence;
-      // Completed work is recorded against the canonical plan as it
-      // happens, so a later replan can preserve it instead of asking the
-      // user to watch finished tasks run a second time.
-      completedTasks = _completedTasksFrom(refreshed);
-      awaitingPermission = refreshed.state == RunState.awaitingApproval;
-      if (conversationSession.awaitingUserInput) {
+      completedTasks = _completedTasksFrom(visibleRun);
+      awaitingPermission = visibleRun.state == RunState.awaitingApproval;
+      if (continuation != null &&
+          visibleRun.state == RunState.awaitingApproval) {
+        status =
+            'Scope updated. Review permissions for the reconciled continuation.';
+      } else if (conversationSession.awaitingUserInput) {
         status = conversationSession.deferredUserPrompt ??
             'Kristin needs your input before continuing.';
       } else if (newTerminal) {
-        status = refreshed.state == RunState.succeeded
+        status = visibleRun.state == RunState.succeeded
             ? 'Finished and verified'
             : 'Execution stopped safely';
       }
@@ -438,8 +558,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (suggestion.kind == ChatAutocompleteKind.command) {
       composerController.value = TextEditingValue(
         text: suggestion.insertText,
-        selection:
-            TextSelection.collapsed(offset: suggestion.insertText.length),
+        selection: TextSelection.collapsed(
+          offset: suggestion.insertText.length,
+        ),
       );
     } else {
       final match = RegExp(r'@[A-Za-z0-9._:-]*$').firstMatch(prefix);
@@ -466,6 +587,14 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (request.isEmpty || busy) return;
     if (suggestions.isNotEmpty) {
       _selectSuggestion(suggestions[suggestionIndex]);
+      return;
+    }
+
+    if (routingDecision?.requiresClarification == true &&
+        currentRun == null &&
+        pendingDecision != null &&
+        taskSpecification?.blockingQuestions.isNotEmpty == true) {
+      await _resolveUnderstandingClarification(request);
       return;
     }
 
@@ -502,9 +631,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         if (resolved == null || !mounted) return;
         _mutate(() {
           conversationSession.setDeferredInteraction(resolved);
-          conversationSession.showLiveProgress(
-            'Continuing with your answer.',
-          );
+          conversationSession.showLiveProgress('Continuing with your answer.');
           status = 'Continuing with your answer';
         });
         await _perform<void>(
@@ -633,9 +760,68 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       planAdjusting = false;
       detailsExpanded = false;
       error = null;
-      status = outcome.isSemantic
-          ? 'Review what Kristin understood'
-          : 'Review how Kristin interpreted this';
+      final needsClarification = routingDecision?.requiresClarification == true;
+      status = needsClarification
+          ? 'Kristin needs one clarification'
+          : outcome.isSemantic
+              ? 'Review what Kristin understood'
+              : 'Review how Kristin interpreted this';
+      if (needsClarification) {
+        final question = outcome.specification.blockingQuestions.first.question;
+        conversationSession.addAssistantMessage(question);
+      }
+    });
+  }
+
+  Future<void> _resolveUnderstandingClarification(String answer) async {
+    final decision = pendingDecision;
+    final specification = taskSpecification;
+    if (decision == null ||
+        specification == null ||
+        specification.blockingQuestions.isEmpty) {
+      return;
+    }
+    final normalized = answer.trim();
+    if (normalized.isEmpty) return;
+    final question = specification.blockingQuestions.first.question;
+    conversationSession.addUserMessage(normalized);
+    composerController.clear();
+    conversationSession.recordClarificationAnswer(
+      question: question,
+      answer: normalized,
+    );
+
+    final originalSemanticPayload = decision.parsed.hasExplicitCommand
+        ? decision.parsed.arguments.trim()
+        : decision.parsed.originalText.trim();
+    final semanticContext = <String>[
+      if (originalSemanticPayload.isNotEmpty) originalSemanticPayload,
+      'CURRENT ACCEPTED SPECIFICATION\n${specification.renderForPlanner()}',
+      'LATEST CLARIFICATION\nQuestion: $question\nUser answer: $normalized',
+    ].join('\n\n');
+    final outcome = await _understandRequest(
+      decision,
+      semanticRequestOverride: semanticContext,
+      userEvidenceText: conversationSession.clarificationEvidenceText,
+    );
+    if (outcome == null || !mounted) return;
+    final routing = runtime.taskKernel.route(
+      specification: outcome.specification,
+      decision: decision,
+    );
+    _mutate(() {
+      taskSpecification = outcome.specification;
+      understandingPath = outcome.path;
+      understandingRejections = outcome.rejections;
+      routingDecision = routing;
+      status = routing.requiresClarification
+          ? 'Kristin needs one clarification'
+          : 'Clarification resolved — review what Kristin understood';
+      error = null;
+      if (routing.requiresClarification) {
+        final next = outcome.specification.blockingQuestions.first.question;
+        conversationSession.addAssistantMessage(next);
+      }
     });
   }
 
@@ -648,8 +834,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   /// here is a real failure -- cancellation, an unreachable provider, a
   /// denied authority, a broken store -- and it is reported as one.
   Future<UnderstandingOutcome?> _understandRequest(
-    ChatInteractionDecision decision,
-  ) async {
+    ChatInteractionDecision decision, {
+    String? semanticRequestOverride,
+    String userEvidenceText = '',
+  }) async {
     final kernel = runtime.taskKernel;
     final context = KernelRequestContext(
       decision: decision,
@@ -657,6 +845,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       model: selectedModel,
       knownTargets: _knownTargets(),
       availableToolNames: runtime.tools.names,
+      semanticRequestOverride: semanticRequestOverride,
+      userEvidenceText: userEvidenceText,
     );
     if (!kernel.understanding.warrantsModelUnderstanding(decision) ||
         selectedModel == null) {
@@ -749,8 +939,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     if (decision.explicitCommand) return false;
     final value = request.trim().toLowerCase();
     return RegExp(
-            r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$')
-        .hasMatch(value);
+      r'^(?:please\s+)?(?:stop|cancel|abort)(?:\s+(?:this|the|current))?(?:\s+(?:task|run|work))?[.!]?$',
+    ).hasMatch(value);
   }
 
   String _pendingRunMessage() {

@@ -98,17 +98,32 @@ void main() {
     );
   });
 
-  test('Runner advertises only user takeover among deferred v3 controls', () {
+  test('Runner bounds deferred v3 controls and rejects opaque waits', () {
     expect(
       source,
       contains(
-          'Protocol v3 user_takeover is the only deferred control decision'),
+        'Protocol-v3 `wait` is allowed only with an absolute UTC `waitUntil` timestamp',
+      ),
     );
     expect(
       source,
-      contains('Do not emit protocol-v3 wait or delegate decisions.'),
+      contains(
+        'Do not emit an opaque `waitHandle`; no signal source is registered for it yet.',
+      ),
     );
-    expect(source, contains('if (!executionStep.isUserTakeover) {'));
+    expect(
+      source,
+      contains(
+        'Protocol-v3 `delegate` is allowed only to one of these bounded model-only roles',
+      ),
+    );
+    expect(source, contains('Future<RunRecord> _executeBoundedDelegation({'));
+    expect(
+      source,
+      contains(
+        'if (!executionStep.isUserTakeover && !executableTimestampWait) {',
+      ),
+    );
     expect(source, contains("'agent_decision_v3_deferred_action'"));
   });
 }
