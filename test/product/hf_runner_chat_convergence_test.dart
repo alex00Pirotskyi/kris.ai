@@ -113,7 +113,7 @@ void main() {
     expect(received[0].sequence, lessThan(received[1].sequence));
   });
 
-  test('steering is queued then consumed exactly once', () async {
+  test('steering remains durable until explicitly acknowledged once', () async {
     final bus = LiveRunSignalBus();
     addTearDown(bus.close);
     final steering = RunSteeringService(
@@ -122,10 +122,16 @@ void main() {
     );
     final queued = await steering.queue('run-a', 'keep everything local');
     expect(queued.text, 'keep everything local');
+
     final first = await steering.takePending('run-a');
-    final second = await steering.takePending('run-a');
+    final replayBeforeAck = await steering.takePending('run-a');
     expect(first, hasLength(1));
-    expect(second, isEmpty);
+    expect(replayBeforeAck, hasLength(1));
+    expect(replayBeforeAck.single.id, first.single.id);
+
+    await steering.applied('run-a', first);
+    final afterAck = await steering.takePending('run-a');
+    expect(afterAck, isEmpty);
   });
 
   test('capability resolver does not infer browser from web-app wording', () {

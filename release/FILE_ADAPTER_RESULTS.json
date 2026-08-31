@@ -77,7 +77,7 @@
     },
     {
       "detail": "RFC822 message parsed successfully",
-      "durationMs": 9,
+      "durationMs": 10,
       "name": "Email adapter parses RFC822 headers",
       "passed": true
     },
