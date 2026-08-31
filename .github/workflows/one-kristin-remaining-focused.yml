@@ -78,11 +78,21 @@ jobs:
           git diff --check -- pubspec.lock
       - name: Fatal analyzer
         shell: bash
-        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+        run: |
+          set -o pipefail
+          flutter analyze --no-pub --fatal-warnings --fatal-infos 2>&1 | tee /tmp/one-kristin-analyzer.log
+          exit ${PIPESTATUS[0]}
+      - name: Upload analyzer diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-analyzer-${{ github.sha }}
+          path: /tmp/one-kristin-analyzer.log
+          if-no-files-found: warn
       - name: Focused One Kristin contracts
         shell: bash
         run: |
-          set -euo pipefail
+          set -o pipefail
           flutter test --no-pub --concurrency=1 \
             test/product/chat_time_capability_test.dart \
             test/product/one_kristin_advanced_source_contract_test.dart \
@@ -94,7 +104,15 @@ jobs:
             test/product/task_kernel/task_family_executor_test.dart \
             test/product/task_kernel/task_specification_patch_test.dart \
             test/product/task_kernel/task_specification_patch_classifier_test.dart \
-            test/product/task_kernel/semantic_steering_test.dart
+            test/product/task_kernel/semantic_steering_test.dart 2>&1 | tee /tmp/one-kristin-tests.log
+          exit ${PIPESTATUS[0]}
+      - name: Upload focused test diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-tests-${{ github.sha }}
+          path: /tmp/one-kristin-tests.log
+          if-no-files-found: warn
       - name: Commit verified source and self-clean verifier
         shell: bash
         run: |
