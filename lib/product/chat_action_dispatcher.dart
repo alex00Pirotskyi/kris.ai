@@ -225,7 +225,7 @@ class ChatActionDispatcher {
   }
 
   Future<PreparedCommand> prepare({
-    required String capabilityId,
+    String capabilityId = 'agent.modify_project',
     required String projectId,
     required CommandMode mode,
     required String request,
