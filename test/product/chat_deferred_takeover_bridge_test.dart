@@ -9,34 +9,42 @@ void main() {
   late String runtime;
 
   setUpAll(() {
-    chat =
-        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
-    actions = File('lib/product/chat_control_plane_studio_actions.dart')
-        .readAsStringSync();
-    view = File('lib/product/chat_control_plane_studio_view.dart')
-        .readAsStringSync();
+    chat = File(
+      'lib/product/chat_control_plane_studio.dart',
+    ).readAsStringSync();
+    actions = File(
+      'lib/product/chat_control_plane_studio_actions.dart',
+    ).readAsStringSync();
+    view = File(
+      'lib/product/chat_control_plane_studio_view.dart',
+    ).readAsStringSync();
     runtime = File('lib/product/product_runtime.dart').readAsStringSync();
   });
 
-  test('Chat run and permission projection are owned by the canonical session',
-      () {
+  test('Chat run and permission projection are owned by the canonical session', () {
     expect(chat, contains("import 'kristin_conversation_session.dart';"));
-    expect(chat,
-        contains('final KristinConversationSession conversationSession ='));
+    expect(
+      chat,
+      contains('final KristinConversationSession conversationSession ='),
+    );
     expect(chat, isNot(contains('RunRecord? currentRun;')));
     expect(chat, isNot(contains('bool awaitingPermission = false;')));
     expect(
-        chat,
-        contains(
-            'RunRecord? get currentRun => conversationSession.currentRun;'));
+      chat,
+      contains('RunRecord? get currentRun => conversationSession.currentRun;'),
+    );
     expect(
-        chat,
-        contains(
-            'bool get awaitingPermission => conversationSession.awaitingPermission;'));
+      chat,
+      contains(
+        'bool get awaitingPermission => conversationSession.awaitingPermission;',
+      ),
+    );
     expect(
-        chat,
-        contains(
-            'bool get hasNonterminalRun => conversationSession.hasNonterminalRun;'));
+      chat,
+      contains(
+        'bool get hasNonterminalRun => conversationSession.hasNonterminalRun;',
+      ),
+    );
     expect(chat, isNot(contains('String? selectedProjectId;')));
     expect(chat, isNot(contains('String? selectedModelId;')));
     expect(
@@ -55,18 +63,20 @@ void main() {
     expect(chat, contains('conversationSession.selectModel(value);'));
   });
 
-  test('Chat detaches finished runs without resetting conversation history',
-      () {
-    expect(chat, contains('conversationSession.detachFinishedRun();'));
-    expect(
-      chat,
-      isNot(contains('conversationSession.resetForNewConversation();')),
-    );
-    expect(
-      actions,
-      contains('conversationSession.resetForNewConversation();'),
-    );
-  });
+  test(
+    'Chat detaches finished runs without resetting conversation history',
+    () {
+      expect(chat, contains('conversationSession.detachFinishedRun();'));
+      expect(
+        chat,
+        isNot(contains('conversationSession.resetForNewConversation();')),
+      );
+      expect(
+        actions,
+        contains('conversationSession.resetForNewConversation();'),
+      );
+    },
+  );
 
   test('Chat visible transcript is owned by the canonical session', () {
     expect(chat, isNot(contains('final List<_ChatLine> transcript')));
@@ -98,16 +108,16 @@ void main() {
     expect(chat, isNot(contains("String liveToolOutput = '';")));
     expect(chat, isNot(contains('liveSignals.clear();')));
     expect(
-      chat.split('\n').any(
-            (line) => line.trimLeft().startsWith('liveProgressText ='),
-          ),
+      chat
+          .split('\n')
+          .any((line) => line.trimLeft().startsWith('liveProgressText =')),
       isFalse,
     );
     expect(actions, isNot(contains('liveSignals.clear();')));
     expect(
-      actions.split('\n').any(
-            (line) => line.trimLeft().startsWith('liveProgressText ='),
-          ),
+      actions
+          .split('\n')
+          .any((line) => line.trimLeft().startsWith('liveProgressText =')),
       isFalse,
     );
     expect(
@@ -116,10 +126,7 @@ void main() {
         'List<LiveRunSignal> get liveSignals => conversationSession.liveSignals;',
       ),
     );
-    expect(
-      chat,
-      contains('conversationSession.recordLiveSignal(signal);'),
-    );
+    expect(chat, contains('conversationSession.recordLiveSignal(signal);'));
     expect(chat, contains('conversationSession.showLiveProgress('));
     expect(chat, contains('conversationSession.clearLiveExecution();'));
     expect(actions, contains('conversationSession.beginLiveExecution();'));
@@ -139,8 +146,9 @@ void main() {
   });
 
   test('takeover answer is recorded and resumed before ordinary steering', () {
-    final takeover =
-        chat.indexOf('if (conversationSession.awaitingUserInput) {');
+    final takeover = chat.indexOf(
+      'if (conversationSession.awaitingUserInput) {',
+    );
     final record = chat.indexOf('runtime.recordDeferredUserResponse(');
     final resume = chat.indexOf('() => runtime.resume(run.id)');
     final steering = chat.indexOf('await _applySemanticSteering(request);');
@@ -148,8 +156,10 @@ void main() {
     expect(record, greaterThan(takeover));
     expect(resume, greaterThan(record));
     expect(steering, greaterThan(resume));
-    expect(chat,
-        contains('conversationSession.setDeferredInteraction(resolved);'));
+    expect(
+      chat,
+      contains('conversationSession.setDeferredInteraction(resolved);'),
+    );
     expect(
       actions,
       contains('Future<void> _applySemanticSteering(String request) async {'),
@@ -160,36 +170,52 @@ void main() {
     );
   });
 
-  test('ProductRuntime exposes only durable deferred interaction operations',
-      () {
-    expect(runtime, contains("import 'agent_deferred_interaction.dart';"));
-    expect(
+  test(
+    'ProductRuntime exposes only durable deferred interaction operations',
+    () {
+      expect(runtime, contains("import 'agent_deferred_interaction.dart';"));
+      expect(
         runtime,
         contains(
-            'Future<AgentDeferredInteraction?> latestDeferredInteraction('));
-    expect(
+          'Future<AgentDeferredInteraction?> latestDeferredInteraction(',
+        ),
+      );
+      expect(
         runtime,
         contains(
-            'Future<AgentDeferredInteraction?> pendingDeferredInteraction('));
-    expect(
+          'Future<AgentDeferredInteraction?> pendingDeferredInteraction(',
+        ),
+      );
+      expect(
         runtime,
         contains(
-            'Future<AgentDeferredInteraction> recordDeferredUserResponse({'));
-    expect(runtime,
-        contains('AgentDeferredInteractionStore(repositories.workflow)'));
-  });
+          'Future<AgentDeferredInteraction> recordDeferredUserResponse({',
+        ),
+      );
+      expect(
+        runtime,
+        contains('AgentDeferredInteractionStore(repositories.workflow)'),
+      );
+    },
+  );
 
-  test('takeover prompt is visible and manual resume is hidden while pending',
-      () {
-    expect(view, contains('conversationSession.deferredUserPrompt'));
-    expect(
+  test(
+    'takeover prompt is visible and manual resume is hidden while pending',
+    () {
+      expect(view, contains('conversationSession.deferredUserPrompt'));
+      expect(
         view,
         contains(
-            'Your answer supplies intent context only and does not grant new permissions or authority.'));
-    expect(view, contains('!conversationSession.awaitingUserInput'));
-    expect(
+          'Your answer supplies intent context only and does not grant new permissions or authority.',
+        ),
+      );
+      expect(view, contains('!conversationSession.awaitingUserInput'));
+      expect(
         view,
         contains(
-            'final waitingForInput = conversationSession.awaitingUserInput;'));
-  });
+          'final waitingForInput = conversationSession.awaitingUserInput;',
+        ),
+      );
+    },
+  );
 }
