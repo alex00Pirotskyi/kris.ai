@@ -34,9 +34,21 @@ jobs:
       - name: Apply remaining One Kristin integration
         shell: bash
         run: |
-          set -euo pipefail
-          python tool/apply_one_kristin_remaining.py
-          python tool/fix_one_kristin_remaining_patch.py
+          set -o pipefail
+          python tool/apply_one_kristin_remaining.py 2>&1 | tee /tmp/one-kristin-apply.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 0 ]; then
+            python tool/fix_one_kristin_remaining_patch.py 2>&1 | tee -a /tmp/one-kristin-apply.log
+            status=${PIPESTATUS[0]}
+          fi
+          exit "$status"
+      - name: Upload patch diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-focused-debug-${{ github.sha }}
+          path: /tmp/one-kristin-apply.log
+          if-no-files-found: warn
       - name: Format focused Dart surface
         shell: bash
         run: |
