@@ -143,13 +143,21 @@ void main() {
         chat.indexOf('if (conversationSession.awaitingUserInput) {');
     final record = chat.indexOf('runtime.recordDeferredUserResponse(');
     final resume = chat.indexOf('() => runtime.resume(run.id)');
-    final steering = chat.indexOf('runtime.steerRun(currentRun!.id, request)');
+    final steering = chat.indexOf('await _applySemanticSteering(request);');
     expect(takeover, greaterThanOrEqualTo(0));
     expect(record, greaterThan(takeover));
     expect(resume, greaterThan(record));
     expect(steering, greaterThan(resume));
     expect(chat,
         contains('conversationSession.setDeferredInteraction(resolved);'));
+    expect(
+      actions,
+      contains('Future<void> _applySemanticSteering(String request) async {'),
+    );
+    expect(
+      actions,
+      contains('runtime.steerRun(run.id, semantic.runnerInstruction)'),
+    );
   });
 
   test('ProductRuntime exposes only durable deferred interaction operations',

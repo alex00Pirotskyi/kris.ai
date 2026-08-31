@@ -950,6 +950,7 @@ class ChatIntentCompiler {
     final timeCapability = registry.byId('utility.time');
     if (!parsed.hasExplicitCommand &&
         timeCapability != null &&
+        !_isActionLanguage(parsed.originalText) &&
         _isTimeLanguage(parsed.originalText)) {
       return _decision(
         kind: ChatInteractionKind.action,
