@@ -1,0 +1,119 @@
+name: temporary-one-kristin-apply-qualify
+
+on:
+  push:
+    branches:
+      - draft/one-kristin-convergence-checkpoint
+    paths:
+      - .github/workflows/temporary-one-kristin-apply-qualify.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout draft branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Reconstruct exact corrected transformers
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .one-kristin-transformer-fixes/part00 \
+              .one-kristin-transformer-fixes/part01 \
+              .one-kristin-transformer-fixes/part02 \
+              .one-kristin-transformer-fixes/part03 \
+              .one-kristin-transformer-fixes/part04 \
+              .one-kristin-transformer-fixes/part05 > "$RUNNER_TEMP/transformer-fixes.tar.gz.b64"
+          printf '%s  %s\n' \
+            '1a3a5ec0ea1791ba53239cf80d838c0aa41c3ceb791f032d047ad6ca34a54a06' \
+            "$RUNNER_TEMP/transformer-fixes.tar.gz.b64" | sha256sum -c -
+          base64 --decode "$RUNNER_TEMP/transformer-fixes.tar.gz.b64" > "$RUNNER_TEMP/transformer-fixes.tar.gz"
+          printf '%s  %s\n' \
+            'c735a2704cc2f0a7423b9d6039c1b305bf48af36b2fb7617479dcaa5e7b74285' \
+            "$RUNNER_TEMP/transformer-fixes.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/transformer-fixes.tar.gz" \
+            -C dev/checkpoints/one-kristin-convergence
+          for file in \
+            apply_one_kristin_state_convergence.py \
+            apply_project_free_research_execution.py \
+            apply_scope_changing_steering_continuation.py \
+            apply_semantic_slash_understanding.py \
+            apply_truthful_conversation_streaming.py \
+            apply_deterministic_utility_time.py \
+            apply_delegate_recovery_qualification.py \
+            apply_semantic_durable_steering.py; do
+            test -s "dev/checkpoints/one-kristin-convergence/$file"
+            python -m py_compile "dev/checkpoints/one-kristin-convergence/$file"
+          done
+
+      - name: Remove temporary transport from candidate tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .one-kristin-transformer-fixes
+          rm -f .github/workflows/temporary-one-kristin-apply-qualify.yml
+
+      - name: Apply all 20 guarded development slices
+        shell: bash
+        run: |
+          set -euo pipefail
+          python dev/checkpoints/one-kristin-convergence/apply_all_development_slices.py \
+            . \
+            --apply \
+            --allow-head-mismatch \
+            --allow-dirty
+          git diff --check
+
+      - name: Qualify applied product source with locked toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python dev/checkpoints/one-kristin-convergence/qualify_real_checkout.py \
+            . \
+            --already-applied \
+            --allow-head-mismatch \
+            --allow-dirty \
+            --format \
+            --repo-gates \
+            --focused \
+            --report-dir "$RUNNER_TEMP/one-kristin-qualification"
+          git diff --check
+
+      - name: Commit qualified product source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'checkpoint: apply and qualify One-Kristin product source'
+          git push origin HEAD:draft/one-kristin-convergence-checkpoint
+
+      - name: Upload qualification report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: one-kristin-real-checkout-qualification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/one-kristin-qualification
+          if-no-files-found: warn
+          retention-days: 7
