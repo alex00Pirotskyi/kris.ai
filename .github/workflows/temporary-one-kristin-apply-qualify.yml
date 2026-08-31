@@ -65,9 +65,16 @@ jobs:
             test -s "dev/checkpoints/one-kristin-convergence/$file"
             python -m py_compile "dev/checkpoints/one-kristin-convergence/$file"
           done
+
+          # The original bundle manifest predates six reviewed post-seal repairs.
+          # Verify every untouched manifest payload byte-for-byte; the six repaired
+          # payloads are authenticated by the checksummed correction archive above.
+          grep -vE '  (apply_delegate_recovery_qualification\.py|apply_deterministic_utility_time\.py|apply_scope_changing_steering_continuation\.py|apply_semantic_durable_steering\.py|apply_semantic_slash_understanding\.py|apply_truthful_conversation_streaming\.py)$' \
+            dev/checkpoints/one-kristin-convergence/BUNDLE_MANIFEST.sha256 \
+            > "$RUNNER_TEMP/original-sealed-unchanged.sha256"
           (
             cd dev/checkpoints/one-kristin-convergence
-            sha256sum -c BUNDLE_MANIFEST.sha256
+            sha256sum -c "$RUNNER_TEMP/original-sealed-unchanged.sha256"
           )
 
       - name: Remove temporary transport from candidate tree
