@@ -13,6 +13,7 @@
 // invents a parallel permission model, or bypasses
 // ProductRuntime.prepare's governed plan/permission/execution pipeline.
 import 'capability_doctor.dart';
+import 'capability_invocation.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
 
@@ -75,26 +76,89 @@ class ChatResearchResult {
 }
 
 class ChatActionDispatcher {
-  const ChatActionDispatcher(this.runtime);
+  const ChatActionDispatcher(
+    this.runtime, {
+    this.authorityResolver = const CapabilityAuthorityResolver(),
+  });
 
   final ChatRuntimeGateway runtime;
+  final CapabilityAuthorityResolver authorityResolver;
 
-  Future<ProjectDiagnosticReport> inspect(String projectId) =>
-      runtime.analyzeProject(projectId);
+  /// The one semantic authority boundary for Chat-originated capability
+  /// execution. Slash commands, natural language and buttons all arrive here
+  /// after the compiler has selected a canonical capability id; the source of
+  /// the gesture cannot change the permission envelope.
+  CapabilityAuthorityDecision authorize({
+    required String capabilityId,
+    Set<String> targetIds = const <String>{},
+    Set<PermissionScope> requestedScopes = const <PermissionScope>{},
+    bool modelProposed = false,
+    String reason = '',
+  }) =>
+      authorityResolver.resolve(
+        CapabilityInvocation(
+          capabilityId: capabilityId,
+          targetIds: targetIds,
+          requestedScopes: requestedScopes,
+          modelProposed: modelProposed,
+          reason: reason,
+        ),
+      );
 
-  Future<ProjectDiagnosticReport> test(String projectId) =>
-      runtime.testProject(projectId);
+  Future<ProjectDiagnosticReport> inspect(
+    String projectId, {
+    String capabilityId = 'project.analyze',
+  }) {
+    authorize(
+      capabilityId: capabilityId,
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.analyzeProject(projectId);
+  }
 
-  Future<ProjectDiagnosticReport> build(String projectId) =>
-      runtime.buildProject(projectId);
+  Future<ProjectDiagnosticReport> test(String projectId) {
+    authorize(
+      capabilityId: 'project.test',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.testProject(projectId);
+  }
 
-  Future<ProjectProcessStatus> run(String projectId) =>
-      runtime.startProject(projectId);
+  Future<ProjectDiagnosticReport> build(String projectId) {
+    authorize(
+      capabilityId: 'project.build',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.buildProject(projectId);
+  }
 
-  Future<ProjectProcessStatus?> stop(String projectId) =>
-      runtime.stopProject(projectId);
+  Future<ProjectProcessStatus> run(String projectId) {
+    authorize(
+      capabilityId: 'project.run',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.startProject(projectId);
+  }
+
+  Future<ProjectProcessStatus?> stop(String projectId) {
+    authorize(
+      capabilityId: 'project.stop',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.stopProject(projectId);
+  }
 
   Future<ProjectProcessStatus> restart(String projectId) async {
+    authorize(
+      capabilityId: 'project.restart',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     await runtime.stopProject(projectId);
     return runtime.startProject(projectId);
   }
@@ -107,6 +171,11 @@ class ChatActionDispatcher {
     String? projectId,
     int count = 10,
   }) async {
+    authorize(
+      capabilityId: 'research.search',
+      targetIds: projectId == null ? const <String>{} : <String>{projectId},
+      reason: 'chat_direct',
+    );
     final results = await runtime.searchWeb(query: query, count: count);
     await runtime.archiveResearchIfProject(
       projectId: projectId,
@@ -119,12 +188,18 @@ class ChatActionDispatcher {
   Future<CapabilityDoctorReport> diagnose({
     String? projectId,
     required List<ModelIdentity> discoveredModels,
-  }) =>
-      runtime.inspectCapabilities(
-        projectId: projectId,
-        discoveredModels: discoveredModels,
-        depth: CapabilityDoctorDepth.full,
-      );
+  }) {
+    authorize(
+      capabilityId: 'system.diagnose',
+      targetIds: projectId == null ? const <String>{} : <String>{projectId},
+      reason: 'chat_direct',
+    );
+    return runtime.inspectCapabilities(
+      projectId: projectId,
+      discoveredModels: discoveredModels,
+      depth: CapabilityDoctorDepth.full,
+    );
+  }
 
   /// Resolves the project a substantial agent action (create/modify/fix)
   /// should target. Only `agent.create_project` ever provisions a new
@@ -136,6 +211,13 @@ class ChatActionDispatcher {
     required ProjectRecord? selectedProject,
     required String originalRequest,
   }) async {
+    authorize(
+      capabilityId: capabilityId,
+      targetIds: selectedProject == null
+          ? const <String>{}
+          : <String>{selectedProject.id},
+      reason: 'chat_coordinator',
+    );
     if (capabilityId == 'agent.create_project') {
       return runtime.provisionProjectForRequest(request: originalRequest);
     }
@@ -143,17 +225,24 @@ class ChatActionDispatcher {
   }
 
   Future<PreparedCommand> prepare({
+    required String capabilityId,
     required String projectId,
     required CommandMode mode,
     required String request,
     required ModelIdentity model,
-  }) =>
-      runtime.prepare(
-        projectId: projectId,
-        mode: mode,
-        request: request,
-        model: model,
-      );
+  }) {
+    authorize(
+      capabilityId: capabilityId,
+      targetIds: <String>{projectId},
+      reason: 'chat_governed_prepare',
+    );
+    return runtime.prepare(
+      projectId: projectId,
+      mode: mode,
+      request: request,
+      model: model,
+    );
+  }
 }
 
 /// The production [ChatRuntimeGateway], delegating every call to the real
