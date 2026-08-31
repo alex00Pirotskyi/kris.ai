@@ -104,7 +104,7 @@ jobs:
             --apply
           git diff --check
 
-      - name: Apply explicit approved-command authority boundary
+      - name: Reconcile continuation authority source contract
         shell: bash
         run: |
           set -euo pipefail
