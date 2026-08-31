@@ -104,6 +104,18 @@ jobs:
             --apply
           git diff --check
 
+      - name: Apply explicit approved-command authority boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            dev/checkpoints/one-kristin-convergence/apply_real_checkout_authority_boundary_fixup.py
+          python dev/checkpoints/one-kristin-convergence/apply_real_checkout_authority_boundary_fixup.py \
+            . \
+            --apply
+          rm -f dev/checkpoints/one-kristin-convergence/apply_real_checkout_authority_boundary_fixup.py
+          git diff --check
+
       - name: Qualify applied product source with locked toolchain
         shell: bash
         run: |
