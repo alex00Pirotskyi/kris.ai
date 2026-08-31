@@ -80,7 +80,7 @@ void main() {
     final result = await const KernelTaskGraphExecutor().execute(
       plan: plan,
       executeAuthorizedNode: (task, dependencies, authority) async {
-        expect(authority.keys, <String>{'research.search'});
+        expect(authority.keys.toSet(), <String>{'research.search'});
         expect(
           authority['research.search']!.requiredScopes,
           contains(PermissionScope.networkResearch),
