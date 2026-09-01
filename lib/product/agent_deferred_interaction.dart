@@ -197,6 +197,85 @@ class AgentDeferredInteractionStore {
     return _decode(checkpoint);
   }
 
+  /// Resolves a durable absolute-time wait once its timestamp has arrived.
+  ///
+  /// Opaque wait handles are deliberately not resolved here: without a
+  /// registered signal source, treating a handle as complete would invent an
+  /// external fact. The coordinator may call this after restart as well as
+  /// from an in-process timer.
+  Future<AgentDeferredInteraction> resolveReadyTimestampWait({
+    required String runId,
+    DateTime? now,
+  }) async {
+    final pending = await pendingForRun(runId);
+    if (pending == null) {
+      throw AgentDeferredInteractionException(
+        'agent_deferred_interaction_missing',
+        'Run $runId has no unresolved deferred interaction.',
+        details: <String, dynamic>{'runId': runId},
+      );
+    }
+    await _requireActiveRun(runId, workItemId: pending.workItemId);
+    if (pending.decision.kind != AgentDecisionV3Kind.wait ||
+        pending.decision.waitUntil == null ||
+        pending.decision.waitHandle != null) {
+      throw AgentDeferredInteractionException(
+        'agent_deferred_wait_not_timestamp',
+        'Only an absolute timestamp wait can be resolved by the time scheduler.',
+        details: <String, dynamic>{
+          'runId': runId,
+          'interactionId': pending.id,
+          'decisionKind': pending.decision.kind.wireName,
+          if (pending.decision.waitHandle != null)
+            'waitHandle': pending.decision.waitHandle,
+        },
+      );
+    }
+    final current = (now ?? DateTime.now()).toUtc();
+    final waitUntil = pending.decision.waitUntil!.toUtc();
+    if (current.isBefore(waitUntil)) {
+      throw AgentDeferredInteractionException(
+        'agent_deferred_wait_not_ready',
+        'The durable wait has not reached its requested timestamp.',
+        details: <String, dynamic>{
+          'runId': runId,
+          'interactionId': pending.id,
+          'waitUntil': waitUntil.toIso8601String(),
+          'now': current.toIso8601String(),
+        },
+      );
+    }
+
+    final checkpoint = await _workflow.createCheckpoint(
+      runId: runId,
+      workItemId: pending.workItemId,
+      kind: checkpointKind,
+      state: _state(
+        interactionId: pending.id,
+        status: AgentDeferredInteractionStatus.resolved,
+        decision: pending.decision,
+        createdAt: pending.createdAt,
+        updatedAt: current,
+      ),
+    );
+    await _workflow.appendEvent(
+      id: newId('event'),
+      type: 'agent.deferred.wait_elapsed',
+      correlationId: runId,
+      runId: runId,
+      causationId: checkpoint.id,
+      timestamp: current,
+      data: <String, dynamic>{
+        'interactionId': pending.id,
+        'checkpointId': checkpoint.id,
+        'workItemId': pending.workItemId,
+        'waitUntil': waitUntil.toIso8601String(),
+        'grantsAuthority': false,
+      },
+    );
+    return _decode(checkpoint);
+  }
+
   Future<RunRecord> _requireActiveRun(
     String runId, {
     required String workItemId,
