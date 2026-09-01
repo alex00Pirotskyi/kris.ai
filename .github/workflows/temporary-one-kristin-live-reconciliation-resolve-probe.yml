@@ -1,0 +1,86 @@
+name: temporary-one-kristin-live-reconciliation-resolve-probe
+
+on:
+  push:
+    branches:
+      - integration/one-kristin-live-reconciliation-probe
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Build live-first reconciliation tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          LIVE="bbb8cbdb52844f868abf9916c9bb77446c2809cf"
+          CANDIDATE="535e8351b6ac213623ca1209b255ac63a08694b7"
+          git reset --hard "$LIVE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git cherry-pick --no-commit "$CANDIDATE" || true
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          conflict_paths = subprocess.check_output(
+              ['git', 'diff', '--name-only', '--diff-filter=U'], text=True
+          ).splitlines()
+          for raw in conflict_paths:
+              path = Path(raw)
+              lines = path.read_text(encoding='utf-8').splitlines(keepends=True)
+              out = []
+              state = 'normal'
+              for line in lines:
+                  if state == 'normal' and line.startswith('<<<<<<< '):
+                      state = 'ours'
+                      continue
+                  if state == 'ours' and line.startswith('======='):
+                      state = 'theirs'
+                      continue
+                  if state == 'theirs' and line.startswith('>>>>>>> '):
+                      state = 'normal'
+                      continue
+                  if state in ('normal', 'ours'):
+                      out.append(line)
+              if state != 'normal':
+                  raise SystemExit(f'unclosed conflict block in {raw}')
+              path.write_text(''.join(out), encoding='utf-8')
+              subprocess.check_call(['git', 'add', raw])
+          PY
+          echo '=== RECONCILIATION DIFF ==='
+          git diff --cached --stat
+          echo '=== CONTINUATION SYMBOLS ==='
+          grep -nE 'steeringContinuationForSourceRun|replaceRunWithContinuation|continuationContext|materializePendingSteeringContinuation' \
+            lib/product/product_runtime.dart \
+            lib/product/run_steering.dart \
+            lib/product/chat_control_plane_studio.dart \
+            lib/product/kristin_conversation_session.dart || true
+          echo '=== REMAINING CONFLICTS ==='
+          git diff --name-only --diff-filter=U
+          test -z "$(git diff --name-only --diff-filter=U)"
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Analyze reconciled tree
+        run: flutter analyze --no-pub --fatal-warnings --fatal-infos
+      - name: Run continuation-focused contracts
+        run: >-
+          flutter test --no-pub --concurrency=1 --reporter expanded
+          test/product/chat_continuation_activity_contract_test.dart
+          test/product/steering_scope_continuation_contract_test.dart
+          test/product/steering_idle_continuation_contract_test.dart
+          test/product/advanced_same_conversation_contract_test.dart
+          test/product/semantic_durable_steering_test.dart
