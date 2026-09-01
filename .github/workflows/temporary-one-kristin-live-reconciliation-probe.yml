@@ -1,0 +1,118 @@
+name: temporary-one-kristin-live-reconciliation-probe
+
+on:
+  push:
+    branches:
+      - integration/one-kristin-live-reconciliation-probe
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+
+      - name: Compare qualified snapshot with live base
+        shell: bash
+        run: |
+          set -euo pipefail
+          LIVE="bbb8cbdb52844f868abf9916c9bb77446c2809cf"
+          CANDIDATE="535e8351b6ac213623ca1209b255ac63a08694b7"
+          cat > /tmp/paths.txt <<'EOF'
+          SOURCE_MANIFEST.sha256
+          config/toolchains.lock.json
+          lib/product/agent_deferred_interaction.dart
+          lib/product/agent_delegation_record.dart
+          lib/product/chat_action_dispatcher.dart
+          lib/product/chat_control_plane.dart
+          lib/product/chat_control_plane_studio.dart
+          lib/product/chat_control_plane_studio_actions.dart
+          lib/product/chat_control_plane_studio_view.dart
+          lib/product/chat_studio.dart
+          lib/product/kristin_conversation_session.dart
+          lib/product/planning_runtime.dart
+          lib/product/product_runtime.dart
+          lib/product/run_steering.dart
+          lib/product/run_steering_record.dart
+          lib/product/storage_security.dart
+          lib/product/task_kernel/command_planning_context.dart
+          lib/product/task_kernel/research_task_family_executor.dart
+          lib/product/task_kernel/task_family_execution.dart
+          lib/product/task_kernel/task_kernel.dart
+          lib/product/task_kernel/task_specification.dart
+          lib/product/task_kernel/task_understanding.dart
+          lib/product/utility_time.dart
+          pubspec.lock
+          pubspec.yaml
+          release/FILE_ADAPTER_RESULTS.json
+          test/product/advanced_same_conversation_contract_test.dart
+          test/product/authority_convergence_contract_test.dart
+          test/product/blocking_clarification_contract_test.dart
+          test/product/chat_continuation_activity_contract_test.dart
+          test/product/chat_failure_projection_contract_test.dart
+          test/product/chat_target_collision_test.dart
+          test/product/hf_runner_chat_convergence_test.dart
+          test/product/kristin_conversation_session_test.dart
+          test/product/research_archive_degradation_contract_test.dart
+          test/product/research_optional_archive_contract_test.dart
+          test/product/runner_bounded_delegate_contract_test.dart
+          test/product/runner_deferred_takeover_contract_test.dart
+          test/product/runner_deferred_timestamp_wait_contract_test.dart
+          test/product/runner_delegate_recovery_contract_test.dart
+          test/product/semantic_durable_steering_test.dart
+          test/product/source_contract_test.dart
+          test/product/steering_idle_continuation_contract_test.dart
+          test/product/steering_scope_continuation_contract_test.dart
+          test/product/task_kernel/research_restart_reconciliation_test.dart
+          test/product/task_kernel/research_task_family_execution_test.dart
+          test/product/task_kernel/semantic_slash_understanding_test.dart
+          test/product/truthful_conversation_streaming_test.dart
+          test/product/utility_time_test.dart
+          EOF
+
+          echo '=== BLOB EQUALITY ==='
+          while IFS= read -r path; do
+            live_blob="$(git rev-parse "$LIVE:$path" 2>/dev/null || true)"
+            candidate_blob="$(git rev-parse "$CANDIDATE:$path" 2>/dev/null || true)"
+            if [[ -z "$live_blob" ]]; then
+              state="LIVE_MISSING"
+            elif [[ -z "$candidate_blob" ]]; then
+              state="CANDIDATE_MISSING"
+            elif [[ "$live_blob" == "$candidate_blob" ]]; then
+              state="IDENTICAL"
+            else
+              state="DIFFERENT"
+            fi
+            printf '%s\t%s\t%s\t%s\n' "$state" "$path" "$live_blob" "$candidate_blob"
+          done < /tmp/paths.txt
+
+      - name: Three-way apply qualified integration commit
+        shell: bash
+        run: |
+          set +e
+          CANDIDATE="535e8351b6ac213623ca1209b255ac63a08694b7"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git cherry-pick --no-commit "$CANDIDATE" > /tmp/cherry-pick.log 2>&1
+          rc=$?
+          echo "CHERRY_PICK_RC=$rc"
+          echo '=== CHERRY-PICK OUTPUT ==='
+          cat /tmp/cherry-pick.log
+          echo '=== AUTO-APPLIED INDEX CHANGES ==='
+          git diff --cached --name-only --diff-filter=ACDMRT | sort
+          echo '=== CONFLICT FILES ==='
+          git diff --name-only --diff-filter=U | sort
+          echo '=== WORKTREE STATUS ==='
+          git status --short
+          echo '=== CONFLICT MARKER LOCATIONS ==='
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            echo "--- $file ---"
+            grep -nE '^(<<<<<<<|=======|>>>>>>>)' "$file" || true
+          done < <(git diff --name-only --diff-filter=U)
+          git cherry-pick --abort >/dev/null 2>&1 || git reset --hard HEAD >/dev/null 2>&1
+          exit 0
