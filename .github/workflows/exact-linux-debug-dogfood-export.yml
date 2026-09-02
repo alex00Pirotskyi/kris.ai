@@ -1,0 +1,53 @@
+name: exact-linux-debug-dogfood-export
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+permissions:
+  contents: read
+jobs:
+  export-debug:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: af957ebf176c67fd1ac948cf2417852773098964
+          fetch-depth: 1
+      - name: Bind exact candidate
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "af957ebf176c67fd1ac948cf2417852773098964"
+          printf '%s\n' "$(git rev-parse HEAD)" > exact-dogfood-sha.txt
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Install Linux desktop build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev
+      - name: Generate native runner
+        run: flutter create --project-name kristin_local_agent --org local.kristin --platforms=linux .
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Build exact Linux debug
+        run: flutter build linux --debug
+      - name: Seal bundle metadata
+        shell: bash
+        run: |
+          cp exact-dogfood-sha.txt build/linux/x64/debug/bundle/EXACT_DOGFOOD_SHA.txt
+          cp SOURCE_MANIFEST.sha256 build/linux/x64/debug/bundle/SOURCE_MANIFEST.sha256
+          test -x build/linux/x64/debug/bundle/kris_studio_ai_2
+      - name: Upload exact Linux debug dogfood bundle
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: exact-linux-debug-dogfood-af957ebf
+          path: build/linux/x64/debug/bundle
+          if-no-files-found: error
+          retention-days: 2
