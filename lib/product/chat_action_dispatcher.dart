@@ -1,14 +1,22 @@
-// Business execution lives outside Flutter UI. This dispatcher remains a thin
-// wrapper over canonical ProductRuntime services; self-awareness is read-only
-// knowledge and does not create a second execution engine.
+import 'dart:async';
+
 import 'capability_doctor.dart';
 import 'capability_invocation.dart';
+import 'chat_control_plane.dart';
+import 'crypto_utils.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
 import 'product_runtime_self_awareness.dart';
+import 'recovery/product_runtime_recovery.dart';
 import 'self_awareness/capability_self_model.dart';
 import 'self_awareness/operational_self_awareness.dart';
+import 'task_kernel/complexity_router.dart';
+import 'task_kernel/task_families.dart';
+import 'task_kernel/task_kernel.dart';
+import 'task_kernel/task_specification.dart';
 
+/// Minimal business gateway for direct Chat actions. UI code talks to this
+/// surface instead of acquiring ProductRuntime internals itself.
 abstract class ChatRuntimeGateway {
   Future<List<Map<String, String>>> searchWeb({
     required String query,
@@ -41,9 +49,8 @@ abstract class ChatRuntimeGateway {
   });
 }
 
-/// Optional read-only surface. Existing ChatRuntimeGateway fakes do not need to
-/// implement it; production does. None of these methods performs an effect or
-/// converts capability knowledge into authority.
+/// Optional read-only self-awareness surface. It never executes an effect and
+/// never converts descriptive authority state into a permission grant.
 abstract interface class ChatSelfAwarenessGateway {
   Future<KristinSelfSnapshot> selfSnapshot({
     ProjectRecord? selectedProject,
@@ -69,14 +76,35 @@ abstract interface class ChatSelfAwarenessGateway {
     ModelIdentity? selectedModel,
   });
 
-  Future<List<SelfModelChange>> selfChangesSince(DateTime since);
+  Future<List<SelfModelChange>> selfChangesSince(
+    DateTime since, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
 
   Future<List<SelfInvariantViolation>> selfIntegrity({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
   });
 
-  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes();
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
+}
+
+/// Optional production planning surface. It is deliberately separate from
+/// ChatRuntimeGateway so existing small fakes remain source-compatible. The
+/// production implementation supplies the live self-model to the real kernel.
+abstract interface class ChatSelfAwarePlanningGateway {
+  Future<KernelPreparedPlan> prepareThroughKernel({
+    required TaskSpecification specification,
+    required RoutingDecision routing,
+    required ProjectRecord project,
+    required CommandMode mode,
+    ModelIdentity? model,
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
+  });
 }
 
 class ChatResearchResult {
@@ -119,11 +147,6 @@ class ChatActionDispatcher {
         ),
       );
 
-  /// Live application self-description for Chat informational turns.
-  ///
-  /// This deliberately does not call [authorize]: reading the bounded
-  /// self-model is knowledge, not an effect. Authority contained in the result
-  /// is descriptive only and never converted into a permission grant.
   Future<KristinSelfSnapshot> selfAwareness({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
@@ -181,8 +204,16 @@ class ChatActionDispatcher {
         selectedModel: selectedModel,
       );
 
-  Future<List<SelfModelChange>> selfChangesSince(DateTime since) =>
-      _selfGateway.selfChangesSince(since);
+  Future<List<SelfModelChange>> selfChangesSince(
+    DateTime since, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      _selfGateway.selfChangesSince(
+        since,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<List<SelfInvariantViolation>> selfIntegrity({
     ProjectRecord? selectedProject,
@@ -193,8 +224,36 @@ class ChatActionDispatcher {
         selectedModel: selectedModel,
       );
 
-  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes() =>
-      _selfGateway.runSelfConsistencyProbes();
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      _selfGateway.runSelfConsistencyProbes(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  Future<KernelPreparedPlan> prepareThroughKernel({
+    required TaskSpecification specification,
+    required RoutingDecision routing,
+    required ProjectRecord project,
+    required CommandMode mode,
+    ModelIdentity? model,
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
+  }) {
+    final gateway = runtime;
+    if (gateway is! ChatSelfAwarePlanningGateway) {
+      throw StateError('chat_self_aware_planning_gateway_unavailable');
+    }
+    return gateway.prepareThroughKernel(
+      specification: specification,
+      routing: routing,
+      project: project,
+      mode: mode,
+      model: model,
+      consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+    );
+  }
 
   Future<ProjectDiagnosticReport> inspect(
     String projectId, {
@@ -328,21 +387,25 @@ class ChatActionDispatcher {
   }
 }
 
-/// Production gateway. It is the composition point that makes the runtime
-/// self-model available to Chat without teaching the UI about ProductRuntime.
-class ProductRuntimeChatGateway
-    implements ChatRuntimeGateway, ChatSelfAwarenessGateway {
-  const ProductRuntimeChatGateway(this.runtime);
+/// Production gateway and composition point for self-awareness plus autonomic
+/// recovery. It remains a wrapper around canonical ProductRuntime behavior;
+/// no second execution engine is introduced here.
+class ProductRuntimeChatGateway implements
+    ChatRuntimeGateway,
+    ChatSelfAwarenessGateway,
+    ChatSelfAwarePlanningGateway {
+  ProductRuntimeChatGateway(this.runtime) {
+    // Installs exactly one observer/recovery supervisor per ProductRuntime.
+    ProductSelfAwarenessRuntime.shared(runtime);
+    ProductRuntimeAutonomicRecovery.shared(runtime);
+  }
+
   final ProductRuntime runtime;
 
-  ProductSelfAwarenessRuntime get awareness {
-    final shared = ProductSelfAwarenessRuntime.shared(runtime);
-    // One idempotent monitor per ProductRuntime. It begins when Chat first
-    // touches the self-aware gateway and stops when the runtime event stream
-    // closes. Probes remain observation-only.
-    shared.consistency.start(tick: const Duration(seconds: 5));
-    return shared;
-  }
+  ProductSelfAwarenessRuntime get awareness =>
+      ProductSelfAwarenessRuntime.shared(runtime);
+  ProductRuntimeAutonomicRecovery get autonomic =>
+      ProductRuntimeAutonomicRecovery.shared(runtime);
 
   @override
   Future<KristinSelfSnapshot> selfSnapshot({
@@ -393,8 +456,16 @@ class ProductRuntimeChatGateway
       );
 
   @override
-  Future<List<SelfModelChange>> selfChangesSince(DateTime since) async =>
-      awareness.changesSince(since);
+  Future<List<SelfModelChange>> selfChangesSince(
+    DateTime since, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) async =>
+      awareness.changesSince(
+        since,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   @override
   Future<List<SelfInvariantViolation>> selfIntegrity({
@@ -407,19 +478,162 @@ class ProductRuntimeChatGateway
       );
 
   @override
-  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes() =>
-      awareness.runProbes(force: true);
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      awareness.runProbes(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        force: true,
+      );
+
+  @override
+  Future<KernelPreparedPlan> prepareThroughKernel({
+    required TaskSpecification specification,
+    required RoutingDecision routing,
+    required ProjectRecord project,
+    required CommandMode mode,
+    ModelIdentity? model,
+    Set<String> consumedCoordinatorCapabilities = const <String>{},
+  }) async {
+    final consumed = <String>{
+      ...consumedCoordinatorCapabilities,
+      ...specification.capabilityHints.where(kCoordinatorCapabilityIds.contains),
+    };
+    final selfContext = await awareness.planningContext(
+      selectedProject: project,
+      selectedModel: model,
+      relevantCapabilityIds: specification.capabilityHints.toSet(),
+    );
+    final result = await runtime.taskKernel.plan(
+      specification: specification,
+      routing: routing,
+      context: PlanningContext(
+        project: project,
+        model: model,
+        availableCapabilityIds: selfContext.availableCapabilityIds,
+        availableToolNames: runtime.tools.names,
+        consumedCoordinatorCapabilities: consumed,
+        localOnly: runtime.settings.localOnly,
+      ),
+    );
+    final compiled = runtime.taskKernel.compile(
+      plan: result.plan,
+      project: project,
+      mode: mode,
+      consumedCoordinatorCapabilities: consumed,
+    );
+    final prepared = PreparedCommand(
+      id: newId('command'),
+      requestKey: Sha256.text(canonicalJson(<String, dynamic>{
+        'projectId': project.id,
+        'specification': specification.contentKey,
+        'planHash': result.plan.contentHash,
+        'selectedTaskIds': compiled.selectedTaskIds.toList()..sort(),
+        'mode': mode.name,
+        'model': model?.toJson(),
+        'selfAvailableCapabilities':
+            selfContext.availableCapabilityIds.toList()..sort(),
+      })),
+      contract: compiled.contract,
+      plan: compiled.plan,
+      model: model ??
+          ModelIdentity(
+            providerId: 'none',
+            name: 'unselected',
+            digest: '',
+            discoveredAt: DateTime.now().toUtc(),
+          ),
+      createdAt: DateTime.now().toUtc(),
+    );
+    final existing = (await runtime.repositories.commands.all())
+        .where((item) => item.requestKey == prepared.requestKey)
+        .firstOrNull;
+    final command = existing ?? prepared;
+    if (existing == null) {
+      await runtime.repositories.commands.put(prepared);
+      await runtime.audit.append(
+        'task_kernel.compiled',
+        prepared.id,
+        <String, dynamic>{
+          'commandId': prepared.id,
+          'projectId': project.id,
+          'family': result.plan.family.name,
+          'route': result.plan.route.name,
+          'conservative': result.isConservative,
+          'coordinatorCapabilitiesConsumed': consumed.toList()..sort(),
+          'specificationSource': specification.source.name,
+          'workItems': compiled.plan.items.length,
+          'planHash': result.plan.contentHash,
+          'selfModelFreshnessWarnings': selfContext.freshnessWarnings,
+        },
+      );
+      await runtime.events.publish(
+        'command.prepared',
+        prepared.id,
+        <String, dynamic>{
+          'commandId': prepared.id,
+          'projectId': project.id,
+          'mode': compiled.contract.mode.name,
+          'complexity': compiled.plan.complexity,
+          'generatedTaskPlan': !result.isConservative,
+          'taskFamily': result.plan.family.name,
+          'selfAwarePlanning': true,
+        },
+      );
+    }
+    return KernelPreparedPlan(
+      command: command,
+      canonical: result.plan,
+      origin: result.origin,
+      routing: routing,
+      failure: result.failure,
+    );
+  }
+
+  Future<T> _observe<T>(
+    String operation,
+    Map<String, Object?> attributes,
+    Future<T> Function() action, {
+    bool stateChanging = true,
+    String? projectId,
+    String? modelExactId,
+    String? capabilityId,
+  }) async {
+    try {
+      return await awareness.observeOperation(
+        operation,
+        attributes,
+        action,
+        stateChanging: stateChanging,
+      );
+    } catch (error) {
+      // Do not delay the user's visible failure while recovery performs its
+      // bounded work. The durable failure event and supervisor continue on the
+      // same ProductRuntime, and the original error is still rethrown to Chat.
+      unawaited(autonomic.handleOperationalFailure(
+        operation: operation,
+        error: error,
+        projectId: projectId,
+        modelExactId: modelExactId,
+        capabilityId: capabilityId,
+      ));
+      rethrow;
+    }
+  }
 
   @override
   Future<List<Map<String, String>>> searchWeb({
     required String query,
     int count = 10,
   }) =>
-      awareness.observeOperation(
+      _observe(
         'research.search',
         <String, Object?>{'query': query, 'count': count},
         () => runtime.searchWeb(query: query, count: count),
         stateChanging: false,
+        capabilityId: 'research.search',
       );
 
   @override
@@ -429,7 +643,7 @@ class ProductRuntimeChatGateway
     required List<Map<String, String>> results,
   }) async {
     if (projectId == null) return;
-    await awareness.observeOperation<void>(
+    await _observe<void>(
       'research.archive',
       <String, Object?>{
         'projectId': projectId,
@@ -442,49 +656,60 @@ class ProductRuntimeChatGateway
         results: results,
         provider: 'duckduckgo',
       ),
+      projectId: projectId,
     );
   }
 
   @override
   Future<ProjectDiagnosticReport> analyzeProject(String projectId) =>
-      awareness.observeOperation(
+      _observe(
         'project.analyze',
         <String, Object?>{'projectId': projectId},
         () => runtime.analyzeProject(projectId),
         stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'project.analyze',
       );
 
   @override
   Future<ProjectDiagnosticReport> testProject(String projectId) =>
-      awareness.observeOperation(
+      _observe(
         'project.test',
         <String, Object?>{'projectId': projectId},
         () => runtime.testProject(projectId),
         stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'project.test',
       );
 
   @override
   Future<ProjectDiagnosticReport> buildProject(String projectId) =>
-      awareness.observeOperation(
+      _observe(
         'project.build',
         <String, Object?>{'projectId': projectId},
         () => runtime.buildProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.build',
       );
 
   @override
   Future<ProjectProcessStatus> startProject(String projectId) =>
-      awareness.observeOperation(
+      _observe(
         'project.start',
         <String, Object?>{'projectId': projectId},
         () => runtime.startProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.run',
       );
 
   @override
   Future<ProjectProcessStatus?> stopProject(String projectId) =>
-      awareness.observeOperation(
+      _observe(
         'project.stop',
         <String, Object?>{'projectId': projectId},
         () => runtime.stopProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.stop',
       );
 
   @override
@@ -492,7 +717,7 @@ class ProductRuntimeChatGateway
     required String request,
     String? suggestedName,
   }) =>
-      awareness.observeOperation(
+      _observe(
         'project.provision',
         <String, Object?>{
           'request': request,
@@ -502,6 +727,7 @@ class ProductRuntimeChatGateway
           request: request,
           suggestedName: suggestedName,
         ),
+        capabilityId: 'agent.create_project',
       );
 
   @override
@@ -511,7 +737,7 @@ class ProductRuntimeChatGateway
     required String request,
     required ModelIdentity model,
   }) =>
-      awareness.observeOperation(
+      _observe(
         'command.prepare',
         <String, Object?>{
           'projectId': projectId,
@@ -524,6 +750,8 @@ class ProductRuntimeChatGateway
           request: request,
           model: model,
         ),
+        projectId: projectId,
+        modelExactId: model.exactId,
       );
 
   @override
@@ -532,7 +760,7 @@ class ProductRuntimeChatGateway
     List<ModelIdentity>? discoveredModels,
     CapabilityDoctorDepth depth = CapabilityDoctorDepth.quick,
   }) =>
-      awareness.observeOperation(
+      _observe(
         'system.capability_doctor',
         <String, Object?>{
           if (projectId != null) 'projectId': projectId,
@@ -544,5 +772,7 @@ class ProductRuntimeChatGateway
           depth: depth,
         ),
         stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'system.diagnose',
       );
 }
