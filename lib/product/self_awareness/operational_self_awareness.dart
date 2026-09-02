@@ -4,7 +4,6 @@ import '../crypto_utils.dart';
 import 'capability_self_model.dart';
 
 enum CausalNodeKind { action, stateChange, observation, failure, recovery }
-
 enum CausalEdgeKind { caused, preceded, observedAfter, recoveredBy, correlated }
 
 final class CausalNode {
@@ -59,11 +58,8 @@ final class CausalEdge {
       };
 }
 
-/// Bounded causal graph for operational reasoning.
-///
-/// Edges are evidence-bearing hypotheses, not proof. That distinction matters:
-/// recovery may use the graph to rank likely causes, but authority and repair
-/// policy remain separate gates.
+/// Bounded evidence graph. Causal edges are hypotheses with confidence, not
+/// authority or proof, and therefore cannot authorize a repair on their own.
 final class CausalStateGraph {
   CausalStateGraph({this.maxNodes = 256, this.maxEdges = 512});
 
@@ -272,25 +268,33 @@ final class SelfIntegrityMonitor {
 
 List<SelfInvariant> defaultKristinSelfInvariants() => <SelfInvariant>[
       SelfInvariant(
-        id: 'coordinator_never_direct_runner_tool',
-        description: 'Coordinator capabilities must never be marked directly executable.',
+        id: 'coordinator_never_runner_tool',
+        description:
+            'Coordinator capabilities must never be represented as exact Runner tools.',
         evaluate: (snapshot) {
           final invalid = snapshot.capabilities
-              .where((item) => item.descriptor.coordinator && item.descriptor.directlyExecutable)
+              .where((item) =>
+                  item.descriptor.coordinator &&
+                  item.descriptor.runnerToolName != null)
               .map((item) => item.descriptor.id)
               .toList();
           return invalid.isEmpty
               ? null
-              : 'Coordinator capability/direct-execution boundary violated by: ${invalid.join(', ')}.';
+              : 'Coordinator capability/Runner-tool boundary violated by: ${invalid.join(', ')}.';
         },
       ),
       SelfInvariant(
         id: 'owner_capability_never_self_grants',
-        description: 'Owner capabilities cannot be operationally usable without observed Owner authority.',
+        description:
+            'Owner capabilities cannot be usable unless authority was evaluated and granted.',
         evaluate: (snapshot) {
           final invalid = snapshot.capabilities.where((item) {
-            if (item.descriptor.authorityClass != CapabilityAuthorityClass.owner) return false;
-            return item.operationallyUsable && !item.availability.currentAuthority.contains('owner');
+            if (item.descriptor.authorityClass != CapabilityAuthorityClass.owner) {
+              return false;
+            }
+            return item.operationallyUsable &&
+                item.availability.authorityObservation !=
+                    AuthorityObservationState.granted;
           }).map((item) => item.descriptor.id).toList();
           return invalid.isEmpty
               ? null
@@ -299,11 +303,13 @@ List<SelfInvariant> defaultKristinSelfInvariants() => <SelfInvariant>[
       ),
       SelfInvariant(
         id: 'browser_truth_matches_runtime',
-        description: 'Browser-dependent capabilities cannot be usable when the Browser runtime is absent.',
+        description:
+            'Browser-dependent capabilities cannot be usable when Browser is absent.',
         evaluate: (snapshot) {
           if (snapshot.application.browser['available'] == true) return null;
           final invalid = snapshot.capabilities
-              .where((item) => item.descriptor.browserRequired && item.operationallyUsable)
+              .where((item) =>
+                  item.descriptor.browserRequired && item.operationallyUsable)
               .map((item) => item.descriptor.id)
               .toList();
           return invalid.isEmpty
@@ -313,22 +319,41 @@ List<SelfInvariant> defaultKristinSelfInvariants() => <SelfInvariant>[
       ),
       SelfInvariant(
         id: 'selected_project_is_known',
-        description: 'A selected project must resolve to the current project repository snapshot.',
+        description:
+            'A selected project must resolve to the current project repository snapshot.',
         severity: SelfInvariantSeverity.warning,
         evaluate: (snapshot) {
           final selected = snapshot.application.selectedProject?['id']?.toString();
           if (selected == null || selected.isEmpty) return null;
           final known = snapshot.application.knownProjects
               .any((project) => project['id']?.toString() == selected);
-          return known ? null : 'Selected project $selected is not present in the current project snapshot.';
+          return known
+              ? null
+              : 'Selected project $selected is not present in the current project snapshot.';
+        },
+      ),
+      SelfInvariant(
+        id: 'selected_model_is_live',
+        description:
+            'A selected model used for planning must be present in fresh provider discovery.',
+        severity: SelfInvariantSeverity.warning,
+        evaluate: (snapshot) {
+          final selected = snapshot.application.selectedModel;
+          if (selected == null) return null;
+          return selected['discovered'] == true
+              ? null
+              : 'Selected model ${selected['exactId']} is not present in fresh provider discovery.';
         },
       ),
       SelfInvariant(
         id: 'failing_health_not_plannable',
-        description: 'Capabilities with failing health cannot be exposed as operationally usable.',
+        description:
+            'Capabilities with failing health cannot be exposed as operationally usable.',
         evaluate: (snapshot) {
           final invalid = snapshot.capabilities
-              .where((item) => item.health?.state == CapabilityHealthState.failing && item.operationallyUsable)
+              .where((item) =>
+                  item.health?.state == CapabilityHealthState.failing &&
+                  item.operationallyUsable)
               .map((item) => item.descriptor.id)
               .toList();
           return invalid.isEmpty
@@ -345,58 +370,63 @@ final class SelfConsistencyProbeResult {
     required this.probeId,
     required this.status,
     required this.message,
-    this.capabilityId,
+    this.capabilityIds = const <String>{},
     this.evidenceReferences = const <String>[],
     this.attributes = const <String, Object?>{},
     DateTime? observedAt,
+    this.validFor = const Duration(seconds: 30),
     this.latency,
   }) : observedAt = observedAt ?? DateTime.now().toUtc();
 
   final String probeId;
-  final String? capabilityId;
+  final Set<String> capabilityIds;
   final ProbeStatus status;
   final String message;
   final DateTime observedAt;
+  final Duration validFor;
   final Duration? latency;
   final List<String> evidenceReferences;
   final Map<String, Object?> attributes;
 
-  CapabilityHealth? toCapabilityHealth() {
-    final id = capabilityId;
-    if (id == null) return null;
+  Iterable<CapabilityHealth> toCapabilityHealth() sync* {
     final state = switch (status) {
       ProbeStatus.healthy => CapabilityHealthState.healthy,
       ProbeStatus.degraded => CapabilityHealthState.degraded,
       ProbeStatus.failing => CapabilityHealthState.failing,
       ProbeStatus.skipped => CapabilityHealthState.unknown,
     };
-    return CapabilityHealth(
-      capabilityId: id,
-      state: state,
-      reasons: <String>[message],
-      observedAt: observedAt,
-      lastVerifiedAt: status == ProbeStatus.skipped ? null : observedAt,
-      evidence: <KnowledgeEvidence>[
-        KnowledgeEvidence(
-          kind: KnowledgeEvidenceKind.observed,
-          source: 'self_consistency_probe:$probeId',
-          confidence: status == ProbeStatus.skipped
-              ? ObservationConfidence.unknown
-              : ObservationConfidence.high,
-          observedAt: observedAt,
-          detail: message,
-        ),
-      ],
-      latency: latency,
-    );
+    for (final capabilityId in capabilityIds) {
+      yield CapabilityHealth(
+        capabilityId: capabilityId,
+        state: state,
+        reasons: <String>[message],
+        observedAt: observedAt,
+        lastVerifiedAt: status == ProbeStatus.skipped ? null : observedAt,
+        expiresAt: observedAt.add(validFor),
+        evidence: <KnowledgeEvidence>[
+          KnowledgeEvidence(
+            kind: KnowledgeEvidenceKind.observed,
+            source: 'self_consistency_probe:$probeId',
+            confidence: status == ProbeStatus.skipped
+                ? ObservationConfidence.unknown
+                : ObservationConfidence.high,
+            observedAt: observedAt,
+            expiresAt: observedAt.add(validFor),
+            detail: message,
+          ),
+        ],
+        latency: latency,
+      );
+    }
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
         'probeId': probeId,
-        if (capabilityId != null) 'capabilityId': capabilityId,
+        'capabilityIds': capabilityIds.toList()..sort(),
         'status': status.name,
         'message': message,
         'observedAt': observedAt.toIso8601String(),
+        'validForMs': validFor.inMilliseconds,
         if (latency != null) 'latencyMs': latency!.inMilliseconds,
         'evidenceReferences': evidenceReferences,
         'attributes': attributes,
@@ -406,7 +436,11 @@ final class SelfConsistencyProbeResult {
 abstract interface class SelfConsistencyProbe {
   String get id;
   Duration get interval;
-  Future<SelfConsistencyProbeResult> run(KristinSelfSnapshot snapshot);
+  bool applies(SelfModelSessionOverlay overlay);
+  Future<SelfConsistencyProbeResult> run(
+    KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
+  );
 }
 
 final class CallbackSelfConsistencyProbe implements SelfConsistencyProbe {
@@ -414,20 +448,34 @@ final class CallbackSelfConsistencyProbe implements SelfConsistencyProbe {
     required this.id,
     required this.interval,
     required this.callback,
+    this.appliesTo,
   });
 
   @override
   final String id;
   @override
   final Duration interval;
-  final Future<SelfConsistencyProbeResult> Function(KristinSelfSnapshot snapshot) callback;
+  final bool Function(SelfModelSessionOverlay overlay)? appliesTo;
+  final Future<SelfConsistencyProbeResult> Function(
+    KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
+  ) callback;
 
   @override
-  Future<SelfConsistencyProbeResult> run(KristinSelfSnapshot snapshot) => callback(snapshot);
+  bool applies(SelfModelSessionOverlay overlay) => appliesTo?.call(overlay) ?? true;
+
+  @override
+  Future<SelfConsistencyProbeResult> run(
+    KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
+  ) =>
+      callback(snapshot, overlay);
 }
 
-/// Runs bounded read-only probes and feeds their observations back into the
-/// self-model. The monitor has no authority-granting or recovery actuator API.
+/// Bounded observation-only monitor. It determines which probes are due before
+/// snapshotting, so a five-second scheduler does not poll all providers every
+/// five seconds. Probe outcomes are then published into one post-probe model
+/// refresh so failures cannot disappear without ever becoming model-visible.
 final class SelfConsistencyMonitor {
   SelfConsistencyMonitor({
     required this.selfModel,
@@ -442,27 +490,43 @@ final class SelfConsistencyMonitor {
   bool _running = false;
   Timer? _timer;
 
-  Future<List<SelfConsistencyProbeResult>> runDue({bool force = false}) async {
+  Future<List<SelfConsistencyProbeResult>> runDue({
+    bool force = false,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async {
     if (_running) return const <SelfConsistencyProbeResult>[];
+    final now = DateTime.now().toUtc();
+    final due = probes.where((probe) {
+      if (!probe.applies(overlay)) return false;
+      final key = '${overlay.cacheKey}|${probe.id}';
+      final last = _lastRun[key];
+      return force || last == null || now.difference(last) >= probe.interval;
+    }).toList(growable: false);
+    if (due.isEmpty) return const <SelfConsistencyProbeResult>[];
+
     _running = true;
     try {
       final snapshot = await selfModel.snapshot(
         source: 'self_consistency_monitor',
         reason: 'probe_context',
+        overlay: overlay,
       );
-      final now = DateTime.now().toUtc();
       final results = <SelfConsistencyProbeResult>[];
-      for (final probe in probes) {
-        final last = _lastRun[probe.id];
-        if (!force && last != null && now.difference(last) < probe.interval) {
-          continue;
-        }
-        final result = await probe.run(snapshot);
-        _lastRun[probe.id] = result.observedAt;
+      for (final probe in due) {
+        final result = await probe.run(snapshot, overlay);
+        _lastRun['${overlay.cacheKey}|${probe.id}'] = result.observedAt;
         results.add(result);
-        final health = result.toCapabilityHealth();
-        if (health != null) selfModel.recordHealthObservation(health);
+        for (final health in result.toCapabilityHealth()) {
+          selfModel.recordHealthObservation(health, overlay: overlay);
+        }
         if (onResult != null) await onResult!(result);
+      }
+      if (results.isNotEmpty) {
+        await selfModel.notifyStateChanged(
+          source: 'self_consistency_monitor',
+          reason: 'probe_results_updated',
+          overlay: overlay,
+        );
       }
       return List<SelfConsistencyProbeResult>.unmodifiable(results);
     } finally {
