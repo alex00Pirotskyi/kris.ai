@@ -10,7 +10,10 @@ import 'self_awareness/capability_self_model.dart';
 import 'self_awareness/operational_self_awareness.dart';
 
 abstract class ChatRuntimeGateway {
-  Future<List<Map<String, String>>> searchWeb({required String query, int count});
+  Future<List<Map<String, String>>> searchWeb({
+    required String query,
+    int count = 10,
+  });
   Future<void> archiveResearchIfProject({
     required String? projectId,
     required String query,
@@ -34,7 +37,7 @@ abstract class ChatRuntimeGateway {
   Future<CapabilityDoctorReport> inspectCapabilities({
     String? projectId,
     List<ModelIdentity>? discoveredModels,
-    CapabilityDoctorDepth depth,
+    CapabilityDoctorDepth depth = CapabilityDoctorDepth.quick,
   });
 }
 
@@ -45,13 +48,13 @@ abstract interface class ChatSelfAwarenessGateway {
   Future<KristinSelfSnapshot> selfSnapshot({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-    bool forceRefresh,
+    bool forceRefresh = false,
   });
 
   Future<SelfModelPlanningContext> selfPlanningContext({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-    Set<String> relevantCapabilityIds,
+    Set<String> relevantCapabilityIds = const <String>{},
   });
 
   Future<CapabilityRequirementReport> capabilityRequirements(
