@@ -1,64 +1,35 @@
-// Architectural Improvement #7: business execution lives outside the
-// Flutter UI. ChatActionDispatcher is a plain Dart, non-widget class --
-// it never imports `package:flutter/material.dart`, never touches
-// BuildContext/Navigator, and never mutates widget state directly. The
-// Flutter UI (chat_control_plane_studio_actions.dart) calls into this
-// dispatcher and only handles: collecting text, displaying messages,
-// rendering progress, and navigation.
-//
-// This is deliberately NOT a second execution engine (see the module
-// docs on ChatExecutionRoute in chat_control_plane.dart): every method
-// here is a thin, directly-testable wrapper around an existing canonical
-// ProductRuntime capability. Nothing here re-implements build/test/run,
-// invents a parallel permission model, or bypasses
-// ProductRuntime.prepare's governed plan/permission/execution pipeline.
+// Business execution lives outside Flutter UI. This dispatcher remains a thin
+// wrapper over canonical ProductRuntime services; self-awareness is read-only
+// knowledge and does not create a second execution engine.
 import 'capability_doctor.dart';
 import 'capability_invocation.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
+import 'product_runtime_self_awareness.dart';
+import 'self_awareness/capability_self_model.dart';
 
-/// The narrow seam ChatActionDispatcher needs from ProductRuntime.
-/// Keeping this interface small (rather than depending on the concrete,
-/// very large ProductRuntime class) is what makes the dispatcher
-/// fakeable in tests without booting real project/process/model
-/// infrastructure -- see Architectural Improvement #7's Stage 7
-/// ("action dispatcher tests ... use fakes at canonical service
-/// boundaries").
 abstract class ChatRuntimeGateway {
-  /// Architectural Improvement #9: deliberately takes no projectId --
-  /// research must not require a project.
-  Future<List<Map<String, String>>> searchWeb({
-    required String query,
-    int count,
-  });
-
-  /// Archives a completed search as project knowledge when a project is
-  /// in scope. A no-op when [projectId] is null: research is optionally
-  /// enriched by a project, never gated by one.
+  Future<List<Map<String, String>>> searchWeb({required String query, int count});
   Future<void> archiveResearchIfProject({
     required String? projectId,
     required String query,
     required List<Map<String, String>> results,
   });
-
   Future<ProjectDiagnosticReport> analyzeProject(String projectId);
   Future<ProjectDiagnosticReport> testProject(String projectId);
   Future<ProjectDiagnosticReport> buildProject(String projectId);
   Future<ProjectProcessStatus> startProject(String projectId);
   Future<ProjectProcessStatus?> stopProject(String projectId);
-
   Future<ProjectRecord> provisionProjectForRequest({
     required String request,
     String? suggestedName,
   });
-
   Future<PreparedCommand> prepare({
     required String projectId,
     required CommandMode mode,
     required String request,
     required ModelIdentity model,
   });
-
   Future<CapabilityDoctorReport> inspectCapabilities({
     String? projectId,
     List<ModelIdentity>? discoveredModels,
@@ -66,11 +37,17 @@ abstract class ChatRuntimeGateway {
   });
 }
 
-/// A completed web search, ready for Chat to present. Carries no
-/// project-scoping requirement -- see [ChatRuntimeGateway.searchWeb].
+/// Optional read-only surface. Existing ChatRuntimeGateway fakes do not need to
+/// implement it; production does. No method on this interface performs effects.
+abstract interface class ChatSelfAwarenessGateway {
+  Future<KristinSelfSnapshot> selfSnapshot({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
+}
+
 class ChatResearchResult {
   const ChatResearchResult({required this.query, required this.results});
-
   final String query;
   final List<Map<String, String>> results;
 }
@@ -84,10 +61,6 @@ class ChatActionDispatcher {
   final ChatRuntimeGateway runtime;
   final CapabilityAuthorityResolver authorityResolver;
 
-  /// The one semantic authority boundary for Chat-originated capability
-  /// execution. Slash commands, natural language and buttons all arrive here
-  /// after the compiler has selected a canonical capability id; the source of
-  /// the gesture cannot change the permission envelope.
   CapabilityAuthorityDecision authorize({
     required String capabilityId,
     Set<String> targetIds = const <String>{},
@@ -105,67 +78,78 @@ class ChatActionDispatcher {
         ),
       );
 
+  /// Live application self-description for Chat informational turns.
+  ///
+  /// This deliberately does not call [authorize]: reading the bounded
+  /// self-model is knowledge, not an effect. Authority contained in the result
+  /// is descriptive only and never converted into a permission grant.
+  Future<KristinSelfSnapshot> selfAwareness({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) {
+    final gateway = runtime;
+    if (gateway is! ChatSelfAwarenessGateway) {
+      throw StateError('chat_self_awareness_gateway_unavailable');
+    }
+    return gateway.selfSnapshot(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+  }
+
+  Future<String> explainCapabilityAvailability(
+    String capabilityId, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) async {
+    final self = await selfAwareness(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    final item = self.capability(capabilityId);
+    if (item == null) {
+      return 'Kristin does not currently know a capability named $capabilityId.';
+    }
+    final reasons = item.availability.reasons.isEmpty
+        ? 'No additional reason was reported.'
+        : item.availability.reasons.join(' ');
+    return '$capabilityId is ${item.availability.state.name}. $reasons';
+  }
+
   Future<ProjectDiagnosticReport> inspect(
     String projectId, {
     String capabilityId = 'project.analyze',
   }) {
-    authorize(
-      capabilityId: capabilityId,
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: capabilityId, targetIds: <String>{projectId}, reason: 'chat_direct');
     return runtime.analyzeProject(projectId);
   }
 
   Future<ProjectDiagnosticReport> test(String projectId) {
-    authorize(
-      capabilityId: 'project.test',
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: 'project.test', targetIds: <String>{projectId}, reason: 'chat_direct');
     return runtime.testProject(projectId);
   }
 
   Future<ProjectDiagnosticReport> build(String projectId) {
-    authorize(
-      capabilityId: 'project.build',
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: 'project.build', targetIds: <String>{projectId}, reason: 'chat_direct');
     return runtime.buildProject(projectId);
   }
 
   Future<ProjectProcessStatus> run(String projectId) {
-    authorize(
-      capabilityId: 'project.run',
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: 'project.run', targetIds: <String>{projectId}, reason: 'chat_direct');
     return runtime.startProject(projectId);
   }
 
   Future<ProjectProcessStatus?> stop(String projectId) {
-    authorize(
-      capabilityId: 'project.stop',
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: 'project.stop', targetIds: <String>{projectId}, reason: 'chat_direct');
     return runtime.stopProject(projectId);
   }
 
   Future<ProjectProcessStatus> restart(String projectId) async {
-    authorize(
-      capabilityId: 'project.restart',
-      targetIds: <String>{projectId},
-      reason: 'chat_direct',
-    );
+    authorize(capabilityId: 'project.restart', targetIds: <String>{projectId}, reason: 'chat_direct');
     await runtime.stopProject(projectId);
     return runtime.startProject(projectId);
   }
 
-  /// research.search: never requires a project (Architectural Improvement
-  /// #9). [projectId], when supplied, only enriches the result with
-  /// project-scoped knowledge archiving; it is never required to proceed.
   Future<ChatResearchResult> search({
     required String query,
     String? projectId,
@@ -201,11 +185,6 @@ class ChatActionDispatcher {
     );
   }
 
-  /// Resolves the project a substantial agent action (create/modify/fix)
-  /// should target. Only `agent.create_project` ever provisions a new
-  /// project; every other capability id must already have a resolvable
-  /// project (Architectural Improvement #8 -- create and modify/fix are
-  /// never the same runtime decision).
   Future<ProjectRecord?> resolveAgentProject({
     required String capabilityId,
     required ProjectRecord? selectedProject,
@@ -245,13 +224,23 @@ class ChatActionDispatcher {
   }
 }
 
-/// The production [ChatRuntimeGateway], delegating every call to the real
-/// canonical [ProductRuntime]. This is the only place chat_control_plane*
-/// code should construct a [ChatActionDispatcher] from a live runtime.
-class ProductRuntimeChatGateway implements ChatRuntimeGateway {
+/// Production gateway. It is the composition point that makes the runtime
+/// self-model available to Chat without teaching the UI about ProductRuntime.
+class ProductRuntimeChatGateway
+    implements ChatRuntimeGateway, ChatSelfAwarenessGateway {
   const ProductRuntimeChatGateway(this.runtime);
-
   final ProductRuntime runtime;
+
+  @override
+  Future<KristinSelfSnapshot> selfSnapshot({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      buildProductSelfModel(
+        runtime,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      ).snapshot();
 
   @override
   Future<List<Map<String, String>>> searchWeb({
