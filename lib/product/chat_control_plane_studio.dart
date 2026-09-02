@@ -222,8 +222,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     conversationSession.setAwaitingPermission(value);
   }
 
-  ChatActionDispatcher get dispatcher =>
-      ChatActionDispatcher(ProductRuntimeChatGateway(runtime));
+  late final ChatActionDispatcher _dispatcher;
+  ChatActionDispatcher get dispatcher => _dispatcher;
 
   ProjectRecord? get selectedProject =>
       projects.where((project) => project.id == selectedProjectId).firstOrNull;
@@ -251,6 +251,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   @override
   void initState() {
     super.initState();
+    // Composition is initialized before any understanding/planning turn so
+    // the kernel's live self-model resolver and failure supervisor are active
+    // from the first governed request, not only after a direct Chat action.
+    _dispatcher = ChatActionDispatcher(ProductRuntimeChatGateway(runtime));
     liveSubscription = runtime.liveRunStream.listen(_onLiveSignal);
     refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (runActive) unawaited(_refreshCurrentRun());
@@ -651,12 +655,21 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     String? semanticRequestOverride,
   }) async {
     final kernel = runtime.taskKernel;
+    final selfContext = await dispatcher.selfPlanningContext(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+      relevantCapabilityIds: <String>{
+        if (decision.capability != null) decision.capability!.id,
+      },
+    );
     final context = KernelRequestContext(
       decision: decision,
       project: selectedProject,
       model: selectedModel,
       knownTargets: _knownTargets(),
       availableToolNames: runtime.tools.names,
+      selfModel: selfContext,
+      localOnly: runtime.settings.localOnly,
     );
     if (semanticRequestOverride != null &&
         semanticRequestOverride.trim().isNotEmpty &&
