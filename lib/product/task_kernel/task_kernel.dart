@@ -24,9 +24,9 @@ import 'universal_task_plan.dart';
 enum KernelPlanOrigin { planned, conservativeFallback }
 
 typedef KernelLiveSelfModelResolver = Future<SelfModelPlanningContext> Function({
-  ProjectRecord? project,
-  ModelIdentity? model,
-  Set<String> relevantCapabilityIds,
+  required ProjectRecord? project,
+  required ModelIdentity? model,
+  required Set<String> relevantCapabilityIds,
 });
 
 /// Product composition may register a live self-model resolver for a kernel.
@@ -44,10 +44,6 @@ final class KernelSelfModelRegistry {
     KernelLiveSelfModelResolver resolver,
   ) {
     _resolvers[kernel] = resolver;
-  }
-
-  static void unregister(UniversalTaskKernel kernel) {
-    _resolvers[kernel] = null;
   }
 
   static Future<SelfModelPlanningContext?> resolve(
