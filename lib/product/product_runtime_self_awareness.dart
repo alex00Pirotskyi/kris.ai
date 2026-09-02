@@ -59,93 +59,109 @@ final class RuntimeCapabilityProvider
         'Runtime provider has not reported a separate direct health probe yet.',
       ],
       observedAt: now,
+      expiresAt: now.add(descriptor.healthFreshnessBudget),
       evidence: <KnowledgeEvidence>[
         KnowledgeEvidence(
           kind: KnowledgeEvidenceKind.inferred,
           source: '$providerId.availability',
           confidence: ObservationConfidence.medium,
           observedAt: now,
+          expiresAt: now.add(descriptor.healthFreshnessBudget),
         ),
       ],
     );
   }
 }
 
-/// Authoritative bounded snapshot adapter for ProductRuntime.
-///
-/// Selection is session state supplied by Chat. Projects, runs, models,
-/// Browser and Owner status come from canonical runtime owners. Field evidence
-/// records how each important fact was learned so the model can distinguish
-/// observation from inference or configuration.
+SelfModelSessionOverlay productSelfOverlay({
+  String key = 'chat',
+  ProjectRecord? selectedProject,
+  ModelIdentity? selectedModel,
+}) =>
+    SelfModelSessionOverlay(
+      key: key,
+      selectedProject: selectedProject == null
+          ? null
+          : <String, Object?>{
+              'id': selectedProject.id,
+              'name': selectedProject.name,
+              'rootPath': selectedProject.rootPath,
+            },
+      selectedModel: selectedModel == null
+          ? null
+          : <String, Object?>{
+              'providerId': selectedModel.providerId,
+              'name': selectedModel.name,
+              'digest': selectedModel.digest,
+              'exactId': selectedModel.exactId,
+            },
+    );
+
+/// Authoritative bounded ProductRuntime adapter. Provider discovery is cached
+/// independently from the five-second monitor tick and records each provider's
+/// success/failure instead of treating an empty aggregate list as proof that
+/// every provider was healthy.
 final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvider {
-  const ProductRuntimeSnapshotProvider({
+  ProductRuntimeSnapshotProvider({
     required this.runtime,
-    this.selectedProject,
-    this.selectedModel,
-    this.selectedProjectProvider,
-    this.selectedModelProvider,
     this.maxProjects = 20,
     this.maxRuns = 10,
     this.maxModels = 30,
+    this.modelDiscoveryBudget = const Duration(seconds: 20),
   });
 
   final ProductRuntime runtime;
-  final ProjectRecord? selectedProject;
-  final ModelIdentity? selectedModel;
-  final ProjectRecord? Function()? selectedProjectProvider;
-  final ModelIdentity? Function()? selectedModelProvider;
   final int maxProjects;
   final int maxRuns;
   final int maxModels;
+  final Duration modelDiscoveryBudget;
 
-  ProjectRecord? get _selectedProject =>
-      selectedProjectProvider?.call() ?? selectedProject;
-  ModelIdentity? get _selectedModel => selectedModelProvider?.call() ?? selectedModel;
+  DateTime? _modelCapturedAt;
+  List<ModelIdentity> _modelCache = const <ModelIdentity>[];
+  List<Map<String, Object?>> _providerCache = const <Map<String, Object?>>[];
 
   @override
-  Future<ApplicationSnapshot> capture() async {
+  Future<ApplicationSnapshot> capture({
+    bool forceRefresh = false,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async {
     final now = DateTime.now().toUtc();
     final projects = await runtime.listProjects();
-    final boundedProjects = projects.take(maxProjects).map((project) =>
-        <String, Object?>{
-          'id': project.id,
-          'name': project.name,
-          'rootPath': project.rootPath,
-          'updatedAt': project.updatedAt.toIso8601String(),
-        }).toList(growable: false);
+    final boundedProjects = projects
+        .take(maxProjects)
+        .map((project) => <String, Object?>{
+              'id': project.id,
+              'name': project.name,
+              'rootPath': project.rootPath,
+              'updatedAt': project.updatedAt.toIso8601String(),
+            })
+        .toList(growable: false);
 
     final runs = await runtime.listRuns(limit: maxRuns);
     final runState = <String, Object?>{
-      'recent': runs.map((run) => <String, Object?>{
-        'id': run.id,
-        'status': run.state.name,
-        'projectId': run.command.contract.projectId,
-        'updatedAt': run.updatedAt.toIso8601String(),
-      }).toList(growable: false),
+      'recent': runs
+          .map((run) => <String, Object?>{
+                'id': run.id,
+                'status': run.state.name,
+                'projectId': run.command.contract.projectId,
+                'updatedAt': run.updatedAt.toIso8601String(),
+              })
+          .toList(growable: false),
     };
 
-    List<ModelIdentity> discoveredModels;
-    try {
-      discoveredModels = await runtime.discoverModels();
-    } catch (_) {
-      final selected = _selectedModel;
-      discoveredModels = selected == null
-          ? <ModelIdentity>[]
-          : <ModelIdentity>[selected];
-    }
-    final boundedModels = discoveredModels.take(maxModels).toList(growable: false);
-    final providersById = <String, Map<String, Object?>>{};
-    for (final model in boundedModels) {
-      providersById[model.providerId] = <String, Object?>{
-        'id': model.providerId,
-        'discovered': true,
-      };
-    }
+    await _refreshModels(now, forceRefresh: forceRefresh);
+    final models = _modelCache.take(maxModels).toList(growable: false);
+    final selectedModel = overlay.selectedModel;
+    final selectedExactId = selectedModel?['exactId']?.toString();
+    final selectedModelLive = selectedExactId != null &&
+        models.any((model) => model.exactId == selectedExactId);
+    final selectedProject = overlay.selectedProject;
+    final selectedProjectId = selectedProject?['id']?.toString();
+    final selectedProjectLive = selectedProjectId != null &&
+        projects.any((project) => project.id == selectedProjectId);
 
     final browser = runtime.p3BrowserRuntime;
     final owner = runtime.p2OwnerMode;
-    final activeProject = _selectedProject;
-    final activeModel = _selectedModel;
     final recentFailures = runs
         .where((run) => run.state == RunState.failed)
         .take(5)
@@ -157,51 +173,54 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
             })
         .toList(growable: false);
 
+    final providerFailures = _providerCache
+        .where((item) => item['status'] == 'failed')
+        .length;
+    final modelEvidenceConfidence = providerFailures == 0
+        ? ObservationConfidence.high
+        : ObservationConfidence.medium;
+
     return ApplicationSnapshot(
       capturedAt: now,
       applicationIdentity: 'kris.ai',
       platform: Platform.operatingSystem,
-      build: <String, Object?>{
-        'runtime': Platform.version,
-      },
+      build: <String, Object?>{'runtime': Platform.version},
       health: <String, Object?>{
         'runtimeOpen': true,
         'browserAvailable': browser.available,
         'ownerAvailable': owner.available,
         'ownerCompletionEligible': owner.completionEligible,
+        'providerFailures': providerFailures,
       },
-      selectedProject: activeProject == null
+      selectedProject: selectedProject == null
           ? null
           : <String, Object?>{
-              'id': activeProject.id,
-              'name': activeProject.name,
-              'rootPath': activeProject.rootPath,
+              ...selectedProject,
+              'known': selectedProjectLive,
             },
       knownProjects: boundedProjects,
-      selectedModel: activeModel == null
+      selectedModel: selectedModel == null
           ? null
           : <String, Object?>{
-              'providerId': activeModel.providerId,
-              'name': activeModel.name,
-              'digest': activeModel.digest,
-              'exactId': activeModel.exactId,
+              ...selectedModel,
+              'discovered': selectedModelLive,
             },
-      availableModels: boundedModels
+      availableModels: models
           .map((model) => <String, Object?>{
                 'providerId': model.providerId,
                 'name': model.name,
                 'digest': model.digest,
                 'exactId': model.exactId,
-                'selected': model.exactId == activeModel?.exactId,
+                'selected': model.exactId == selectedExactId,
               })
           .toList(growable: false),
-      providers: providersById.values.toList(growable: false),
+      providers: List<Map<String, Object?>>.unmodifiable(_providerCache),
       runState: runState,
       authority: <String, Object?>{
         'ownerCompletionEligible': owner.completionEligible,
         'ownerSecureIsolationActive': owner.secureIsolationActive,
-        // Deliberately not a claim that Owner authority is granted to a run.
-        // Per-operation grants remain an execution-time authority decision.
+        // No operation-specific grant has been evaluated in a snapshot.
+        'state': AuthorityObservationState.notEvaluated.name,
         'granted': const <String>[],
       },
       ownerMode: <String, Object?>{
@@ -218,6 +237,7 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
       },
       research: <String, Object?>{
         'service': runtime.research.runtimeType.toString(),
+        'localOnly': runtime.settings.localOnly,
       },
       recentFailures: recentFailures,
       knowledgeEvidence: <String, KnowledgeEvidence>{
@@ -243,10 +263,13 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
         ),
         'models': KnowledgeEvidence(
           kind: KnowledgeEvidenceKind.observed,
-          source: 'ProductRuntime.discoverModels',
-          confidence: ObservationConfidence.high,
-          observedAt: now,
-          expiresAt: now.add(const Duration(seconds: 20)),
+          source: 'ModelRegistry.providers.discover',
+          confidence: modelEvidenceConfidence,
+          observedAt: _modelCapturedAt ?? now,
+          expiresAt: (_modelCapturedAt ?? now).add(modelDiscoveryBudget),
+          detail: providerFailures == 0
+              ? 'All configured providers completed discovery.'
+              : '$providerFailures configured provider(s) failed discovery; failures are represented explicitly.',
         ),
         'browser': KnowledgeEvidence(
           kind: KnowledgeEvidenceKind.observed,
@@ -268,10 +291,57 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
           confidence: ObservationConfidence.certain,
           observedAt: now,
           expiresAt: now,
-          detail: 'No per-operation Owner grant is inferred from runtime availability.',
+          detail:
+              'Operation authority has not been evaluated. Runtime availability is never treated as a grant.',
         ),
       },
     );
+  }
+
+  Future<void> _refreshModels(
+    DateTime now, {
+    required bool forceRefresh,
+  }) async {
+    final captured = _modelCapturedAt;
+    if (!forceRefresh &&
+        captured != null &&
+        now.difference(captured) < modelDiscoveryBudget) {
+      return;
+    }
+    final models = <ModelIdentity>[];
+    final providers = <Map<String, Object?>>[];
+    for (final provider in runtime.models.providers()) {
+      final started = Stopwatch()..start();
+      try {
+        final discovered = await provider.discover().timeout(
+              const Duration(seconds: 12),
+            );
+        started.stop();
+        models.addAll(discovered);
+        providers.add(<String, Object?>{
+          'id': provider.id,
+          'status': discovered.isEmpty ? 'empty' : 'available',
+          'modelCount': discovered.length,
+          'latencyMs': started.elapsedMilliseconds,
+        });
+      } catch (error) {
+        started.stop();
+        providers.add(<String, Object?>{
+          'id': provider.id,
+          'status': 'failed',
+          'modelCount': 0,
+          'latencyMs': started.elapsedMilliseconds,
+          'error': runtime.redactor.redact('$error'),
+        });
+      }
+    }
+    models.sort((a, b) => a.exactId.compareTo(b.exactId));
+    providers.sort(
+      (a, b) => a['id'].toString().compareTo(b['id'].toString()),
+    );
+    _modelCache = List<ModelIdentity>.unmodifiable(models);
+    _providerCache = List<Map<String, Object?>>.unmodifiable(providers);
+    _modelCapturedAt = now;
   }
 }
 
@@ -279,8 +349,9 @@ List<CapabilitySatisfactionStep> _projectSatisfactionPath() =>
     const <CapabilitySatisfactionStep>[
       CapabilitySatisfactionStep(
         id: 'select_project',
-        description: 'Select or create the project that the capability will target.',
-        condition: 'A current project is selected and present in the project repository.',
+        description:
+            'Select an existing project whose identity is present in the current project repository.',
+        condition: 'The selected project exists in a fresh project snapshot.',
       ),
     ];
 
@@ -288,8 +359,9 @@ List<CapabilitySatisfactionStep> _modelSatisfactionPath() =>
     const <CapabilitySatisfactionStep>[
       CapabilitySatisfactionStep(
         id: 'select_live_model',
-        description: 'Select a model discovered from a currently reachable provider.',
-        condition: 'The selected model appears in a fresh provider discovery observation.',
+        description:
+            'Select a model whose exact identity is present in fresh provider discovery.',
+        condition: 'The selected model appears in a fresh provider observation.',
       ),
     ];
 
@@ -308,28 +380,70 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
               : snapshot.capturedAt.add(descriptor.freshnessBudget),
         ),
       ];
-      if (descriptor.projectRequired && snapshot.selectedProject == null) {
-        return CapabilityAvailability(
-          capabilityId: descriptor.id,
-          state: CapabilityAvailabilityState.projectRequired,
-          reasons: const <String>['No project is selected for this session.'],
-          missingPrerequisites: const <String>{'selectedProject'},
-          observedAt: snapshot.capturedAt,
-          evidence: evidence,
-          satisfactionPath: _projectSatisfactionPath(),
-        );
+      if (descriptor.projectRequired) {
+        final selected = snapshot.selectedProject;
+        if (selected == null || selected['known'] != true) {
+          return CapabilityAvailability(
+            capabilityId: descriptor.id,
+            state: CapabilityAvailabilityState.projectRequired,
+            reasons: const <String>[
+              'A live selected project is required for this capability.',
+            ],
+            missingPrerequisites: const <String>{'selectedProject'},
+            requiredAuthority: descriptor.permissionRequirements,
+            authorityObservation: descriptor.permissionRequirements.isEmpty
+                ? AuthorityObservationState.notRequired
+                : AuthorityObservationState.notEvaluated,
+            observedAt: snapshot.capturedAt,
+            evidence: evidence,
+            satisfactionPath: _projectSatisfactionPath(),
+          );
+        }
       }
-      if (descriptor.modelProviderRequired && snapshot.selectedModel == null) {
+      if (descriptor.modelProviderRequired) {
+        final selected = snapshot.selectedModel;
+        if (selected == null || selected['discovered'] != true) {
+          return CapabilityAvailability(
+            capabilityId: descriptor.id,
+            state: CapabilityAvailabilityState.modelProviderMissing,
+            reasons: <String>[
+              selected == null
+                  ? 'No model/provider is selected for substantial planning.'
+                  : 'Selected model ${selected['exactId']} is not present in fresh provider discovery.',
+            ],
+            missingPrerequisites: const <String>{'liveSelectedModel'},
+            requiredAuthority: descriptor.permissionRequirements,
+            authorityObservation: descriptor.permissionRequirements.isEmpty
+                ? AuthorityObservationState.notRequired
+                : AuthorityObservationState.notEvaluated,
+            observedAt: snapshot.capturedAt,
+            evidence: evidence,
+            satisfactionPath: _modelSatisfactionPath(),
+          );
+        }
+      }
+      if (capability.route == ChatExecutionRoute.researchSearch &&
+          snapshot.research['localOnly'] == true) {
         return CapabilityAvailability(
           capabilityId: descriptor.id,
-          state: CapabilityAvailabilityState.modelProviderMissing,
+          state: CapabilityAvailabilityState.blocked,
           reasons: const <String>[
-            'No live model/provider is selected for substantial planning.',
+            'Web research is disabled by the current local-only setting.',
           ],
-          missingPrerequisites: const <String>{'selectedModel'},
+          missingPrerequisites: const <String>{'networkResearchEnabled'},
+          requiredAuthority: descriptor.permissionRequirements,
+          authorityObservation: AuthorityObservationState.notEvaluated,
           observedAt: snapshot.capturedAt,
           evidence: evidence,
-          satisfactionPath: _modelSatisfactionPath(),
+          satisfactionPath: const <CapabilitySatisfactionStep>[
+            CapabilitySatisfactionStep(
+              id: 'enable_network_research',
+              description:
+                  'Change the governed local-only setting before attempting network research.',
+              condition: 'Network research is enabled by user-controlled settings.',
+              automatic: false,
+            ),
+          ],
         );
       }
       if (capability.route == ChatExecutionRoute.ownerMode) {
@@ -348,22 +462,29 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
             else if (!eligible)
               'Owner Mode is present but its isolated authority service is not completion-eligible.'
             else
-              'Owner Mode exists, but Owner authority is not automatically granted to this operation.',
+              'Owner Mode exists, but authority has not been evaluated for a concrete operation.',
           ],
-          requiredAuthority: const <String>{'owner'},
+          requiredAuthority: <String>{
+            ...descriptor.permissionRequirements,
+            'owner',
+          },
           currentAuthority: const <String>{},
+          authorityObservation: AuthorityObservationState.notEvaluated,
           observedAt: snapshot.capturedAt,
           evidence: evidence,
           satisfactionPath: const <CapabilitySatisfactionStep>[
             CapabilitySatisfactionStep(
               id: 'verify_owner_runtime',
-              description: 'Verify that the isolated Owner runtime is available and completion-eligible.',
-              condition: 'Owner runtime health observation is healthy.',
+              description:
+                  'Verify that the isolated Owner runtime is available and completion-eligible.',
+              condition: 'Owner runtime probe is healthy.',
             ),
             CapabilitySatisfactionStep(
               id: 'obtain_owner_grant',
-              description: 'Obtain explicit Owner authority for the specific operation.',
-              condition: 'The authority service returns a valid per-operation grant.',
+              description:
+                  'Evaluate and obtain explicit Owner authority for the specific operation.',
+              condition:
+                  'The authority service returns a valid per-operation grant.',
               requiredAuthority: <String>{'owner'},
               automatic: false,
             ),
@@ -374,6 +495,10 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
         capabilityId: descriptor.id,
         state: CapabilityAvailabilityState.available,
         reasons: const <String>['Runtime prerequisites are currently satisfied.'],
+        requiredAuthority: descriptor.permissionRequirements,
+        authorityObservation: descriptor.permissionRequirements.isEmpty
+            ? AuthorityObservationState.notRequired
+            : AuthorityObservationState.notEvaluated,
         observedAt: snapshot.capturedAt,
         evidence: evidence,
       );
@@ -387,7 +512,7 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
         id: 'browser.navigate',
         name: 'Browser navigation',
         description:
-            'Open and inspect a public web page using the provisioned application-owned Browser runtime.',
+            'Open and inspect a public web page using the application-owned Browser runtime.',
         semanticPurpose:
             'Rendered-page observation for governed browsing/research flows.',
         category: 'connections',
@@ -402,6 +527,7 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
           'Availability depends on the packaged/provisioned Browser runtime.',
         ],
         freshnessBudget: Duration(seconds: 5),
+        healthFreshnessBudget: Duration(seconds: 35),
         probeInterval: Duration(seconds: 30),
         providerId: 'browser.runtime',
       ),
@@ -420,6 +546,7 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
         ],
         missingPrerequisites:
             available ? const <String>{} : const <String>{'browserRuntime'},
+        authorityObservation: AuthorityObservationState.notRequired,
         observedAt: snapshot.capturedAt,
         evidence: <KnowledgeEvidence>[
           KnowledgeEvidence(
@@ -435,12 +562,14 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
             : const <CapabilitySatisfactionStep>[
                 CapabilitySatisfactionStep(
                   id: 'provision_browser_runtime',
-                  description: 'Provision or refresh the application-owned Browser runtime.',
+                  description:
+                      'Provision or refresh the application-owned Browser runtime.',
                   condition: 'Browser runtime handle reports available.',
                 ),
                 CapabilitySatisfactionStep(
                   id: 'probe_browser_runtime',
-                  description: 'Run a lightweight Browser startup/shutdown probe.',
+                  description:
+                      'Run a lightweight Browser startup/shutdown probe.',
                   condition: 'Browser consistency probe reports healthy.',
                 ),
               ],
@@ -451,21 +580,23 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
       return CapabilityHealth(
         capabilityId: descriptor.id,
         state: available
-            ? CapabilityHealthState.healthy
+            ? CapabilityHealthState.degraded
             : CapabilityHealthState.failing,
         reasons: <String>[
           available
-              ? 'Browser handle is provisioned; a periodic consistency probe provides stronger verification.'
+              ? 'Browser bundle exists; the startup probe is the stronger health signal.'
               : 'Browser handle is not available: ${snapshot.browser['statusCode']}.',
         ],
         observedAt: snapshot.capturedAt,
+        expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
         evidence: <KnowledgeEvidence>[
           KnowledgeEvidence(
             kind: KnowledgeEvidenceKind.observed,
             source: 'ProductRuntime.p3BrowserRuntime.handle',
             confidence: ObservationConfidence.high,
             observedAt: snapshot.capturedAt,
-            expiresAt: snapshot.capturedAt.add(descriptor.freshnessBudget),
+            expiresAt:
+                snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
           ),
         ],
       );
@@ -496,6 +627,7 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
           'Every effect remains subject to Owner Mode authority and approval policy.',
         ],
         freshnessBudget: Duration.zero,
+        healthFreshnessBudget: Duration(seconds: 12),
         probeInterval: Duration(seconds: 10),
         providerId: 'owner.recovery',
       ),
@@ -516,10 +648,11 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
           else if (!eligible)
             'Owner Mode exists but its isolated authority service is not completion-eligible.'
           else
-            'Owner recovery exists but requires an explicit per-operation authority grant.',
+            'Owner recovery exists, but operation authority has not been evaluated.',
         ],
         requiredAuthority: const <String>{'owner'},
         currentAuthority: const <String>{},
+        authorityObservation: AuthorityObservationState.notEvaluated,
         observedAt: snapshot.capturedAt,
         evidence: <KnowledgeEvidence>[
           KnowledgeEvidence(
@@ -538,7 +671,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
           ),
           CapabilitySatisfactionStep(
             id: 'obtain_owner_authority',
-            description: 'Obtain explicit authority for the concrete recovery operation.',
+            description:
+                'Evaluate and obtain explicit authority for the concrete recovery operation.',
             condition: 'Authority service returns a valid grant.',
             requiredAuthority: <String>{'owner'},
             automatic: false,
@@ -549,30 +683,33 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
     healthResolver: (descriptor, snapshot, availability) async {
       final available = snapshot.ownerMode['available'] == true;
       final eligible = snapshot.ownerMode['completionEligible'] == true;
+      final isolated = snapshot.ownerMode['secureIsolationActive'] == true;
       return CapabilityHealth(
         capabilityId: descriptor.id,
         state: !available
             ? CapabilityHealthState.failing
-            : eligible
+            : eligible && isolated
                 ? CapabilityHealthState.healthy
                 : CapabilityHealthState.degraded,
         reasons: <String>[
           if (!available)
             'Owner runtime is unavailable.'
-          else if (!eligible)
-            'Owner runtime exists but is not completion-eligible.'
+          else if (!eligible || !isolated)
+            'Owner runtime exists but completion eligibility or secure isolation is not active.'
           else
-            'Owner runtime is available and completion-eligible; operation authority is still separate.',
+            'Owner runtime is isolated and completion-eligible; operation authority is still separate.',
         ],
         observedAt: snapshot.capturedAt,
         lastVerifiedAt: snapshot.capturedAt,
+        expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
         evidence: <KnowledgeEvidence>[
           KnowledgeEvidence(
             kind: KnowledgeEvidenceKind.observed,
             source: 'ProductRuntime.p2OwnerMode.health',
             confidence: ObservationConfidence.high,
             observedAt: snapshot.capturedAt,
-            expiresAt: snapshot.capturedAt,
+            expiresAt:
+                snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
           ),
         ],
       );
@@ -581,12 +718,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
   return registry;
 }
 
-/// Shared live self-awareness runtime for one ProductRuntime instance.
-///
-/// It listens to the durable runtime event stream, debounces refreshes, runs
-/// due read-only consistency probes, records causal observations, and updates
-/// the bounded self-model. It never exposes an execution or authority grant
-/// primitive.
+/// One application-global observer per ProductRuntime. Session/project/model
+/// selection is passed as an overlay to each query and is never stored here.
 final class ProductSelfAwarenessRuntime {
   factory ProductSelfAwarenessRuntime.shared(ProductRuntime runtime) {
     final existing = _shared[runtime];
@@ -597,11 +730,7 @@ final class ProductSelfAwarenessRuntime {
   }
 
   ProductSelfAwarenessRuntime._(this.runtime) {
-    snapshotProvider = ProductRuntimeSnapshotProvider(
-      runtime: runtime,
-      selectedProjectProvider: () => _selectedProject,
-      selectedModelProvider: () => _selectedModel,
-    );
+    snapshotProvider = ProductRuntimeSnapshotProvider(runtime: runtime);
     selfModel = KristinSelfModelService(
       registry: buildProductCapabilityRegistry(runtime),
       application: snapshotProvider,
@@ -625,6 +754,7 @@ final class ProductSelfAwarenessRuntime {
         CallbackSelfConsistencyProbe(
           id: 'model.selection.discovery',
           interval: const Duration(seconds: 20),
+          appliesTo: (overlay) => overlay.selectedModel != null,
           callback: _probeSelectedModel,
         ),
       ],
@@ -637,7 +767,7 @@ final class ProductSelfAwarenessRuntime {
               : ObservationConfidence.high,
         );
       },
-    );
+    )..start(tick: const Duration(seconds: 5));
     _runtimeEvents = runtime.eventStream.listen(
       _scheduleRuntimeRefresh,
       onDone: () {
@@ -661,45 +791,59 @@ final class ProductSelfAwarenessRuntime {
   StreamSubscription<EventEnvelope>? _runtimeEvents;
   Timer? _eventDebounce;
   EventEnvelope? _lastRuntimeEvent;
-  ProjectRecord? _selectedProject;
-  ModelIdentity? _selectedModel;
-  List<SelfInvariantViolation> _lastIntegrityViolations =
-      const <SelfInvariantViolation>[];
+  final Map<String, List<SelfInvariantViolation>> _integrityByOverlay =
+      <String, List<SelfInvariantViolation>>{};
 
   Stream<SelfModelChange> get changes => selfModel.changes;
-  List<SelfInvariantViolation> get lastIntegrityViolations =>
-      List<SelfInvariantViolation>.unmodifiable(_lastIntegrityViolations);
 
-  void setSelection({ProjectRecord? project, ModelIdentity? model}) {
-    _selectedProject = project;
-    _selectedModel = model;
-  }
+  SelfModelSessionOverlay overlay({
+    String key = 'chat',
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      productSelfOverlay(
+        key: key,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<KristinSelfSnapshot> snapshot({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
+    String sessionKey = 'chat',
     bool forceRefresh = false,
   }) async {
-    setSelection(project: selectedProject, model: selectedModel);
-    await consistency.runDue();
-    final snapshot = await selfModel.snapshot(
+    final session = overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    await consistency.runDue(overlay: session);
+    final value = await selfModel.snapshot(
       forceRefresh: forceRefresh,
       source: 'product_runtime.self_awareness',
       reason: forceRefresh ? 'forced_snapshot' : 'snapshot',
+      overlay: session,
     );
-    _lastIntegrityViolations = integrity.checkSnapshot(snapshot);
-    return snapshot;
+    _integrityByOverlay[session.cacheKey] = integrity.checkSnapshot(value);
+    return value;
   }
 
   Future<SelfModelPlanningContext> planningContext({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
+    String sessionKey = 'chat',
     Set<String> relevantCapabilityIds = const <String>{},
   }) async {
-    setSelection(project: selectedProject, model: selectedModel);
-    await consistency.runDue();
+    final session = overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    await consistency.runDue(overlay: session);
     return selfModel.planningContext(
       relevantCapabilityIds: relevantCapabilityIds,
+      overlay: session,
     );
   }
 
@@ -707,46 +851,75 @@ final class ProductSelfAwarenessRuntime {
     String capabilityId, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) async {
-    setSelection(project: selectedProject, model: selectedModel);
-    return queries.requirementsFor(capabilityId);
+    String sessionKey = 'chat',
+  }) {
+    final session = overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    return queries.requirementsFor(capabilityId, overlay: session);
   }
 
   Future<List<KnownCapability>> capabilitiesFor(
     String objective, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) async {
-    setSelection(project: selectedProject, model: selectedModel);
-    return queries.capabilitiesFor(objective);
+    String sessionKey = 'chat',
+  }) {
+    final session = overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    return queries.capabilitiesFor(objective, overlay: session);
   }
 
-  List<SelfModelChange> changesSince(DateTime since) =>
-      queries.whatChangedSince(since);
+  List<SelfModelChange> changesSince(
+    DateTime since, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    String sessionKey = 'chat',
+  }) {
+    final session = overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    return queries.whatChangedSince(since, overlayKey: session.cacheKey);
+  }
 
   Future<List<SelfInvariantViolation>> integrityReport({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
+    String sessionKey = 'chat',
   }) async {
-    final snapshot = await this.snapshot(
+    final value = await snapshot(
       selectedProject: selectedProject,
       selectedModel: selectedModel,
+      sessionKey: sessionKey,
       forceRefresh: true,
     );
-    _lastIntegrityViolations = integrity.checkSnapshot(snapshot);
-    return lastIntegrityViolations;
+    final session = value.overlay.cacheKey;
+    final violations = integrity.checkSnapshot(value);
+    _integrityByOverlay[session] = violations;
+    return List<SelfInvariantViolation>.unmodifiable(violations);
   }
 
-  Future<List<SelfConsistencyProbeResult>> runProbes({bool force = true}) async {
-    final results = await consistency.runDue(force: force);
-    if (results.isNotEmpty) {
-      await selfModel.notifyStateChanged(
-        source: 'self_consistency_monitor',
-        reason: 'probe_results_updated',
+  Future<List<SelfConsistencyProbeResult>> runProbes({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    String sessionKey = 'chat',
+    bool force = true,
+  }) =>
+      consistency.runDue(
+        force: force,
+        overlay: overlay(
+          key: sessionKey,
+          selectedProject: selectedProject,
+          selectedModel: selectedModel,
+        ),
       );
-    }
-    return results;
-  }
 
   Future<T> observeOperation<T>(
     String operation,
@@ -782,7 +955,7 @@ final class ProductSelfAwarenessRuntime {
         attributes: <String, Object?>{
           ...attributes,
           'errorType': error.runtimeType.toString(),
-          'error': '$error',
+          'error': runtime.redactor.redact('$error'),
         },
       );
       await selfModel.notifyStateChanged(
@@ -812,28 +985,34 @@ final class ProductSelfAwarenessRuntime {
       },
       confidence: ObservationConfidence.high,
     );
-    await consistency.runDue();
-    await selfModel.notifyStateChanged(
+    const runtimeOverlay = SelfModelSessionOverlay();
+    await consistency.runDue(overlay: runtimeOverlay);
+    final latest = await selfModel.notifyStateChanged(
       source: 'runtime.event.${event.type}',
       reason: 'durable_runtime_event',
+      overlay: runtimeOverlay,
     );
-    final latest = await selfModel.snapshot(
-      source: 'runtime.event.integrity',
-      reason: event.type,
-    );
-    _lastIntegrityViolations = integrity.checkSnapshot(latest);
+    _integrityByOverlay[runtimeOverlay.cacheKey] =
+        integrity.checkSnapshot(latest);
   }
 
   Future<SelfConsistencyProbeResult> _probeBrowser(
     KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
   ) async {
     final browser = runtime.p3BrowserRuntime;
+    final affected = snapshot.capabilities
+        .where((item) => item.descriptor.browserRequired)
+        .map((item) => item.descriptor.id)
+        .toSet()
+      ..add('browser.navigate');
     if (!browser.available) {
       return SelfConsistencyProbeResult(
         probeId: 'browser.runtime.startup',
-        capabilityId: 'browser.navigate',
+        capabilityIds: affected,
         status: ProbeStatus.failing,
         message: 'Browser runtime is unavailable: ${browser.statusCode}.',
+        validFor: const Duration(seconds: 35),
       );
     }
     final watch = Stopwatch()..start();
@@ -842,57 +1021,70 @@ final class ProductSelfAwarenessRuntime {
       watch.stop();
       return SelfConsistencyProbeResult(
         probeId: 'browser.runtime.startup',
-        capabilityId: 'browser.navigate',
+        capabilityIds: affected,
         status: ProbeStatus.healthy,
         message: 'Browser startup/shutdown probe completed successfully.',
         latency: watch.elapsed,
+        validFor: const Duration(seconds: 35),
       );
     } catch (error) {
       watch.stop();
       return SelfConsistencyProbeResult(
         probeId: 'browser.runtime.startup',
-        capabilityId: 'browser.navigate',
+        capabilityIds: affected,
         status: ProbeStatus.failing,
-        message: 'Browser probe failed: $error',
+        message: 'Browser probe failed: ${runtime.redactor.redact('$error')}',
         latency: watch.elapsed,
+        validFor: const Duration(seconds: 35),
       );
     }
   }
 
   Future<SelfConsistencyProbeResult> _probeOwner(
     KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
   ) async {
     final owner = runtime.p2OwnerMode;
+    final affected = snapshot.capabilities
+        .where((item) =>
+            item.descriptor.authorityClass == CapabilityAuthorityClass.owner)
+        .map((item) => item.descriptor.id)
+        .toSet()
+      ..add('owner.recovery.actuate');
     if (!owner.available) {
       return SelfConsistencyProbeResult(
         probeId: 'owner.runtime.readiness',
-        capabilityId: 'owner.recovery.actuate',
+        capabilityIds: affected,
         status: ProbeStatus.failing,
         message: 'Owner runtime is unavailable: ${owner.diagnosticCode}.',
+        validFor: const Duration(seconds: 12),
       );
     }
     if (!owner.completionEligible || !owner.secureIsolationActive) {
       return SelfConsistencyProbeResult(
         probeId: 'owner.runtime.readiness',
-        capabilityId: 'owner.recovery.actuate',
+        capabilityIds: affected,
         status: ProbeStatus.degraded,
         message:
             'Owner runtime exists but completion eligibility or secure isolation is not active.',
+        validFor: const Duration(seconds: 12),
       );
     }
     return SelfConsistencyProbeResult(
       probeId: 'owner.runtime.readiness',
-      capabilityId: 'owner.recovery.actuate',
+      capabilityIds: affected,
       status: ProbeStatus.healthy,
       message:
-          'Owner runtime is isolated and completion-eligible; this observation does not grant operation authority.',
+          'Owner runtime is isolated and completion-eligible; this observation grants no operation authority.',
+      validFor: const Duration(seconds: 12),
     );
   }
 
   Future<SelfConsistencyProbeResult> _probeSelectedModel(
     KristinSelfSnapshot snapshot,
+    SelfModelSessionOverlay overlay,
   ) async {
-    final selected = _selectedModel;
+    final selected = overlay.selectedModel;
     if (selected == null) {
       return SelfConsistencyProbeResult(
         probeId: 'model.selection.discovery',
@@ -900,46 +1092,76 @@ final class ProductSelfAwarenessRuntime {
         message: 'No model is selected, so there is no model identity to probe.',
       );
     }
+    final exactId = selected['exactId']?.toString() ?? '';
+    final affected = snapshot.capabilities
+        .where((item) => item.descriptor.modelProviderRequired)
+        .map((item) => item.descriptor.id)
+        .toSet();
     final watch = Stopwatch()..start();
     try {
-      final discovered = await runtime.discoverModels();
-      final present = discovered.any((model) => model.exactId == selected.exactId);
+      final refreshed = await snapshotProvider.capture(
+        forceRefresh: true,
+        overlay: overlay,
+      );
+      final present = refreshed.availableModels
+          .any((model) => model['exactId']?.toString() == exactId);
       watch.stop();
       return SelfConsistencyProbeResult(
         probeId: 'model.selection.discovery',
+        capabilityIds: affected,
         status: present ? ProbeStatus.healthy : ProbeStatus.failing,
         message: present
-            ? 'Selected model ${selected.exactId} is present in fresh provider discovery.'
-            : 'Selected model ${selected.exactId} is no longer present in provider discovery.',
+            ? 'Selected model $exactId is present in fresh provider discovery.'
+            : 'Selected model $exactId is no longer present in provider discovery.',
         latency: watch.elapsed,
-        attributes: <String, Object?>{'selectedModel': selected.exactId},
+        validFor: const Duration(seconds: 25),
+        attributes: <String, Object?>{'selectedModel': exactId},
       );
     } catch (error) {
       watch.stop();
       return SelfConsistencyProbeResult(
         probeId: 'model.selection.discovery',
+        capabilityIds: affected,
         status: ProbeStatus.failing,
-        message: 'Selected model discovery probe failed: $error',
+        message:
+            'Selected model discovery probe failed: ${runtime.redactor.redact('$error')}',
         latency: watch.elapsed,
-        attributes: <String, Object?>{'selectedModel': selected.exactId},
+        validFor: const Duration(seconds: 25),
+        attributes: <String, Object?>{'selectedModel': exactId},
       );
     }
   }
 }
 
-/// Product composition entry point for one-shot consumers. Stateful Chat
-/// consumers should use [ProductSelfAwarenessRuntime.shared] so changes,
-/// causal history and probe evidence survive across turns.
+/// One-shot adapter retained for narrow callers. Stateful product flows should
+/// use ProductSelfAwarenessRuntime.shared so history/probes remain continuous.
 KristinSelfModelService buildProductSelfModel(
   ProductRuntime runtime, {
   ProjectRecord? selectedProject,
   ModelIdentity? selectedModel,
-}) =>
-    KristinSelfModelService(
-      registry: buildProductCapabilityRegistry(runtime),
-      application: ProductRuntimeSnapshotProvider(
-        runtime: runtime,
+}) {
+  final provider = ProductRuntimeSnapshotProvider(runtime: runtime);
+  return KristinSelfModelService(
+    registry: buildProductCapabilityRegistry(runtime),
+    application: _FixedOverlaySnapshotProvider(
+      provider,
+      productSelfOverlay(
         selectedProject: selectedProject,
         selectedModel: selectedModel,
       ),
-    );
+    ),
+  );
+}
+
+final class _FixedOverlaySnapshotProvider implements ApplicationSnapshotProvider {
+  const _FixedOverlaySnapshotProvider(this.delegate, this.fixedOverlay);
+  final ApplicationSnapshotProvider delegate;
+  final SelfModelSessionOverlay fixedOverlay;
+
+  @override
+  Future<ApplicationSnapshot> capture({
+    bool forceRefresh = false,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) =>
+      delegate.capture(forceRefresh: forceRefresh, overlay: fixedOverlay);
+}
