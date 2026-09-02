@@ -7,6 +7,7 @@ import 'domain.dart';
 import 'product_runtime.dart';
 import 'product_runtime_self_awareness.dart';
 import 'self_awareness/capability_self_model.dart';
+import 'self_awareness/operational_self_awareness.dart';
 
 abstract class ChatRuntimeGateway {
   Future<List<Map<String, String>>> searchWeb({required String query, int count});
@@ -38,12 +39,41 @@ abstract class ChatRuntimeGateway {
 }
 
 /// Optional read-only surface. Existing ChatRuntimeGateway fakes do not need to
-/// implement it; production does. No method on this interface performs effects.
+/// implement it; production does. None of these methods performs an effect or
+/// converts capability knowledge into authority.
 abstract interface class ChatSelfAwarenessGateway {
   Future<KristinSelfSnapshot> selfSnapshot({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
+    bool forceRefresh,
   });
+
+  Future<SelfModelPlanningContext> selfPlanningContext({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    Set<String> relevantCapabilityIds,
+  });
+
+  Future<CapabilityRequirementReport> capabilityRequirements(
+    String capabilityId, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
+
+  Future<List<KnownCapability>> capabilitiesForObjective(
+    String objective, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
+
+  Future<List<SelfModelChange>> selfChangesSince(DateTime since);
+
+  Future<List<SelfInvariantViolation>> selfIntegrity({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  });
+
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes();
 }
 
 class ChatResearchResult {
@@ -60,6 +90,14 @@ class ChatActionDispatcher {
 
   final ChatRuntimeGateway runtime;
   final CapabilityAuthorityResolver authorityResolver;
+
+  ChatSelfAwarenessGateway get _selfGateway {
+    final gateway = runtime;
+    if (gateway is! ChatSelfAwarenessGateway) {
+      throw StateError('chat_self_awareness_gateway_unavailable');
+    }
+    return gateway;
+  }
 
   CapabilityAuthorityDecision authorize({
     required String capabilityId,
@@ -86,66 +124,129 @@ class ChatActionDispatcher {
   Future<KristinSelfSnapshot> selfAwareness({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) {
-    final gateway = runtime;
-    if (gateway is! ChatSelfAwarenessGateway) {
-      throw StateError('chat_self_awareness_gateway_unavailable');
-    }
-    return gateway.selfSnapshot(
-      selectedProject: selectedProject,
-      selectedModel: selectedModel,
-    );
-  }
+    bool forceRefresh = false,
+  }) =>
+      _selfGateway.selfSnapshot(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        forceRefresh: forceRefresh,
+      );
+
+  Future<SelfModelPlanningContext> selfPlanningContext({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    Set<String> relevantCapabilityIds = const <String>{},
+  }) =>
+      _selfGateway.selfPlanningContext(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        relevantCapabilityIds: relevantCapabilityIds,
+      );
 
   Future<String> explainCapabilityAvailability(
     String capabilityId, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
   }) async {
-    final self = await selfAwareness(
+    final report = await capabilityRequirements(
+      capabilityId,
       selectedProject: selectedProject,
       selectedModel: selectedModel,
     );
-    final item = self.capability(capabilityId);
-    if (item == null) {
-      return 'Kristin does not currently know a capability named $capabilityId.';
-    }
-    final reasons = item.availability.reasons.isEmpty
-        ? 'No additional reason was reported.'
-        : item.availability.reasons.join(' ');
-    return '$capabilityId is ${item.availability.state.name}. $reasons';
+    return report.explanation;
   }
+
+  Future<CapabilityRequirementReport> capabilityRequirements(
+    String capabilityId, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      _selfGateway.capabilityRequirements(
+        capabilityId,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  Future<List<KnownCapability>> capabilitiesForObjective(
+    String objective, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      _selfGateway.capabilitiesForObjective(
+        objective,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  Future<List<SelfModelChange>> selfChangesSince(DateTime since) =>
+      _selfGateway.selfChangesSince(since);
+
+  Future<List<SelfInvariantViolation>> selfIntegrity({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      _selfGateway.selfIntegrity(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes() =>
+      _selfGateway.runSelfConsistencyProbes();
 
   Future<ProjectDiagnosticReport> inspect(
     String projectId, {
     String capabilityId = 'project.analyze',
   }) {
-    authorize(capabilityId: capabilityId, targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: capabilityId,
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     return runtime.analyzeProject(projectId);
   }
 
   Future<ProjectDiagnosticReport> test(String projectId) {
-    authorize(capabilityId: 'project.test', targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: 'project.test',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     return runtime.testProject(projectId);
   }
 
   Future<ProjectDiagnosticReport> build(String projectId) {
-    authorize(capabilityId: 'project.build', targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: 'project.build',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     return runtime.buildProject(projectId);
   }
 
   Future<ProjectProcessStatus> run(String projectId) {
-    authorize(capabilityId: 'project.run', targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: 'project.run',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     return runtime.startProject(projectId);
   }
 
   Future<ProjectProcessStatus?> stop(String projectId) {
-    authorize(capabilityId: 'project.stop', targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: 'project.stop',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     return runtime.stopProject(projectId);
   }
 
   Future<ProjectProcessStatus> restart(String projectId) async {
-    authorize(capabilityId: 'project.restart', targetIds: <String>{projectId}, reason: 'chat_direct');
+    authorize(
+      capabilityId: 'project.restart',
+      targetIds: <String>{projectId},
+      reason: 'chat_direct',
+    );
     await runtime.stopProject(projectId);
     return runtime.startProject(projectId);
   }
@@ -231,23 +332,86 @@ class ProductRuntimeChatGateway
   const ProductRuntimeChatGateway(this.runtime);
   final ProductRuntime runtime;
 
+  ProductSelfAwarenessRuntime get awareness =>
+      ProductSelfAwarenessRuntime.shared(runtime);
+
   @override
   Future<KristinSelfSnapshot> selfSnapshot({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
+    bool forceRefresh = false,
   }) =>
-      buildProductSelfModel(
-        runtime,
+      awareness.snapshot(
         selectedProject: selectedProject,
         selectedModel: selectedModel,
-      ).snapshot();
+        forceRefresh: forceRefresh,
+      );
+
+  @override
+  Future<SelfModelPlanningContext> selfPlanningContext({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    Set<String> relevantCapabilityIds = const <String>{},
+  }) =>
+      awareness.planningContext(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        relevantCapabilityIds: relevantCapabilityIds,
+      );
+
+  @override
+  Future<CapabilityRequirementReport> capabilityRequirements(
+    String capabilityId, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      awareness.requirementsFor(
+        capabilityId,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  @override
+  Future<List<KnownCapability>> capabilitiesForObjective(
+    String objective, {
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      awareness.capabilitiesFor(
+        objective,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  @override
+  Future<List<SelfModelChange>> selfChangesSince(DateTime since) async =>
+      awareness.changesSince(since);
+
+  @override
+  Future<List<SelfInvariantViolation>> selfIntegrity({
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+  }) =>
+      awareness.integrityReport(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
+
+  @override
+  Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes() =>
+      awareness.runProbes(force: true);
 
   @override
   Future<List<Map<String, String>>> searchWeb({
     required String query,
     int count = 10,
   }) =>
-      runtime.searchWeb(query: query, count: count);
+      awareness.observeOperation(
+        'research.search',
+        <String, Object?>{'query': query, 'count': count},
+        () => runtime.searchWeb(query: query, count: count),
+        stateChanging: false,
+      );
 
   @override
   Future<void> archiveResearchIfProject({
@@ -256,42 +420,79 @@ class ProductRuntimeChatGateway
     required List<Map<String, String>> results,
   }) async {
     if (projectId == null) return;
-    await runtime.knowledge.addResearchSearch(
-      projectId: projectId,
-      query: query,
-      results: results,
-      provider: 'duckduckgo',
+    await awareness.observeOperation<void>(
+      'research.archive',
+      <String, Object?>{
+        'projectId': projectId,
+        'query': query,
+        'resultCount': results.length,
+      },
+      () => runtime.knowledge.addResearchSearch(
+        projectId: projectId,
+        query: query,
+        results: results,
+        provider: 'duckduckgo',
+      ),
     );
   }
 
   @override
   Future<ProjectDiagnosticReport> analyzeProject(String projectId) =>
-      runtime.analyzeProject(projectId);
+      awareness.observeOperation(
+        'project.analyze',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.analyzeProject(projectId),
+        stateChanging: false,
+      );
 
   @override
   Future<ProjectDiagnosticReport> testProject(String projectId) =>
-      runtime.testProject(projectId);
+      awareness.observeOperation(
+        'project.test',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.testProject(projectId),
+        stateChanging: false,
+      );
 
   @override
   Future<ProjectDiagnosticReport> buildProject(String projectId) =>
-      runtime.buildProject(projectId);
+      awareness.observeOperation(
+        'project.build',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.buildProject(projectId),
+      );
 
   @override
   Future<ProjectProcessStatus> startProject(String projectId) =>
-      runtime.startProject(projectId);
+      awareness.observeOperation(
+        'project.start',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.startProject(projectId),
+      );
 
   @override
   Future<ProjectProcessStatus?> stopProject(String projectId) =>
-      runtime.stopProject(projectId);
+      awareness.observeOperation(
+        'project.stop',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.stopProject(projectId),
+      );
 
   @override
   Future<ProjectRecord> provisionProjectForRequest({
     required String request,
     String? suggestedName,
   }) =>
-      runtime.provisionProjectForRequest(
-        request: request,
-        suggestedName: suggestedName,
+      awareness.observeOperation(
+        'project.provision',
+        <String, Object?>{
+          'request': request,
+          if (suggestedName != null) 'suggestedName': suggestedName,
+        },
+        () => runtime.provisionProjectForRequest(
+          request: request,
+          suggestedName: suggestedName,
+        ),
       );
 
   @override
@@ -301,11 +502,19 @@ class ProductRuntimeChatGateway
     required String request,
     required ModelIdentity model,
   }) =>
-      runtime.prepare(
-        projectId: projectId,
-        mode: mode,
-        request: request,
-        model: model,
+      awareness.observeOperation(
+        'command.prepare',
+        <String, Object?>{
+          'projectId': projectId,
+          'mode': mode.name,
+          'model': model.exactId,
+        },
+        () => runtime.prepare(
+          projectId: projectId,
+          mode: mode,
+          request: request,
+          model: model,
+        ),
       );
 
   @override
@@ -314,9 +523,17 @@ class ProductRuntimeChatGateway
     List<ModelIdentity>? discoveredModels,
     CapabilityDoctorDepth depth = CapabilityDoctorDepth.quick,
   }) =>
-      runtime.inspectCapabilities(
-        projectId: projectId,
-        discoveredModels: discoveredModels,
-        depth: depth,
+      awareness.observeOperation(
+        'system.capability_doctor',
+        <String, Object?>{
+          if (projectId != null) 'projectId': projectId,
+          'depth': depth.name,
+        },
+        () => runtime.inspectCapabilities(
+          projectId: projectId,
+          discoveredModels: discoveredModels,
+          depth: depth,
+        ),
+        stateChanging: false,
       );
 }
