@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../capability_invocation.dart';
 import '../crypto_utils.dart';
 import '../domain.dart';
 import '../product_runtime.dart';
@@ -8,13 +9,9 @@ import '../storage_security.dart';
 import '../task_kernel/complexity_router.dart';
 import '../task_kernel/task_families.dart';
 import '../task_kernel/task_specification.dart';
-import '../task_kernel/universal_task_plan.dart';
 import 'failure_recovery.dart';
 import 'recovery_host.dart';
 
-/// Durable failure/attempt journal implemented over the canonical EventJournal.
-/// No parallel storage engine is introduced: workflow SQLite remains the
-/// authoritative event store behind ProductRuntime.events.
 final class ProductRuntimeFailureJournal implements FailureJournal {
   const ProductRuntimeFailureJournal(this.runtime);
   final ProductRuntime runtime;
@@ -47,8 +44,9 @@ final class ProductRuntimeRecoveryEventSink implements RecoveryEventSink {
       );
 }
 
-/// Recovery strategy memory survives application restarts by replaying the
-/// bounded durable recovery.experience event subset once on first use.
+/// Recovery strategy memory is replayed from the same durable EventJournal
+/// ProductRuntime already owns. Historical decode failures are ignored but
+/// remain available in the journal for diagnostics.
 final class ProductRuntimeRecoveryExperienceStore
     implements RecoveryExperienceStore {
   ProductRuntimeRecoveryExperienceStore(this.runtime, {this.maxRetained = 512});
@@ -61,22 +59,25 @@ final class ProductRuntimeRecoveryExperienceStore
 
   Future<void> _load() async {
     if (_loaded) return;
-    _loaded = true;
     final events = await runtime.events.after(0, limit: 5000);
+    final loaded = <RecoveryExperience>[];
     for (final event in events) {
       if (event.type != 'recovery.experience') continue;
       final raw = event.data['experience'];
       if (raw is! Map) continue;
       try {
-        _items.add(
+        loaded.add(
           RecoveryExperience.fromJson(Map<String, dynamic>.from(raw)),
         );
       } catch (_) {
-        // Corrupt historical recovery memory must not prevent startup. The
-        // original durable event remains available for diagnostics.
+        // Invalid old memory cannot become authority or block startup.
       }
     }
+    _items
+      ..clear()
+      ..addAll(loaded);
     _trim();
+    _loaded = true;
   }
 
   @override
@@ -131,9 +132,8 @@ final class ProductRuntimeFailureSelfContextResolver
     if (failure.projectId != null) {
       project = await runtime.repositories.projects.get(failure.projectId!);
     }
-    final sourceRun = failure.runId == null
-        ? null
-        : await runtime.getRun(failure.runId!);
+    final sourceRun =
+        failure.runId == null ? null : await runtime.getRun(failure.runId!);
     project ??= sourceRun == null
         ? null
         : await runtime.repositories.projects.get(
@@ -141,8 +141,8 @@ final class ProductRuntimeFailureSelfContextResolver
           );
     model = sourceRun?.command.model;
     if (model == null && failure.modelExactId != null) {
-      final models = await runtime.discoverModels();
-      model = models
+      final discovered = await runtime.discoverModels();
+      model = discovered
           .where((item) => item.exactId == failure.modelExactId)
           .firstOrNull;
     }
@@ -154,9 +154,36 @@ final class ProductRuntimeFailureSelfContextResolver
   }
 }
 
-/// Evaluates only authority that actually exists in the canonical permission
-/// service. Unknown authority vocabularies (notably owner.self_repair) remain
-/// notEvaluated; Owner runtime availability is never converted into a grant.
+/// Independent Owner/self-repair authority plugs in here. Merely registering
+/// a recovery host, or observing Owner runtime availability, is not a grant.
+abstract interface class RecoveryExternalAuthorityProvider {
+  Future<RecoveryAuthorityEvaluation> evaluate({
+    required ProductRuntime runtime,
+    required FailureEvent failure,
+    required RecoveryDecision decision,
+    required Set<String> authorityNames,
+  });
+}
+
+final class ProductRuntimeRecoveryAuthorityRegistry {
+  ProductRuntimeRecoveryAuthorityRegistry._();
+  static final Expando<RecoveryExternalAuthorityProvider> _providers =
+      Expando<RecoveryExternalAuthorityProvider>('kristin-recovery-authority');
+
+  static void register(
+    ProductRuntime runtime,
+    RecoveryExternalAuthorityProvider provider,
+  ) {
+    _providers[runtime] = provider;
+  }
+
+  static RecoveryExternalAuthorityProvider? forRuntime(ProductRuntime runtime) =>
+      _providers[runtime];
+}
+
+/// Canonical run grants prove ordinary permission scopes. Authority names that
+/// are not PermissionScope values (notably owner/owner.self_repair) require an
+/// independent provider. Unknown authority always fails closed.
 final class ProductRuntimeRecoveryAuthorityGate
     implements RecoveryAuthorityGate {
   const ProductRuntimeRecoveryAuthorityGate(this.runtime);
@@ -177,25 +204,84 @@ final class ProductRuntimeRecoveryAuthorityGate
     final byName = <String, PermissionScope>{
       for (final scope in PermissionScope.values) scope.name: scope,
     };
-    final unknown = decision.requiredAuthority
-        .where((name) => !byName.containsKey(name))
-        .toSet();
-    if (unknown.isNotEmpty) {
-      return RecoveryAuthorityEvaluation(
-        allowed: false,
-        reason:
-            'Recovery authority ${unknown.join(', ')} requires an external governed authority service and has not been evaluated.',
-        notEvaluated: unknown,
+    final knownNames =
+        decision.requiredAuthority.where(byName.containsKey).toSet();
+    final externalNames = decision.requiredAuthority.difference(knownNames);
+    final granted = <String>{};
+    final missing = <String>{};
+    final notEvaluated = <String>{};
+
+    if (knownNames.isNotEmpty) {
+      final known = await _evaluateKnownScopes(
+        failure,
+        knownNames.map((name) => byName[name]!).toSet(),
       );
+      granted.addAll(known.granted);
+      missing.addAll(known.missing);
+      notEvaluated.addAll(known.notEvaluated);
     }
 
+    if (externalNames.isNotEmpty) {
+      final provider = ProductRuntimeRecoveryAuthorityRegistry.forRuntime(runtime);
+      if (provider == null) {
+        notEvaluated.addAll(externalNames);
+      } else {
+        final external = await provider.evaluate(
+          runtime: runtime,
+          failure: failure,
+          decision: decision,
+          authorityNames: externalNames,
+        );
+        granted.addAll(external.granted.intersection(externalNames));
+        missing.addAll(external.missing.intersection(externalNames));
+        notEvaluated.addAll(
+          external.notEvaluated.intersection(externalNames),
+        );
+        final unresolved = externalNames
+            .difference(granted)
+            .difference(missing)
+            .difference(notEvaluated);
+        if (external.allowed) {
+          granted.addAll(unresolved);
+        } else {
+          notEvaluated.addAll(unresolved);
+        }
+      }
+    }
+
+    final allowed = missing.isEmpty &&
+        notEvaluated.isEmpty &&
+        granted.containsAll(decision.requiredAuthority);
+    return RecoveryAuthorityEvaluation(
+      allowed: allowed,
+      reason: allowed
+          ? 'Required recovery authority is explicitly proven for this operation.'
+          : missing.isNotEmpty
+              ? 'Required recovery authority is explicitly absent.'
+              : 'Required recovery authority has not been evaluated.',
+      granted: granted,
+      missing: missing,
+      notEvaluated: notEvaluated,
+    );
+  }
+
+  Future<RecoveryAuthorityEvaluation> _evaluateKnownScopes(
+    FailureEvent failure,
+    Set<PermissionScope> required,
+  ) async {
+    if (required.isEmpty) {
+      return const RecoveryAuthorityEvaluation(
+        allowed: true,
+        reason: 'No canonical permission scopes are required.',
+      );
+    }
     final runId = failure.runId;
     if (runId == null) {
       return RecoveryAuthorityEvaluation(
         allowed: false,
         reason:
-            'There is no source run from which recovery authority can be proven.',
-        notEvaluated: decision.requiredAuthority,
+            'No governed source run exists from which recovery permission can be proven.',
+        notEvaluated: required.map((scope) => scope.name).toSet(),
       );
     }
     final source = await runtime.getRun(runId);
@@ -203,20 +289,17 @@ final class ProductRuntimeRecoveryAuthorityGate
       return RecoveryAuthorityEvaluation(
         allowed: false,
         reason: 'The source run no longer exists.',
-        notEvaluated: decision.requiredAuthority,
+        notEvaluated: required.map((scope) => scope.name).toSet(),
       );
     }
-    final grantedScopes = await _activeScopesFor(source);
-    final requiredScopes = decision.requiredAuthority
-        .map((name) => byName[name]!)
-        .toSet();
-    final missing = requiredScopes.difference(grantedScopes);
+    final active = await _activeScopesFor(source);
+    final missing = required.difference(active);
     return RecoveryAuthorityEvaluation(
       allowed: missing.isEmpty,
       reason: missing.isEmpty
-          ? 'The original governed run has an active grant covering this recovery authority.'
-          : 'The original governed run does not have all required recovery scopes.',
-      granted: grantedScopes.map((scope) => scope.name).toSet(),
+          ? 'The original governed run has an active grant covering these scopes.'
+          : 'The original governed run does not have all required scopes.',
+      granted: required.intersection(active).map((scope) => scope.name).toSet(),
       missing: missing.map((scope) => scope.name).toSet(),
     );
   }
@@ -237,9 +320,8 @@ final class ProductRuntimeRecoveryAuthorityGate
   }
 }
 
-/// Operational recovery uses only narrow, reversible ProductRuntime actions.
-/// Arbitrary settings mutation is intentionally not implemented here; unknown
-/// L2 configuration repairs are routed to governed kernel work or escalation.
+/// Narrow, deterministic ProductRuntime recovery actuator. Arbitrary config
+/// mutation is intentionally absent; an unknown L2 repair fails closed.
 final class ProductRuntimeRecoveryActuator implements RecoveryActuator {
   const ProductRuntimeRecoveryActuator(this.runtime);
   final ProductRuntime runtime;
@@ -253,65 +335,61 @@ final class ProductRuntimeRecoveryActuator implements RecoveryActuator {
     final before = await awareness.snapshot(forceRefresh: true);
     final evidence = <String>[];
 
-    switch (decision.kind) {
-      case RecoveryDecisionKind.retry:
-        if (failure.category == FailureCategory.browser) {
-          if (runtime.p3BrowserRuntime.available) {
-            await runtime.p3BrowserRuntime.probe(
-              startupTimeout: const Duration(seconds: 10),
-            );
-            evidence.add('browserProbe:healthy');
-          }
-        } else if (failure.category == FailureCategory.provider) {
-          final models = await runtime.discoverModels();
-          evidence.add('modelDiscovery:${models.length}');
-        }
-      case RecoveryDecisionKind.restart:
-        if (failure.category == FailureCategory.browser) {
-          final browser = await runtime.refreshProvisionedBrowserRuntime();
-          if (!browser.available) {
-            throw ProductException(
-              'recovery_browser_unavailable',
-              'Browser runtime is still unavailable after refresh.',
-            );
-          }
-          await browser.probe(startupTimeout: const Duration(seconds: 10));
-          evidence.add('browserRuntime:restarted');
-        } else if (failure.projectId != null) {
-          final status = await runtime.projectProcessStatus(failure.projectId!);
-          if (status?.running == true) {
-            await runtime.stopProject(failure.projectId!);
-          }
-          final started = await runtime.startProject(failure.projectId!);
-          evidence.add('projectProcess:${started.processId}');
-        } else {
+    if (decision.kind == RecoveryDecisionKind.retry) {
+      if (failure.category == FailureCategory.browser) {
+        if (!runtime.p3BrowserRuntime.available) {
           throw ProductException(
-            'recovery_restart_target_missing',
-            'No bounded runtime resource is identified for restart.',
+            'recovery_browser_unavailable',
+            'Browser runtime is unavailable for retry.',
           );
         }
-      case RecoveryDecisionKind.reconfigure:
-        if (failure.category == FailureCategory.browser) {
-          final browser = await runtime.refreshProvisionedBrowserRuntime();
-          evidence.add('browserProvisioning:${browser.statusCode}');
-        } else if (failure.category == FailureCategory.provider) {
-          final models = await runtime.discoverModels();
-          evidence.add('providerDiscovery:${models.length}');
-        } else {
+        await runtime.p3BrowserRuntime.probe(
+          startupTimeout: const Duration(seconds: 10),
+        );
+        evidence.add('browserProbe:healthy');
+      } else if (failure.category == FailureCategory.provider) {
+        final models = await runtime.discoverModels();
+        evidence.add('modelDiscovery:${models.length}');
+      }
+    } else if (decision.kind == RecoveryDecisionKind.restart) {
+      if (failure.category == FailureCategory.browser) {
+        final browser = await runtime.refreshProvisionedBrowserRuntime();
+        if (!browser.available) {
           throw ProductException(
-            'recovery_configuration_not_bounded',
-            'This configuration repair has no deterministic bounded ProductRuntime actuator.',
+            'recovery_browser_unavailable',
+            'Browser runtime is still unavailable after refresh.',
           );
         }
-      case RecoveryDecisionKind.repair:
-      case RecoveryDecisionKind.selfRepair:
-      case RecoveryDecisionKind.rollback:
-      case RecoveryDecisionKind.requestAuthority:
-      case RecoveryDecisionKind.askUser:
-      case RecoveryDecisionKind.abort:
-      case RecoveryDecisionKind.quarantine:
-      case RecoveryDecisionKind.degraded:
-        throw StateError('recovery_actuator_kind_invalid:${decision.kind.name}');
+        await browser.probe(startupTimeout: const Duration(seconds: 10));
+        evidence.add('browserRuntime:restarted');
+      } else if (failure.projectId != null) {
+        final status = await runtime.projectProcessStatus(failure.projectId!);
+        if (status?.running == true) {
+          await runtime.stopProject(failure.projectId!);
+        }
+        final started = await runtime.startProject(failure.projectId!);
+        evidence.add('projectProcess:${started.processId}');
+      } else {
+        throw ProductException(
+          'recovery_restart_target_missing',
+          'No bounded runtime resource is identified for restart.',
+        );
+      }
+    } else if (decision.kind == RecoveryDecisionKind.reconfigure) {
+      if (failure.category == FailureCategory.browser) {
+        final browser = await runtime.refreshProvisionedBrowserRuntime();
+        evidence.add('browserProvisioning:${browser.statusCode}');
+      } else if (failure.category == FailureCategory.provider) {
+        final models = await runtime.discoverModels();
+        evidence.add('providerDiscovery:${models.length}');
+      } else {
+        throw ProductException(
+          'recovery_configuration_not_bounded',
+          'This configuration repair has no deterministic bounded ProductRuntime actuator.',
+        );
+      }
+    } else {
+      throw StateError('recovery_actuator_kind_invalid:${decision.kind.name}');
     }
 
     final after = await awareness.snapshot(forceRefresh: true);
@@ -322,7 +400,8 @@ final class ProductRuntimeRecoveryActuator implements RecoveryActuator {
       evidenceReferences: evidence,
       beforeFingerprint: beforeHash,
       afterFingerprint: afterHash,
-      materialProgress: beforeHash != afterHash || evidence.isNotEmpty,
+      // A newly-created evidence id is not semantic progress by itself.
+      materialProgress: beforeHash != afterHash,
     );
   }
 
@@ -364,6 +443,7 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
     RecoveryActionResult action,
   ) async {
     final overlay = await contextResolver.resolve(originalFailure);
+
     if (originalFailure.category == FailureCategory.browser) {
       final browser = runtime.p3BrowserRuntime;
       if (!browser.available) {
@@ -371,7 +451,6 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
           passed: false,
           check: 'browser_runtime',
           observed: 'Browser runtime remains unavailable.',
-          rollbackRecommended: false,
         );
       }
       try {
@@ -384,21 +463,22 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
             ...action.evidenceReferences,
             'browserProbe:verified',
           ],
-          materialProgress: action.materialProgress,
+          materialProgress: true,
         );
       } catch (error) {
         return RecoveryVerification(
           passed: false,
           check: 'browser_runtime',
-          observed: 'Browser startup probe failed: ${runtime.redactor.redact('$error')}',
-          rollbackRecommended: false,
+          observed:
+              'Browser startup probe failed: ${runtime.redactor.redact('$error')}',
         );
       }
     }
 
-    if (originalFailure.category == FailureCategory.provider ||
-        originalFailure.modelExactId != null) {
-      final snapshot = await ProductSelfAwarenessRuntime.shared(runtime).selfModel.snapshot(
+    if (originalFailure.modelExactId != null) {
+      final snapshot = await ProductSelfAwarenessRuntime.shared(runtime)
+          .selfModel
+          .snapshot(
             forceRefresh: true,
             source: 'recovery_verifier',
             reason: 'provider_verification',
@@ -413,7 +493,7 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
             ? 'Selected model ${selected['exactId']} is present in fresh provider discovery.'
             : 'The selected model is not present in fresh provider discovery.',
         evidenceReferences: action.evidenceReferences,
-        materialProgress: action.materialProgress,
+        materialProgress: live,
       );
     }
 
@@ -428,7 +508,7 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
             ? 'The managed project process is running.'
             : 'The managed project process is not running.',
         evidenceReferences: action.evidenceReferences,
-        materialProgress: action.materialProgress,
+        materialProgress: running,
         rollbackRecommended: !running,
       );
     }
@@ -449,14 +529,16 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
         passed: true,
         check: 'kernel_recovery_terminal_result',
         observed:
-            'Governed recovery work reached a verified terminal success with semantic progress.',
+            'Governed recovery work reached verified terminal success with semantic progress.',
         evidenceReferences: action.evidenceReferences,
         materialProgress: true,
       );
     }
 
     if (originalFailure.capabilityId != null) {
-      final snapshot = await ProductSelfAwarenessRuntime.shared(runtime).selfModel.snapshot(
+      final snapshot = await ProductSelfAwarenessRuntime.shared(runtime)
+          .selfModel
+          .snapshot(
             forceRefresh: true,
             source: 'recovery_verifier',
             reason: 'capability_verification',
@@ -486,8 +568,8 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
 }
 
 /// L3 repair is compiled and executed through the existing Universal Task
-/// Kernel. Authority may only be carried forward when the original run has an
-/// active grant covering every permission in the newly compiled recovery plan.
+/// Kernel. Recovery may carry authority forward only when an active grant on
+/// the original run covers every permission in the new recovery plan.
 final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
   ProductRuntimeRecoveryTaskRouter(this.runtime, this.internalRunIds);
 
@@ -515,7 +597,8 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         'The recovery project no longer exists.',
       );
     }
-    final source = failure.runId == null ? null : await runtime.getRun(failure.runId!);
+    final source =
+        failure.runId == null ? null : await runtime.getRun(failure.runId!);
     final model = source?.command.model ?? await _resolveModel(failure.modelExactId);
     if (model == null) {
       throw ProductException(
@@ -623,7 +706,7 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     );
 
     final run = await runtime.createRun(prepared.id);
-    internalRunIds.add(run.id);
+    _rememberInternalRun(run.id);
     await _carryForwardAuthority(
       source: source,
       target: run,
@@ -656,6 +739,8 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         'summary': terminal.summary,
         'evidence': evidence.map((item) => item.hash).toList(),
       })),
+      // A succeeded recovery run has already crossed the governed runtime's
+      // convergence/verifier boundary; this is semantic progress.
       materialProgress: true,
     );
   }
@@ -665,7 +750,7 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     final runId = failure.runId;
     if (runId == null) {
       return const RecoveryActionResult(
-        summary: 'No original governed run requires continuation.',
+        summary: 'No governed original run requires continuation.',
       );
     }
     final source = await runtime.getRun(runId);
@@ -683,9 +768,8 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
           target: retry,
           required: retry.command.contract.requiredPermissions,
         );
-        // This is the original user's continued task, not an internal recovery
-        // child. Do not add it to internalRunIds: if it fails again, the normal
-        // failure supervisor sees the recurrence and applies the bounded ladder.
+        // This is the user's continued task, not an internal recovery child.
+        // A repeated failure remains visible to the bounded strategy ladder.
         unawaited(runtime.execute(retry.id));
         await runtime.events.publish(
           'recovery.original_continuation_started',
@@ -726,12 +810,14 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
           summary: 'The original run is already succeeded.',
           evidenceReferences: <String>['run:${source.id}:succeeded'],
         );
+      case RunState.prepared:
       case RunState.queued:
       case RunState.awaitingApproval:
       case RunState.running:
       case RunState.cancelling:
         return RecoveryActionResult(
-          summary: 'The original run is already nonterminal and does not need a new continuation.',
+          summary:
+              'The original run is already nonterminal and does not need a duplicate continuation.',
           evidenceReferences: <String>['run:${source.id}:${source.state.name}'],
         );
     }
@@ -748,10 +834,7 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     required RunRecord target,
     required Set<PermissionScope> required,
   }) async {
-    if (required.isEmpty) {
-      await runtime.approve(runId: target.id, scopes: const <PermissionScope>{});
-      return;
-    }
+    if (required.isEmpty) return;
     if (source == null) {
       throw ProductException(
         'recovery_authority_source_missing',
@@ -795,11 +878,15 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       },
     );
   }
+
+  void _rememberInternalRun(String runId) {
+    internalRunIds.add(runId);
+    if (internalRunIds.length > 256) {
+      internalRunIds.remove(internalRunIds.first);
+    }
+  }
 }
 
-/// Registration seam for an independently hosted L4 recovery boundary. Merely
-/// registering a host does not grant owner.self_repair; the authority gate must
-/// independently evaluate that authority before this coordinator is reached.
 final class ProductRuntimeRecoveryHostRegistry {
   ProductRuntimeRecoveryHostRegistry._();
   static final Expando<KristinRecoveryHost> _hosts =
@@ -822,6 +909,15 @@ final class ProductRuntimeSelfRepairCoordinator
     RecoveryDecision decision,
     FailureEvent failure,
   ) async {
+    final owner = runtime.p2OwnerMode;
+    if (!owner.available ||
+        !owner.completionEligible ||
+        !owner.secureIsolationActive) {
+      throw ProductException(
+        'owner_recovery_runtime_not_ready',
+        'The isolated Owner runtime is not healthy enough for staged self-repair.',
+      );
+    }
     final host = ProductRuntimeRecoveryHostRegistry.forRuntime(runtime);
     if (host == null) {
       throw ProductException(
@@ -864,26 +960,25 @@ final class ProductRuntimeSelfRepairCoordinator
         'The recovery host did not finish with the verified candidate active and healthy.',
       );
     }
+    final beforeHash = Sha256.text(canonicalJson(before.toJson()));
+    final afterHash = Sha256.text(canonicalJson(after.toJson()));
     return RecoveryActionResult(
       summary: 'Activated verified recovery candidate ${identity.version}.',
       evidenceReferences: <String>[
         ...failure.evidenceReferences,
         'recoveryHost:${identity.artifactIdentity}',
       ],
-      beforeFingerprint: Sha256.text(canonicalJson(before.toJson())),
-      afterFingerprint: Sha256.text(canonicalJson(after.toJson())),
-      materialProgress:
-          Sha256.text(canonicalJson(before.toJson())) !=
-              Sha256.text(canonicalJson(after.toJson())),
+      beforeFingerprint: beforeHash,
+      afterFingerprint: afterHash,
+      materialProgress: beforeHash != afterHash,
     );
   }
 }
 
-/// Real application composition for autonomic recovery. It watches canonical
-/// run failures and accepts direct-operation failures from the Chat runtime
-/// gateway. Recovery-generated child runs are excluded from the watcher to
-/// avoid recursive concurrent supervision; linked continuations remain visible
-/// so recurrence can advance the bounded strategy ladder.
+/// One autonomic supervisor per ProductRuntime. It watches canonical run
+/// failures; recovery-generated child runs are excluded to avoid recursive
+/// concurrent repair. Linked user-task continuations remain visible so a
+/// recurrence advances the bounded strategy ladder.
 final class ProductRuntimeAutonomicRecovery {
   factory ProductRuntimeAutonomicRecovery.shared(ProductRuntime runtime) {
     final existing = _shared[runtime];
@@ -932,6 +1027,9 @@ final class ProductRuntimeAutonomicRecovery {
     final runId = event.data['runId']?.toString() ?? event.correlationId;
     if (runId.isEmpty || _internalRunIds.contains(runId)) return;
     if (!_handledFailureEvents.add(event.id)) return;
+    if (_handledFailureEvents.length > 1024) {
+      _handledFailureEvents.remove(_handledFailureEvents.first);
+    }
     unawaited(_handleRunFailure(event, runId));
   }
 
@@ -949,6 +1047,7 @@ final class ProductRuntimeAutonomicRecovery {
         operation: 'execute',
         message: message,
         runId: run.id,
+        workItemId: event.data['workItemId']?.toString(),
         projectId: run.command.contract.projectId,
         modelExactId: run.command.model.exactId,
         errorCode: _errorCode(message),
@@ -958,6 +1057,9 @@ final class ProductRuntimeAutonomicRecovery {
           'state': run.state.name,
           'sourceRunId': run.sourceRunId,
         },
+        requiredAuthority: run.command.contract.requiredPermissions
+            .map((scope) => scope.name)
+            .toSet(),
         evidenceReferences: <String>['runtimeEvent:${event.id}'],
       );
       await supervisor.handle(failure);
@@ -987,7 +1089,8 @@ final class ProductRuntimeAutonomicRecovery {
     final failure = FailureEvent(
       severity: FailureSeverity.error,
       category: _categoryFor(message, operation: operation),
-      subsystem: operation.contains('.') ? operation.split('.').first : 'runtime',
+      subsystem:
+          operation.contains('.') ? operation.split('.').first : 'runtime',
       operation: operation,
       message: message,
       projectId: projectId,
@@ -1033,9 +1136,8 @@ final class ProductRuntimeAutonomicRecovery {
   }
 
   String? _errorCode(String message) {
-    final match = RegExp(r'\b([a-z][a-z0-9_]{3,})\s*:').firstMatch(
-      message.toLowerCase(),
-    );
+    final match = RegExp(r'\b([a-z][a-z0-9_]{3,})\s*:')
+        .firstMatch(message.toLowerCase());
     return match?.group(1);
   }
 
