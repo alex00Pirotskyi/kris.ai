@@ -13,12 +13,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          ref: af957ebf176c67fd1ac948cf2417852773098964
+          ref: 8ba3cc1279fcccd1e15a33b0117d098c7ed37cce
           fetch-depth: 1
       - name: Bind exact candidate
         shell: bash
         run: |
-          test "$(git rev-parse HEAD)" = "af957ebf176c67fd1ac948cf2417852773098964"
+          test "$(git rev-parse HEAD)" = "8ba3cc1279fcccd1e15a33b0117d098c7ed37cce"
           printf '%s\n' "$(git rev-parse HEAD)" > exact-dogfood-sha.txt
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
@@ -47,7 +47,7 @@ jobs:
       - name: Upload exact Linux debug dogfood bundle
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: exact-linux-debug-dogfood-af957ebf
+          name: repaired-linux-debug-dogfood-8ba3cc12
           path: build/linux/x64/debug/bundle
           if-no-files-found: error
           retention-days: 2
