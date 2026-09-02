@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../capability_invocation.dart';
 import '../chat_control_plane.dart';
 import '../crypto_utils.dart';
 
@@ -31,12 +32,18 @@ enum CapabilityAvailabilityState {
 }
 
 enum CapabilityAuthorityClass { none, governed, owner, explicitApproval }
-
+enum AuthorityObservationState { notRequired, notEvaluated, absent, granted }
 enum KnowledgeEvidenceKind { observed, configured, inferred, cached, unknown }
-
 enum ObservationConfidence { certain, high, medium, low, unknown }
-
 enum CapabilityHealthState { healthy, degraded, failing, unknown }
+
+int _confidenceRank(ObservationConfidence value) => switch (value) {
+      ObservationConfidence.certain => 4,
+      ObservationConfidence.high => 3,
+      ObservationConfidence.medium => 2,
+      ObservationConfidence.low => 1,
+      ObservationConfidence.unknown => 0,
+    };
 
 final class KnowledgeEvidence {
   KnowledgeEvidence({
@@ -57,12 +64,23 @@ final class KnowledgeEvidence {
 
   bool isFreshAt(DateTime now) => expiresAt == null || now.isBefore(expiresAt!);
 
+  bool get directlyObserved =>
+      kind == KnowledgeEvidenceKind.observed ||
+      kind == KnowledgeEvidenceKind.configured;
+
   Map<String, Object?> toJson() => <String, Object?>{
         'kind': kind.name,
         'source': source,
         'confidence': confidence.name,
         'observedAt': observedAt.toIso8601String(),
         if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
+        if (detail.isNotEmpty) 'detail': detail,
+      };
+
+  Map<String, Object?> semanticJson() => <String, Object?>{
+        'kind': kind.name,
+        'source': source,
+        'confidence': confidence.name,
         if (detail.isNotEmpty) 'detail': detail,
       };
 }
@@ -97,10 +115,8 @@ final class CapabilitySatisfactionStep {
       };
 }
 
-/// Canonical, model-readable description of a Kristin capability.
-///
-/// A descriptor says what exists. It does not say that the capability is
-/// currently usable and, critically, it never grants execution authority.
+/// Canonical model-readable capability description. This says what exists;
+/// it never claims the capability is currently healthy, available or granted.
 final class CapabilityDescriptor {
   const CapabilityDescriptor({
     required this.id,
@@ -133,12 +149,14 @@ final class CapabilityDescriptor {
     this.recoverability = const <String>[],
     this.coordinator = false,
     this.directlyExecutable = false,
+    this.runnerToolName,
     this.recoveryParticipant = false,
     this.usageHints = const <String>[],
     this.providerId = 'unknown',
     this.freshnessBudget = const Duration(seconds: 10),
+    this.healthFreshnessBudget = const Duration(seconds: 30),
     this.probeInterval = const Duration(seconds: 30),
-    this.schemaVersion = 2,
+    this.schemaVersion = 3,
   });
 
   final String id;
@@ -171,12 +189,20 @@ final class CapabilityDescriptor {
   final List<String> recoverability;
   final bool coordinator;
   final bool directlyExecutable;
+  final String? runnerToolName;
   final bool recoveryParticipant;
   final List<String> usageHints;
   final String providerId;
   final Duration freshnessBudget;
+  final Duration healthFreshnessBudget;
   final Duration probeInterval;
   final int schemaVersion;
+
+  bool get authoritySensitive =>
+      authorityClass == CapabilityAuthorityClass.owner ||
+      authorityClass == CapabilityAuthorityClass.explicitApproval ||
+      riskClass == CapabilityRiskClass.sensitive ||
+      riskClass == CapabilityRiskClass.destructive;
 
   Map<String, Object?> toJson() => <String, Object?>{
         'id': id,
@@ -211,10 +237,12 @@ final class CapabilityDescriptor {
         'recoverability': recoverability,
         'coordinator': coordinator,
         'directlyExecutable': directlyExecutable,
+        if (runnerToolName != null) 'runnerToolName': runnerToolName,
         'recoveryParticipant': recoveryParticipant,
         'usageHints': usageHints,
         'providerId': providerId,
         'freshnessBudgetMs': freshnessBudget.inMilliseconds,
+        'healthFreshnessBudgetMs': healthFreshnessBudget.inMilliseconds,
         'probeIntervalMs': probeInterval.inMilliseconds,
         'schemaVersion': schemaVersion,
       };
@@ -228,6 +256,7 @@ final class CapabilityAvailability {
     this.missingPrerequisites = const <String>{},
     this.requiredAuthority = const <String>{},
     this.currentAuthority = const <String>{},
+    this.authorityObservation = AuthorityObservationState.notEvaluated,
     this.retryAfter,
     this.observedAt,
     this.evidence = const <KnowledgeEvidence>[],
@@ -240,6 +269,7 @@ final class CapabilityAvailability {
   final Set<String> missingPrerequisites;
   final Set<String> requiredAuthority;
   final Set<String> currentAuthority;
+  final AuthorityObservationState authorityObservation;
   final DateTime? retryAfter;
   final DateTime? observedAt;
   final List<KnowledgeEvidence> evidence;
@@ -259,6 +289,18 @@ final class CapabilityAvailability {
     return evidence.every((item) => item.isFreshAt(now));
   }
 
+  ObservationConfidence get strongestConfidence {
+    var best = ObservationConfidence.unknown;
+    for (final item in evidence) {
+      if (_confidenceRank(item.confidence) > _confidenceRank(best)) {
+        best = item.confidence;
+      }
+    }
+    return best;
+  }
+
+  bool get hasDirectEvidence => evidence.any((item) => item.directlyObserved);
+
   Map<String, Object?> toJson() => <String, Object?>{
         'capabilityId': capabilityId,
         'state': state.name,
@@ -267,6 +309,7 @@ final class CapabilityAvailability {
         'missingPrerequisites': missingPrerequisites.toList()..sort(),
         'requiredAuthority': requiredAuthority.toList()..sort(),
         'currentAuthority': currentAuthority.toList()..sort(),
+        'authorityObservation': authorityObservation.name,
         if (retryAfter != null) 'retryAfter': retryAfter!.toIso8601String(),
         if (observedAt != null) 'observedAt': observedAt!.toIso8601String(),
         'evidence': evidence.map((item) => item.toJson()).toList(),
@@ -281,6 +324,7 @@ final class CapabilityHealth {
     this.reasons = const <String>[],
     this.observedAt,
     this.lastVerifiedAt,
+    this.expiresAt,
     this.evidence = const <KnowledgeEvidence>[],
     this.latency,
   });
@@ -290,17 +334,19 @@ final class CapabilityHealth {
   final List<String> reasons;
   final DateTime? observedAt;
   final DateTime? lastVerifiedAt;
+  final DateTime? expiresAt;
   final List<KnowledgeEvidence> evidence;
   final Duration? latency;
 
-  bool get healthyEnough =>
-      state == CapabilityHealthState.healthy ||
-      state == CapabilityHealthState.degraded ||
-      state == CapabilityHealthState.unknown;
+  bool get healthyEnough => state == CapabilityHealthState.healthy ||
+      state == CapabilityHealthState.degraded;
 
   bool freshAt(DateTime now, Duration budget) {
-    if (budget == Duration.zero || observedAt == null) return false;
-    if (now.difference(observedAt!) > budget) return false;
+    if (observedAt == null) return false;
+    if (expiresAt != null && !now.isBefore(expiresAt!)) return false;
+    if (budget == Duration.zero || now.difference(observedAt!) > budget) {
+      return false;
+    }
     return evidence.every((item) => item.isFreshAt(now));
   }
 
@@ -311,6 +357,7 @@ final class CapabilityHealth {
         if (observedAt != null) 'observedAt': observedAt!.toIso8601String(),
         if (lastVerifiedAt != null)
           'lastVerifiedAt': lastVerifiedAt!.toIso8601String(),
+        if (expiresAt != null) 'expiresAt': expiresAt!.toIso8601String(),
         if (latency != null) 'latencyMs': latency!.inMilliseconds,
         'evidence': evidence.map((item) => item.toJson()).toList(),
       };
@@ -327,8 +374,44 @@ final class KnownCapability {
   final CapabilityAvailability availability;
   final CapabilityHealth? health;
 
-  bool get operationallyUsable =>
-      availability.usableNow && (health?.healthyEnough ?? true);
+  bool get operationallyUsable => operationallyUsableAt(DateTime.now().toUtc());
+
+  bool operationallyUsableAt(DateTime now) {
+    if (!availability.usableNow ||
+        !availability.freshAt(now, descriptor.freshnessBudget)) {
+      return false;
+    }
+    if (descriptor.authoritySensitive &&
+        availability.requiredAuthority.isNotEmpty &&
+        availability.authorityObservation != AuthorityObservationState.granted) {
+      return false;
+    }
+    final observedHealth = health;
+    if (observedHealth == null) {
+      return descriptor.riskClass == CapabilityRiskClass.none ||
+          descriptor.riskClass == CapabilityRiskClass.readOnly;
+    }
+    if (observedHealth.state == CapabilityHealthState.failing) return false;
+    if (observedHealth.state == CapabilityHealthState.unknown &&
+        descriptor.riskClass != CapabilityRiskClass.none &&
+        descriptor.riskClass != CapabilityRiskClass.readOnly) {
+      return false;
+    }
+    if (descriptor.riskClass != CapabilityRiskClass.none &&
+        descriptor.riskClass != CapabilityRiskClass.readOnly &&
+        !observedHealth.freshAt(now, descriptor.healthFreshnessBudget)) {
+      return false;
+    }
+    if (descriptor.riskClass == CapabilityRiskClass.sensitive ||
+        descriptor.riskClass == CapabilityRiskClass.destructive) {
+      if (!availability.hasDirectEvidence ||
+          _confidenceRank(availability.strongestConfidence) <
+              _confidenceRank(ObservationConfidence.high)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   Map<String, Object?> toJson() => <String, Object?>{
         'descriptor': descriptor.toJson(),
@@ -336,6 +419,21 @@ final class KnownCapability {
         if (health != null) 'health': health!.toJson(),
         'operationallyUsable': operationallyUsable,
       };
+}
+
+/// Conversation/session facts are an overlay, not global runtime truth.
+final class SelfModelSessionOverlay {
+  const SelfModelSessionOverlay({
+    this.key = 'runtime',
+    this.selectedProject,
+    this.selectedModel,
+  });
+
+  final String key;
+  final Map<String, Object?>? selectedProject;
+  final Map<String, Object?>? selectedModel;
+
+  String get cacheKey => '$key|${selectedProject?['id'] ?? ''}|${selectedModel?['exactId'] ?? ''}';
 }
 
 /// Bounded runtime state assembled from authoritative product/domain services.
@@ -386,6 +484,14 @@ final class ApplicationSnapshot {
 
   Map<String, Object?> toJson() => <String, Object?>{
         'capturedAt': capturedAt.toIso8601String(),
+        ...semanticJson(),
+        'knowledgeEvidence': knowledgeEvidence.map(
+          (key, value) => MapEntry<String, Object?>(key, value.toJson()),
+        ),
+      };
+
+  /// Semantic equality deliberately excludes re-observation timestamps.
+  Map<String, Object?> semanticJson() => <String, Object?>{
         'applicationIdentity': applicationIdentity,
         'platform': platform,
         'build': build,
@@ -405,17 +511,20 @@ final class ApplicationSnapshot {
         'recentFailures': recentFailures,
         'recentActions': recentActions,
         'knowledgeEvidence': knowledgeEvidence.map(
-          (key, value) => MapEntry<String, Object?>(key, value.toJson()),
+          (key, value) => MapEntry<String, Object?>(key, value.semanticJson()),
         ),
       };
+
+  String get semanticFingerprint => Sha256.text(canonicalJson(semanticJson()));
 }
 
 abstract interface class ApplicationSnapshotProvider {
-  Future<ApplicationSnapshot> capture();
+  Future<ApplicationSnapshot> capture({
+    bool forceRefresh = false,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  });
 }
 
-/// Provider-owned capability registration seam. New subsystems register their
-/// provider here instead of extending a central switch/catalog.
 abstract interface class KristinCapabilityProvider {
   String get providerId;
   Iterable<CapabilityDescriptor> describeCapabilities();
@@ -425,9 +534,6 @@ abstract interface class KristinCapabilityProvider {
   );
 }
 
-/// Optional provider surface for health. Availability answers whether a
-/// capability may be used; health answers whether the underlying facility is
-/// currently behaving well enough to rely on.
 abstract interface class KristinCapabilityHealthProvider {
   Future<CapabilityHealth> resolveHealth(
     CapabilityDescriptor descriptor,
@@ -451,16 +557,15 @@ final class KristinCapabilityRegistry {
   Iterable<KristinCapabilityProvider> get providers => _providers.values;
 }
 
-/// Adapter for the existing Chat capability registry. This is intentionally a
-/// provider, not the final self model: subsystem-specific providers can add
-/// richer runtime-owned capabilities without growing one global switch.
 final class ChatCapabilityProvider implements KristinCapabilityProvider {
   const ChatCapabilityProvider({
     required this.availabilityResolver,
     this.capabilities = kKristinCapabilities,
+    this.authorityResolver = const CapabilityAuthorityResolver(),
   });
 
   final List<KristinCapability> capabilities;
+  final CapabilityAuthorityResolver authorityResolver;
   final Future<CapabilityAvailability> Function(
     KristinCapability capability,
     CapabilityDescriptor descriptor,
@@ -470,10 +575,25 @@ final class ChatCapabilityProvider implements KristinCapabilityProvider {
   @override
   String get providerId => 'chat.registry';
 
+  static const Set<ChatExecutionRoute> _projectRequiredRoutes =
+      <ChatExecutionRoute>{
+    ChatExecutionRoute.modifyProject,
+    ChatExecutionRoute.fixProject,
+    ChatExecutionRoute.projectAnalyze,
+    ChatExecutionRoute.projectTest,
+    ChatExecutionRoute.projectBuild,
+    ChatExecutionRoute.projectRun,
+    ChatExecutionRoute.projectStop,
+    ChatExecutionRoute.projectRestart,
+  };
+
   @override
   Iterable<CapabilityDescriptor> describeCapabilities() => capabilities.map((c) {
         final mutating = c.riskClass == ChatRiskClass.mutation ||
             c.riskClass == ChatRiskClass.destructive;
+        final authority = authorityResolver.resolve(
+          CapabilityInvocation(capabilityId: c.id, reason: 'self_model.describe'),
+        );
         return CapabilityDescriptor(
           id: c.id,
           name: c.displayName,
@@ -489,18 +609,24 @@ final class ChatCapabilityProvider implements KristinCapabilityProvider {
           mutatesProjectState: mutating,
           coordinator: c.isCoordinatorCapability,
           directlyExecutable: !c.isCoordinatorCapability,
-          projectRequired: !c.availableWithoutTarget &&
-              c.acceptedTargetTypes.contains(ChatTargetType.project),
+          projectRequired: _projectRequiredRoutes.contains(c.route),
           modelProviderRequired: c.actionClass == ChatActionClass.substantial,
+          permissionRequirements:
+              authority.requiredScopes.map((scope) => scope.name).toSet(),
           authorityClass: c.route == ChatExecutionRoute.ownerMode
               ? CapabilityAuthorityClass.owner
               : c.riskClass == ChatRiskClass.sensitive ||
                       c.riskClass == ChatRiskClass.destructive
                   ? CapabilityAuthorityClass.explicitApproval
-                  : CapabilityAuthorityClass.governed,
+                  : authority.requiredScopes.isEmpty
+                      ? CapabilityAuthorityClass.none
+                      : CapabilityAuthorityClass.governed,
           freshnessBudget: c.route == ChatExecutionRoute.ownerMode
               ? Duration.zero
               : const Duration(seconds: 10),
+          healthFreshnessBudget: c.route == ChatExecutionRoute.ownerMode
+              ? const Duration(seconds: 5)
+              : const Duration(seconds: 30),
           probeInterval: c.route == ChatExecutionRoute.ownerMode
               ? const Duration(seconds: 5)
               : const Duration(seconds: 30),
@@ -525,13 +651,17 @@ final class CapabilityStateChange {
     required this.nextAvailability,
     required this.previousHealth,
     required this.nextHealth,
+    required this.previousUsable,
+    required this.nextUsable,
   });
 
+  final String capabilityId;
   final CapabilityAvailabilityState? previousAvailability;
   final CapabilityAvailabilityState nextAvailability;
   final CapabilityHealthState? previousHealth;
   final CapabilityHealthState nextHealth;
-  final String capabilityId;
+  final bool previousUsable;
+  final bool nextUsable;
 
   Map<String, Object?> toJson() => <String, Object?>{
         'capabilityId': capabilityId,
@@ -540,6 +670,8 @@ final class CapabilityStateChange {
         'nextAvailability': nextAvailability.name,
         if (previousHealth != null) 'previousHealth': previousHealth!.name,
         'nextHealth': nextHealth.name,
+        'previousUsable': previousUsable,
+        'nextUsable': nextUsable,
       };
 }
 
@@ -547,41 +679,47 @@ final class SelfModelChange {
   SelfModelChange({
     String? id,
     DateTime? observedAt,
+    required this.overlayKey,
     required this.source,
     required this.reason,
     required this.capabilityChanges,
-    required this.applicationChanged,
+    required this.applicationFieldsChanged,
   })  : id = id ?? newId('self_change'),
         observedAt = observedAt ?? DateTime.now().toUtc();
 
   final String id;
   final DateTime observedAt;
+  final String overlayKey;
   final String source;
   final String reason;
   final List<CapabilityStateChange> capabilityChanges;
-  final bool applicationChanged;
+  final List<String> applicationFieldsChanged;
 
+  bool get applicationChanged => applicationFieldsChanged.isNotEmpty;
   bool get material => capabilityChanges.isNotEmpty || applicationChanged;
 
   Map<String, Object?> toJson() => <String, Object?>{
         'id': id,
         'observedAt': observedAt.toIso8601String(),
+        'overlayKey': overlayKey,
         'source': source,
         'reason': reason,
         'applicationChanged': applicationChanged,
+        'applicationFieldsChanged': applicationFieldsChanged,
         'capabilityChanges': capabilityChanges.map((item) => item.toJson()).toList(),
       };
 }
 
-/// Immutable, bounded self-model result used by Chat and planning.
 final class KristinSelfSnapshot {
   const KristinSelfSnapshot({
     required this.application,
     required this.capabilities,
+    this.overlay = const SelfModelSessionOverlay(),
   });
 
   final ApplicationSnapshot application;
   final List<KnownCapability> capabilities;
+  final SelfModelSessionOverlay overlay;
 
   Iterable<KnownCapability> get available =>
       capabilities.where((c) => c.operationallyUsable);
@@ -596,16 +734,14 @@ final class KristinSelfSnapshot {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': 2,
+        'schemaVersion': 3,
         'identity': 'Kristin, the governed AI operating kris.ai',
+        'overlayKey': overlay.cacheKey,
         'application': application.toJson(),
         'capabilities': capabilities.map((c) => c.toJson()).toList(),
       };
 }
 
-/// Compact planning projection. This is knowledge only; Runner tool names
-/// remain an executor-specific allow-list and are never derived from known
-/// coordinator capabilities.
 final class SelfModelPlanningContext {
   const SelfModelPlanningContext({
     required this.summary,
@@ -614,12 +750,14 @@ final class SelfModelPlanningContext {
     required this.currentAuthority,
     required this.relevantCapabilities,
     this.freshnessWarnings = const <String>[],
+    this.authorityNotEvaluated = const <String>{},
   });
 
   final String summary;
   final Set<String> availableCapabilityIds;
   final Map<String, String> blockedCapabilityReasons;
   final Set<String> currentAuthority;
+  final Set<String> authorityNotEvaluated;
   final List<Map<String, Object?>> relevantCapabilities;
   final List<String> freshnessWarnings;
 
@@ -628,6 +766,7 @@ final class SelfModelPlanningContext {
         'availableCapabilityIds': availableCapabilityIds.toList()..sort(),
         'blockedCapabilityReasons': blockedCapabilityReasons,
         'currentAuthority': currentAuthority.toList()..sort(),
+        'authorityNotEvaluated': authorityNotEvaluated.toList()..sort(),
         'relevantCapabilities': relevantCapabilities,
         'freshnessWarnings': freshnessWarnings,
       };
@@ -639,7 +778,9 @@ final class CapabilityRequirementReport {
     required this.known,
     required this.usableNow,
     required this.missingPrerequisites,
+    required this.requiredAuthority,
     required this.missingAuthority,
+    required this.authorityObservation,
     required this.satisfactionPath,
     required this.explanation,
   });
@@ -648,7 +789,9 @@ final class CapabilityRequirementReport {
   final bool known;
   final bool usableNow;
   final Set<String> missingPrerequisites;
+  final Set<String> requiredAuthority;
   final Set<String> missingAuthority;
+  final AuthorityObservationState authorityObservation;
   final List<CapabilitySatisfactionStep> satisfactionPath;
   final String explanation;
 
@@ -657,7 +800,9 @@ final class CapabilityRequirementReport {
         'known': known,
         'usableNow': usableNow,
         'missingPrerequisites': missingPrerequisites.toList()..sort(),
+        'requiredAuthority': requiredAuthority.toList()..sort(),
         'missingAuthority': missingAuthority.toList()..sort(),
+        'authorityObservation': authorityObservation.name,
         'satisfactionPath': satisfactionPath.map((item) => item.toJson()).toList(),
         'explanation': explanation,
       };
@@ -683,16 +828,47 @@ final class KristinSelfModelService {
   final Map<String, CapabilityHealth> _healthOverrides =
       <String, CapabilityHealth>{};
   final List<SelfModelChange> _recentChanges = <SelfModelChange>[];
-  KristinSelfSnapshot? _lastSnapshot;
+  final Map<String, KristinSelfSnapshot> _lastSnapshots =
+      <String, KristinSelfSnapshot>{};
+  Future<void> _serial = Future<void>.value();
 
   Stream<SelfModelChange> get changes => _changeController.stream;
+
+  Future<T> _synchronized<T>(Future<T> Function() action) {
+    final completer = Completer<T>();
+    _serial = _serial.then((_) async {
+      try {
+        completer.complete(await action());
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    return completer.future;
+  }
 
   Future<KristinSelfSnapshot> snapshot({
     bool forceRefresh = false,
     String source = 'self_model.read',
     String reason = 'snapshot',
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) =>
+      _synchronized(() => _snapshotUnlocked(
+            forceRefresh: forceRefresh,
+            source: source,
+            reason: reason,
+            overlay: overlay,
+          ));
+
+  Future<KristinSelfSnapshot> _snapshotUnlocked({
+    required bool forceRefresh,
+    required String source,
+    required String reason,
+    required SelfModelSessionOverlay overlay,
   }) async {
-    final app = await application.capture();
+    final app = await application.capture(
+      forceRefresh: forceRefresh,
+      overlay: overlay,
+    );
     final resolved = <KnownCapability>[];
     final ids = <String>{};
     final now = DateTime.now().toUtc();
@@ -706,6 +882,7 @@ final class KristinSelfModelService {
           descriptor,
           app,
           now,
+          overlay,
           forceRefresh: forceRefresh,
         );
         final health = await _resolveHealth(
@@ -714,6 +891,7 @@ final class KristinSelfModelService {
           app,
           availability,
           now,
+          overlay,
           forceRefresh: forceRefresh,
         );
         resolved.add(KnownCapability(
@@ -724,41 +902,69 @@ final class KristinSelfModelService {
       }
     }
     resolved.sort((a, b) => a.descriptor.id.compareTo(b.descriptor.id));
-    final next = KristinSelfSnapshot(application: app, capabilities: resolved);
-    _recordChange(_lastSnapshot, next, source: source, reason: reason);
-    _lastSnapshot = next;
+    final next = KristinSelfSnapshot(
+      application: app,
+      capabilities: resolved,
+      overlay: overlay,
+    );
+    final key = overlay.cacheKey;
+    _recordChange(_lastSnapshots[key], next, source: source, reason: reason);
+    _lastSnapshots[key] = next;
     return next;
   }
 
   Future<KristinSelfSnapshot> refresh({
     String source = 'self_model.refresh',
     String reason = 'explicit_refresh',
-  }) {
-    _availabilityCache.clear();
-    _healthCache.clear();
-    return snapshot(forceRefresh: true, source: source, reason: reason);
-  }
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) =>
+      _synchronized(() async {
+        _clearOverlayCaches(overlay);
+        return _snapshotUnlocked(
+          forceRefresh: true,
+          source: source,
+          reason: reason,
+          overlay: overlay,
+        );
+      });
 
   Future<KristinSelfSnapshot> notifyStateChanged({
     required String source,
     required String reason,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
   }) =>
-      refresh(source: source, reason: reason);
+      refresh(source: source, reason: reason, overlay: overlay);
 
-  void recordHealthObservation(CapabilityHealth health) {
-    _healthOverrides[health.capabilityId] = health;
-    _healthCache.remove(health.capabilityId);
+  void recordHealthObservation(
+    CapabilityHealth health, {
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) {
+    final key = _cacheKey(overlay, health.capabilityId);
+    _healthOverrides[key] = health;
+    _healthCache.remove(key);
   }
 
-  List<SelfModelChange> changesSince(DateTime since) => List<SelfModelChange>.unmodifiable(
-        _recentChanges.where((change) => !change.observedAt.isBefore(since)),
-      );
+  List<SelfModelChange> changesSince(
+    DateTime since, {
+    String? overlayKey,
+  }) =>
+      List<SelfModelChange>.unmodifiable(_recentChanges.where((change) {
+        if (change.observedAt.isBefore(since)) return false;
+        return overlayKey == null || change.overlayKey == overlayKey;
+      }));
 
-  Future<KnownCapability?> capability(String id, {bool forceRefresh = false}) async =>
-      (await snapshot(forceRefresh: forceRefresh)).capability(id);
+  Future<KnownCapability?> capability(
+    String id, {
+    bool forceRefresh = false,
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async =>
+      (await snapshot(forceRefresh: forceRefresh, overlay: overlay)).capability(id);
 
-  Future<String> explainAvailability(String id) async {
-    final item = await capability(id);
+  Future<String> explainAvailability(
+    String id, {
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async {
+    final item = await capability(id, overlay: overlay);
     if (item == null) {
       return 'Kristin does not currently know a capability named $id.';
     }
@@ -770,19 +976,25 @@ final class KristinSelfModelService {
     final healthText = health == null
         ? 'Health is unknown.'
         : 'Health is ${health.state.name}${health.reasons.isEmpty ? '.' : ': ${health.reasons.join(' ')}'}';
-    return '$id is ${state.state.name}. $why $healthText';
+    final authorityText = state.requiredAuthority.isEmpty
+        ? ''
+        : ' Authority is ${state.authorityObservation.name}; required: ${state.requiredAuthority.join(', ')}.';
+    return '$id is ${state.state.name}. $why $healthText$authorityText';
   }
 
   Future<SelfModelPlanningContext> planningContext({
     Set<String> relevantCapabilityIds = const <String>{},
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
   }) async {
     final self = await snapshot(
       source: 'task_kernel',
       reason: 'planning_context',
+      overlay: overlay,
     );
     final available = self.available.map((c) => c.descriptor.id).toSet();
     final blocked = <String, String>{};
     final freshnessWarnings = <String>[];
+    final authorityNotEvaluated = <String>{};
     final now = DateTime.now().toUtc();
     for (final item in self.blocked) {
       final reasons = <String>[
@@ -795,11 +1007,21 @@ final class KristinSelfModelService {
     }
     for (final item in self.capabilities) {
       if (!item.availability.freshAt(now, item.descriptor.freshnessBudget)) {
-        freshnessWarnings.add('${item.descriptor.id}: availability observation is stale or execution-time only.');
+        freshnessWarnings.add(
+          '${item.descriptor.id}: availability observation is stale or execution-time only.',
+        );
       }
       final health = item.health;
-      if (health != null && !health.freshAt(now, item.descriptor.freshnessBudget)) {
-        freshnessWarnings.add('${item.descriptor.id}: health observation is stale or execution-time only.');
+      if (health != null &&
+          !health.freshAt(now, item.descriptor.healthFreshnessBudget)) {
+        freshnessWarnings.add(
+          '${item.descriptor.id}: health observation is stale or execution-time only.',
+        );
+      }
+      if (item.availability.requiredAuthority.isNotEmpty &&
+          item.availability.authorityObservation ==
+              AuthorityObservationState.notEvaluated) {
+        authorityNotEvaluated.add(item.descriptor.id);
       }
     }
     final relevant = self.capabilities.where((item) {
@@ -816,6 +1038,7 @@ final class KristinSelfModelService {
       availableCapabilityIds: available,
       blockedCapabilityReasons: blocked,
       currentAuthority: authority,
+      authorityNotEvaluated: authorityNotEvaluated,
       relevantCapabilities: relevant,
       freshnessWarnings: freshnessWarnings.take(12).toList(growable: false),
     );
@@ -837,22 +1060,36 @@ final class KristinSelfModelService {
   String renderMachineReadable(KristinSelfSnapshot self) => jsonEncode(self.toJson());
 
   Future<void> close() async {
+    await _serial;
     await _changeController.close();
+  }
+
+  String _cacheKey(SelfModelSessionOverlay overlay, String capabilityId) =>
+      '${overlay.cacheKey}|$capabilityId';
+
+  void _clearOverlayCaches(SelfModelSessionOverlay overlay) {
+    final prefix = '${overlay.cacheKey}|';
+    _availabilityCache.removeWhere((key, _) => key.startsWith(prefix));
+    _healthCache.removeWhere((key, _) => key.startsWith(prefix));
   }
 
   Future<CapabilityAvailability> _resolveAvailability(
     KristinCapabilityProvider provider,
     CapabilityDescriptor descriptor,
     ApplicationSnapshot app,
-    DateTime now, {
+    DateTime now,
+    SelfModelSessionOverlay overlay, {
     required bool forceRefresh,
   }) async {
-    final cached = _availabilityCache[descriptor.id];
-    if (!forceRefresh && cached != null && cached.freshAt(now, descriptor.freshnessBudget)) {
+    final key = _cacheKey(overlay, descriptor.id);
+    final cached = _availabilityCache[key];
+    if (!forceRefresh &&
+        cached != null &&
+        cached.freshAt(now, descriptor.freshnessBudget)) {
       return cached;
     }
     final value = await provider.resolveAvailability(descriptor, app);
-    _availabilityCache[descriptor.id] = value;
+    _availabilityCache[key] = value;
     return value;
   }
 
@@ -861,15 +1098,20 @@ final class KristinSelfModelService {
     CapabilityDescriptor descriptor,
     ApplicationSnapshot app,
     CapabilityAvailability availability,
-    DateTime now, {
+    DateTime now,
+    SelfModelSessionOverlay overlay, {
     required bool forceRefresh,
   }) async {
-    final override = _healthOverrides[descriptor.id];
-    if (override != null && override.freshAt(now, descriptor.freshnessBudget)) {
+    final key = _cacheKey(overlay, descriptor.id);
+    final override = _healthOverrides[key] ?? _healthOverrides[_cacheKey(const SelfModelSessionOverlay(), descriptor.id)];
+    if (override != null &&
+        override.freshAt(now, descriptor.healthFreshnessBudget)) {
       return override;
     }
-    final cached = _healthCache[descriptor.id];
-    if (!forceRefresh && cached != null && cached.freshAt(now, descriptor.freshnessBudget)) {
+    final cached = _healthCache[key];
+    if (!forceRefresh &&
+        cached != null &&
+        cached.freshAt(now, descriptor.healthFreshnessBudget)) {
       return cached;
     }
     CapabilityHealth health;
@@ -879,18 +1121,21 @@ final class KristinSelfModelService {
       final state = switch (availability.state) {
         CapabilityAvailabilityState.available => CapabilityHealthState.healthy,
         CapabilityAvailabilityState.degraded => CapabilityHealthState.degraded,
-        CapabilityAvailabilityState.temporarilyUnavailable => CapabilityHealthState.failing,
+        CapabilityAvailabilityState.temporarilyUnavailable =>
+          CapabilityHealthState.failing,
         _ => CapabilityHealthState.unknown,
       };
+      final observedAt = availability.observedAt ?? app.capturedAt;
       health = CapabilityHealth(
         capabilityId: descriptor.id,
         state: state,
         reasons: <String>[
           state == CapabilityHealthState.healthy
-              ? 'No provider-specific health failure is currently reported.'
+              ? 'Health is inferred from fresh availability; no provider-specific failure is reported.'
               : 'Health is inferred from availability until a subsystem probe reports direct evidence.',
         ],
-        observedAt: availability.observedAt ?? app.capturedAt,
+        observedAt: observedAt,
+        expiresAt: observedAt.add(descriptor.healthFreshnessBudget),
         evidence: <KnowledgeEvidence>[
           KnowledgeEvidence(
             kind: KnowledgeEvidenceKind.inferred,
@@ -898,12 +1143,13 @@ final class KristinSelfModelService {
             confidence: state == CapabilityHealthState.healthy
                 ? ObservationConfidence.medium
                 : ObservationConfidence.low,
-            observedAt: availability.observedAt ?? app.capturedAt,
+            observedAt: observedAt,
+            expiresAt: observedAt.add(descriptor.healthFreshnessBudget),
           ),
         ],
       );
     }
-    _healthCache[descriptor.id] = health;
+    _healthCache[key] = health;
     return health;
   }
 
@@ -932,19 +1178,27 @@ final class KristinSelfModelService {
           nextAvailability: item.availability.state,
           previousHealth: prior?.health?.state,
           nextHealth: nextHealth,
+          previousUsable: prior?.operationallyUsable ?? false,
+          nextUsable: item.operationallyUsable,
         ));
       }
     }
-    final previousApplication = Map<String, Object?>.from(previous.application.toJson())
-      ..remove('capturedAt');
-    final nextApplication = Map<String, Object?>.from(next.application.toJson())
-      ..remove('capturedAt');
-    final applicationChanged = jsonEncode(previousApplication) != jsonEncode(nextApplication);
+    final previousApplication = previous.application.semanticJson();
+    final nextApplication = next.application.semanticJson();
+    final changedFields = <String>{
+      ...previousApplication.keys,
+      ...nextApplication.keys,
+    }.where((key) {
+      return canonicalJson(previousApplication[key]) !=
+          canonicalJson(nextApplication[key]);
+    }).toList()
+      ..sort();
     final change = SelfModelChange(
+      overlayKey: next.overlay.cacheKey,
       source: source,
       reason: reason,
       capabilityChanges: changes,
-      applicationChanged: applicationChanged,
+      applicationFieldsChanged: changedFields,
     );
     if (!change.material) return;
     _recentChanges.add(change);
@@ -955,52 +1209,76 @@ final class KristinSelfModelService {
   }
 }
 
-/// Deterministic read-only reasoning API over the same self-model used by
-/// planning. It answers questions about capability state without introducing
-/// another planner or execution path.
 final class SelfAwarenessQueryService {
   const SelfAwarenessQueryService(this.selfModel);
 
   final KristinSelfModelService selfModel;
 
-  Future<String> explainCapability(String capabilityId) =>
-      selfModel.explainAvailability(capabilityId);
+  Future<String> explainCapability(
+    String capabilityId, {
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) =>
+      selfModel.explainAvailability(capabilityId, overlay: overlay);
 
-  Future<CapabilityRequirementReport> requirementsFor(String capabilityId) async {
-    final item = await selfModel.capability(capabilityId, forceRefresh: true);
+  Future<CapabilityRequirementReport> requirementsFor(
+    String capabilityId, {
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async {
+    final item = await selfModel.capability(
+      capabilityId,
+      forceRefresh: true,
+      overlay: overlay,
+    );
     if (item == null) {
-      return CapabilityRequirementReport(
-        capabilityId: capabilityId,
+      return const CapabilityRequirementReport(
+        capabilityId: '',
         known: false,
         usableNow: false,
-        missingPrerequisites: const <String>{},
-        missingAuthority: const <String>{},
-        satisfactionPath: const <CapabilitySatisfactionStep>[],
+        missingPrerequisites: <String>{},
+        requiredAuthority: <String>{},
+        missingAuthority: <String>{},
+        authorityObservation: AuthorityObservationState.notEvaluated,
+        satisfactionPath: <CapabilitySatisfactionStep>[],
         explanation: 'Kristin does not currently know this capability.',
       );
     }
-    final missingAuthority = item.availability.requiredAuthority
-        .difference(item.availability.currentAuthority);
+    final missingAuthority = item.availability.authorityObservation ==
+            AuthorityObservationState.granted
+        ? item.availability.requiredAuthority
+            .difference(item.availability.currentAuthority)
+        : item.availability.requiredAuthority;
     final path = item.availability.satisfactionPath.isNotEmpty
         ? item.availability.satisfactionPath
         : _derivedSatisfactionPath(item, missingAuthority);
+    final authorityNote = item.availability.requiredAuthority.isEmpty
+        ? ''
+        : item.availability.authorityObservation ==
+                AuthorityObservationState.notEvaluated
+            ? ' Required authority is checked at execution time and has not been evaluated for a concrete operation.'
+            : '';
     return CapabilityRequirementReport(
       capabilityId: capabilityId,
       known: true,
       usableNow: item.operationallyUsable,
       missingPrerequisites: item.availability.missingPrerequisites,
+      requiredAuthority: item.availability.requiredAuthority,
       missingAuthority: missingAuthority,
+      authorityObservation: item.availability.authorityObservation,
       satisfactionPath: path,
       explanation: item.operationallyUsable
-          ? '$capabilityId is operationally usable now.'
-          : '${item.availability.reasons.join(' ')} ${item.health?.reasons.join(' ') ?? ''}'.trim(),
+          ? '$capabilityId is operationally usable now.$authorityNote'
+          : '${item.availability.reasons.join(' ')} ${item.health?.reasons.join(' ') ?? ''}$authorityNote'.trim(),
     );
   }
 
-  Future<List<KnownCapability>> capabilitiesFor(String objective) async {
+  Future<List<KnownCapability>> capabilitiesFor(
+    String objective, {
+    SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
+  }) async {
     final self = await selfModel.snapshot(
       source: 'self_awareness.query',
       reason: 'capabilities_for_objective',
+      overlay: overlay,
     );
     final tokens = objective
         .toLowerCase()
@@ -1033,8 +1311,11 @@ final class SelfAwarenessQueryService {
     return List<KnownCapability>.unmodifiable(ranked.take(12));
   }
 
-  List<SelfModelChange> whatChangedSince(DateTime since) =>
-      selfModel.changesSince(since);
+  List<SelfModelChange> whatChangedSince(
+    DateTime since, {
+    String? overlayKey,
+  }) =>
+      selfModel.changesSince(since, overlayKey: overlayKey);
 
   List<CapabilitySatisfactionStep> _derivedSatisfactionPath(
     KnownCapability item,
@@ -1051,22 +1332,26 @@ final class SelfAwarenessQueryService {
     if (item.descriptor.browserRequired) {
       steps.add(const CapabilitySatisfactionStep(
         id: 'verify_browser_runtime',
-        description: 'Provision and successfully probe the application-owned Browser runtime.',
+        description:
+            'Provision and successfully probe the application-owned Browser runtime.',
         condition: 'Browser runtime probe is healthy.',
       ));
     }
     if (item.descriptor.modelProviderRequired) {
       steps.add(const CapabilitySatisfactionStep(
         id: 'verify_model_provider',
-        description: 'Select a model whose provider is currently discoverable and responsive.',
+        description:
+            'Select a model whose exact identity is present in fresh provider discovery.',
         condition: 'Selected model resolves to a live provider observation.',
       ));
     }
     if (missingAuthority.isNotEmpty) {
       steps.add(CapabilitySatisfactionStep(
         id: 'obtain_explicit_authority',
-        description: 'Obtain the missing governed authority at execution time.',
-        condition: 'Authority service reports the required grant for this operation.',
+        description:
+            'Evaluate and obtain the missing governed authority for the concrete operation.',
+        condition:
+            'Authority service reports the required grant for this operation.',
         requiredAuthority: missingAuthority,
         automatic: false,
         safe: true,
