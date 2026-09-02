@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 180
     env:
       BASE_SHA: bbb8cbdb52844f868abf9916c9bb77446c2809cf
-      PRIOR_CANDIDATE_SHA: af957ebf176c67fd1ac948cf2417852773098964
+      PRIOR_CANDIDATE_SHA: 7a0bcfdc2f904036503f11a4f84f2dc588be27b0
       RECONCILIATION_REF: feat/one-kristin-live-continuation-reconciliation
     steps:
       - name: Check out exact live base
@@ -27,7 +27,7 @@ jobs:
           ref: ${{ env.BASE_SHA }}
           fetch-depth: 0
 
-      - name: Reconstruct reviewed candidate and repair null-run detach semantics
+      - name: Reconstruct qualified candidate and repair approval state synchronization
         shell: bash
         run: |
           set -euo pipefail
@@ -36,51 +36,71 @@ jobs:
           git cherry-pick --no-commit "$PRIOR_CANDIDATE_SHA"
           python - <<'PY'
           from pathlib import Path
-          nl = chr(10)
-          source = Path('lib/product/chat_control_plane_studio.dart')
-          text = source.read_text(encoding='utf-8')
-          old = nl.join([
-              '    if (value == null) {',
-              '      conversationSession.detachFinishedRun();',
-              '      return;',
-              '    }',
-              '',
-          ])
-          new = nl.join([
-              '    if (value == null) {',
-              '      if (existing != null) {',
-              '        conversationSession.detachFinishedRun();',
-              '      }',
-              '      return;',
-              '    }',
-              '',
-          ])
-          assert old in text, 'expected currentRun null setter shape missing'
-          assert new not in text, 'runtime detach guard already present unexpectedly'
-          source.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          studio_path = Path('lib/product/chat_control_plane_studio.dart')
+          studio = studio_path.read_text(encoding='utf-8')
+          assert 'if (existing != null) {' in studio, 'prior null-run planning-state repair missing'
+          old_refresh = '      if (runActive) unawaited(_refreshCurrentRun());'
+          new_refresh = '''      if (currentRun != null && !runTerminal) {
+            unawaited(_refreshCurrentRun());
+          }'''
+          assert old_refresh in studio, 'expected active-only refresh guard missing'
+          assert new_refresh not in studio, 'nonterminal refresh repair already present unexpectedly'
+          studio_path.write_text(studio.replace(old_refresh, new_refresh, 1), encoding='utf-8')
+
+          actions_path = Path('lib/product/chat_control_plane_studio_actions.dart')
+          actions = actions_path.read_text(encoding='utf-8')
+          old_transition = '''      currentRun = run;
+      unawaited(runtime.execute(run.id));
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+      return await runtime.getRun(run.id) ?? run;'''
+          new_transition = '''      currentRun = run;
+      unawaited(runtime.execute(run.id));
+      return await _awaitRunStartTransition(run);'''
+          assert old_transition in actions, 'expected fixed approval transition sample missing'
+          assert '_awaitRunStartTransition' not in actions, 'approval synchronization helper already present unexpectedly'
+          actions = actions.replace(old_transition, new_transition, 1)
+          helper = '''
+
+  Future<RunRecord> _awaitRunStartTransition(RunRecord run) async {
+    var latest = run;
+    for (var attempt = 0; attempt < 60; attempt++) {
+      final refreshed = await runtime.getRun(run.id);
+      if (refreshed != null) latest = refreshed;
+      if (latest.state != RunState.awaitingApproval) return latest;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    return latest;
+  }
+'''
+          marker = '\n  Future<void> _startPrepared() async {'
+          assert marker in actions, 'start-prepared marker missing'
+          actions = actions.replace(marker, helper + marker, 1)
+          actions_path.write_text(actions, encoding='utf-8')
+
           test_path = Path('test/product/live_continuation_reconciliation_contract_test.dart')
           test_text = test_path.read_text(encoding='utf-8')
-          assert 'null currentRun does not erase planning state before a run exists' not in test_text
-          addition = nl.join([
-              '',
-              "  test('null currentRun does not erase planning state before a run exists', () {",
-              '    final source =',
-              "        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();",
-              "    final start = source.indexOf('set currentRun(RunRecord? value)');",
-              "    final end = source.indexOf('bool get awaitingPermission', start);",
-              '    expect(start, greaterThanOrEqualTo(0));',
-              '    expect(end, greaterThan(start));',
-              '    final setter = source.substring(start, end);',
-              '    expect(',
-              '      setter.contains(',
-              "        'if (existing != null) {',",
-              '      ),',
-              '      isTrue,',
-              "      reason: 'Planning/understanding state must survive currentRun = null when no run is attached.',",
-              '    );',
-              '  });',
-          ])
-          marker = nl + '}'
+          assert 'null currentRun does not erase planning state before a run exists' in test_text, 'prior dogfood regression contract missing'
+          test_name = 'Chat approval follows authoritative run state instead of a fixed delay'
+          assert test_name not in test_text, 'approval synchronization regression already present unexpectedly'
+          addition = '''
+
+  test('Chat approval follows authoritative run state instead of a fixed delay', () {
+    final studio =
+        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
+    final actions = File('lib/product/chat_control_plane_studio_actions.dart')
+        .readAsStringSync();
+    expect(actions, isNot(contains('Duration(milliseconds: 180)')));
+    expect(actions, contains('_awaitRunStartTransition'));
+    expect(actions, contains('runtime.getRun(run.id)'));
+    expect(actions, contains('latest.state != RunState.awaitingApproval'));
+    expect(
+      studio,
+      contains('if (currentRun != null && !runTerminal)'),
+      reason: 'Awaiting-approval sessions must keep refreshing until durable run state advances.',
+    );
+  });'''
+          marker = '\n}'
           head, sep, tail = test_text.rpartition(marker)
           assert sep, 'test main closing brace missing'
           test_path.write_text(head + addition + marker + tail, encoding='utf-8')
@@ -127,7 +147,14 @@ jobs:
             exit 1
           fi
           grep -Fq 'if (existing != null)' lib/product/chat_control_plane_studio.dart
+          grep -Fq 'if (currentRun != null && !runTerminal)' lib/product/chat_control_plane_studio.dart
+          grep -Fq '_awaitRunStartTransition' lib/product/chat_control_plane_studio_actions.dart
+          if grep -Fq 'Duration(milliseconds: 180)' lib/product/chat_control_plane_studio_actions.dart; then
+            echo 'fixed approval transition sample remains in product candidate' >&2
+            exit 1
+          fi
           grep -Fq 'null currentRun does not erase planning state before a run exists' test/product/live_continuation_reconciliation_contract_test.dart
+          grep -Fq 'Chat approval follows authoritative run state instead of a fixed delay' test/product/live_continuation_reconciliation_contract_test.dart
 
       - name: Seal one clean product commit
         id: candidate
@@ -178,7 +205,10 @@ jobs:
         run: |
           python tool/dart_format_scope.py --check
           flutter analyze --no-pub --fatal-warnings --fatal-infos
-          flutter test --no-pub --concurrency=1 --reporter expanded test/product/live_continuation_reconciliation_contract_test.dart test/product/kristin_conversation_session_test.dart
+          flutter test --no-pub --concurrency=1 --reporter expanded \
+            test/product/live_continuation_reconciliation_contract_test.dart \
+            test/product/kristin_conversation_session_test.dart \
+            test/product/hf_runner_chat_convergence_test.dart
 
       - name: Run full Flutter suite
         shell: bash
