@@ -395,8 +395,26 @@ class ProductRuntimeChatGateway implements
     ChatSelfAwarenessGateway,
     ChatSelfAwarePlanningGateway {
   ProductRuntimeChatGateway(this.runtime) {
-    // Installs exactly one observer/recovery supervisor per ProductRuntime.
-    ProductSelfAwarenessRuntime.shared(runtime);
+    final live = ProductSelfAwarenessRuntime.shared(runtime);
+    // Every kernel plan/understanding path now receives the same live
+    // self-model intersection, including paths that still construct a plain
+    // PlanningContext for compatibility. Exact Runner tools remain supplied
+    // independently by those callers.
+    KernelSelfModelRegistry.register(
+      runtime.taskKernel,
+      ({
+        required ProjectRecord? project,
+        required ModelIdentity? model,
+        required Set<String> relevantCapabilityIds,
+      }) =>
+          live.planningContext(
+        selectedProject: project,
+        selectedModel: model,
+        sessionKey:
+            'kernel:${project?.id ?? 'none'}:${model?.exactId ?? 'none'}',
+        relevantCapabilityIds: relevantCapabilityIds,
+      ),
+    );
     ProductRuntimeAutonomicRecovery.shared(runtime);
   }
 
@@ -609,9 +627,8 @@ class ProductRuntimeChatGateway implements
         stateChanging: stateChanging,
       );
     } catch (error) {
-      // Do not delay the user's visible failure while recovery performs its
-      // bounded work. The durable failure event and supervisor continue on the
-      // same ProductRuntime, and the original error is still rethrown to Chat.
+      // The visible operation still fails immediately. Autonomic recovery runs
+      // under its own bounded supervisor against the same durable runtime.
       unawaited(autonomic.handleOperationalFailure(
         operation: operation,
         error: error,
