@@ -62,7 +62,8 @@ void main() {
     expect(result.succeeded, isTrue);
   });
 
-  test('resolves model-authored capabilities before the family executor', () async {
+  test('resolves model-authored capabilities before the family executor',
+      () async {
     final plan = planWith(
       const <UniversalTask>[
         UniversalTask(
@@ -101,7 +102,8 @@ void main() {
     expect(result.results['retrieve']!.evidence['sourceCount'], 2);
   });
 
-  test('coordinator capability never reaches a graph family executor', () async {
+  test('coordinator capability never reaches a graph family executor',
+      () async {
     final plan = planWith(
       const <UniversalTask>[
         UniversalTask(

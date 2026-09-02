@@ -18,6 +18,7 @@ import 'retry_policy.dart';
 import 'run_live_signals.dart';
 import 'run_preflight.dart';
 import 'run_steering.dart';
+import 'task_kernel/task_specification_patch.dart';
 import 'storage_security.dart';
 import 'tool_schema.dart';
 import 'workspace_tools.dart';
@@ -1647,6 +1648,7 @@ class RunCoordinator {
   final RunPreflightService preflight;
   final LiveRunSignalBus liveSignals;
   final RunSteeringService steering;
+  Future<void> Function(RunRecord source)? _steeringReplanHandler;
   final ProjectResourceLocks _locks = ProjectResourceLocks();
   final Map<String, RunControl> _controls = <String, RunControl>{};
   final Map<String, Future<RunRecord>> _active = <String, Future<RunRecord>>{};
@@ -1655,6 +1657,82 @@ class RunCoordinator {
   static const Duration _runLeaseDuration = Duration(minutes: 2);
   static const Duration _runLeaseHeartbeat = Duration(seconds: 20);
   static const int _minimumRecoverySafetyLimit = 24;
+
+  void attachSteeringReplanHandler(
+    Future<void> Function(RunRecord source) handler,
+  ) {
+    _steeringReplanHandler = handler;
+  }
+
+  Future<RunRecord> createContinuationRun(
+    PreparedCommand command, {
+    required String sourceRunId,
+  }) =>
+      _createFreshRun(
+        command,
+        budget: AutonomyBudget.forPlan(command.plan),
+        sourceRunId: sourceRunId,
+      );
+
+  Future<RunRecord> interruptAwaitingApprovalForSteeringReplan(
+    String runId,
+  ) async {
+    final run = await repositories.runs.get(runId);
+    if (run == null) {
+      throw ProductException('run_missing', 'Unknown run: $runId');
+    }
+    if (run.state != RunState.awaitingApproval) {
+      throw ProductException(
+        'steering_idle_replan_state_invalid',
+        'Only an awaiting-approval run can be retired before execution for scope replanning.',
+        details: <String, dynamic>{'runId': run.id, 'state': run.state.name},
+      );
+    }
+    final pending = await steering.pendingReplan(run.id);
+    if (pending.isEmpty) {
+      throw ProductException(
+        'steering_replan_missing',
+        'No scope-changing steering is pending for this run.',
+        details: <String, dynamic>{'runId': run.id},
+      );
+    }
+    await steering.markReplanning(run.id, pending);
+    final interrupted = run.copyWith(
+      state: RunState.interrupted,
+      completedAt: DateTime.now().toUtc(),
+      failure:
+          'steering_replan_requested: Scope changed before execution began.',
+    );
+    await _save(interrupted);
+    try {
+      await permissions.revokeForCommand(interrupted.command.id);
+    } catch (_) {}
+    final details = <String, dynamic>{
+      'runId': interrupted.id,
+      'instructionIds': pending.map((value) => value.id).toList(),
+      'executionStarted': false,
+      'workspaceTransactionCreated': false,
+      'authorityInherited': false,
+    };
+    await _bestEffortAudit(
+      'run.steering_replan_before_execution',
+      interrupted.id,
+      details,
+    );
+    await _bestEffortEvent(
+      'run.steering_replan_before_execution',
+      interrupted.id,
+      details,
+    );
+    liveSignals.publish(
+      LiveRunSignal.phase(
+        runId: interrupted.id,
+        phase: 'replanning',
+        message: 'Scope changed before execution. Preparing a revised plan.',
+      ),
+    );
+    return interrupted;
+  }
 
   Future<void> reconcileInterruptedRuns() async {
     final recovered = await repositories.workflow.recoverInFlightRuns();
@@ -1721,19 +1799,23 @@ class RunCoordinator {
   Future<RunSteeringInstruction> queueSteering(
     String runId,
     String text,
+    TaskSpecificationPatch patch,
   ) async {
     final run = await repositories.runs.get(runId);
     if (run == null) {
       throw ProductException('run_missing', 'Run not found.');
     }
-    if (!const <RunState>{RunState.running, RunState.paused}
-        .contains(run.state)) {
+    if (!const <RunState>{
+      RunState.awaitingApproval,
+      RunState.running,
+      RunState.paused,
+    }.contains(run.state)) {
       throw ProductException(
         'run_not_steerable',
-        'Only an active or paused run can receive new direction.',
+        'Only an awaiting-approval, active, or paused run can receive new direction.',
       );
     }
-    final instruction = steering.queue(runId, text);
+    final instruction = await steering.queueDurable(runId, text, patch);
     await _bestEffortEvent(
       'steering.queued',
       runId,
@@ -1741,6 +1823,8 @@ class RunCoordinator {
         'runId': runId,
         'instructionId': instruction.id,
         'text': instruction.text,
+        'patch': instruction.patch.toJson(),
+        'grantsAuthority': false,
       },
     );
     return instruction;
@@ -1884,6 +1968,18 @@ class RunCoordinator {
       );
     }
     await _throwIfDeferredInteractionPending(run.id);
+    final pendingReplan = await steering.pendingReplan(run.id);
+    if (run.state == RunState.interrupted && pendingReplan.isNotEmpty) {
+      throw ProductException(
+        'steering_continuation_required',
+        'This run stopped at a safe steering boundary and must continue through its reconciled plan.',
+        details: <String, dynamic>{
+          'runId': run.id,
+          'instructionIds': pendingReplan.map((value) => value.id).toList(),
+          'grantsAuthority': false,
+        },
+      );
+    }
     if (run.state != RunState.awaitingApproval &&
         run.state != RunState.interrupted &&
         run.state != RunState.paused) {
@@ -2429,6 +2525,11 @@ class RunCoordinator {
       for (var itemIndex = 0; itemIndex < run.items.length; itemIndex++) {
         await _awaitControl(control, run.budget, started);
         run = (await repositories.runs.get(run.id)) ?? run;
+        final steeringBoundary = await _interruptAtSteeringReplanBoundary(
+          run,
+          transaction,
+        );
+        if (steeringBoundary != null) return steeringBoundary;
         final progress = run.items[itemIndex];
         if (progress.state == WorkItemState.succeeded) {
           continue;
@@ -2749,6 +2850,11 @@ class RunCoordinator {
           );
         }
       }
+      final finalSteeringBoundary = await _interruptAtSteeringReplanBoundary(
+        run,
+        transaction,
+      );
+      if (finalSteeringBoundary != null) return finalSteeringBoundary;
       await transaction.commit();
       run = run.copyWith(
         state: RunState.succeeded,
@@ -2852,6 +2958,57 @@ class RunCoordinator {
       } catch (_) {}
       return run;
     }
+  }
+
+  Future<RunRecord?> _interruptAtSteeringReplanBoundary(
+    RunRecord run,
+    WorkspaceTransaction transaction,
+  ) async {
+    final pending = await steering.pendingReplan(run.id);
+    if (pending.isEmpty) return null;
+    await steering.markReplanning(run.id, pending);
+    if (!transaction.isCommitted) {
+      await transaction.commit();
+    }
+    final interrupted = run.copyWith(
+      state: RunState.interrupted,
+      completedAt: DateTime.now().toUtc(),
+      failure:
+          'steering_replan_requested: Scope changed after a verified task boundary.',
+    );
+    await _save(interrupted);
+    try {
+      await permissions.revokeForCommand(interrupted.command.id);
+    } catch (_) {}
+    final evidence = <String, dynamic>{
+      'runId': interrupted.id,
+      'instructionIds': pending.map((value) => value.id).toList(),
+      'committedWorkspace': true,
+      'verifiedBoundaryOnly': true,
+      'authorityInherited': false,
+    };
+    await _bestEffortAudit(
+      'run.steering_replan_boundary',
+      interrupted.id,
+      evidence,
+    );
+    await _bestEffortEvent(
+      'run.steering_replan_boundary',
+      interrupted.id,
+      evidence,
+    );
+    liveSignals.publish(
+      LiveRunSignal.phase(
+        runId: interrupted.id,
+        phase: 'replanning',
+        message: 'Scope changed. Replanning from verified completed work.',
+      ),
+    );
+    final handler = _steeringReplanHandler;
+    if (handler != null) {
+      await handler(interrupted);
+    }
+    return interrupted;
   }
 
   Future<RunRecord> _failBeforeTransaction(
@@ -3186,10 +3343,10 @@ class RunCoordinator {
         stalledTurns: stalledTurns,
         deferredUserResponse: deferredUserResponse,
       );
-      final pendingSteering = steering.takePending(current.id);
+      final pendingSteering = await steering.takePendingDurable(current.id);
       if (pendingSteering.isNotEmpty) {
         final directions = pendingSteering
-            .map((instruction) => '- ${instruction.text}')
+            .map((instruction) => '- ${instruction.patch.renderForExecutor()}')
             .join('\n');
         final steeringEnvelope = AgentContextEnvelope(
           source: AgentContextSource.user,
@@ -3199,7 +3356,7 @@ class RunCoordinator {
         );
         user =
             '$user\n\nUSER STEERING RECEIVED DURING THIS RUN\n${steeringEnvelope.render()}\nApply these directions to future work only. Do not repeat or corrupt an in-flight side effect.';
-        steering.applied(
+        await steering.appliedDurable(
           current.id,
           pendingSteering,
           workItemId: progress.item.id,
@@ -3215,6 +3372,27 @@ class RunCoordinator {
         );
       }
       final requestNumber = current.modelRequests + 1;
+      final replanSteering = await steering.pendingReplan(current.id);
+      final immediateConstraintGuidance = replanSteering
+          .map((instruction) => instruction.patch.renderForExecutor().trim())
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false);
+      if (immediateConstraintGuidance.isNotEmpty) {
+        final envelope = AgentContextEnvelope(
+          source: AgentContextSource.user,
+          trust: AgentContextTrust.userIntent,
+          content:
+              immediateConstraintGuidance.map((value) => '- $value').join('\n'),
+          metadata: const <String, Object?>{
+            'authorityBearing': false,
+            'pendingPlanReconciliation': true,
+          },
+        );
+        user = '$user\n\nNEW USER CONSTRAINTS PENDING PLAN RECONCILIATION\n'
+            '${envelope.render()}\nRespect these constraints immediately for future '
+            'decisions in this work item. They grant no authority. The task '
+            'graph will be reconciled at the next verified work-item boundary.';
+      }
       current = current.copyWith(modelRequests: requestNumber);
       await _save(current);
       final stopwatch = Stopwatch()..start();

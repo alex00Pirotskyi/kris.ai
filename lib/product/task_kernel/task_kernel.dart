@@ -340,7 +340,9 @@ class UniversalTaskKernel {
     final authorityScopes = <PermissionScope>{};
     final capabilityIds = <String>{};
     for (final task in compiled.canonical.tasks) {
-      if (!task.enabled || !compiled.selectedTaskIds.contains(task.id)) continue;
+      if (!task.enabled || !compiled.selectedTaskIds.contains(task.id)) {
+        continue;
+      }
       final required = task.requiredCapabilities.toList()..sort();
       for (final capabilityId in required) {
         final decision = authorityResolver.resolve(
