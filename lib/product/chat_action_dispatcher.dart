@@ -332,8 +332,14 @@ class ProductRuntimeChatGateway
   const ProductRuntimeChatGateway(this.runtime);
   final ProductRuntime runtime;
 
-  ProductSelfAwarenessRuntime get awareness =>
-      ProductSelfAwarenessRuntime.shared(runtime);
+  ProductSelfAwarenessRuntime get awareness {
+    final shared = ProductSelfAwarenessRuntime.shared(runtime);
+    // One idempotent monitor per ProductRuntime. It begins when Chat first
+    // touches the self-aware gateway and stops when the runtime event stream
+    // closes. Probes remain observation-only.
+    shared.consistency.start(tick: const Duration(seconds: 5));
+    return shared;
+  }
 
   @override
   Future<KristinSelfSnapshot> selfSnapshot({
