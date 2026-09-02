@@ -483,7 +483,13 @@ class KristinConversationSession {
   }
 
   bool detachFinishedRun() {
+    if (_currentRun == null) return true;
     if (hasNonterminalRun) return false;
+    _clearGovernedState();
+    return true;
+  }
+
+  void _clearGovernedState() {
     cancelAssistantResponse();
     _composerDraft = '';
     _pendingDecision = null;
@@ -505,7 +511,6 @@ class KristinConversationSession {
     _activeRequest = '';
     _state = const ChatIdle();
     clearLiveExecution();
-    return true;
   }
 
   void setAwaitingPermission(bool value) {
@@ -637,12 +642,13 @@ class KristinConversationSession {
   }
 
   void resetForNewConversation() {
-    if (!detachFinishedRun()) {
+    if (hasNonterminalRun) {
       throw const KristinConversationSessionException(
         'conversation_run_active',
         'A new conversation cannot orphan an unfinished governed run.',
       );
     }
+    _clearGovernedState();
     _messages.clear();
   }
 

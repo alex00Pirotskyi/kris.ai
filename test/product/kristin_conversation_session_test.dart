@@ -5,6 +5,7 @@ import 'package:kristin_local_agent/product/chat_conversation_state.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/kristin_conversation_session.dart';
 import 'package:kristin_local_agent/product/run_live_signals.dart';
+import 'package:kristin_local_agent/product/task_kernel/task_specification.dart';
 
 void main() {
   test('selected project and model survive a genuinely new conversation', () {
@@ -20,6 +21,25 @@ void main() {
     expect(session.selectedProjectId, 'project-a');
     expect(session.selectedModelId, 'ollama/model-a');
     expect(session.state, isA<ChatIdle>());
+  });
+
+  test('detach without an attached run preserves governed request state', () {
+    final session = KristinConversationSession();
+    final specification = TaskSpecification(
+      id: 'spec-a',
+      originalRequest: 'Build something',
+      objective: 'Build something',
+    );
+    session.beginGovernedRequest('Build something');
+    session.setTaskSpecification(specification);
+    session.setActiveRequest('Build something');
+
+    expect(session.currentRun, isNull);
+    expect(session.detachFinishedRun(), isTrue);
+
+    expect(session.activeRequest, 'Build something');
+    expect(session.taskSpecification, same(specification));
+    expect(session.state, isA<ChatInterpreting>());
   });
 
   test('finished run detach preserves transcript and selected context', () {
