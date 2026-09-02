@@ -50,6 +50,7 @@ class KernelRequestContext {
     this.knownTargets = const <ChatTarget>[],
     this.availableCapabilities = kKristinCapabilities,
     this.availableToolNames = const <String>{},
+    this.consumedCoordinatorCapabilities = const <String>{},
     this.selfModel,
     this.localOnly = false,
     this.maxLeafTasks = 25,
@@ -61,6 +62,7 @@ class KernelRequestContext {
   final List<ChatTarget> knownTargets;
   final List<KristinCapability> availableCapabilities;
   final Set<String> availableToolNames;
+  final Set<String> consumedCoordinatorCapabilities;
   final SelfModelPlanningContext? selfModel;
   final bool localOnly;
   final int maxLeafTasks;
@@ -84,6 +86,7 @@ class KernelRequestContext {
         model: model,
         availableCapabilityIds: liveAvailableCapabilityIds,
         availableToolNames: availableToolNames,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
         localOnly: localOnly,
         maxLeafTasks: maxLeafTasks,
       );
@@ -197,9 +200,6 @@ class UniversalTaskKernel {
     }
   }
 
-  /// Convenience path for callers that hold the complete kernel request
-  /// context. This ensures live self-model availability participates in the
-  /// plan rather than callers accidentally rebuilding a stale PlanningContext.
   Future<KernelPlanResult> planWithRequestContext({
     required TaskSpecification specification,
     required RoutingDecision routing,
