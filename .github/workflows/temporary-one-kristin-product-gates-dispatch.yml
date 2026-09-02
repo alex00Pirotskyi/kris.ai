@@ -22,6 +22,32 @@ jobs:
           ref: ba0ff2a6e40fa5e78f60d80c48ea812b9644085c
           fetch-depth: 1
 
+      - name: Apply exhaustive source contract repair
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('test/product/source_contract_test.dart')
+          text = path.read_text(encoding='utf-8')
+          assert "'lib/product/run_steering_record.dart'," not in text
+          assert "'lib/product/task_kernel/command_planning_context.dart'," not in text
+          text = text.replace(
+              "        'lib/product/run_steering.dart',\n",
+              "        'lib/product/run_steering.dart',\n        'lib/product/run_steering_record.dart',\n",
+              1,
+          )
+          text = text.replace(
+              "        'lib/product/task_kernel/task_specification.dart',\n",
+              "        'lib/product/task_kernel/command_planning_context.dart',\n        'lib/product/task_kernel/task_specification.dart',\n",
+              1,
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+          dart format test/product/source_contract_test.dart
+          git diff --check
+          git diff -- test/product/source_contract_test.dart
+
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -70,7 +96,7 @@ jobs:
           npm ci --prefix automation_host --no-audit --no-fund
 
       - id: tests
-        name: Run exact full Flutter suite with machine reporter
+        name: Run full Flutter suite after contract repair
         shell: bash
         run: |
           set +e
