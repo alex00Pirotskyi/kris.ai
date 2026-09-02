@@ -1,6 +1,9 @@
 name: exact-linux-dogfood-export
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
 permissions:
   contents: read
 jobs:
