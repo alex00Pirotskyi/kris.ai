@@ -1,0 +1,29 @@
+name: linux-gles-hostlib-export
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Export GLVND GLES runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p linux-gles-hostlib
+          path="$(ldconfig -p | awk '/libGLESv2\.so\.2 \(/{print $NF; exit}')"
+          test -n "$path"
+          cp -L "$path" linux-gles-hostlib/libGLESv2.so.2
+          sha256sum linux-gles-hostlib/libGLESv2.so.2 > linux-gles-hostlib/SHA256SUMS
+          file linux-gles-hostlib/libGLESv2.so.2
+      - name: Upload GLES runtime
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linux-gles-hostlib
+          path: linux-gles-hostlib
+          if-no-files-found: error
+          retention-days: 1
