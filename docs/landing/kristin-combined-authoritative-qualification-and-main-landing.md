@@ -1,447 +1,332 @@
-# Kristin Combined Convergence + Self-Awareness — Authoritative Qualification & Main Landing Contract
+# KRISTIN CORRECTIVE QUALIFICATION + MAIN LANDING CONTRACT
 
-Status: **READY FOR QWEN QUALIFICATION / REPAIR / INTEGRATION / MAIN LANDING**
+Status: **AUTHORITATIVE QWEN QUALIFICATION / INTEGRATION / LANDING WORK ORDER**
 
-Authority: **GPT Landing Worker**
+This document is the source of truth for qualifying and landing the combined One-Kristin + dynamic self-awareness + autonomic-recovery corrective candidate.
 
-Execution worker: **Qwen**
+## 1. Authoritative source and supersession
 
-This document is the authoritative landing contract for the complete product state currently ready for qualification. It is intentionally written after implementation work finished and before qualification/landing work begins.
+Authoritative immutable source candidate:
 
-## 1. Exact immutable source
+- Branch: `candidate/kristin-self-awareness-corrective-landing-source`
+- SHA: `3119211e11ce5ccf8b6411aa7fa05bbd8c640139`
+- Traceability implementation branch: `feat/kristin-self-awareness-autonomic-recovery`
+- Corrective handoff: `docs/implementation-handoffs/kristin-self-awareness-corrective-pass.md`
 
-Qwen MUST treat the following branch/SHA as the immutable source input:
+Historical candidate, preserved for audit only and explicitly superseded:
 
-- Source candidate branch: `candidate/kristin-self-awareness-landing-source`
-- Exact source SHA: `81091cdf615c8fe4a0e8382ec402b977ea2ea8c6`
-- Source tree is a frozen snapshot of `feat/kristin-self-awareness-autonomic-recovery` at that exact SHA.
-- Do not qualify a later moving implementation-branch head by accident.
-- Do not modify the frozen source candidate branch.
+- Branch: `candidate/kristin-self-awareness-landing-source`
+- SHA: `81091cdf615c8fe4a0e8382ec402b977ea2ea8c6`
 
-Expected `main` at contract creation:
+Do not move, rewrite, or add commits to either candidate branch.
 
-- `main`: `74515b89dd16a1084b40760bd482524cca5e1b2c`
-- Commit: `fix(runner): harden coordinator-to-executor protocol boundary (#290)`
+PR #291, #300, and #301 are historical only and MUST NOT be used as landing vehicles.
 
-Before any final landing, Qwen MUST re-read the live `main` head. If `main` moved, Qwen must rebuild/rebase/reconcile the integration candidate against the new `main` and repeat final qualification. A SHA qualified against an old base is not automatically valid for a changed base.
+Expected `main` observed when this contract was updated:
 
-## 2. What this candidate contains
+- `74515b89dd16a1084b40760bd482524cca5e1b2c`
 
-This is a **combined product candidate**, not a self-awareness patch in isolation.
+That SHA is not a landing assumption. Qwen MUST resolve live `main` before integration and again immediately before landing.
 
-The frozen source contains the full One-Kristin convergence line plus the Self-Awareness / Autonomic-Recovery implementation layered on top.
+## 2. Required reading
 
-Treat the candidate as one product state for qualification and landing.
+Before editing or qualifying:
 
-Do NOT first land the stale One-Kristin draft PRs and then separately land self-awareness.
+1. read `docs/implementation-handoffs/kristin-self-awareness-corrective-pass.md` from the authoritative candidate;
+2. read this contract completely;
+3. use older Kristin implementation/landing handoffs only as historical context, never as a substitute for the corrective candidate state.
 
-Historical draft PRs are reference/evidence only and are NOT authorized landing vehicles:
+The implementation worker intentionally did not run analyzer, tests, CI, release qualification, or landing. Qwen owns qualification truth.
 
-- PR #291 — `Converge Chat state and deferred protocol control flow`
-- PR #300 — `Draft: qualified One-Kristin convergence candidate`
-- PR #301 — `Draft: integrate qualified One-Kristin convergence`
+## 3. Qwen role and permitted scope
 
-Do not merge those PRs as part of this contract. After this combined candidate is successfully landed and verified on `main`, they may be closed as superseded with an explanatory note.
+Qwen acts as:
 
-## 3. Required reading before edits
+- **TESTER**
+- **DEFECT HUNTER**
+- **INTEGRATOR**
+- **MAIN LANDING EXECUTOR**
 
-Qwen MUST read these files before changing source:
+Qwen may repair defects required to qualify and land the candidate, including compile/interface defects, current-`main` integration conflicts, runtime wiring defects, tests, release checks, and CI defects.
 
-1. `docs/implementation-handoffs/kristin-self-awareness-autonomic-recovery.md`
-2. `docs/implementation-handoffs/kristin-self-awareness-v2.md`
-3. this authoritative landing contract
+Qwen MUST NOT use this assignment for unrelated feature development, speculative redesign, or broad cleanup.
 
-Also inspect the exact frozen candidate diff against live `main` before planning repairs.
+Every material repair changes the candidate-under-test SHA and therefore requires final qualification to be re-established on the new exact SHA.
 
-Repository source and runtime truth override prose when they disagree. If a handoff is stale, record the discrepancy and use the actual source/runtime behavior.
+## 4. Clean integration procedure
 
-## 4. Qwen's role
+1. Verify `candidate/kristin-self-awareness-corrective-landing-source` still resolves exactly to `3119211e11ce5ccf8b6411aa7fa05bbd8c640139`.
+2. Resolve live `main`.
+3. Create a fresh qualification/integration branch from that live `main`.
+4. Integrate the exact immutable corrective candidate into the fresh branch.
+5. Perform all repairs and qualification on the integration branch only.
+6. Do not edit either immutable candidate.
+7. Do not edit or directly manipulate `main` during qualification.
+8. Before final landing, resolve live `main` again. If it advanced, reconcile and requalify the resulting exact SHA.
 
-Qwen owns **all work from qualification through safe main landing**.
+## 5. Non-negotiable architecture invariants
 
-Qwen is allowed and expected to:
+Qualification MUST preserve all of the following:
 
-- create a fresh qualification/integration branch from the immutable source candidate;
-- inspect the complete candidate versus live `main`;
-- compile/analyze/test the candidate;
-- run repository-native architecture/security/release/source-manifest/governance gates;
-- run native/platform builds and E2E/smoke gates required by the repository;
-- dispatch and validate hosted CI on the exact candidate SHA;
-- repair compile, analyzer, test, integration, runtime-wiring, source-manifest, qualification, CI and compatibility defects discovered during landing work;
-- add or repair focused tests where necessary to prove behavior;
-- finish incomplete production wiring called out in the implementation handoffs where the architecture already requires that wiring;
-- re-run qualification after material repairs;
-- create/update a clean landing PR to `main` only from the final qualified integration branch;
-- land the exact qualified SHA to `main` only when all mandatory gates are green;
-- verify `main` after merge/landing;
-- write a final landing report with evidence.
+- There is one Kristin conversation/session control plane; do not reintroduce split conversational authorities.
+- Capability **knowledge**, operational **availability**, **health**, **authority**, and exact Runner **tool availability** are separate facts.
+- `USER CAPABILITY != EXECUTION TOOL`.
+- Coordinator capabilities such as `agent.create_project`, `agent.modify_project`, `agent.fix_project`, and recovery coordinators MUST NOT leak into exact Runner tool lists.
+- A self-model/catalog/planner may restrict or describe capability use; it MUST NOT mint Runner tools or permission grants.
+- Authority MUST NOT be inferred from capability availability, health, Browser readiness, Owner readiness, or recovery-host readiness.
+- Browser and Owner state must be reported truthfully from the real runtime.
+- Original task continuation is permitted only after mandatory recovery verification succeeds.
+- Explicit user cancellation is final; autonomic recovery MUST NOT resurrect cancelled work.
+- The SHA that lands MUST be the exact SHA that passed the final mandatory qualification gates.
 
-Qwen is NOT allowed to waive failures, redefine acceptance downward, or merge an unqualified SHA.
+Any violation is a hard stop.
 
-## 5. Required branch strategy
+## 6. Corrective implementation claims Qwen MUST prove
 
-Qwen MUST NOT perform repair work directly on `main`.
+The corrective pass claims to wire previously identified gaps. Treat every item below as a verification target, not as an assumption.
 
-Qwen MUST NOT modify the immutable source branch.
+### A. Universal Task Kernel uses live self-awareness
 
-Recommended flow:
+Prove that:
 
-1. Fetch live refs.
-2. Verify `candidate/kristin-self-awareness-landing-source` still points to `81091cdf615c8fe4a0e8382ec402b977ea2ea8c6`.
-3. Verify live `main`.
-4. Create a fresh working branch, suggested name:
-   `integration/kristin-combined-qualified`
-5. Start from the immutable source candidate and reconcile it against the current `main` using the repository's safe integration strategy.
-6. Perform all qualification repairs only on that integration branch.
-7. Every material repair creates a new candidate SHA and invalidates qualification evidence tied to an older SHA where relevant.
-8. Final qualification must bind to one exact final SHA.
-9. Only that exact final SHA may be landed.
+- `KernelSelfModelRegistry` is actually installed on the production Chat/ProductRuntime composition path;
+- understanding and planning consume the live self-model capability intersection;
+- the self-model can remove unavailable capabilities but cannot add a capability absent from the caller/catalog;
+- exact Runner tool names remain a separate input;
+- consumed coordinator capabilities remain explicit and never become execution tools;
+- research, diagnostics, semantic replans, and primary planning cannot silently reconstruct a broader static capability universe.
 
-No force-push to protected/shared landing refs unless repository policy explicitly requires and authorizes it. Prefer normal fast-forward/rebase/merge mechanics with exact-head guards.
+### B. Runtime self-model lifecycle is truthful and bounded
 
-## 6. Architectural invariants that MUST survive landing
+Prove that:
+
+- selected project/model state is session-scoped overlay state rather than accidental global mutable truth;
+- concurrent refreshes are serialized/coalesced safely;
+- semantic state/change fingerprints do not report observation timestamps as material state changes;
+- capability descriptors use explicit project/model requirements;
+- a selected model is available only when fresh discovery actually contains that exact model;
+- provider discovery is bounded/cached appropriately and records per-provider failures without converting partial failure into false global health;
+- probe scheduling selects due probes before expensive refresh work where intended;
+- probe health has an independent TTL;
+- post-probe refresh publishes probe results back into the self-model used by planning/Chat;
+- Browser and Owner availability/diagnostic state comes from the actual ProductRuntime handles.
+
+### C. ProductRuntime recovery is concrete, durable, and connected
+
+Prove `lib/product/recovery/product_runtime_recovery.dart` is production wiring, not a disconnected abstraction:
+
+- structured failures, attempts, and recovery experiences persist through the canonical durable event journal;
+- the production composition installs the `run.failed` watcher;
+- direct operational failures can enter the same supervisor without blocking the user-visible error path;
+- recovery-generated internal child runs do not recursively create concurrent supervisors;
+- linked continuations of the original user task remain observable so recurrence can advance the bounded strategy ladder;
+- recovery shutdown/lifecycle behavior does not leak duplicate watchers or corrupt runtime shutdown.
+
+### D. L3 code repair is a governed kernel operation
+
+Prove L3 recovery:
 
-The following are hard product invariants, not optional style preferences.
+- creates a real recovery `TaskSpecification`;
+- plans and compiles through the existing Universal Task Kernel;
+- executes a real governed recovery run;
+- waits for terminal recovery work before verification begins;
+- cannot carry forward permissions that were not active on the original governed task;
+- rejects any permission-scope expansion;
+- does not resume the original task before verification passes;
+- preserves original run/task lineage and evidence.
 
-### 6.1 Knowledge / availability / health / authority / tools remain separate
+### E. L4 staged self-repair remains fail-closed
+
+Prove the staged host flow is:
+
+`stage -> qualify -> activate -> verify -> rollback on failure`
+
+and that:
 
-Self-awareness must preserve the explicit hierarchy:
+- the recovery host is an independent `KristinRecoveryHost` boundary;
+- host registration/readiness is not authority;
+- a separate external governed authority provider must positively establish `owner` / `owner.self_repair`;
+- Owner runtime availability, completion eligibility, or secure-isolation readiness alone can never satisfy that authority;
+- absence of an external authority provider or recovery host yields truthful blocked / not-evaluated state;
+- Kristin MUST NOT claim L4 operational readiness when those external prerequisites are absent;
+- activation or verification failure rolls back to last-known-good state.
 
-- capability knowledge != capability availability;
-- availability != health;
-- health != authority;
-- authority != Runner tool allow-list;
-- knowing a capability exists never grants permission to execute it.
+Claiming usable L4 without both the independent host and externally proven authority is a hard stop.
 
-### 6.2 USER CAPABILITY != EXECUTION TOOL
+### F. Recovery is bounded and progress-aware
 
-The coordinator-to-executor protocol fix on `main` must remain intact.
+Prove that:
 
-Coordinator capabilities such as project creation/modification/fix semantics must not leak into Runner as phantom executable tools.
+- terminal/permission/unknown failures cannot fall through to L0 transient retry;
+- retry/escalation attempts are bounded;
+- repeated ineffective strategies are suppressed for the same normalized failure/environment;
+- durable recovery experience influences later strategy selection;
+- merely producing a new evidence/event ID is NOT material progress;
+- semantic before/after state or successful verification establishes progress;
+- failed verification can trigger rollback where deterministic rollback exists;
+- repeated no-progress cycles terminate/escalate rather than loop forever.
 
-The Runner may know enough task context to execute its compiled work, but its concrete executable tools remain the governed subset granted for that work item.
+### G. One Kristin Chat exposes the same live self-model
 
-Any regression where a semantic/coordinator capability appears as an executable Runner tool is a hard stop.
+Prove deterministic Chat handling for self-awareness questions such as:
 
-### 6.3 Owner Mode never self-grants authority
+- “what can you do?”
+- “why can’t you do X?”
+- “what do you need for X?”
+- “what changed?”
+- “check your health”
+- “check your integrity”
 
-Owner runtime presence/readiness may be known.
+The answers must come from the same live self-model used by planning, must distinguish unavailable from unauthorized, and must never claim an effect or grant authority.
 
-That does not imply Owner authority has been granted.
+## 7. Focused qualification scenarios
+
+In addition to the repository’s normal suite, add or execute focused coverage sufficient to prove:
 
-Self-awareness, recovery, historical recovery success, capability availability, or health observations must never manufacture an Owner grant.
+1. known capability vs currently unavailable vs authority-blocked vs exact-tool-executable;
+2. project/model session overlay isolation between different conversations/contexts;
+3. concurrent self-model refresh serialization;
+4. provider partial-failure behavior;
+5. selected model missing from fresh discovery;
+6. probe due/TTL/post-refresh publication behavior;
+7. semantic change fingerprint immunity to observation-time-only churn;
+8. terminal, permission, and unknown failures never selecting L0 retry;
+9. bounded repeated failure and learned-ineffective strategy skipping;
+10. added evidence IDs alone do not count as progress;
+11. L3 recovery reaches terminal result before verifier invocation;
+12. recovery authority carry-forward rejects scope expansion;
+13. explicit user cancellation is never automatically resumed;
+14. internal recovery child runs are excluded from recursive supervision while linked continuations remain recurrence-visible;
+15. original task continuation occurs only after successful recovery verification;
+16. L4 requires independent host + external authority and rolls back failed candidate activation/verification;
+17. deterministic Chat self-awareness uses the live state seen by planning.
 
-### 6.4 Browser truthfulness
+## 8. Mandatory qualification gates
 
-Browser-required capabilities must report real provisioning/health/availability state.
+Qwen MUST discover and execute the repository’s current required gates rather than relying only on this list.
 
-Do not claim Browser support merely because a descriptor exists.
+At minimum, final qualification must include, where supported by the repository:
 
-### 6.5 Recovery requires verification
-
-A repair is not successful because source changed or an actuator returned success.
-
-The original failure condition must be objectively disproven or the intended acceptance condition must be re-established before recovery is marked successful and the parent/original task resumes.
-
-### 6.6 Recovery is bounded and progress-aware
-
-Do not allow repeated identical ineffective recovery attempts to consume unbounded model/runtime turns.
-
-Materially unchanged evidence must cause strategy change, escalation, rollback, or user escalation rather than blind repetition.
-
-### 6.7 L4 self-repair remains staged
-
-Kristin must not blindly overwrite its currently executing installation/process with no independent rollback boundary.
-
-Self-repair remains behind the staged recovery-host / last-known-good / candidate-health / rollback seam.
-
-### 6.8 One authoritative Kristin session state remains intact
-
-Do not regress the One-Kristin conversation/session convergence, durable takeover/steering behavior, continuation planning context, or truthful execution/activity projection that the combined branch inherits.
-
-## 7. Self-awareness architecture that must be verified
-
-Qualification must prove the implementation is real product wiring, not disconnected classes.
-
-Verify at minimum:
-
-- canonical capability descriptors are runtime/model readable;
-- subsystem-owned capability providers participate in the self-model rather than requiring a parallel static catalog;
-- capability availability includes truthful blockers/reasons;
-- capability health is separate from availability;
-- freshness budgets/probe intervals are honored;
-- authority-sensitive state is re-observed rather than trusted indefinitely from cache;
-- `ApplicationSnapshot`/equivalent uses authoritative domain/runtime state, not fragile UI-only state;
-- epistemic provenance/confidence distinguishes observed/configured/inferred/cached/unknown information;
-- `KristinSelfModelService`/equivalent maintains bounded live changes;
-- the causal operational graph is observational and does not become an authority path;
-- capability satisfaction paths explain prerequisites without implying they are granted;
-- self-integrity invariants are actually evaluated and surfaced;
-- recovery experience memory influences strategy without becoming authority;
-- deterministic self-awareness queries use the same canonical self-model;
-- continuous self-consistency probes publish durable truthful health/state observations;
-- shared self-awareness runtime identity/lifetime is correct across lightweight gateway wrappers;
-- shutdown/disposal ordering does not leave timers/listeners writing into closed journals/services.
-
-## 8. Universal Task Kernel / planning integration — mandatory production check
-
-The Task Kernel already accepts self-model planning context, but the implementation handoff explicitly warns that large production planning call sites may still reconstruct static capability state.
-
-Qwen MUST inspect all real production planning entry paths.
-
-The final landed product must not have a split where:
-
-- Chat can answer self-awareness queries from the live self-model,
-- but actual production planning still reasons from stale/static capability availability.
-
-Every production planning path that needs capability state must consume the canonical live self-model planning context, or an explicitly equivalent bounded projection derived from it.
-
-If any production planning path bypasses the live model, repair it and add coverage.
-
-This is a hard landing requirement.
-
-## 9. Failure/recovery runtime binding — mandatory production check
-
-The implementation handoff calls out remaining application-wide adapter/binding risk around equivalents of:
-
-- `FailureJournal`
-- `RecoveryEventSink`
-- `RecoveryTaskRouter`
-- `RecoveryActuator`
-- `RecoveryVerifier`
-
-Qwen MUST determine from current source which of these remain abstract/unbound at real runtime failure boundaries.
-
-Do not mark the feature landed merely because recovery domain classes compile.
-
-At minimum, meaningful product/runtime failures must be able to enter structured recovery flow through the actual runtime composition where automatic recovery is intended.
-
-Verify the real flow conceptually behaves as:
-
-failure evidence
-→ structured failure event
-→ relevant live self-model snapshot
-→ bounded recovery policy
-→ Universal Task Kernel / existing repair architecture
-→ governed authority/actuation
-→ verification
-→ original-task continuation OR rollback/escalation.
-
-If the source intentionally leaves a capability staged/not-yet-enabled, it must be truthful and safe. Do not fabricate automatic recovery for unsupported boundaries.
-
-## 10. Operational state/probe checks
-
-Pay special attention to the follow-up commits after the v2 handoff, including durable self-state/probe publication.
-
-Verify:
-
-- probe observations update the authoritative self-state projection expected by planning/query consumers;
-- stale probe state expires according to freshness rules;
-- rapid Browser/Owner transitions do not leave contradictory availability/health/authority state;
-- model/provider discovery state does not remain falsely available after provider changes;
-- event-driven refresh does not recurse into execution or cause feedback loops;
-- self-consistency monitoring is bounded and can shut down cleanly;
-- capability state changes are observable without becoming hidden authority grants.
-
-## 11. Qualification requirements
-
-Use repository-native authoritative commands/workflows rather than inventing a parallel test recipe.
-
-The final candidate must pass every mandatory gate that applies to `main` landing, including all gates currently enforced by the repository and CI configuration.
-
-At minimum, Qwen must establish evidence for the following categories.
-
-### Local / deterministic qualification
-
-- canonical formatting checks;
-- Dart/Flutter analyzer with repository-required fatal warning/info behavior;
-- full Flutter/Dart test suite, not only focused new tests;
-- focused new/changed self-awareness and recovery tests;
-- One-Kristin session/takeover/continuation tests;
-- Runner coordinator/executor protocol-boundary tests;
-- architecture contract gates;
-- security/threat/permission/authority gates;
-- source manifest / deterministic inventory gates;
-- release validator / release-source gates;
-- migration/schema checks if schema changed;
-- relevant Python/tool tests for repository qualification tooling;
-- native/platform build checks required by the repo;
-- E2E/smoke checks required by the repo.
-
-### Hosted exact-SHA qualification
-
-Final hosted qualification must run against the **exact final integration SHA**.
-
-Require all repository-required hosted checks and all required operating systems. The previous repository standard has included Ubuntu, Windows, and macOS; use the current live workflow as authority.
-
-Do not treat checks from an ancestor SHA as evidence for a repaired descendant SHA.
-
-If a workflow mutates/generated source or advances the branch, the resulting new exact head must itself be the final qualified SHA or must be requalified according to repository policy.
-
-## 12. Tests Qwen should add/repair where coverage is missing
-
-Do not add tests mechanically if equivalent coverage already exists. Inspect first.
-
-Coverage should mechanically protect at least:
-
-- capability knowledge vs availability vs health vs authority separation;
-- coordinator capability never exposed as Runner tool;
-- Owner readiness never becomes Owner grant;
-- unavailable capability explains blocker and minimum satisfaction path;
-- stale knowledge/freshness budget behavior;
-- provider/model/browser/owner availability transitions;
-- self-model event refresh and bounded change history;
-- integrity invariant violations;
-- self-awareness deterministic query answers from live state;
-- self-consistency probe success/failure publication;
-- structured FailureEvent creation/redaction;
-- repeated recovery signature/no-progress escalation;
-- recovery history does not grant authority;
-- recovery verification required before success;
-- original-task continuation after verified recovery;
-- rollback/escalation after unverified/failed recovery;
-- shutdown ordering / monitor disposal;
-- all production Task Kernel planning paths receive live self-model context;
-- real runtime failure boundaries route into recovery where intended.
-
-## 13. Integration-repair policy
-
-Qwen may repair defects discovered during qualification.
-
-Repairs should preserve architecture and be as small as practical, but correctness beats artificially tiny diffs.
-
-Allowed repair categories include:
-
-- compile/null-safety/signature breakage;
-- stale interface implementations;
-- missing runtime composition bindings;
-- missing self-model planning context propagation;
-- incorrect lifecycle/disposal behavior;
-- race/freshness/probe defects;
-- failing or missing focused tests;
-- source manifest/inventory updates required by real source changes;
-- analyzer/formatter issues;
-- platform compatibility defects;
-- CI workflow compatibility required to prove the candidate;
-- deterministic release/governance artifacts required by repository policy.
-
-Do NOT use qualification as an excuse to add unrelated product features.
-
-If a large unrelated defect is discovered, record it separately unless it blocks the candidate's safe landing.
-
-## 14. Exact-SHA rule
-
-This rule is absolute:
-
-> The SHA merged to `main` must be the exact SHA that passed final required qualification.
-
-If Qwen changes any product/test/qualification-relevant file after final evidence was collected, final qualification is stale.
-
-Re-run the required gates against the new exact SHA.
-
-If `main` moves after qualification but before merge, re-integrate/rebase/reconcile and requalify the new exact candidate SHA.
-
-Never use “the previous SHA was green and this change is small” as a waiver.
-
-## 15. Main landing rule
-
-Qwen may land to `main` only after all of the following are true:
-
-1. Frozen source identity was verified.
-2. Live `main` was resolved.
-3. Integration candidate is cleanly based/reconciled against live `main`.
-4. Required runtime/planning/recovery wiring gaps are resolved or truthfully proven not applicable.
-5. Local qualification is green.
-6. Hosted required-platform qualification is green on the exact final SHA.
-7. No unresolved required review/check remains.
-8. No authority/Runner boundary regression exists.
-9. No known failing mandatory test/gate is waived.
-10. The final PR head equals the exact qualified SHA.
-11. `main` has not changed since the final integration/qualification basis, or the candidate was rebuilt and requalified after the change.
-
-Then Qwen may merge/land using the repository-approved method.
-
-## 16. Hard-stop conditions
-
-Qwen MUST NOT land when any of these is true:
-
-- compile/analyzer failure;
-- mandatory test failure;
-- security/authority/architecture gate failure;
-- required source-manifest/release-validator failure;
-- missing required hosted OS/platform result;
-- candidate head differs from qualified SHA;
-- `main` moved after qualification and candidate was not requalified;
-- coordinator capability leaks into Runner tools;
-- Owner capability/state self-grants authority;
-- recovery can mark success without verification;
-- self-repair can overwrite the running product without staged rollback boundary;
-- production planning bypasses the canonical live self-model where self-awareness is required;
-- recovery is advertised as automatic at a runtime boundary that is not actually wired;
-- unresolved merge conflict is hidden by dropping behavior;
-- qualification evidence belongs only to an older/stale candidate;
-- a failure is being ignored merely to finish the landing.
-
-If blocked, stop landing, preserve evidence, state the exact blocker, and continue repair only when it can be done safely on the integration branch.
-
-## 17. Post-landing verification
-
-After merge/landing, Qwen MUST verify the actual `main` state rather than assuming the merge completed correctly.
-
-Record:
-
-- final qualified integration SHA;
+- Dart formatting check;
+- analyzer with repository-required fatal warnings/infos;
+- full automated test suite;
+- focused Kristin/self-awareness/recovery tests;
+- repository release validation;
+- security/source-manifest/native/tool/e2e checks required by current `main`;
+- hosted CI checks required for landing;
+- required OS/platform checks on the **exact final qualification SHA**.
+
+No failing mandatory gate may be waived.
+
+Record every exact command/check and its result in the final landing report.
+
+## 9. Repair policy during qualification
+
+Allowed:
+
+- compile fixes;
+- API/interface compatibility fixes;
+- current-`main` integration fixes;
+- missing production wiring discovered by qualification;
+- regression tests required to prove the contract;
+- release/CI fixes needed for the candidate to satisfy existing repository policy.
+
+Not allowed:
+
+- unrelated product features;
+- unrelated architecture redesign;
+- broad opportunistic cleanup;
+- weakening tests/checks/policies to manufacture green status;
+- changing an immutable candidate branch.
+
+After a material repair:
+
+1. commit it on the qualification/integration branch;
+2. establish the new exact candidate-under-test SHA;
+3. rerun all gates invalidated by that change;
+4. perform the complete mandatory final qualification on one exact final SHA before landing.
+
+## 10. Exact-SHA qualification rule
+
+Before opening/using the landing PR, record one final qualification SHA.
+
+The following MUST all refer to that same SHA:
+
+- final local mandatory qualification;
+- mandatory hosted/CI gates;
+- landing PR head;
+- the SHA approved for merge.
+
+Any commit, rebase, merge-from-main, conflict resolution, generated-file change, or other content change after qualification creates a new SHA and invalidates previous exact-SHA qualification.
+
+Requalify before landing.
+
+## 11. Hard-stop conditions
+
+Report **BLOCKED WITH EXACT EVIDENCE** and do not land if any unresolved condition remains, including:
+
+- authoritative candidate branch no longer equals `3119211e11ce5ccf8b6411aa7fa05bbd8c640139`;
+- live `main` changes after qualification and the new integration has not been requalified;
+- analyzer, tests, release validation, required security/tool/native/e2e checks, or required CI remain failing;
+- self-awareness/catalog/planning can introduce an execution capability/tool the caller/Runner did not provide;
+- coordinator capabilities leak into Runner execution tools;
+- capability availability, health, Browser readiness, Owner readiness, or recovery-host readiness is treated as authority;
+- recovery resumes original work before verification succeeds;
+- recovery resumes or recreates explicitly cancelled user work;
+- L4 is represented as operational without an independent recovery host and externally proven `owner` / `owner.self_repair` authority;
+- recovery can loop without bounded attempts or without semantic progress;
+- evidence/event creation alone is accepted as progress;
+- selected model/provider/Browser/Owner state is reported more optimistically than fresh runtime evidence supports;
+- session-scoped self-model selection leaks across conversations;
+- multiple competing Kristin conversational/control-plane states are reintroduced;
+- the proposed landing requires destructive or unreviewed direct manipulation of `main`.
+
+## 12. Landing procedure
+
+When and only when one exact final SHA is fully green:
+
+1. resolve live `main` again;
+2. if it changed, refresh/reconcile the qualification branch and requalify;
+3. open or use a clean landing PR from the qualification branch to live `main`;
+4. do not use PR #291, #300, or #301;
+5. confirm the PR head is exactly the final qualified SHA;
+6. require all repository-required hosted gates;
+7. merge only that exact qualified content through the repository’s normal landing mechanism;
+8. do not force-push or directly rewrite `main`.
+
+## 13. Post-landing verification and report
+
+After merge:
+
+- resolve `main` and record the landed SHA;
+- verify the qualified candidate content is an ancestor/content of the landed result as appropriate for the repository’s merge method;
+- run any repository-required post-landing smoke/verification;
+- confirm the landing did not reintroduce authority/tool/control-plane violations.
+
+Final report MUST include:
+
+- immutable source candidate branch + SHA;
+- live `main` base SHA used for final integration;
+- qualification/integration branch;
+- final exact qualified SHA;
+- every mandatory command/check and result;
+- focused corrective scenarios and results;
+- all qualification repairs with commit SHAs;
+- explicit L4 truth: host state and external authority state, including blocked/not-evaluated if that is the real result;
+- landing PR number;
 - resulting `main` SHA;
-- merge method / PR number;
-- exact hosted workflow run IDs/URLs or equivalent evidence;
-- required OS/platform conclusions;
-- analyzer/test/release/source-manifest evidence;
-- key repairs made during qualification;
-- confirmation that the source candidate branch was not modified;
-- confirmation that old PRs #291/#300/#301 were not used as landing vehicles;
-- post-merge smoke/health result;
-- any intentionally deferred non-blocking follow-up.
+- residual risks, if any.
 
-If post-merge verification fails, treat it as a real landing incident and repair/revert according to repository policy. Do not declare success until `main` is healthy.
+## 14. Terminal outcomes
 
-## 18. Historical PR cleanup
+This work order has exactly two acceptable terminal states:
 
-Only after the combined candidate is successfully verified on `main`:
+### **VERIFIED LANDED**
 
-- PR #291 may be closed as superseded by the combined qualified landing;
-- PR #300 may be closed as superseded checkpoint/audit history;
-- PR #301 may be closed as superseded stale candidate.
+All mandatory gates passed on the exact landed content and post-landing verification succeeded.
 
-Preserve their historical evidence/comments. Do not rewrite history merely for cosmetic cleanup.
+### **BLOCKED WITH EXACT EVIDENCE**
 
-## 19. Required final report
+A hard-stop condition remains. Report the exact failing command/check, SHA, logs/evidence, and why landing was refused.
 
-Qwen's final response/report must include:
-
-- source frozen SHA;
-- initial and final `main` SHA;
-- integration branch and final candidate SHA;
-- all source/test/runtime repairs made after the frozen input;
-- tests run locally and their result;
-- hosted qualification evidence and exact SHA binding;
-- runtime self-model/planning-context wiring conclusion;
-- failure/recovery runtime-binding conclusion;
-- authority/Runner boundary conclusion;
-- PR number and merge method;
-- post-landing verification result;
-- disposition of historical PRs;
-- remaining non-blocking follow-ups, if any.
-
-## 20. Definition of done
-
-This assignment is complete only when:
-
-- the complete One-Kristin + Self-Awareness/Autonomic-Recovery product state has been qualified as one candidate;
-- defects discovered during qualification have been repaired on the integration branch;
-- final required local and hosted gates pass on one exact final SHA;
-- that exact SHA is safely landed to `main`;
-- `main` is verified healthy afterward;
-- no safety/authority boundary was weakened to make qualification pass;
-- a durable final landing report exists.
-
-If these conditions cannot be satisfied, the correct result is **BLOCKED / NOT LANDED with exact evidence**, not a partial or waived merge.
+There is no “mostly green,” “waived,” or “land now and fix later” terminal state.
