@@ -76,11 +76,16 @@ jobs:
           cache: npm
           cache-dependency-path: automation_host/package-lock.json
 
-      - name: Canonicalize repair and refresh source manifest
+      - name: Resolve Dart package language version
+        shell: bash
+        run: flutter pub get
+
+      - name: Canonicalize repair with repository formatter and refresh source manifest
         shell: bash
         run: |
           set -euo pipefail
-          dart format test/product/source_contract_test.dart
+          python tool/dart_format_scope.py --write
+          python tool/dart_format_scope.py --check
           python tool/p2_refresh_source_manifest.py .
           git add -A
           git diff --cached --check
