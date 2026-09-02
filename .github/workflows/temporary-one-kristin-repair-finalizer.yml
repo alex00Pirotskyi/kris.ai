@@ -36,44 +36,52 @@ jobs:
           git cherry-pick --no-commit "$PRIOR_CANDIDATE_SHA"
           python - <<'PY'
           from pathlib import Path
+          nl = chr(10)
 
           studio_path = Path('lib/product/chat_control_plane_studio.dart')
           studio = studio_path.read_text(encoding='utf-8')
           assert 'if (existing != null) {' in studio, 'prior null-run planning-state repair missing'
           old_refresh = '      if (runActive) unawaited(_refreshCurrentRun());'
-          new_refresh = '''      if (currentRun != null && !runTerminal) {
-            unawaited(_refreshCurrentRun());
-          }'''
+          new_refresh = nl.join([
+              '      if (currentRun != null && !runTerminal) {',
+              '        unawaited(_refreshCurrentRun());',
+              '      }',
+          ])
           assert old_refresh in studio, 'expected active-only refresh guard missing'
           assert new_refresh not in studio, 'nonterminal refresh repair already present unexpectedly'
           studio_path.write_text(studio.replace(old_refresh, new_refresh, 1), encoding='utf-8')
 
           actions_path = Path('lib/product/chat_control_plane_studio_actions.dart')
           actions = actions_path.read_text(encoding='utf-8')
-          old_transition = '''      currentRun = run;
-      unawaited(runtime.execute(run.id));
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-      return await runtime.getRun(run.id) ?? run;'''
-          new_transition = '''      currentRun = run;
-      unawaited(runtime.execute(run.id));
-      return await _awaitRunStartTransition(run);'''
+          old_transition = nl.join([
+              '      currentRun = run;',
+              '      unawaited(runtime.execute(run.id));',
+              '      await Future<void>.delayed(const Duration(milliseconds: 180));',
+              '      return await runtime.getRun(run.id) ?? run;',
+          ])
+          new_transition = nl.join([
+              '      currentRun = run;',
+              '      unawaited(runtime.execute(run.id));',
+              '      return await _awaitRunStartTransition(run);',
+          ])
           assert old_transition in actions, 'expected fixed approval transition sample missing'
           assert '_awaitRunStartTransition' not in actions, 'approval synchronization helper already present unexpectedly'
           actions = actions.replace(old_transition, new_transition, 1)
-          helper = '''
-
-  Future<RunRecord> _awaitRunStartTransition(RunRecord run) async {
-    var latest = run;
-    for (var attempt = 0; attempt < 60; attempt++) {
-      final refreshed = await runtime.getRun(run.id);
-      if (refreshed != null) latest = refreshed;
-      if (latest.state != RunState.awaitingApproval) return latest;
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-    }
-    return latest;
-  }
-'''
-          marker = '\n  Future<void> _startPrepared() async {'
+          helper = nl.join([
+              '',
+              '',
+              '  Future<RunRecord> _awaitRunStartTransition(RunRecord run) async {',
+              '    var latest = run;',
+              '    for (var attempt = 0; attempt < 60; attempt++) {',
+              '      final refreshed = await runtime.getRun(run.id);',
+              '      if (refreshed != null) latest = refreshed;',
+              '      if (latest.state != RunState.awaitingApproval) return latest;',
+              '      await Future<void>.delayed(const Duration(milliseconds: 50));',
+              '    }',
+              '    return latest;',
+              '  }',
+          ])
+          marker = nl + '  Future<void> _startPrepared() async {'
           assert marker in actions, 'start-prepared marker missing'
           actions = actions.replace(marker, helper + marker, 1)
           actions_path.write_text(actions, encoding='utf-8')
@@ -83,24 +91,26 @@ jobs:
           assert 'null currentRun does not erase planning state before a run exists' in test_text, 'prior dogfood regression contract missing'
           test_name = 'Chat approval follows authoritative run state instead of a fixed delay'
           assert test_name not in test_text, 'approval synchronization regression already present unexpectedly'
-          addition = '''
-
-  test('Chat approval follows authoritative run state instead of a fixed delay', () {
-    final studio =
-        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
-    final actions = File('lib/product/chat_control_plane_studio_actions.dart')
-        .readAsStringSync();
-    expect(actions, isNot(contains('Duration(milliseconds: 180)')));
-    expect(actions, contains('_awaitRunStartTransition'));
-    expect(actions, contains('runtime.getRun(run.id)'));
-    expect(actions, contains('latest.state != RunState.awaitingApproval'));
-    expect(
-      studio,
-      contains('if (currentRun != null && !runTerminal)'),
-      reason: 'Awaiting-approval sessions must keep refreshing until durable run state advances.',
-    );
-  });'''
-          marker = '\n}'
+          addition = nl.join([
+              '',
+              '',
+              "  test('Chat approval follows authoritative run state instead of a fixed delay', () {",
+              '    final studio =',
+              "        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();",
+              "    final actions = File('lib/product/chat_control_plane_studio_actions.dart')",
+              '        .readAsStringSync();',
+              "    expect(actions, isNot(contains('Duration(milliseconds: 180)')));",
+              "    expect(actions, contains('_awaitRunStartTransition'));",
+              "    expect(actions, contains('runtime.getRun(run.id)'));",
+              "    expect(actions, contains('latest.state != RunState.awaitingApproval'));",
+              '    expect(',
+              '      studio,',
+              "      contains('if (currentRun != null && !runTerminal)'),",
+              "      reason: 'Awaiting-approval sessions must keep refreshing until durable run state advances.',",
+              '    );',
+              '  });',
+          ])
+          marker = nl + '}'
           head, sep, tail = test_text.rpartition(marker)
           assert sep, 'test main closing brace missing'
           test_path.write_text(head + addition + marker + tail, encoding='utf-8')
