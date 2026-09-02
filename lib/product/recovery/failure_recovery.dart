@@ -213,16 +213,12 @@ final class FailureEvent {
             .toList(growable: false),
         expectedState: json['expectedState']?.toString(),
         observedState: json['observedState']?.toString(),
-        stateBefore: Map<String, Object?>.from(
-          json['stateBefore'] is Map
-              ? json['stateBefore'] as Map
-              : const <String, Object?>{},
-        ),
-        stateAfter: Map<String, Object?>.from(
-          json['stateAfter'] is Map
-              ? json['stateAfter'] as Map
-              : const <String, Object?>{},
-        ),
+        stateBefore: json['stateBefore'] is Map
+            ? Map<String, Object?>.from(json['stateBefore'] as Map)
+            : const <String, Object?>{},
+        stateAfter: json['stateAfter'] is Map
+            ? Map<String, Object?>.from(json['stateAfter'] as Map)
+            : const <String, Object?>{},
         capabilityId: json['capabilityId']?.toString(),
         requiredAuthority:
             (json['requiredAuthority'] as List? ?? const <Object>[])
@@ -265,7 +261,6 @@ final class FailureClassification {
     required this.level,
     required this.reason,
   });
-
   final Recoverability recoverability;
   final RecoveryLevel level;
   final String reason;
@@ -418,7 +413,6 @@ final class OperationTransition {
     this.changedFiles = const <String>[],
     this.resultEvidence = const <String>[],
   });
-
   final OperationalCheckpoint before;
   final OperationalCheckpoint after;
   final List<String> changedFiles;
@@ -447,7 +441,6 @@ final class RecoveryDecision {
     this.requiredAuthority = const <String>{},
     this.destructive = false,
   });
-
   final RecoveryDecisionKind kind;
   final RecoveryLevel level;
   final String strategyId;
@@ -465,7 +458,6 @@ final class RecoveryActionResult {
     this.afterFingerprint = '',
     this.materialProgress = false,
   });
-
   final String summary;
   final List<String> evidenceReferences;
   final String beforeFingerprint;
@@ -528,7 +520,6 @@ final class RecoveryVerification {
     this.materialProgress = false,
     this.rollbackRecommended = false,
   });
-
   final bool passed;
   final String check;
   final String observed;
@@ -548,7 +539,6 @@ final class RecoveryObjective {
     this.originalRunId,
     this.originalTaskId,
   });
-
   final FailureEvent failure;
   final RecoveryLevel level;
   final String objective;
@@ -650,7 +640,6 @@ abstract interface class RecoveryExperienceStore {
 
 final class InMemoryRecoveryExperienceStore implements RecoveryExperienceStore {
   InMemoryRecoveryExperienceStore({this.maxRetained = 256});
-
   final int maxRetained;
   final List<RecoveryExperience> _items = <RecoveryExperience>[];
 
@@ -705,7 +694,6 @@ final class RecoveryAuthorityEvaluation {
     this.missing = const <String>{},
     this.notEvaluated = const <String>{},
   });
-
   final bool allowed;
   final String reason;
   final Set<String> granted;
@@ -729,7 +717,6 @@ abstract interface class FailureSelfContextResolver {
 final class RuntimeOnlyFailureSelfContextResolver
     implements FailureSelfContextResolver {
   const RuntimeOnlyFailureSelfContextResolver();
-
   @override
   Future<SelfModelSessionOverlay> resolve(FailureEvent failure) async =>
       const SelfModelSessionOverlay();
@@ -744,7 +731,6 @@ abstract interface class RecoveryAuthorityGate {
 
 final class FailClosedRecoveryAuthorityGate implements RecoveryAuthorityGate {
   const FailClosedRecoveryAuthorityGate();
-
   @override
   Future<RecoveryAuthorityEvaluation> evaluate(
     FailureEvent failure,
@@ -753,7 +739,7 @@ final class FailClosedRecoveryAuthorityGate implements RecoveryAuthorityGate {
     if (decision.requiredAuthority.isEmpty) {
       return const RecoveryAuthorityEvaluation(
         allowed: true,
-        reason: 'No additional authority is required by this recovery strategy.',
+        reason: 'No additional authority is required by this strategy.',
       );
     }
     return RecoveryAuthorityEvaluation(
@@ -765,13 +751,9 @@ final class FailClosedRecoveryAuthorityGate implements RecoveryAuthorityGate {
 }
 
 abstract interface class RecoveryTaskRouter {
-  /// Creates, executes and waits for recovery work through the existing
-  /// Universal Task Kernel. Returning only a queued work id is insufficient:
-  /// verification may not start until this future represents terminal work.
+  /// This future must represent terminal recovery work, not merely creation of
+  /// a queued task. Verification starts only after this future resolves.
   Future<RecoveryActionResult> runRecoveryWork(RecoveryObjective objective);
-
-  /// Continues the original objective after recovery verification. A terminal
-  /// original run may be continued as a child run, but lineage must be emitted.
   Future<RecoveryActionResult> continueOriginalTask(FailureEvent failure);
 }
 
@@ -806,7 +788,6 @@ final class RecoveryPolicy {
     this.maxAttemptsPerFailureSignature = 4,
     this.maxSameStrategyAttempts = 1,
   });
-
   final int maxAttemptsPerFailureSignature;
   final int maxSameStrategyAttempts;
 
@@ -820,23 +801,25 @@ final class RecoveryPolicy {
   }) {
     if (classification.recoverability == Recoverability.terminal ||
         classification.level == RecoveryLevel.terminal) {
-      if (failure.category == FailureCategory.permission ||
-          failure.requiredAuthority.isNotEmpty) {
+      if (failure.requiredAuthority.isNotEmpty) {
         return RecoveryDecision(
           kind: RecoveryDecisionKind.requestAuthority,
           level: RecoveryLevel.terminal,
           strategyId: 'authority_required',
           reason:
-              'Automatic recovery is stopped until the required authority is explicitly evaluated.',
+              'Automatic recovery is stopped until required authority is explicitly evaluated.',
           requiredAuthority: failure.requiredAuthority,
         );
       }
-      return const RecoveryDecision(
+      return RecoveryDecision(
         kind: RecoveryDecisionKind.askUser,
         level: RecoveryLevel.terminal,
-        strategyId: 'terminal_unknown_cause',
-        reason:
-            'Automatic recovery is unsafe until the terminal/unknown cause is established.',
+        strategyId: failure.category == FailureCategory.permission
+            ? 'permission_requirement_unknown'
+            : 'terminal_unknown_cause',
+        reason: failure.category == FailureCategory.permission
+            ? 'A permission failure occurred, but the exact required authority was not captured; automatic retry is forbidden.'
+            : 'Automatic recovery is unsafe until the terminal/unknown cause is established.',
       );
     }
 
@@ -849,8 +832,7 @@ final class RecoveryPolicy {
       );
     }
 
-    final candidates = _strategyLadder(classification.level, failure);
-    for (final candidate in candidates) {
+    for (final candidate in _strategyLadder(classification.level, failure)) {
       final repeated = priorAttempts
           .where((attempt) => attempt.decision.strategyId == candidate.strategyId)
           .length;
@@ -879,15 +861,15 @@ final class RecoveryPolicy {
     FailureEvent failure,
   ) {
     if (level == RecoveryLevel.l4SelfRepair) {
-      return <RecoveryDecision>[
-        const RecoveryDecision(
+      return const <RecoveryDecision>[
+        RecoveryDecision(
           kind: RecoveryDecisionKind.selfRepair,
           level: RecoveryLevel.l4SelfRepair,
           strategyId: 'staged_self_repair',
           reason:
-              'Stage a candidate outside the primary process, qualify it, activate it, verify it and roll back on failure.',
+              'Use the independent recovery host to stage, qualify, activate, verify and roll back a candidate.',
           requiredCapabilities: <String>{'owner.recovery.actuate'},
-          requiredAuthority: <String>{'owner.self_repair'},
+          requiredAuthority: <String>{'owner', 'owner.self_repair'},
           destructive: true,
         ),
       ];
@@ -919,6 +901,7 @@ final class RecoveryPolicy {
           level: level,
           strategyId: 'refresh_and_retry',
           reason: '${prefix}Refresh volatile state and retry once.',
+          requiredAuthority: failure.requiredAuthority,
         );
       case RecoveryLevel.l1Operational:
         return RecoveryDecision(
@@ -927,6 +910,7 @@ final class RecoveryPolicy {
           strategyId: 'restart_resource',
           reason:
               '${prefix}Recreate or restart the failed disposable/runtime resource.',
+          requiredAuthority: failure.requiredAuthority,
         );
       case RecoveryLevel.l2Configuration:
         return RecoveryDecision(
@@ -1147,7 +1131,8 @@ final class FailureSupervisor {
       ));
       causalGraph?.recordFailure(
         'recovery.${decision.strategyId}.failed',
-        causedBy: failureNode == null ? const <String>[] : <String>[failureNode.id],
+        causedBy:
+            failureNode == null ? const <String>[] : <String>[failureNode.id],
         attributes: <String, Object?>{
           'failureId': failure.id,
           'attemptId': attempt.id,
@@ -1221,8 +1206,8 @@ final class FailureSupervisor {
           result: rolledBack,
           finishedAt: DateTime.now().toUtc(),
         );
-        attempts[attempts.indexWhere((item) => item.id == completed.id)] =
-            completed;
+        final index = attempts.indexWhere((item) => item.id == completed.id);
+        if (index >= 0) attempts[index] = completed;
         await journal.recordAttempt(completed);
         await events.emit('recovery_rolled_back', <String, Object?>{
           'failureId': failure.id,
@@ -1255,8 +1240,8 @@ final class FailureSupervisor {
       attemptId: attempt.id,
       verificationCheck: verification.check,
       verificationObserved: verification.observed,
-      evidenceReferences: completed.result?.evidenceReferences ??
-          verification.evidenceReferences,
+      evidenceReferences:
+          completed.result?.evidenceReferences ?? verification.evidenceReferences,
     ));
 
     await events.emit(
@@ -1302,7 +1287,8 @@ final class FailureSupervisor {
           failureId: failure.id,
           attemptId: attempt.id,
           verificationCheck: verification.check,
-          verificationObserved: 'Recovery verified but continuation failed: $error',
+          verificationObserved:
+              'Recovery verified but continuation failed: $error',
           evidenceReferences: verification.evidenceReferences,
         ));
         await events.emit('original_task_resume_failed', <String, Object?>{
@@ -1313,7 +1299,8 @@ final class FailureSupervisor {
         return RecoveryVerification(
           passed: false,
           check: 'original_task_continuity',
-          observed: 'Recovery verified, but the original task could not continue: $error',
+          observed:
+              'Recovery verified, but the original task could not continue: $error',
           evidenceReferences: verification.evidenceReferences,
           materialProgress: true,
         );
@@ -1333,7 +1320,7 @@ final class FailureSupervisor {
     final query = SelfAwarenessQueryService(selfModel);
     for (final capabilityId in decision.requiredCapabilities) {
       final capability = self.capability(capabilityId);
-      if (capability?.operationallyUsable == true) continue;
+      if (_facilityReadyForAuthorityCheck(capability)) continue;
       final requirements = await query.requirementsFor(
         capabilityId,
         overlay: overlay,
@@ -1345,7 +1332,7 @@ final class FailureSupervisor {
     if (blockedCapabilities.isEmpty && authorityDecision.allowed) return null;
 
     final reason = blockedCapabilities.isNotEmpty
-        ? 'Recovery capability prerequisites are not currently satisfied.'
+        ? 'Recovery capability facilities or prerequisites are not currently ready.'
         : authorityDecision.reason;
     await events.emit('recovery_preflight_blocked', <String, Object?>{
       'failureId': failure.id,
@@ -1371,6 +1358,18 @@ final class FailureSupervisor {
       observed: reason,
       evidenceReferences: failure.evidenceReferences,
     );
+  }
+
+  bool _facilityReadyForAuthorityCheck(KnownCapability? capability) {
+    if (capability == null) return false;
+    if (capability.operationallyUsable) return true;
+    if (capability.availability.missingPrerequisites.isNotEmpty) return false;
+    if (capability.health?.state == CapabilityHealthState.failing) return false;
+    final authorityOnlyBlock = capability.availability.knownButAuthorityBlocked ||
+        (capability.availability.requiredAuthority.isNotEmpty &&
+            capability.availability.authorityObservation ==
+                AuthorityObservationState.notEvaluated);
+    return authorityOnlyBlock;
   }
 
   Future<void> _recordBlocked(
