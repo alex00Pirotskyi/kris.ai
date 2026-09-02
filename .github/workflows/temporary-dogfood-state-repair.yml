@@ -1,0 +1,121 @@
+name: temporary-dogfood-state-repair
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: github.event.head_commit.message == 'chore(ci): materialize dogfood state repair'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: candidate/one-kristin-dogfood-repair-20260902
+          fetch-depth: 0
+      - name: Bind repair base
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "af957ebf176c67fd1ac948cf2417852773098964"
+      - name: Repair no-run detach semantics and add regression
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          session_path = Path('lib/product/kristin_conversation_session.dart')
+          text = session_path.read_text()
+          start = text.index('  bool detachFinishedRun() {')
+          clear_start = text.index('    cancelAssistantResponse();', start)
+          return_marker = '    return true;\n  }'
+          return_pos = text.index(return_marker, clear_start)
+          block_end = return_pos + len(return_marker)
+          clear_body = text[clear_start:return_pos]
+          replacement = (
+              '  bool detachFinishedRun() {\n'
+              '    if (_currentRun == null) return true;\n'
+              '    if (hasNonterminalRun) return false;\n'
+              '    _clearGovernedState();\n'
+              '    return true;\n'
+              '  }\n\n'
+              '  void _clearGovernedState() {\n'
+              + clear_body +
+              '  }'
+          )
+          text = text[:start] + replacement + text[block_end:]
+
+          reset_start = text.index('  void resetForNewConversation() {')
+          reset_end = text.index('\n  KristinConversationMessage _addMessage(', reset_start)
+          reset = '''  void resetForNewConversation() {
+            if (hasNonterminalRun) {
+              throw const KristinConversationSessionException(
+                'conversation_run_active',
+                'A new conversation cannot orphan an unfinished governed run.',
+              );
+            }
+            _clearGovernedState();
+            _messages.clear();
+          }
+          '''
+          text = text[:reset_start] + reset.rstrip() + text[reset_end:]
+          session_path.write_text(text)
+
+          test_path = Path('test/product/kristin_conversation_session_test.dart')
+          tests = test_path.read_text()
+          import_line = "import 'package:kristin_local_agent/product/run_live_signals.dart';\n"
+          new_import = "import 'package:kristin_local_agent/product/task_kernel/task_specification.dart';\n"
+          if new_import not in tests:
+              tests = tests.replace(import_line, import_line + new_import, 1)
+          anchor = "  test('finished run detach preserves transcript and selected context', () {\n"
+          regression = '''  test('detach without an attached run preserves governed request state', () {
+            final session = KristinConversationSession();
+            final specification = TaskSpecification(
+              id: 'spec-a',
+              originalRequest: 'Build something',
+              objective: 'Build something',
+            );
+            session.beginGovernedRequest('Build something');
+            session.setTaskSpecification(specification);
+            session.setActiveRequest('Build something');
+
+            expect(session.currentRun, isNull);
+            expect(session.detachFinishedRun(), isTrue);
+
+            expect(session.activeRequest, 'Build something');
+            expect(session.taskSpecification, same(specification));
+            expect(session.state, isA<ChatInterpreting>());
+          });
+
+          '''
+          if regression not in tests:
+              tests = tests.replace(anchor, regression + anchor, 1)
+          test_path.write_text(tests)
+          PY
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - run: flutter pub get
+      - name: Canonical format
+        run: |
+          python tool/dart_format_scope.py --write
+          python tool/dart_format_scope.py --check
+      - name: Focused session regression
+        run: flutter test --no-pub --concurrency=1 test/product/kristin_conversation_session_test.dart
+      - name: Refresh source manifest
+        run: python tool/p2_refresh_source_manifest.py
+      - name: Seal repair commit
+        shell: bash
+        run: |
+          git diff --check
+          git add lib/product/kristin_conversation_session.dart test/product/kristin_conversation_session_test.dart SOURCE_MANIFEST.sha256
+          git diff --cached --check
+          git config user.name 'Kristin Integration Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'fix(kristin): preserve governed state before run attachment'
+          git push origin HEAD:candidate/one-kristin-dogfood-repair-20260902
+          git rev-parse HEAD
