@@ -44,7 +44,6 @@ jobs:
           )
           path.write_text(text, encoding='utf-8')
           PY
-          dart format test/product/source_contract_test.dart
           git diff --check
           git diff -- test/product/source_contract_test.dart
 
