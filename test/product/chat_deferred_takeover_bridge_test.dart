@@ -21,7 +21,8 @@ void main() {
     runtime = File('lib/product/product_runtime.dart').readAsStringSync();
   });
 
-  test('Chat run and permission projection are owned by the canonical session', () {
+  test('Chat run and permission projection are owned by the canonical session',
+      () {
     expect(chat, contains("import 'kristin_conversation_session.dart';"));
     expect(
       chat,

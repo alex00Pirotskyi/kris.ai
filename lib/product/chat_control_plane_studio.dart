@@ -204,7 +204,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   set currentRun(RunRecord? value) {
     final existing = conversationSession.currentRun;
     if (value == null) {
-      conversationSession.detachFinishedRun();
+      if (existing != null) {
+        conversationSession.detachFinishedRun();
+      }
       return;
     }
     if (existing != null && existing.id == value.id) {
@@ -253,7 +255,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
     super.initState();
     liveSubscription = runtime.liveRunStream.listen(_onLiveSignal);
     refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (runActive) unawaited(_refreshCurrentRun());
+      if (currentRun != null && !runTerminal) {
+        unawaited(_refreshCurrentRun());
+      }
       if (projectProcessStatus?.running == true) {
         unawaited(_refreshProjectProcess());
       }
@@ -340,12 +344,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       loading = false;
       status = conversationSession.awaitingUserInput
           ? conversationSession.deferredUserPrompt ??
-                'Kristin needs your input before continuing.'
+              'Kristin needs your input before continuing.'
           : runAwaitingApproval
-          ? 'Permission review required'
-          : runExecuting
-          ? 'Continuing active work'
-          : 'Kristin is ready';
+              ? 'Permission review required'
+              : runExecuting
+                  ? 'Continuing active work'
+                  : 'Kristin is ready';
     });
   }
 
@@ -358,31 +362,68 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       silent: true,
     );
     if (refreshed == null || !mounted) return;
+    final continuation = refreshed.state == RunState.interrupted
+        ? await runtime.steeringContinuationForSourceRun(refreshed.id)
+        : null;
+    final continuationContext = continuation == null
+        ? null
+        : await runtime.repositories.commandPlanningContexts.get(
+            continuation.command.id,
+          );
+    final visibleRun = continuation ?? refreshed;
     final newTerminal = const <RunState>{
       RunState.succeeded,
       RunState.failed,
       RunState.cancelled,
-    }.contains(refreshed.state);
-    final loadedEvidence = newTerminal
-        ? await runtime.evidenceForRun(refreshed.id)
-        : evidence;
+    }.contains(visibleRun.state);
+    final loadedEvidence =
+        newTerminal ? await runtime.evidenceForRun(visibleRun.id) : evidence;
     final deferred = newTerminal
         ? null
-        : await runtime.latestDeferredInteraction(refreshed.id);
+        : await runtime.latestDeferredInteraction(visibleRun.id);
     _mutate(() {
-      currentRun = refreshed;
+      if (continuation != null) {
+        conversationSession.updateRun(refreshed);
+        conversationSession.replaceRunWithContinuation(
+          source: refreshed,
+          continuation: continuation,
+        );
+        planningFailure = null;
+        lastReconciliation = null;
+        if (continuationContext == null) {
+          taskSpecification = null;
+          routingDecision = null;
+          canonicalPlan = null;
+          planningPath = ChatPlanningPath.deterministic;
+        } else {
+          taskSpecification = continuationContext.specification;
+          routingDecision = RoutingDecision(
+            route: continuationContext.route,
+            family: continuationContext.family,
+            rationale: continuationContext.routingRationale,
+          );
+          canonicalPlan = continuationContext.canonicalPlan;
+        }
+      } else {
+        currentRun = visibleRun;
+      }
       conversationSession.setDeferredInteraction(deferred);
       evidence = loadedEvidence;
-      completedTasks = _completedTasksFrom(refreshed);
-      awaitingPermission = refreshed.state == RunState.awaitingApproval;
+      completedTasks = _completedTasksFrom(visibleRun);
+      awaitingPermission = visibleRun.state == RunState.awaitingApproval;
       if (conversationSession.awaitingUserInput) {
-        status =
-            conversationSession.deferredUserPrompt ??
+        status = conversationSession.deferredUserPrompt ??
             'Kristin needs your input before continuing.';
+      } else if (visibleRun.state == RunState.awaitingApproval) {
+        status = continuation == null
+            ? 'Permission review required'
+            : 'Permission review required for revised plan';
       } else if (newTerminal) {
-        status = refreshed.state == RunState.succeeded
+        status = visibleRun.state == RunState.succeeded
             ? 'Finished and verified'
             : 'Execution stopped safely';
+      } else {
+        status = 'Continuing active work';
       }
     });
   }
@@ -408,10 +449,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   }
 
   List<ChatTarget> _knownTargets() {
-    final providerIds = runtime.models
-        .providers()
-        .map((item) => item.id)
-        .toSet();
+    final providerIds =
+        runtime.models.providers().map((item) => item.id).toSet();
     return ChatTargetResolver(<ChatTargetProvider>[
       ProjectTargetProvider(
         projects: projects,
@@ -560,8 +599,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         await _controlRun('cancel');
         return;
       }
-      final safeAlongsidePendingRun =
-          decision.isInformational ||
+      final safeAlongsidePendingRun = decision.isInformational ||
           (decision.capability != null &&
               decision.capability!.riskClass == ChatRiskClass.none);
       if (!safeAlongsidePendingRun) {
@@ -632,12 +670,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       error = null;
       final needsClarification =
           routingDecision?.requiresClarification == true &&
-          outcome.specification.blockingQuestions.isNotEmpty;
+              outcome.specification.blockingQuestions.isNotEmpty;
       status = needsClarification
           ? 'Kristin needs one clarification'
           : outcome.isSemantic
-          ? 'Review what Kristin understood'
-          : 'Review how Kristin interpreted this';
+              ? 'Review what Kristin understood'
+              : 'Review how Kristin interpreted this';
       if (needsClarification) {
         conversationSession.addAssistantMessage(
           outcome.specification.blockingQuestions.first.question,
@@ -670,11 +708,11 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       try {
         return await (kernel.understanding as SemanticSlashUnderstandingService)
             .understandWithSemanticContext(
-              decision: decision,
-              context: context.understandingContext,
-              modelIdentity: selectedModel!,
-              semanticRequest: semanticRequestOverride,
-            );
+          decision: decision,
+          context: context.understandingContext,
+          modelIdentity: selectedModel!,
+          semanticRequest: semanticRequestOverride,
+        );
       } catch (thrown, stackTrace) {
         final failure = classifyPlanningFailure(thrown, stackTrace: stackTrace);
         _mutate(() {
@@ -711,8 +749,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           return null;
         case PlanningFailureKind.providerUnavailable:
           _mutate(() {
-            status =
-                'Interpreting without the model '
+            status = 'Interpreting without the model '
                 '(${failure.message})';
             error = null;
           });
@@ -781,8 +818,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       );
       routingDecision = routing;
       error = null;
-      final stillBlocked =
-          routing.requiresClarification &&
+      final stillBlocked = routing.requiresClarification &&
           outcome.specification.blockingQuestions.isNotEmpty;
       status = stillBlocked
           ? 'Kristin needs one clarification'

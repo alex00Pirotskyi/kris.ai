@@ -155,7 +155,8 @@ class _FakeGateway implements ChatRuntimeGateway {
 
 void main() {
   group('ChatActionDispatcher authority boundary', () {
-    test('direct project action resolves authority before touching runtime', () async {
+    test('direct project action resolves authority before touching runtime',
+        () async {
       final gateway = _FakeGateway();
       final dispatcher = ChatActionDispatcher(gateway);
 
@@ -173,7 +174,8 @@ void main() {
       expect(gateway.calls, isEmpty);
     });
 
-    test('button/slash/natural-language source cannot change run authority', () {
+    test('button/slash/natural-language source cannot change run authority',
+        () {
       final dispatcher = ChatActionDispatcher(_FakeGateway());
       final fromSlash = dispatcher.authorize(
         capabilityId: 'project.run',
@@ -194,7 +196,8 @@ void main() {
       expect(fromSlash.requiredScopes, fromNaturalLanguage.requiredScopes);
       expect(fromSlash.requiredScopes, fromButton.requiredScopes);
       expect(fromSlash.requiredScopes, contains(PermissionScope.projectRead));
-      expect(fromSlash.requiredScopes, contains(PermissionScope.executeManaged));
+      expect(
+          fromSlash.requiredScopes, contains(PermissionScope.executeManaged));
     });
   });
 
