@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: Provision GLES runtime
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends libgles2
       - name: Export GLVND GLES runtime
         shell: bash
         run: |
