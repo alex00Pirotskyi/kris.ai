@@ -36,49 +36,51 @@ jobs:
           git cherry-pick --no-commit "$PRIOR_CANDIDATE_SHA"
           python - <<'PY'
           from pathlib import Path
-
+          nl = chr(10)
           source = Path('lib/product/chat_control_plane_studio.dart')
           text = source.read_text(encoding='utf-8')
-          old = '''    if (value == null) {
-      conversationSession.detachFinishedRun();
-      return;
-    }
-'''
-          new = '''    if (value == null) {
-      if (existing != null) {
-        conversationSession.detachFinishedRun();
-      }
-      return;
-    }
-'''
+          old = nl.join([
+              '    if (value == null) {',
+              '      conversationSession.detachFinishedRun();',
+              '      return;',
+              '    }',
+              '',
+          ])
+          new = nl.join([
+              '    if (value == null) {',
+              '      if (existing != null) {',
+              '        conversationSession.detachFinishedRun();',
+              '      }',
+              '      return;',
+              '    }',
+              '',
+          ])
           assert old in text, 'expected currentRun null setter shape missing'
           assert new not in text, 'runtime detach guard already present unexpectedly'
           source.write_text(text.replace(old, new, 1), encoding='utf-8')
-
           test_path = Path('test/product/live_continuation_reconciliation_contract_test.dart')
           test_text = test_path.read_text(encoding='utf-8')
           assert 'null currentRun does not erase planning state before a run exists' not in test_text
-          marker = '\n}'
-          addition = r'''
-
-  test('null currentRun does not erase planning state before a run exists', () {
-    final source =
-        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
-    final start = source.indexOf('set currentRun(RunRecord? value)');
-    final end = source.indexOf('bool get awaitingPermission', start);
-    expect(start, greaterThanOrEqualTo(0));
-    expect(end, greaterThan(start));
-    final setter = source.substring(start, end);
-    expect(
-      RegExp(
-        r'if\s*\(existing != null\)\s*\{\s*conversationSession\.detachFinishedRun\(\);',
-        multiLine: true,
-      ).hasMatch(setter),
-      isTrue,
-      reason: 'Planning/understanding state must survive currentRun = null when no run is attached.',
-    );
-  });
-'''
+          addition = nl.join([
+              '',
+              "  test('null currentRun does not erase planning state before a run exists', () {",
+              '    final source =',
+              "        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();",
+              "    final start = source.indexOf('set currentRun(RunRecord? value)');",
+              "    final end = source.indexOf('bool get awaitingPermission', start);",
+              '    expect(start, greaterThanOrEqualTo(0));',
+              '    expect(end, greaterThan(start));',
+              '    final setter = source.substring(start, end);',
+              '    expect(',
+              '      setter.contains(',
+              "        'if (existing != null) {',",
+              '      ),',
+              '      isTrue,',
+              "      reason: 'Planning/understanding state must survive currentRun = null when no run is attached.',",
+              '    );',
+              '  });',
+          ])
+          marker = nl + '}'
           head, sep, tail = test_text.rpartition(marker)
           assert sep, 'test main closing brace missing'
           test_path.write_text(head + addition + marker + tail, encoding='utf-8')
