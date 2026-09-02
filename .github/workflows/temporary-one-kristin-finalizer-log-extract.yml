@@ -1,0 +1,74 @@
+name: temporary-one-kristin-finalizer-log-extract
+
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+    paths:
+      - .github/workflows/temporary-one-kristin-finalizer-log-extract.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download finalizer job log
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/jobs/100240856792/logs" \
+            -o "$RUNNER_TEMP/finalizer.log"
+          test -s "$RUNNER_TEMP/finalizer.log"
+
+      - name: Extract formatter and analyzer failure
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          source = Path(os.environ['RUNNER_TEMP']) / 'finalizer.log'
+          raw = source.read_text(encoding='utf-8', errors='replace').splitlines()
+          ansi = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
+          lines = [ansi.sub('', line) for line in raw]
+          needles = (
+              'dart_format_scope.py',
+              'flutter analyze',
+              'Analyzing ',
+              'would change',
+              'Changed ',
+              'error •',
+              'warning •',
+              'info •',
+              'issues found',
+              'Process completed with exit code',
+          )
+          hits = [i for i, line in enumerate(lines) if any(n.lower() in line.lower() for n in needles)]
+          ranges = []
+          for i in hits:
+              start = max(0, i - 12)
+              end = min(len(lines), i + 24)
+              if ranges and start <= ranges[-1][1] + 3:
+                  ranges[-1] = (ranges[-1][0], max(ranges[-1][1], end))
+              else:
+                  ranges.append((start, end))
+          out = []
+          for n, (start, end) in enumerate(ranges[-6:], 1):
+              out.append(f'=== PREFLIGHT WINDOW {n} lines {start + 1}-{end} ===')
+              out.extend(lines[start:end])
+          if not out:
+              out = ['NO_MARKERS_FOUND', *lines[-120:]]
+          text = '\n'.join(out) + '\n'
+          print(text)
+          (Path(os.environ['RUNNER_TEMP']) / 'finalizer-preflight-failure.txt').write_text(text, encoding='utf-8')
+          PY
