@@ -1,0 +1,88 @@
+name: temporary-one-kristin-log-extract
+
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+    paths:
+      - .github/workflows/temporary-one-kristin-log-extract.yml
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download protected Ubuntu job log
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/jobs/100218784606/logs" \
+            -o "$RUNNER_TEMP/protected-ubuntu.log"
+          test -s "$RUNNER_TEMP/protected-ubuntu.log"
+
+      - name: Extract compact failed-test windows
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          source = Path(os.environ['RUNNER_TEMP']) / 'protected-ubuntu.log'
+          target = Path(os.environ['RUNNER_TEMP']) / 'protected-failure-window.txt'
+          raw = source.read_text(encoding='utf-8', errors='replace').splitlines()
+
+          ansi = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
+          lines = [ansi.sub('', line) for line in raw]
+          markers = []
+          marker_patterns = (
+              re.compile(r'\+\d+\s+-\d+:'),
+              re.compile(r'\[E\]'),
+              re.compile(r'Some tests failed', re.I),
+              re.compile(r'^.*Expected:', re.I),
+              re.compile(r'^.*Actual:', re.I),
+              re.compile(r'TestFailure'),
+          )
+          for i, line in enumerate(lines):
+              if any(pattern.search(line) for pattern in marker_patterns):
+                  markers.append(i)
+
+          ranges = []
+          for index in markers:
+              start = max(0, index - 12)
+              end = min(len(lines), index + 28)
+              if ranges and start <= ranges[-1][1] + 3:
+                  ranges[-1] = (ranges[-1][0], max(ranges[-1][1], end))
+              else:
+                  ranges.append((start, end))
+
+          out = []
+          for n, (start, end) in enumerate(ranges[:12], 1):
+              out.append(f'=== FAILURE WINDOW {n} lines {start + 1}-{end} ===')
+              out.extend(lines[start:end])
+
+          if not out:
+              out.append('NO_FAILURE_MARKERS_FOUND')
+              out.extend(lines[-120:])
+
+          text = '\n'.join(out) + '\n'
+          target.write_text(text, encoding='utf-8')
+          print(text)
+          PY
+
+      - name: Upload failure window
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: one-kristin-protected-failure-window
+          path: ${{ runner.temp }}/protected-failure-window.txt
+          if-no-files-found: error
+          retention-days: 7
