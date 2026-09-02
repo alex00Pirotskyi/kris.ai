@@ -1,0 +1,183 @@
+name: temporary-one-kristin-repair-finalizer
+
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+    paths:
+      - .github/workflows/temporary-one-kristin-repair-finalizer.yml
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      BASE_SHA: bbb8cbdb52844f868abf9916c9bb77446c2809cf
+      PRIOR_CANDIDATE_SHA: ba0ff2a6e40fa5e78f60d80c48ea812b9644085c
+      RECONCILIATION_REF: feat/one-kristin-live-continuation-reconciliation
+    steps:
+      - name: Check out exact live base
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          ref: ${{ env.BASE_SHA }}
+          fetch-depth: 0
+
+      - name: Reconstruct reviewed candidate and repair exhaustive source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git rev-parse "$PRIOR_CANDIDATE_SHA^")" = "$BASE_SHA"
+          git cherry-pick --no-commit "$PRIOR_CANDIDATE_SHA"
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('test/product/source_contract_test.dart')
+          text = path.read_text(encoding='utf-8')
+          assert "'lib/product/run_steering_record.dart'," not in text
+          assert "'lib/product/task_kernel/command_planning_context.dart'," not in text
+          text = text.replace(
+              "        'lib/product/run_steering.dart',\n",
+              "        'lib/product/run_steering.dart',\n        'lib/product/run_steering_record.dart',\n",
+              1,
+          )
+          text = text.replace(
+              "        'lib/product/task_kernel/task_specification.dart',\n",
+              "        'lib/product/task_kernel/command_planning_context.dart',\n        'lib/product/task_kernel/task_specification.dart',\n",
+              1,
+          )
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12.10'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
+          pub-cache-key: 'flutter-pub-:os:-:channel:-:version:-:arch:-:hash:'
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: config/p2.node-version
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+
+      - name: Canonicalize repair and refresh source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format test/product/source_contract_test.dart
+          python tool/p2_refresh_source_manifest.py .
+          git add -A
+          git diff --cached --check
+          test "$(git diff --cached --name-only "$BASE_SHA" | wc -l | tr -d ' ')" = "33"
+          if git diff --cached --name-only "$BASE_SHA" | grep -q '^\.github/workflows/'; then
+            echo 'workflow history leaked into product candidate' >&2
+            exit 1
+          fi
+          grep -Fq "'lib/product/run_steering_record.dart'," test/product/source_contract_test.dart
+          grep -Fq "'lib/product/task_kernel/command_planning_context.dart'," test/product/source_contract_test.dart
+
+      - name: Seal one clean product commit
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+          git commit -m 'feat(kristin): reconcile durable steering continuations'
+          final_sha="$(git rev-parse HEAD)"
+          parent_sha="$(git rev-parse HEAD^)"
+          test "$parent_sha" = "$BASE_SHA"
+          test "$(git rev-list --count "$BASE_SHA"..HEAD)" = "1"
+          test "$(git diff --name-only "$BASE_SHA"..HEAD | wc -l | tr -d ' ')" = "33"
+          echo "final_sha=$final_sha" >> "$GITHUB_OUTPUT"
+          echo "parent_sha=$parent_sha" >> "$GITHUB_OUTPUT"
+          echo "tree_sha=$(git rev-parse HEAD^{tree})" >> "$GITHUB_OUTPUT"
+          echo "FINAL_SHA=$final_sha"
+          echo "PARENT_SHA=$parent_sha"
+          echo "TREE_SHA=$(git rev-parse HEAD^{tree})"
+
+      - name: Install Linux desktop build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            libstdc++-12-dev
+
+      - name: Generate native runner
+        shell: bash
+        run: flutter create --project-name kristin_local_agent --org local.kristin --platforms=linux .
+
+      - name: Install exact dependency closure
+        shell: bash
+        run: |
+          flutter pub get
+          python tool/v71r12_bootstrap_hosted_python.py --project .
+          npm ci --prefix automation_host --no-audit --no-fund
+
+      - name: Validate formatting and analyzer
+        shell: bash
+        run: |
+          python tool/dart_format_scope.py --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Run full Flutter suite
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 --reporter expanded
+
+      - name: Validate generated-state and governance gates
+        shell: bash
+        run: |
+          python tool/source_tree_policy_test.py
+          python tool/generated_state_guard_test.py
+          python tool/p0_010_generated_state_test.py --project .
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/repository_governance_test.py --json-output release/evidence/P0-006/local_governance_results.json
+          python -m unittest -v tool/github_governance_client_test.py
+          git diff --check "$BASE_SHA"..HEAD
+
+      - name: Move reconciliation ref only after qualification
+        shell: bash
+        run: |
+          set -euo pipefail
+          final_sha="${{ steps.candidate.outputs.final_sha }}"
+          remote_sha="$(git ls-remote origin "refs/heads/$RECONCILIATION_REF" | cut -f1)"
+          test "$remote_sha" = "$PRIOR_CANDIDATE_SHA"
+          git push --force-with-lease="refs/heads/$RECONCILIATION_REF:$PRIOR_CANDIDATE_SHA" \
+            origin "$final_sha:refs/heads/$RECONCILIATION_REF"
+
+      - name: Dispatch protected product gates on repaired SHA
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/ci.yml/dispatches" \
+            -d "{\"ref\":\"$RECONCILIATION_REF\"}"
+          echo "Dispatched product-gates for ${{ steps.candidate.outputs.final_sha }}"
