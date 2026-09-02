@@ -4,9 +4,9 @@
 // COMPLEXITY ROUTER -> UNIVERSAL TASK KERNEL -> PLAN COMPILER -> AUTHORITY ->
 // Runner / Research / Owner / Diagnostics / Browser.
 //
-// Self-awareness enters as planning knowledge. It can remove a capability
-// from the set that planners may rely on, but it never expands the compiled
-// Runner tool allow-list and never grants authority.
+// Self-awareness enters as planning knowledge. It may only narrow capabilities;
+// it never expands the compiled Runner tool allow-list and never grants
+// authority.
 import '../capability_invocation.dart';
 import '../chat_control_plane.dart';
 import '../domain.dart';
@@ -22,6 +22,49 @@ import 'task_understanding.dart';
 import 'universal_task_plan.dart';
 
 enum KernelPlanOrigin { planned, conservativeFallback }
+
+typedef KernelLiveSelfModelResolver = Future<SelfModelPlanningContext> Function({
+  ProjectRecord? project,
+  ModelIdentity? model,
+  Set<String> relevantCapabilityIds,
+});
+
+/// Product composition may register a live self-model resolver for a kernel.
+/// The kernel only intersects its caller-provided capability set with this
+/// result, so a resolver can remove stale/unhealthy capabilities but can never
+/// add capabilities the caller/catalog did not already allow.
+final class KernelSelfModelRegistry {
+  KernelSelfModelRegistry._();
+
+  static final Expando<KernelLiveSelfModelResolver> _resolvers =
+      Expando<KernelLiveSelfModelResolver>('kristin-kernel-self-model');
+
+  static void register(
+    UniversalTaskKernel kernel,
+    KernelLiveSelfModelResolver resolver,
+  ) {
+    _resolvers[kernel] = resolver;
+  }
+
+  static void unregister(UniversalTaskKernel kernel) {
+    _resolvers[kernel] = null;
+  }
+
+  static Future<SelfModelPlanningContext?> resolve(
+    UniversalTaskKernel kernel, {
+    ProjectRecord? project,
+    ModelIdentity? model,
+    Set<String> relevantCapabilityIds = const <String>{},
+  }) async {
+    final resolver = _resolvers[kernel];
+    if (resolver == null) return null;
+    return resolver(
+      project: project,
+      model: model,
+      relevantCapabilityIds: relevantCapabilityIds,
+    );
+  }
+}
 
 class KernelPlanResult {
   const KernelPlanResult({
@@ -73,6 +116,20 @@ class KernelRequestContext {
     return live == null ? catalog : catalog.intersection(live);
   }
 
+  KernelRequestContext withSelfModel(SelfModelPlanningContext live) =>
+      KernelRequestContext(
+        decision: decision,
+        project: project,
+        model: model,
+        knownTargets: knownTargets,
+        availableCapabilities: availableCapabilities,
+        availableToolNames: availableToolNames,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+        selfModel: live,
+        localOnly: localOnly,
+        maxLeafTasks: maxLeafTasks,
+      );
+
   UnderstandingContext get understandingContext => UnderstandingContext(
         availableCapabilities: availableCapabilities
             .where((item) => liveAvailableCapabilityIds.contains(item.id))
@@ -120,15 +177,30 @@ class UniversalTaskKernel {
     String? specificationId,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) =>
-      understanding.understand(
-        decision: context.decision,
-        context: context.understandingContext,
-        modelIdentity: context.model,
-        specificationId: specificationId,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
+  }) async {
+    var effective = context;
+    if (context.selfModel == null) {
+      final relevant = <String>{
+        if (context.decision.capability != null)
+          context.decision.capability!.id,
+      };
+      final live = await KernelSelfModelRegistry.resolve(
+        this,
+        project: context.project,
+        model: context.model,
+        relevantCapabilityIds: relevant,
       );
+      if (live != null) effective = context.withSelfModel(live);
+    }
+    return understanding.understand(
+      decision: effective.decision,
+      context: effective.understandingContext,
+      modelIdentity: effective.model,
+      specificationId: specificationId,
+      cancellation: cancellation,
+      isCancelled: isCancelled,
+    );
+  }
 
   RoutingDecision route({
     required TaskSpecification specification,
@@ -150,19 +222,45 @@ class UniversalTaskKernel {
         message: 'This request routes to direct execution and must not be planned.',
       );
     }
-    final planner = _plannerFor(routing.family, specification, routing.route);
+
+    final live = await KernelSelfModelRegistry.resolve(
+      this,
+      project: context.project,
+      model: context.model,
+      relevantCapabilityIds: specification.capabilityHints.toSet(),
+    );
+    final effectiveContext = live == null
+        ? context
+        : PlanningContext(
+            project: context.project,
+            model: context.model,
+            availableCapabilityIds: context.availableCapabilityIds
+                .intersection(live.availableCapabilityIds),
+            availableToolNames: context.availableToolNames,
+            consumedCoordinatorCapabilities:
+                context.consumedCoordinatorCapabilities,
+            localOnly: context.localOnly,
+            maxLeafTasks: context.maxLeafTasks,
+          );
+
+    final planner = _plannerFor(
+      routing.family,
+      specification,
+      routing.route,
+    );
     if (planner == null) {
       throw PlanningFailure(
         kind: PlanningFailureKind.unexpected,
         code: 'task_family_unsupported',
-        message: 'No planner is registered for the ${routing.family.name} task family.',
+        message:
+            'No planner is registered for the ${routing.family.name} task family.',
       );
     }
     try {
       final plan = await planner.plan(
         specification: specification,
         route: routing.route,
-        context: context,
+        context: effectiveContext,
         cancellation: cancellation,
         isCancelled: isCancelled,
       );
@@ -171,7 +269,8 @@ class UniversalTaskKernel {
         throw PlanningFailure(
           kind: PlanningFailureKind.recoverablePlanning,
           code: 'task_plan_invalid',
-          message: 'The generated task plan did not validate: ${errors.join(' ')}',
+          message:
+              'The generated task plan did not validate: ${errors.join(' ')}',
           details: <String, dynamic>{'errors': errors},
         );
       }
@@ -187,7 +286,7 @@ class UniversalTaskKernel {
       final fallback = await conservative.plan(
         specification: specification,
         route: routing.route,
-        context: context,
+        context: effectiveContext,
         cancellation: cancellation,
         isCancelled: isCancelled,
       );
@@ -229,7 +328,9 @@ class UniversalTaskKernel {
       plan: plan,
       project: project,
       mode: mode,
-      request: request.trim().isEmpty ? plan.specification.originalRequest : request,
+      request: request.trim().isEmpty
+          ? plan.specification.originalRequest
+          : request,
       selectedTaskIds: selectedTaskIds,
       additionalConstraints: additionalConstraints,
       additionalCriteria: additionalCriteria,
