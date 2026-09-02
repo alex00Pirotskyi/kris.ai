@@ -32,8 +32,11 @@ class KernelTaskGraphResult {
   final Map<String, KernelTaskNodeResult> results;
 
   bool get succeeded {
-    for (final task in plan.tasks.where((task) => task.enabled && !task.manual)) {
-      if (results[task.id]?.state != KernelTaskNodeState.succeeded) return false;
+    for (final task
+        in plan.tasks.where((task) => task.enabled && !task.manual)) {
+      if (results[task.id]?.state != KernelTaskNodeState.succeeded) {
+        return false;
+      }
     }
     return true;
   }
@@ -44,13 +47,15 @@ typedef KernelTaskNodeExecutor = Future<KernelTaskNodeResult> Function(
   Map<String, KernelTaskNodeResult> dependencyResults,
 );
 
-typedef KernelAuthorizedTaskNodeExecutor = Future<KernelTaskNodeResult> Function(
+typedef KernelAuthorizedTaskNodeExecutor = Future<KernelTaskNodeResult>
+    Function(
   UniversalTask task,
   Map<String, KernelTaskNodeResult> dependencyResults,
   Map<String, CapabilityAuthorityDecision> authorityDecisions,
 );
 
-typedef KernelTaskNodeStateListener = void Function(KernelTaskNodeResult result);
+typedef KernelTaskNodeStateListener = void Function(
+    KernelTaskNodeResult result);
 
 /// Executes non-Runner task families from the same canonical DAG used by
 /// planning and UI projection. Research/diagnostics/utilities bind their own
@@ -89,27 +94,31 @@ class KernelTaskGraphExecutor {
     }
 
     final enabled = <String, UniversalTask>{
-      for (final task in plan.tasks.where((task) => task.enabled)) task.id: task,
+      for (final task in plan.tasks.where((task) => task.enabled))
+        task.id: task,
     };
     final pending = enabled.keys.toSet();
     final results = <String, KernelTaskNodeResult>{};
 
     for (final task in enabled.values) {
       onStateChanged?.call(
-        KernelTaskNodeResult(taskId: task.id, state: KernelTaskNodeState.queued),
+        KernelTaskNodeResult(
+            taskId: task.id, state: KernelTaskNodeState.queued),
       );
     }
 
     while (pending.isNotEmpty) {
       if (isCancelled?.call() == true) {
-        throw ProductException('cancelled', 'Task graph execution was cancelled.');
+        throw ProductException(
+            'cancelled', 'Task graph execution was cancelled.');
       }
 
       final ready = pending
           .map((id) => enabled[id]!)
           .where(
             (task) => task.dependencies.every(
-              (dependency) => !enabled.containsKey(dependency) ||
+              (dependency) =>
+                  !enabled.containsKey(dependency) ||
                   results.containsKey(dependency),
             ),
           )
@@ -123,7 +132,8 @@ class KernelTaskGraphExecutor {
 
       for (final task in ready) {
         if (isCancelled?.call() == true) {
-          throw ProductException('cancelled', 'Task graph execution was cancelled.');
+          throw ProductException(
+              'cancelled', 'Task graph execution was cancelled.');
         }
         final dependencies = <String, KernelTaskNodeResult>{
           for (final dependency in task.dependencies)

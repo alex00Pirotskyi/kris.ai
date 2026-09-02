@@ -7,7 +7,8 @@ import 'package:kristin_local_agent/product/task_kernel/task_specification.dart'
 import 'package:kristin_local_agent/product/task_kernel/universal_task_plan.dart';
 
 void main() {
-  test('research executes retrieval verification and synthesis as graph nodes', () async {
+  test('research executes retrieval verification and synthesis as graph nodes',
+      () async {
     final specification = TaskSpecification(
       id: 'spec-research',
       originalRequest: 'Compare current Flutter and Dart release information.',
@@ -62,7 +63,8 @@ void main() {
     );
   });
 
-  test('diagnostics collects one real report and propagates it through graph', () async {
+  test('diagnostics collects one real report and propagates it through graph',
+      () async {
     final specification = TaskSpecification(
       id: 'spec-diagnostics',
       originalRequest: 'Why is Kristin unhealthy?',

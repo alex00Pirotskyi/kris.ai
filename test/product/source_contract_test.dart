@@ -210,6 +210,7 @@ void main() {
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',
         'lib/product/run_steering.dart',
+        'lib/product/run_steering_record.dart',
         'lib/product/access_profile_v2.dart',
         'lib/product/capability_grant_v2.dart',
         'lib/product/deterministic_policy_engine.dart',
@@ -282,6 +283,7 @@ void main() {
         'lib/product/protocol_recovery_policy.dart',
         // The universal task kernel: one semantic task architecture that
         // every product capability plans through.
+        'lib/product/task_kernel/command_planning_context.dart',
         'lib/product/task_kernel/task_specification.dart',
         'lib/product/task_kernel/task_understanding.dart',
         'lib/product/task_kernel/complexity_router.dart',
@@ -845,14 +847,12 @@ void main() {
       for (final file in activeDartFiles()) {
         final content = file.readAsStringSync();
         final offsets = unconvertedClampOffsets(content).toList();
-        final details = offsets
-            .map((offset) => sourceLineAt(content, offset))
-            .join(' | ');
+        final details =
+            offsets.map((offset) => sourceLineAt(content, offset)).join(' | ');
         expect(
           offsets,
           isEmpty,
-          reason:
-              '${file.path}: clamp calls without explicit conversion: '
+          reason: '${file.path}: clamp calls without explicit conversion: '
               '$details',
         );
       }
@@ -1007,7 +1007,8 @@ void main() {
       expect(behavioral, contains('accepts a valid 100-task plan'));
     });
 
-    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired', () {
+    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired',
+        () {
       final domain = source('lib/product/domain.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
       final runtime = source('lib/product/product_runtime.dart');
@@ -1444,7 +1445,8 @@ void main() {
       );
     });
 
-    test('v1.1.2 cold-model recovery and capability alignment stay bounded', () {
+    test('v1.1.2 cold-model recovery and capability alignment stay bounded',
+        () {
       final models = source('lib/product/models_research.dart');
       final settings = source('lib/product/storage_security.dart');
       final runtime = source('lib/product/planning_runtime.dart');

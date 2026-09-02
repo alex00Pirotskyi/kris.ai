@@ -4,7 +4,8 @@ import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/storage_security.dart';
 
 void main() {
-  test('research compiles to network authority without a project read grant', () {
+  test('research compiles to network authority without a project read grant',
+      () {
     final decision = const CapabilityAuthorityResolver().resolve(
       const CapabilityInvocation(capabilityId: 'research.search'),
     );
@@ -15,7 +16,9 @@ void main() {
     );
   });
 
-  test('model cannot turn create-project coordinator capability into executor authority', () {
+  test(
+      'model cannot turn create-project coordinator capability into executor authority',
+      () {
     expect(
       () => const CapabilityAuthorityResolver().resolve(
         const CapabilityInvocation(

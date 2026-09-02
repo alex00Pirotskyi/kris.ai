@@ -94,9 +94,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final activeModel = model;
     final result = await _perform<ModelGenerationResult>(
       'Answering',
-      () => runtime.models
-          .providerFor(activeModel)
-          .generate(
+      () => runtime.models.providerFor(activeModel).generate(
             ModelGenerationRequest(
               identity: activeModel,
               commandId: newId('chat_info'),
@@ -148,18 +146,17 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         conversationSession.addAssistantMessage(
           decision.unresolvedMentions.isEmpty
               ? "I'm not sure what that refers to. Type @ to see projects, "
-                    'models, providers, and workspaces I know about.'
+                  'models, providers, and workspaces I know about.'
               : "I don't have a match for "
-                    '${decision.unresolvedMentions.map((value) => '@$value').join(', ')}.',
+                  '${decision.unresolvedMentions.map((value) => '@$value').join(', ')}.',
         );
         status = 'Kristin is ready';
       });
       return;
     }
     if (decision.targets.length > 1) {
-      final names = decision.targets
-          .map((target) => target.displayName)
-          .join(', ');
+      final names =
+          decision.targets.map((target) => target.displayName).join(', ');
       _mutate(() {
         conversationSession.addAssistantMessage(
           'Which one did you mean: $names?',
@@ -227,12 +224,10 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         '${process.exitCode == null ? '' : ', last exit ${process.exitCode}'}.',
       );
     }
-    final recent = runs
-        .where((run) {
-          return selectedProjectId == null ||
-              run.command.contract.projectId == selectedProjectId;
-        })
-        .take(3);
+    final recent = runs.where((run) {
+      return selectedProjectId == null ||
+          run.command.contract.projectId == selectedProjectId;
+    }).take(3);
     for (final run in recent) {
       buffer.writeln(
         'Recent run: ${run.command.contract.request} — ${run.state.name}'
@@ -265,9 +260,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final priorTurns = transcript.isEmpty
         ? transcript
         : transcript.sublist(0, transcript.length - 1);
-    final windowStart = priorTurns.length > maxTurns
-        ? priorTurns.length - maxTurns
-        : 0;
+    final windowStart =
+        priorTurns.length > maxTurns ? priorTurns.length - maxTurns : 0;
     final buffer = StringBuffer();
     for (final line in priorTurns.sublist(windowStart)) {
       buffer.writeln('${line.assistant ? 'Kristin' : 'User'}: ${line.text}');
@@ -354,9 +348,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     if (projectTarget != null &&
         RegExp(r'\b(running|status|started|stopped|active)\b').hasMatch(text)) {
       final process = await runtime.projectProcessStatus(projectTarget.id);
-      final project = projects
-          .where((item) => item.id == projectTarget.id)
-          .firstOrNull;
+      final project =
+          projects.where((item) => item.id == projectTarget.id).firstOrNull;
       final name = project?.name ?? projectTarget.displayName;
       if (process?.running == true) return '$name is running.';
       return '$name is not currently running.';
@@ -394,8 +387,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
     if (routingDecision?.requiresClarification == true ||
         taskSpecification?.blockingQuestions.isNotEmpty == true) {
-      final question =
-          taskSpecification?.blockingQuestions.first.question ??
+      final question = taskSpecification?.blockingQuestions.first.question ??
           'I need one clarification before I can continue safely.';
       _mutate(() {
         status = 'Reply in Chat: $question';
@@ -492,8 +484,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     // deterministic one here keeps the kernel path total even when the
     // understanding step was skipped (an explicit command, for example).
     final specification = _specificationFor(decision, request);
-    final routing =
-        routingDecision ??
+    final routing = routingDecision ??
         runtime.taskKernel.route(
           specification: specification,
           decision: decision,
@@ -531,8 +522,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       planAdjusting = false;
       status = outcome.isConservative
           ? 'Plan ready for review (safety-net plan -- '
-                '${outcome.failure?.message ?? 'the generated task graph did '
-                        'not validate'})'
+              '${outcome.failure?.message ?? 'the generated task graph did '
+                  'not validate'})'
           : 'Plan ready for review';
     });
   }
@@ -799,7 +790,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
                 query: effectiveQuery,
                 projectId: project?.id,
               ),
-            ))?.results;
+            ))
+              ?.results;
       if (raw == null) return;
       if (raw.isEmpty) {
         _finishDirectAction(
@@ -858,15 +850,13 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
   Future<UniversalTaskPlan?> _researchPlan(
     ChatInteractionDecision decision,
   ) async {
-    final specification =
-        taskSpecification ??
+    final specification = taskSpecification ??
         const DeterministicUnderstanding().understand(decision).specification;
     final context = PlanningContext(
       project: selectedProject,
       model: selectedModel,
-      availableCapabilityIds: kKristinCapabilities
-          .map((item) => item.id)
-          .toSet(),
+      availableCapabilityIds:
+          kKristinCapabilities.map((item) => item.id).toSet(),
       availableToolNames: runtime.tools.names,
     );
     final routing = routingDecision;
@@ -914,17 +904,14 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
     final evidence = topResults
         .map(
-          (entry) =>
-              'Title: ${entry['title']}\n'
+          (entry) => 'Title: ${entry['title']}\n'
               'URL: ${entry['url']}\n'
               'Snippet: ${entry['snippet']}',
         )
         .join('\n\n');
     final response = await _perform<ModelGenerationResult>(
       'Reading sources',
-      () => runtime.models
-          .providerFor(model)
-          .generate(
+      () => runtime.models.providerFor(model).generate(
             ModelGenerationRequest(
               identity: model,
               commandId: newId('chat_research'),
@@ -1033,9 +1020,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final context = PlanningContext(
       project: selectedProject,
       model: selectedModel,
-      availableCapabilityIds: kKristinCapabilities
-          .map((item) => item.id)
-          .toSet(),
+      availableCapabilityIds:
+          kKristinCapabilities.map((item) => item.id).toSet(),
       availableToolNames: runtime.tools.names,
     );
     final routing = routingDecision;
@@ -1072,8 +1058,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     return report.coreReady
         ? 'Kristin readiness is healthy: ${report.readyCount}/${report.checks.length} checks ready.'
         : 'Kristin readiness needs attention: '
-              '${report.readyCount}/${report.checks.length} checks ready. '
-              'Not ready: ${failing.join(', ')}.';
+            '${report.readyCount}/${report.checks.length} checks ready. '
+            'Not ready: ${failing.join(', ')}.';
   }
 
   Future<void> _runUtilityTime(ChatInteractionDecision decision) async {
@@ -1200,9 +1186,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
                   context: PlanningContext(
                     project: selectedProject,
                     model: model,
-                    availableCapabilityIds: kKristinCapabilities
-                        .map((item) => item.id)
-                        .toSet(),
+                    availableCapabilityIds:
+                        kKristinCapabilities.map((item) => item.id).toSet(),
                     availableToolNames: runtime.tools.names,
                   ),
                 );
@@ -1545,8 +1530,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       action == 'pause'
           ? 'Pausing'
           : action == 'resume'
-          ? 'Resuming'
-          : 'Stopping',
+              ? 'Resuming'
+              : 'Stopping',
       () async {
         if (action == 'pause') {
           await runtime.pause(run.id);

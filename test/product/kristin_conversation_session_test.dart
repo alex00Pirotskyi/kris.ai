@@ -126,6 +126,28 @@ void main() {
     expect(session.currentRun?.id, 'run-a');
   });
 
+  test('linked steering continuation replaces only its interrupted source', () {
+    final session = KristinConversationSession();
+    session.restoreRun(_run(id: 'run-a', state: RunState.running));
+    session.updateRun(_run(id: 'run-a', state: RunState.interrupted));
+    final continuation = _run(
+      id: 'run-b',
+      state: RunState.awaitingApproval,
+      sourceRunId: 'run-a',
+    );
+
+    session.replaceRunWithContinuation(
+      source: _run(id: 'run-a', state: RunState.interrupted),
+      continuation: continuation,
+    );
+
+    expect(session.currentRun?.id, 'run-b');
+    expect(session.currentRun?.sourceRunId, 'run-a');
+    expect(session.prepared?.id, continuation.command.id);
+    expect(session.awaitingPermission, isTrue);
+    expect(session.state, isA<ChatAwaitingPermission>());
+  });
+
   test('pending user takeover is projected through the canonical session', () {
     final session = KristinConversationSession();
     session.restoreRun(_run(id: 'run-a', state: RunState.paused));
@@ -311,7 +333,11 @@ LiveRunSignal _signal(String runId, int sequence, LiveRunSignalKind kind) =>
       data: const <String, dynamic>{'message': 'progress'},
     );
 
-RunRecord _run({required String id, required RunState state}) {
+RunRecord _run({
+  required String id,
+  required RunState state,
+  String? sourceRunId,
+}) {
   final command = _command();
   return RunRecord(
     id: id,
@@ -329,6 +355,7 @@ RunRecord _run({required String id, required RunState state}) {
     budget: const AutonomyBudget(),
     createdAt: DateTime.utc(2026, 8, 29),
     updatedAt: DateTime.utc(2026, 8, 29),
+    sourceRunId: sourceRunId,
   );
 }
 

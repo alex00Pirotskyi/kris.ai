@@ -55,14 +55,16 @@ class TaskSpecificationPatch {
         return specification.copyWith(
           hardConstraints: _appendClaim(
             specification.hardConstraints,
-            SpecificationClaim.stated(normalized, source: 'conversation_steering'),
+            SpecificationClaim.stated(normalized,
+                source: 'conversation_steering'),
           ),
         );
       case TaskSpecificationPatchKind.preference:
         return specification.copyWith(
           preferences: _appendClaim(
             specification.preferences,
-            SpecificationClaim.stated(normalized, source: 'conversation_steering'),
+            SpecificationClaim.stated(normalized,
+                source: 'conversation_steering'),
           ),
         );
       case TaskSpecificationPatchKind.requestedMethod:

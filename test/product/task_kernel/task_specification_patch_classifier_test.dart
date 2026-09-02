@@ -13,11 +13,14 @@ void main() {
     discoveredAt: DateTime.utc(2026, 8, 30),
   );
 
-  test('model classification cannot bypass deterministic clarification validation', () async {
+  test(
+      'model classification cannot bypass deterministic clarification validation',
+      () async {
     final classifier = ModelTaskSpecificationPatchClassifier(
       model: model,
       generate: (request) async => ModelGenerationResult(
-        text: '{"kind":"clarificationAnswer","value":"Europe","question":"Which region?","reason":"answers the pending region question"}',
+        text:
+            '{"kind":"clarificationAnswer","value":"Europe","question":"Which region?","reason":"answers the pending region question"}',
         identity: model,
         startedAt: DateTime.utc(2026, 8, 30),
         firstTokenAt: DateTime.utc(2026, 8, 30),

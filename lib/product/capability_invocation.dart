@@ -57,7 +57,8 @@ class CapabilityAuthorityResolver {
         '${capability.id} is a coordinator capability and cannot be granted to an execution model.',
       );
     }
-    if (capability.route == ChatExecutionRoute.ownerMode && invocation.modelProposed) {
+    if (capability.route == ChatExecutionRoute.ownerMode &&
+        invocation.modelProposed) {
       throw ProductException(
         'owner_full_host_not_implemented',
         'This release does not implement unrestricted full-host Owner authority. Owner Mode may be inspected, but an execution model cannot be granted full-host control.',
@@ -73,7 +74,8 @@ class CapabilityAuthorityResolver {
         'The capability request includes authority not implied by ${capability.id}.',
         details: <String, dynamic>{
           'extraScopes': extra.map((scope) => scope.name).toList(),
-          'requiredScopes': required.map((scope) => scope.name).toList()..sort(),
+          'requiredScopes': required.map((scope) => scope.name).toList()
+            ..sort(),
         },
       );
     }
