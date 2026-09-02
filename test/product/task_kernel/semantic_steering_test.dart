@@ -12,15 +12,16 @@ class _Classifier implements TaskSpecificationPatchClassifier {
   Future<TaskSpecificationPatch> classify({
     required TaskSpecification specification,
     required String userMessage,
-  }) async => patch;
+  }) async =>
+      patch;
 }
 
 void main() {
   TaskSpecification specification() => TaskSpecification(
-    id: 'spec',
-    originalRequest: 'Build a storage-backed app.',
-    objective: 'Build a storage-backed app.',
-  );
+        id: 'spec',
+        originalRequest: 'Build a storage-backed app.',
+        objective: 'Build a storage-backed app.',
+      );
 
   UniversalTask task({required String id, required String objective}) =>
       UniversalTask(

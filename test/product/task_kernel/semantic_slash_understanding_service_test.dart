@@ -40,7 +40,8 @@ void main() {
         ),
       );
 
-  test('/fix free text is semantic while /run target-only stays deterministic', () {
+  test('/fix free text is semantic while /run target-only stays deterministic',
+      () {
     final service = fixture(<String, dynamic>{});
     final fix = compiler.compile(
       '/fix @project-a login crashes when the access token expires',
@@ -53,7 +54,8 @@ void main() {
     expect(service.warrantsModelUnderstanding(run), isFalse);
   });
 
-  test('slash capability and deterministic target survive model interpretation', () async {
+  test('slash capability and deterministic target survive model interpretation',
+      () async {
     final decision = compiler.compile(
       '/fix @project-a login crashes when the access token expires; do not change the database',
       knownTargets: targets,
@@ -82,7 +84,8 @@ void main() {
 
     expect(outcome.path, UnderstandingPath.model);
     expect(outcome.specification.originalRequest, decision.parsed.originalText);
-    expect(outcome.specification.capabilityHints, <String>['agent.fix_project']);
+    expect(
+        outcome.specification.capabilityHints, <String>['agent.fix_project']);
     expect(
       outcome.specification.targetRefs.map((target) => target.value),
       contains('project-a'),
@@ -94,11 +97,13 @@ void main() {
     );
   });
 
-  test('/create and /search with semantic payloads warrant model understanding', () {
+  test('/create and /search with semantic payloads warrant model understanding',
+      () {
     final service = fixture(<String, dynamic>{});
     expect(
       service.warrantsModelUnderstanding(
-        compiler.compile('/create a small Flutter habit tracker with offline sync'),
+        compiler
+            .compile('/create a small Flutter habit tracker with offline sync'),
       ),
       isTrue,
     );

@@ -452,6 +452,36 @@ class KristinConversationSession {
     _attachRun(run, restoring: false);
   }
 
+  void replaceRunWithContinuation({
+    required RunRecord source,
+    required RunRecord continuation,
+  }) {
+    final attached = _currentRun;
+    if (attached == null || attached.id != source.id) {
+      throw const KristinConversationSessionException(
+        'conversation_continuation_source_mismatch',
+        'The steering continuation can replace only the currently attached source run.',
+      );
+    }
+    if (source.state != RunState.interrupted ||
+        continuation.sourceRunId != source.id) {
+      throw const KristinConversationSessionException(
+        'conversation_continuation_link_invalid',
+        'A steering continuation must be linked to an interrupted source run.',
+      );
+    }
+    cancelAssistantResponse();
+    _currentRun = continuation;
+    _prepared = continuation.command;
+    _activeRequest = continuation.command.contract.request;
+    selectProject(continuation.command.contract.projectId);
+    _selectedModelId = continuation.command.model.exactId;
+    _deferredInteraction = null;
+    _awaitingPermission = continuation.state == RunState.awaitingApproval;
+    clearLiveExecution();
+    _synchronizeConversationState();
+  }
+
   bool detachFinishedRun() {
     if (hasNonterminalRun) return false;
     cancelAssistantResponse();

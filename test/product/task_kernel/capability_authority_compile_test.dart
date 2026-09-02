@@ -22,7 +22,8 @@ void main() {
     planners: const [],
   );
 
-  UniversalTaskPlan planWithCapability(String capabilityId) => UniversalTaskPlan(
+  UniversalTaskPlan planWithCapability(String capabilityId) =>
+      UniversalTaskPlan(
         id: 'plan',
         specification: TaskSpecification(
           id: 'spec',
@@ -47,7 +48,8 @@ void main() {
         ],
       );
 
-  test('compiled contract must contain scopes implied by requiredCapabilities', () {
+  test('compiled contract must contain scopes implied by requiredCapabilities',
+      () {
     expect(
       () => kernel.compile(
         plan: planWithCapability('project.run'),

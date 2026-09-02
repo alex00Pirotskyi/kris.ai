@@ -381,8 +381,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final decision = pendingDecision!;
     final draft = history.current;
     final specification = taskSpecification;
-    final blockingClarification = routingDecision?.requiresClarification == true &&
-        specification?.blockingQuestions.isNotEmpty == true;
+    final blockingClarification =
+        routingDecision?.requiresClarification == true &&
+            specification?.blockingQuestions.isNotEmpty == true;
     // The product's wording rule: "I understood" is only truthful when a
     // model actually read the request through the kernel's structured
     // understanding contract and deterministic code validated the result.

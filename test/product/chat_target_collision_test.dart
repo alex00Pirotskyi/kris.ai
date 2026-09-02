@@ -34,7 +34,8 @@ void main() {
       expect(decision.targets, isEmpty);
       expect(decision.unresolvedMentions, <String>['shared']);
       expect(decision.ambiguous, isTrue);
-      expect(known.where((target) => target.fuzzyMatches('shared')), hasLength(2));
+      expect(
+          known.where((target) => target.fuzzyMatches('shared')), hasLength(2));
     }
   });
 }
