@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 180
     env:
       BASE_SHA: bbb8cbdb52844f868abf9916c9bb77446c2809cf
-      PRIOR_CANDIDATE_SHA: ba0ff2a6e40fa5e78f60d80c48ea812b9644085c
+      PRIOR_CANDIDATE_SHA: af957ebf176c67fd1ac948cf2417852773098964
       RECONCILIATION_REF: feat/one-kristin-live-continuation-reconciliation
     steps:
       - name: Check out exact live base
@@ -27,7 +27,7 @@ jobs:
           ref: ${{ env.BASE_SHA }}
           fetch-depth: 0
 
-      - name: Reconstruct reviewed candidate and repair exhaustive source contract
+      - name: Reconstruct reviewed candidate and repair null-run detach semantics
         shell: bash
         run: |
           set -euo pipefail
@@ -37,21 +37,51 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          path = Path('test/product/source_contract_test.dart')
-          text = path.read_text(encoding='utf-8')
-          assert "'lib/product/run_steering_record.dart'," not in text
-          assert "'lib/product/task_kernel/command_planning_context.dart'," not in text
-          text = text.replace(
-              "        'lib/product/run_steering.dart',\n",
-              "        'lib/product/run_steering.dart',\n        'lib/product/run_steering_record.dart',\n",
-              1,
-          )
-          text = text.replace(
-              "        'lib/product/task_kernel/task_specification.dart',\n",
-              "        'lib/product/task_kernel/command_planning_context.dart',\n        'lib/product/task_kernel/task_specification.dart',\n",
-              1,
-          )
-          path.write_text(text, encoding='utf-8')
+          source = Path('lib/product/chat_control_plane_studio.dart')
+          text = source.read_text(encoding='utf-8')
+          old = '''    if (value == null) {
+      conversationSession.detachFinishedRun();
+      return;
+    }
+'''
+          new = '''    if (value == null) {
+      if (existing != null) {
+        conversationSession.detachFinishedRun();
+      }
+      return;
+    }
+'''
+          assert old in text, 'expected currentRun null setter shape missing'
+          assert new not in text, 'runtime detach guard already present unexpectedly'
+          source.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          test_path = Path('test/product/live_continuation_reconciliation_contract_test.dart')
+          test_text = test_path.read_text(encoding='utf-8')
+          assert 'null currentRun does not erase planning state before a run exists' not in test_text
+          marker = '\n}'
+          addition = r'''
+
+  test('null currentRun does not erase planning state before a run exists', () {
+    final source =
+        File('lib/product/chat_control_plane_studio.dart').readAsStringSync();
+    final start = source.indexOf('set currentRun(RunRecord? value)');
+    final end = source.indexOf('bool get awaitingPermission', start);
+    expect(start, greaterThanOrEqualTo(0));
+    expect(end, greaterThan(start));
+    final setter = source.substring(start, end);
+    expect(
+      RegExp(
+        r'if\s*\(existing != null\)\s*\{\s*conversationSession\.detachFinishedRun\(\);',
+        multiLine: true,
+      ).hasMatch(setter),
+      isTrue,
+      reason: 'Planning/understanding state must survive currentRun = null when no run is attached.',
+    );
+  });
+'''
+          head, sep, tail = test_text.rpartition(marker)
+          assert sep, 'test main closing brace missing'
+          test_path.write_text(head + addition + marker + tail, encoding='utf-8')
           PY
 
       - name: Set up Python
@@ -94,8 +124,8 @@ jobs:
             echo 'workflow history leaked into product candidate' >&2
             exit 1
           fi
-          grep -Fq "'lib/product/run_steering_record.dart'," test/product/source_contract_test.dart
-          grep -Fq "'lib/product/task_kernel/command_planning_context.dart'," test/product/source_contract_test.dart
+          grep -Fq 'if (existing != null)' lib/product/chat_control_plane_studio.dart
+          grep -Fq 'null currentRun does not erase planning state before a run exists' test/product/live_continuation_reconciliation_contract_test.dart
 
       - name: Seal one clean product commit
         id: candidate
@@ -141,11 +171,12 @@ jobs:
           python tool/v71r12_bootstrap_hosted_python.py --project .
           npm ci --prefix automation_host --no-audit --no-fund
 
-      - name: Validate formatting and analyzer
+      - name: Validate formatting, analyzer, and focused runtime regression
         shell: bash
         run: |
           python tool/dart_format_scope.py --check
           flutter analyze --no-pub --fatal-warnings --fatal-infos
+          flutter test --no-pub --concurrency=1 --reporter expanded test/product/live_continuation_reconciliation_contract_test.dart test/product/kristin_conversation_session_test.dart
 
       - name: Run full Flutter suite
         shell: bash
