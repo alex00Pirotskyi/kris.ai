@@ -101,9 +101,158 @@ Future<void> main() async {
           return;
         }
 
+        // Scope-changing steering promotes the compact source plan into the
+        // production reviewed software-planning path. Supply a valid Prompt
+        // Studio draft to that path rather than forcing an unrelated parser
+        // failure; the product remains responsible for reconciliation,
+        // compilation, persistence, authority, and continuation creation.
+        if (system.contains(
+          'You are the Prompt Studio model inside Kristin Local Agent',
+        )) {
+          await streamPayload(request, <String, dynamic>{
+            'title': 'Constrained project improvement',
+            'purpose':
+                'Improve documented project behavior while preserving the user hard constraint.',
+            'systemPrompt':
+                'Act as a careful local project engineer. Respect every user hard constraint, stay inside the active project, and verify the result objectively.',
+            'userPrompt':
+                'Inspect the active project, improve its documented behavior without modifying README.md, and verify the result.',
+            'variables': <String>[],
+            'clarifyingQuestions': <String>[],
+            'acceptanceCriteria': <String>[
+              'README.md remains unchanged.',
+              'The requested improvement is supported by objective evidence.',
+            ],
+            'outputExpectations': <String>[
+              'Project-local improvement evidence',
+              'Verification result',
+            ],
+            'guardrails': <String>[
+              'Do not modify README.md.',
+              'Do not modify files outside the active project.',
+            ],
+            'stopConditions': <String>[],
+            'evaluationCases': <String>[
+              'README.md is unchanged after the planned work.',
+            ],
+            'mode': 'build',
+          });
+          return;
+        }
+
+        if (system.contains('task-planning model')) {
+          await streamPayload(request, <String, dynamic>{
+            'title': 'Constrained project improvement plan',
+            'rationale':
+                'Inspect first, make a project-local improvement away from README.md, then verify both the result and the hard constraint.',
+            'tasks': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'id': 'task_001',
+                'phase': 'Inspect',
+                'parentId': null,
+                'title': 'Inspect project evidence without changing README',
+                'objective':
+                    'Establish the current project state and identify a safe improvement target.',
+                'instructions':
+                    'List the active project and inspect relevant files. Do not modify README.md.',
+                'dependencies': <String>[],
+                'acceptanceCriteria': <String>[
+                  'A real project evidence baseline is established.',
+                ],
+                'verificationSteps': <String>[
+                  'List the project root and inspect the selected source files.',
+                ],
+                'expectedArtifacts': <String>['Evidence baseline'],
+                'allowedTools': <String>['list_directory', 'read_file'],
+                'complexity': 2,
+                'effortPoints': 2,
+                'uncertainty': 'low',
+                'risk': 'low',
+                'estimateConfidence': 0.9,
+                'expectedModelTurns': 2,
+                'expectedToolCalls': 3,
+                'maxAttempts': 2,
+                'enabled': true,
+                'manual': false,
+              },
+              <String, dynamic>{
+                'id': 'task_002',
+                'phase': 'Implement',
+                'parentId': null,
+                'title': 'Apply a constrained project-local improvement',
+                'objective':
+                    'Implement the requested improvement without touching README.md.',
+                'instructions':
+                    'Use project-local source or documentation other than README.md for the bounded improvement. Never modify README.md.',
+                'dependencies': <String>['task_001'],
+                'acceptanceCriteria': <String>[
+                  'The bounded improvement is present and README.md is unchanged.',
+                ],
+                'verificationSteps': <String>[
+                  'Inspect the resulting project diff and confirm README.md is absent from it.',
+                ],
+                'expectedArtifacts': <String>['Updated project-local source'],
+                'allowedTools': <String>[
+                  'read_file',
+                  'write_file',
+                  'replace_text',
+                  'apply_patch',
+                  'git_diff',
+                ],
+                'complexity': 3,
+                'effortPoints': 3,
+                'uncertainty': 'low',
+                'risk': 'low',
+                'estimateConfidence': 0.85,
+                'expectedModelTurns': 2,
+                'expectedToolCalls': 4,
+                'maxAttempts': 2,
+                'enabled': true,
+                'manual': false,
+              },
+              <String, dynamic>{
+                'id': 'task_003',
+                'phase': 'Verify',
+                'parentId': null,
+                'title': 'Verify the improvement and hard constraint',
+                'objective':
+                    'Prove the change is valid and README.md stayed untouched.',
+                'instructions':
+                    'Run the detected project verification, inspect the final diff, and fail rather than claiming success if README.md changed.',
+                'dependencies': <String>['task_002'],
+                'acceptanceCriteria': <String>[
+                  'Objective verification succeeds or exact failures are recorded.',
+                  'README.md is unchanged.',
+                ],
+                'verificationSteps': <String>[
+                  'Run project verification and inspect the final diff.',
+                ],
+                'expectedArtifacts': <String>['Verification evidence'],
+                'allowedTools': <String>[
+                  'read_file',
+                  'verify_project',
+                  'git_diff',
+                ],
+                'complexity': 2,
+                'effortPoints': 2,
+                'uncertainty': 'low',
+                'risk': 'low',
+                'estimateConfidence': 0.9,
+                'expectedModelTurns': 2,
+                'expectedToolCalls': 3,
+                'maxAttempts': 2,
+                'enabled': true,
+                'manual': false,
+              },
+            ],
+          });
+          return;
+        }
+
         // The initial compact software plan is deterministic. Therefore the
-        // first other streaming model call is the first real Runner work-item
-        // turn. Hold it open so steering is provably injected while Running.
+        // first remaining streaming model call is the first real Runner
+        // work-item turn. Hold it open so steering is provably injected while
+        // the source is Running.
         runnerTurns++;
         if (runnerTurns == 1) {
           if (!firstWorkItemModelTurn.isCompleted) {
@@ -135,13 +284,7 @@ Future<void> main() async {
           return;
         }
 
-        // A scope-changing compact-plan continuation is deliberately promoted
-        // to reviewed graph planning. Returning a recognized invalid model
-        // protocol exercises the product's documented conservative software
-        // fallback without forging planning state in the harness.
-        await streamPayload(request, <String, dynamic>{
-          'unexpected': 'force_documented_recoverable_planning_fallback',
-        });
+        throw StateError('unexpected_fixture_model_turn:$runnerTurns');
       } catch (error, stackTrace) {
         stderr.writeln('fixture-server error: $error\n$stackTrace');
         try {
