@@ -1,0 +1,482 @@
+name: exact-live-steering-dogfood
+on:
+  push:
+    branches:
+      - automation/one-kristin-product-gates-dispatch-20260902
+    paths:
+      - .github/workflows/exact-live-steering-dogfood.yml
+permissions:
+  contents: read
+jobs:
+  dogfood-linux-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: e59583b170b2a5d333a3c6eff5243725daef0d54
+          fetch-depth: 1
+      - name: Bind exact candidate
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "e59583b170b2a5d333a3c6eff5243725daef0d54"
+          git diff --exit-code
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+      - name: Install Linux native dependencies
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends clang cmake ninja-build pkg-config libgtk-3-dev libstdc++-12-dev xvfb
+      - name: Generate native runner
+        run: flutter create --project-name kristin_local_agent --org local.kristin --platforms=linux .
+      - name: Resolve dependencies
+        run: flutter pub get
+      - name: Materialize external native dogfood entrypoint
+        shell: bash
+        run: |
+          cat > tool/exact_live_steering_dogfood.dart <<'DART'
+          import 'dart:async';
+          import 'dart:convert';
+          import 'dart:io';
+
+          import 'package:flutter/widgets.dart';
+          import 'package:kristin_local_agent/product/domain.dart';
+          import 'package:kristin_local_agent/product/product_runtime.dart';
+          import 'package:kristin_local_agent/product/storage_security.dart';
+
+          const candidateSha = 'e59583b170b2a5d333a3c6eff5243725daef0d54';
+
+          Future<void> main() async {
+            WidgetsFlutterBinding.ensureInitialized();
+            final receiptFile = File('exact-live-steering-dogfood.json');
+            final receipt = <String, dynamic>{
+              'candidateSha': candidateSha,
+              'platform': 'linux-native-flutter',
+              'sequence': <String>[],
+            };
+            ProductRuntime? runtime;
+            HttpServer? server;
+            StreamSubscription<HttpRequest>? subscription;
+            Directory? temporary;
+            final firstExecutionStreamStarted = Completer<void>();
+            final releaseFirstExecutionStream = Completer<void>();
+            var executionStreamingTurns = 0;
+
+            Future<void> writeReceipt() async {
+              await receiptFile.writeAsString(
+                '${const JsonEncoder.withIndent('  ').convert(receipt)}\n',
+                flush: true,
+              );
+            }
+
+            Future<void> streamJson(HttpRequest request, Object payload) async {
+              request.response.headers.contentType = ContentType(
+                'application',
+                'x-ndjson',
+                charset: 'utf-8',
+              );
+              request.response.writeln(jsonEncode(<String, dynamic>{
+                'response': jsonEncode(payload),
+                'done': false,
+              }));
+              request.response.writeln(jsonEncode(<String, dynamic>{
+                'response': '',
+                'done': true,
+                'prompt_eval_count': 12,
+                'eval_count': 8,
+              }));
+              await request.response.close();
+            }
+
+            try {
+              server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+              subscription = server.listen((request) async {
+                try {
+                  if (request.uri.path == '/api/tags') {
+                    request.response.headers.contentType = ContentType.json;
+                    request.response.write(jsonEncode(<String, dynamic>{
+                      'models': <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          'name': 'dogfood-model',
+                          'digest': 'sha256:dogfood',
+                          'details': <String, dynamic>{
+                            'parameter_size': '1B',
+                            'quantization_level': 'Q4',
+                          },
+                        },
+                      ],
+                    }));
+                    await request.response.close();
+                    return;
+                  }
+                  if (request.uri.path != '/api/generate') {
+                    request.response.statusCode = HttpStatus.notFound;
+                    await request.response.close();
+                    return;
+                  }
+
+                  final raw = await utf8.decoder.bind(request).join();
+                  final decoded = jsonDecode(raw) as Map<String, dynamic>;
+                  if (decoded['stream'] != true) {
+                    request.response.headers.contentType = ContentType.json;
+                    request.response.write(jsonEncode(<String, dynamic>{
+                      'done': true,
+                      'load_duration': 1000,
+                    }));
+                    await request.response.close();
+                    return;
+                  }
+
+                  final system = decoded['system']?.toString() ?? '';
+                  if (system.contains(
+                    'You classify one user steering message against an active task specification.',
+                  )) {
+                    await streamJson(request, <String, dynamic>{
+                      'kind': 'hardConstraint',
+                      'value': 'Do not modify README.md.',
+                      'question': '',
+                      'reason': 'The user stated a mandatory prohibition.',
+                    });
+                    return;
+                  }
+
+                  executionStreamingTurns++;
+                  if (executionStreamingTurns == 1) {
+                    if (!firstExecutionStreamStarted.isCompleted) {
+                      firstExecutionStreamStarted.complete();
+                    }
+                    await releaseFirstExecutionStream.future;
+                  }
+
+                  final payload = switch (executionStreamingTurns) {
+                    1 => <String, dynamic>{
+                        'action': 'tool',
+                        'tool': 'list_directory',
+                        'arguments': <String, dynamic>{
+                          'path': '.',
+                          'recursive': false,
+                          'maxEntries': 200,
+                        },
+                        'reason': 'Establish the project evidence baseline.',
+                      },
+                    2 => <String, dynamic>{
+                        'action': 'tool',
+                        'tool': 'inspect_file',
+                        'arguments': <String, dynamic>{'path': 'README.md'},
+                        'reason': 'Inspect the primary project document.',
+                      },
+                    3 => <String, dynamic>{
+                        'action': 'tool',
+                        'tool': 'index_project',
+                        'arguments': <String, dynamic>{},
+                        'reason': 'Capture diverse project-wide evidence.',
+                      },
+                    _ => <String, dynamic>{
+                        'action': 'complete',
+                        'summary': 'Project evidence baseline established.',
+                      },
+                  };
+                  await streamJson(request, payload);
+                } catch (error, stackTrace) {
+                  stderr.writeln('fixture-server error: $error\n$stackTrace');
+                  try {
+                    request.response.statusCode = HttpStatus.internalServerError;
+                    await request.response.close();
+                  } catch (_) {}
+                }
+              });
+
+              temporary = await Directory.systemTemp.createTemp(
+                'kristin-exact-live-steering-dogfood-',
+              );
+              final project = Directory(
+                '${temporary.path}${Platform.pathSeparator}project',
+              );
+              await project.create(recursive: true);
+              await File(
+                '${project.path}${Platform.pathSeparator}README.md',
+              ).writeAsString('# Exact dogfood fixture\n');
+
+              runtime = await ProductRuntime.initialize(
+                dataRoot:
+                    '${temporary.path}${Platform.pathSeparator}app-data',
+              );
+              await runtime.updateSettings(
+                runtime.settings.copyWith(
+                  ollamaBaseUrl: 'http://127.0.0.1:${server.port}',
+                  ollamaLoadTimeoutSeconds: 60,
+                  ollamaLoadRetries: 0,
+                  ollamaKeepAliveMinutes: 1,
+                ),
+              );
+              final admitted = await runtime.addProject(
+                name: 'Exact live-steering dogfood',
+                rootPath: project.path,
+              );
+              final model = ModelIdentity(
+                providerId: 'ollama',
+                name: 'dogfood-model',
+                digest: 'sha256:dogfood',
+                discoveredAt: DateTime.now().toUtc(),
+              );
+              final command = await runtime.prepare(
+                projectId: admitted.id,
+                mode: CommandMode.analyze,
+                request:
+                    'Analyze this project structure and produce evidence-backed findings.',
+                model: model,
+              );
+              final source = await runtime.createRun(command.id);
+              if (source.state != RunState.awaitingApproval) {
+                throw StateError(
+                  'source_not_awaiting_approval:${source.state.name}',
+                );
+              }
+
+              final sourceApproval = await runtime.approve(
+                runId: source.id,
+                scopes: command.contract.requiredPermissions,
+                validity: const Duration(hours: 1),
+              );
+              if (sourceApproval.commandId != command.id ||
+                  sourceApproval.scopes.length !=
+                      command.contract.requiredPermissions.length) {
+                throw StateError('source_approval_not_bound');
+              }
+              (receipt['sequence'] as List<String>).add('native_approval');
+              receipt['nativeApproval'] = <String, dynamic>{
+                'runId': source.id,
+                'commandId': command.id,
+                'grantId': sourceApproval.id,
+                'scopes': sourceApproval.scopes.map((e) => e.name).toList()
+                  ..sort(),
+              };
+
+              final sourceExecution = runtime.execute(source.id);
+              await firstExecutionStreamStarted.future.timeout(
+                const Duration(seconds: 30),
+              );
+              final running = await runtime.getRun(source.id);
+              if (running == null || running.state != RunState.running) {
+                throw StateError(
+                  'source_not_running:${running?.state.name ?? 'missing'}',
+                );
+              }
+
+              await runtime.steerRun(
+                source.id,
+                'Do not modify README.md under any circumstance.',
+              );
+              (receipt['sequence'] as List<String>).add('live_steering');
+              receipt['liveSteering'] = <String, dynamic>{
+                'sourceRunId': source.id,
+                'observedWhileState': running.state.name,
+                'instruction': 'Do not modify README.md under any circumstance.',
+              };
+
+              if (!releaseFirstExecutionStream.isCompleted) {
+                releaseFirstExecutionStream.complete();
+              }
+              final interrupted = await sourceExecution.timeout(
+                const Duration(minutes: 2),
+              );
+              if (interrupted.state != RunState.interrupted) {
+                throw StateError(
+                  'source_not_interrupted:${interrupted.state.name}:${interrupted.failure}',
+                );
+              }
+              final succeededItems = interrupted.items
+                  .where((item) => item.state == WorkItemState.succeeded)
+                  .length;
+              final queuedItems = interrupted.items
+                  .where((item) => item.state == WorkItemState.queued)
+                  .length;
+              if (succeededItems < 1 || queuedItems < 1) {
+                throw StateError(
+                  'not_a_verified_between_item_boundary:succeeded=$succeededItems,queued=$queuedItems',
+                );
+              }
+              (receipt['sequence'] as List<String>)
+                  .add('safe_boundary_interruption');
+              receipt['safeBoundaryInterruption'] = <String, dynamic>{
+                'sourceRunId': interrupted.id,
+                'state': interrupted.state.name,
+                'failure': interrupted.failure,
+                'succeededItems': succeededItems,
+                'queuedItems': queuedItems,
+              };
+
+              RunRecord? continuation;
+              final continuationDeadline =
+                  DateTime.now().toUtc().add(const Duration(seconds: 30));
+              while (DateTime.now().toUtc().isBefore(continuationDeadline)) {
+                continuation =
+                    await runtime.steeringContinuationForSourceRun(source.id);
+                if (continuation != null) break;
+                await Future<void>.delayed(const Duration(milliseconds: 100));
+              }
+              if (continuation == null) {
+                throw StateError('linked_continuation_missing');
+              }
+              if (continuation.sourceRunId != source.id ||
+                  continuation.state != RunState.awaitingApproval) {
+                throw StateError(
+                  'continuation_link_or_state_invalid:${continuation.sourceRunId}:${continuation.state.name}',
+                );
+              }
+              (receipt['sequence'] as List<String>).add('linked_continuation');
+              receipt['linkedContinuation'] = <String, dynamic>{
+                'sourceRunId': source.id,
+                'continuationRunId': continuation.id,
+                'continuationCommandId': continuation.command.id,
+                'state': continuation.state.name,
+              };
+
+              final grantsBeforeContinuationApproval =
+                  await runtime.repositories.grants.all();
+              final inherited = grantsBeforeContinuationApproval.where(
+                (grant) =>
+                    grant.commandId == continuation!.command.id &&
+                    !grant.isExpired &&
+                    grant.remainingUses > 0,
+              );
+              if (inherited.isNotEmpty) {
+                throw StateError('continuation_inherited_authority');
+              }
+              (receipt['sequence'] as List<String>).add('no_inherited_authority');
+              receipt['noInheritedAuthority'] = <String, dynamic>{
+                'continuationRunId': continuation.id,
+                'continuationCommandId': continuation.command.id,
+                'activeGrantCountBeforeExplicitApproval': 0,
+              };
+
+              final continuationApproval = await runtime.approve(
+                runId: continuation.id,
+                scopes: continuation.command.contract.requiredPermissions,
+                validity: const Duration(hours: 1),
+              );
+              if (continuationApproval.commandId != continuation.command.id) {
+                throw StateError('continuation_approval_not_bound');
+              }
+              final grantsAfterContinuationApproval =
+                  await runtime.repositories.grants.all();
+              final explicit = grantsAfterContinuationApproval.where(
+                (grant) =>
+                    grant.commandId == continuation!.command.id &&
+                    !grant.isExpired &&
+                    grant.remainingUses > 0,
+              );
+              if (explicit.isEmpty) {
+                throw StateError('continuation_explicit_grant_missing');
+              }
+              (receipt['sequence'] as List<String>)
+                  .add('explicit_continuation_approval');
+              receipt['explicitContinuationApproval'] = <String, dynamic>{
+                'continuationRunId': continuation.id,
+                'commandId': continuation.command.id,
+                'grantId': continuationApproval.id,
+                'scopes': continuationApproval.scopes.map((e) => e.name).toList()
+                  ..sort(),
+              };
+
+              const expected = <String>[
+                'native_approval',
+                'live_steering',
+                'safe_boundary_interruption',
+                'linked_continuation',
+                'no_inherited_authority',
+                'explicit_continuation_approval',
+              ];
+              final actual = (receipt['sequence'] as List<String>);
+              if (jsonEncode(actual) != jsonEncode(expected)) {
+                throw StateError('dogfood_sequence_order_invalid:$actual');
+              }
+              receipt['result'] = 'pass';
+              await writeReceipt();
+              stdout.writeln('EXACT_LIVE_STEERING_DOGFOOD_PASS');
+              stdout.writeln(jsonEncode(receipt));
+            } catch (error, stackTrace) {
+              receipt['result'] = 'fail';
+              receipt['error'] = '$error';
+              receipt['stackTrace'] = '$stackTrace';
+              try {
+                await writeReceipt();
+              } catch (_) {}
+              stderr.writeln('EXACT_LIVE_STEERING_DOGFOOD_FAIL: $error');
+              stderr.writeln(stackTrace);
+              if (!releaseFirstExecutionStream.isCompleted) {
+                releaseFirstExecutionStream.complete();
+              }
+              exitCode = 1;
+            } finally {
+              if (runtime != null) {
+                try {
+                  await runtime.close();
+                } catch (_) {}
+              }
+              if (subscription != null) {
+                try {
+                  await subscription.cancel();
+                } catch (_) {}
+              }
+              if (server != null) {
+                try {
+                  await server.close(force: true);
+                } catch (_) {}
+              }
+              if (temporary != null) {
+                try {
+                  if (await temporary.exists()) {
+                    await temporary.delete(recursive: true);
+                  }
+                } catch (_) {}
+              }
+            }
+            exit(exitCode);
+          }
+          DART
+      - name: Run exact native approval-steering-continuation dogfood
+        shell: bash
+        run: |
+          xvfb-run -a flutter run -d linux --debug --no-pub -t tool/exact_live_steering_dogfood.dart
+      - name: Verify dogfood receipt and untouched tracked product tree
+        if: always()
+        shell: bash
+        run: |
+          if [ -f exact-live-steering-dogfood.json ]; then
+            cat exact-live-steering-dogfood.json
+          fi
+          git diff --exit-code -- . ':(exclude)linux'
+          test -f exact-live-steering-dogfood.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('exact-live-steering-dogfood.json')
+          data = json.loads(p.read_text())
+          assert data['candidateSha'] == 'e59583b170b2a5d333a3c6eff5243725daef0d54'
+          assert data['result'] == 'pass'
+          assert data['sequence'] == [
+              'native_approval',
+              'live_steering',
+              'safe_boundary_interruption',
+              'linked_continuation',
+              'no_inherited_authority',
+              'explicit_continuation_approval',
+          ]
+          assert data['noInheritedAuthority']['activeGrantCountBeforeExplicitApproval'] == 0
+          PY
+      - name: Upload exact dogfood receipt
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: exact-live-steering-dogfood-e59583b1
+          path: exact-live-steering-dogfood.json
+          if-no-files-found: warn
+          retention-days: 7
