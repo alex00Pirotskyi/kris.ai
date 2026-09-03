@@ -1,0 +1,46 @@
+name: qualification-manifest-repair
+
+on:
+  push:
+    branches:
+      - integration/kristin-corrective-main-landing-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.ref_name == 'integration/kristin-corrective-main-landing-20260903'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: integration/kristin-corrective-main-landing-20260903
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Rebuild canonical source manifest for final tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/qualification-manifest-repair.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          python tool/generated_state_guard.py audit --project . --strict
+          git diff --check
+          git status --short
+      - name: Commit manifest repair and remove helper
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A -- SOURCE_MANIFEST.sha256 .github/workflows/qualification-manifest-repair.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: refresh source manifest after formatting'
+          git push origin HEAD:integration/kristin-corrective-main-landing-20260903
