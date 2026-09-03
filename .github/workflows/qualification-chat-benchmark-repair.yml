@@ -67,6 +67,21 @@ jobs:
           """
           if old not in text:
               raise SystemExit('chat_control_plane.dart insertion anchor not found')
+          text = text.replace(old, new, 1)
+
+          old = """bool _isInformationalLanguage(String input) {
+            final normalized = _normalized(input);
+            if (normalized.isEmpty) return false;
+            if (_isActionLanguage(normalized)) return false;
+          """
+          new = """bool _isInformationalLanguage(String input) {
+            final normalized = _normalized(input);
+            if (normalized.isEmpty) return false;
+            if (isCapabilityHelpRequest(normalized)) return true;
+            if (_isActionLanguage(normalized)) return false;
+          """
+          if old not in text:
+              raise SystemExit('chat_control_plane.dart informational anchor not found')
           control.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
 
           actions = Path('lib/product/chat_control_plane_studio_actions.dart')
@@ -123,7 +138,10 @@ jobs:
               raise SystemExit('chat_control_plane_test.dart insertion anchor not found')
           tests.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
           PY
-          python tool/dart_format_scope.py --write
+          dart format \
+            lib/product/chat_control_plane.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            test/product/chat_control_plane_test.dart
           python tool/dart_format_scope.py --check
           git diff --check
       - name: Run focused Chat regression test
