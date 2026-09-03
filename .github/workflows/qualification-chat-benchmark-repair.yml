@@ -1,0 +1,164 @@
+name: qualification-chat-benchmark-repair
+
+on:
+  push:
+    branches:
+      - integration/kristin-corrective-main-landing-20260903
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.ref_name == 'integration/kristin-corrective-main-landing-20260903'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: integration/kristin-corrective-main-landing-20260903
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+      - name: Install Dart dependencies
+        run: flutter pub get
+      - name: Patch capability-help intent and regression test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          control = Path('lib/product/chat_control_plane.dart')
+          text = control.read_text(encoding='utf-8')
+          old = """bool isInformationalChatRequest(String input) =>
+              _isInformationalLanguage(input);
+
+          bool isSemanticActionRequest(String input) => _isActionLanguage(input);
+          """
+          new = """bool isInformationalChatRequest(String input) =>
+              _isInformationalLanguage(input);
+
+          bool isCapabilityHelpRequest(String input) {
+            final normalized = _normalized(
+              input,
+            ).replaceFirst(RegExp(r'\\s*[?!.,]+$'), '').trim();
+            return RegExp(
+              r'^(?:help|'
+              r'what\\s+(?:can|could)\\s+(?:you|u)\\s+do|'
+              r'what\\s+(?:are|r)\\s+(?:you|u)\\s+able\\s+to\\s+do|'
+              r'what\\s+can\\s+(?:you|u)\\s+help\\s+me\\s+with|'
+              r'what\\s+(?:are|r)\\s+(?:your|ur)\\s+capabilities|'
+              r'what\\s+capabilities\\s+do\\s+(?:you|u)\\s+have|'
+              r'(?:show|list)(?:\\s+me)?\\s+(?:your|ur)\\s+capabilities)$',
+            ).hasMatch(normalized);
+          }
+
+          bool isSemanticActionRequest(String input) => _isActionLanguage(input);
+          """
+          if old not in text:
+              raise SystemExit('chat_control_plane.dart insertion anchor not found')
+          control.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          actions = Path('lib/product/chat_control_plane_studio_actions.dart')
+          text = actions.read_text(encoding='utf-8')
+          old = """    final text = decision.parsed.originalText.toLowerCase();
+              if (RegExp(r'\\bwhat can you do\\b').hasMatch(text) ||
+                  text.trim() == 'help') {
+                return _capabilityHelpText();
+              }
+          """
+          new = """    final text = decision.parsed.originalText.toLowerCase();
+              if (isCapabilityHelpRequest(decision.parsed.originalText)) {
+                return _capabilityHelpText();
+              }
+          """
+          if old not in text:
+              raise SystemExit('chat_control_plane_studio_actions.dart matcher anchor not found')
+          actions.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+
+          tests = Path('test/product/chat_control_plane_test.dart')
+          text = tests.read_text(encoding='utf-8')
+          old = """  group('interaction policy', () {
+              test('plain arithmetic question stays informational', () {
+          """
+          new = """  group('interaction policy', () {
+              test('capability-help shorthand stays informational and deterministic', () {
+                for (final request in <String>[
+                  'what can u do ?',
+                  'what can you do?',
+                  'what are u able to do?',
+                  'what are your capabilities?',
+                  'list ur capabilities',
+                ]) {
+                  expect(isCapabilityHelpRequest(request), isTrue, reason: request);
+                  final decision = compiler.compile(
+                    request,
+                    inferredMode: CommandMode.build,
+                  );
+                  expect(
+                    decision.kind,
+                    ChatInteractionKind.informational,
+                    reason: request,
+                  );
+                  expect(decision.mode, CommandMode.ask, reason: request);
+                  expect(decision.capability, isNull, reason: request);
+                  expect(decision.needsUnderstanding, isFalse, reason: request);
+                  expect(decision.needsPlan, isFalse, reason: request);
+                }
+              });
+
+              test('plain arithmetic question stays informational', () {
+          """
+          if old not in text:
+              raise SystemExit('chat_control_plane_test.dart insertion anchor not found')
+          tests.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          PY
+          python tool/dart_format_scope.py --write
+          python tool/dart_format_scope.py --check
+          git diff --check
+      - name: Run focused Chat regression test
+        run: flutter test --no-pub --concurrency=1 --reporter expanded test/product/chat_control_plane_test.dart
+      - name: Regenerate governed benchmark and source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/qualification-chat-benchmark-repair.yml
+          git add -A -- \
+            lib/product/chat_control_plane.dart \
+            lib/product/chat_control_plane_studio_actions.dart \
+            test/product/chat_control_plane_test.dart \
+            .github/workflows/qualification-chat-benchmark-repair.yml
+          python tool/benchmark_runner.py run --project .
+          git add -A -- \
+            evals/results/p0_009_baseline.json \
+            evals/results/P0_009_BASELINE.md
+          python tool/benchmark_runner.py check --project .
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
+          git add SOURCE_MANIFEST.sha256
+          python tool/generated_state_guard.py audit --project . --strict
+          python tool/benchmark_runner.py check --project .
+          python tool/dart_format_scope.py --check
+          git diff --check
+          git diff --cached --check
+          git status --short
+      - name: Commit combined qualification repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: repair capability help and benchmark baseline'
+          git push origin HEAD:integration/kristin-corrective-main-landing-20260903
