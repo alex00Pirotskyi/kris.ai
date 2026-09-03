@@ -123,6 +123,18 @@ Future<void> main() async {
           return;
         }
 
+        // The Runner asks again after the tool result. Complete the current
+        // work item cleanly so the queued steering can be honored at the next
+        // verified work-item boundary instead of failing inside the item.
+        if (runnerTurns == 2) {
+          await streamPayload(request, <String, dynamic>{
+            'action': 'complete',
+            'summary': 'Project evidence baseline established.',
+            'reason': 'The bounded inspection completed successfully.',
+          });
+          return;
+        }
+
         // A scope-changing compact-plan continuation is deliberately promoted
         // to reviewed graph planning. Returning a recognized invalid model
         // protocol exercises the product's documented conservative software
