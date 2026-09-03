@@ -50,23 +50,23 @@ class ChatTargetResolver {
   }
 
   static Set<String> _exactTokens(ChatTarget target) => <String>{
-        chatTargetSlug(target.id),
-        chatTargetSlug(target.displayName),
-        ...target.aliases.map(chatTargetSlug),
-      }..remove('');
+    chatTargetSlug(target.id),
+    chatTargetSlug(target.displayName),
+    ...target.aliases.map(chatTargetSlug),
+  }..remove('');
 }
 
 class _CollisionSafeChatTarget extends ChatTarget {
   _CollisionSafeChatTarget.from(ChatTarget target, this.blockedTokens)
-      : super(
-          id: target.id,
-          type: target.type,
-          displayName: target.displayName,
-          aliases: target.aliases,
-          description: target.description,
-          status: target.status,
-          available: target.available,
-        );
+    : super(
+        id: target.id,
+        type: target.type,
+        displayName: target.displayName,
+        aliases: target.aliases,
+        description: target.description,
+        status: target.status,
+        available: target.available,
+      );
 
   final Set<String> blockedTokens;
 
@@ -95,8 +95,9 @@ class ProjectTargetProvider implements ChatTargetProvider {
           displayName: project.name,
           aliases: <String>[chatTargetSlug(project.name), project.id],
           description: 'Project',
-          status:
-              project.id == selectedProjectId ? 'Selected project' : 'Project',
+          status: project.id == selectedProjectId
+              ? 'Selected project'
+              : 'Project',
         ),
       )
       .toList(growable: false);
@@ -138,30 +139,30 @@ class ProviderTargetProvider implements ChatTargetProvider {
   final Set<String> configuredProviderIds;
 
   static const List<
-      ({
-        String id,
-        String displayName,
-        String description,
-        List<String> aliases
-      })> knownProviders = <({
-    String id,
-    String displayName,
-    String description,
-    List<String> aliases
-  })>[
-    (
-      id: 'ollama',
-      displayName: 'Ollama',
-      description: 'Local model provider',
-      aliases: <String>['ollama'],
-    ),
-    (
-      id: 'openai-compatible',
-      displayName: 'OpenAI-compatible',
-      description: 'OpenAI-compatible model provider',
-      aliases: <String>['openai', 'openai-compatible'],
-    ),
-  ];
+    ({String id, String displayName, String description, List<String> aliases})
+  >
+  knownProviders =
+      <
+        ({
+          String id,
+          String displayName,
+          String description,
+          List<String> aliases,
+        })
+      >[
+        (
+          id: 'ollama',
+          displayName: 'Ollama',
+          description: 'Local model provider',
+          aliases: <String>['ollama'],
+        ),
+        (
+          id: 'openai-compatible',
+          displayName: 'OpenAI-compatible',
+          description: 'OpenAI-compatible model provider',
+          aliases: <String>['openai', 'openai-compatible'],
+        ),
+      ];
 
   @override
   List<ChatTarget> resolve() => knownProviders
@@ -186,35 +187,35 @@ class WorkspaceTargetProvider implements ChatTargetProvider {
 
   @override
   List<ChatTarget> resolve() => const <ChatTarget>[
-        ChatTarget(
-          id: 'webstudio',
-          type: ChatTargetType.workspace,
-          displayName: 'Web Studio',
-          aliases: <String>['webstudio'],
-          description: 'Web deep-dive workspace',
-        ),
-        ChatTarget(
-          id: 'web',
-          type: ChatTargetType.workspace,
-          displayName: 'Web',
-          aliases: <String>['web'],
-          description: 'Public-source research',
-        ),
-        ChatTarget(
-          id: 'owner',
-          type: ChatTargetType.capability,
-          displayName: 'Owner Mode',
-          aliases: <String>['owner'],
-          description: 'Governed elevated execution mode',
-        ),
-        ChatTarget(
-          id: 'project-manager',
-          type: ChatTargetType.workspace,
-          displayName: 'Project Manager',
-          aliases: <String>['project-manager'],
-          description: 'Persistent deep project controls',
-        ),
-      ];
+    ChatTarget(
+      id: 'webstudio',
+      type: ChatTargetType.workspace,
+      displayName: 'Web Studio',
+      aliases: <String>['webstudio'],
+      description: 'Web deep-dive workspace',
+    ),
+    ChatTarget(
+      id: 'web',
+      type: ChatTargetType.workspace,
+      displayName: 'Web',
+      aliases: <String>['web'],
+      description: 'Public-source research',
+    ),
+    ChatTarget(
+      id: 'owner',
+      type: ChatTargetType.capability,
+      displayName: 'Owner Mode',
+      aliases: <String>['owner'],
+      description: 'Governed elevated execution mode',
+    ),
+    ChatTarget(
+      id: 'project-manager',
+      type: ChatTargetType.workspace,
+      displayName: 'Project Manager',
+      aliases: <String>['project-manager'],
+      description: 'Persistent deep project controls',
+    ),
+  ];
 }
 
 String chatTargetSlug(String value) => value

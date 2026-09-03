@@ -155,10 +155,7 @@ class ConversationOrchestrator {
 
   ConversationIntent classify(String request, CommandMode mode) {
     final normalized = request.trim();
-    final decision = intentCompiler.compile(
-      normalized,
-      inferredMode: mode,
-    );
+    final decision = intentCompiler.compile(normalized, inferredMode: mode);
 
     if (decision.isInformational) {
       return const ConversationIntent(
@@ -251,22 +248,30 @@ class ConversationOrchestrator {
   String suggestProjectName(String request) {
     var value = request
         .replaceAll(
-            RegExp(r'\b(please|hey|kristin|can you|could you|i want you to)\b',
-                caseSensitive: false),
-            ' ')
+          RegExp(
+            r'\b(please|hey|kristin|can you|could you|i want you to)\b',
+            caseSensitive: false,
+          ),
+          ' ',
+        )
         .replaceAll(
-            RegExp(r'\b(build|create|make|develop|implement|me|a|an|the)\b',
-                caseSensitive: false),
-            ' ')
+          RegExp(
+            r'\b(build|create|make|develop|implement|me|a|an|the)\b',
+            caseSensitive: false,
+          ),
+          ' ',
+        )
         .replaceAll(RegExp(r'[^A-Za-z0-9 _-]+'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     if (value.isEmpty) return 'Kristin Project';
     final words = value.split(' ').take(5).toList();
-    value = words.map((word) {
-      if (word.isEmpty) return word;
-      return '${word[0].toUpperCase()}${word.substring(1)}';
-    }).join(' ');
+    value = words
+        .map((word) {
+          if (word.isEmpty) return word;
+          return '${word[0].toUpperCase()}${word.substring(1)}';
+        })
+        .join(' ');
     return value.length <= 54 ? value : value.substring(0, 54).trim();
   }
 }

@@ -37,9 +37,7 @@ Map<String, dynamic> _effectiveResearchSearchJson() {
       ...json,
       'description': _researchSearchDescription,
       'inputSchema': inputSchema,
-      'example': const <String, dynamic>{
-        'query': 'official API documentation',
-      },
+      'example': const <String, dynamic>{'query': 'official API documentation'},
     };
   }
   throw StateError('Generated research_search contract is missing.');
@@ -55,8 +53,9 @@ class ToolSchemaRegistry {
   const ToolSchemaRegistry();
 
   static const base.ToolSchemaRegistry _base = base.ToolSchemaRegistry();
-  static final base.ToolContract _researchSearch =
-      base.ToolContract.fromJson(_effectiveResearchSearchJson());
+  static final base.ToolContract _researchSearch = base.ToolContract.fromJson(
+    _effectiveResearchSearchJson(),
+  );
 
   String get version => _base.version;
   String get contractDigest => _base.contractDigest;
@@ -86,11 +85,10 @@ class ToolSchemaRegistry {
   List<Map<String, dynamic>> descriptors({
     Set<String>? allowlist,
     base.ToolDescriptorDialect dialect = base.ToolDescriptorDialect.canonical,
-  }) =>
-      names
-          .where((name) => allowlist == null || allowlist.contains(name))
-          .map((name) => require(name).descriptor(dialect: dialect))
-          .toList(growable: false);
+  }) => names
+      .where((name) => allowlist == null || allowlist.contains(name))
+      .map((name) => require(name).descriptor(dialect: dialect))
+      .toList(growable: false);
 
   void verifyCoverage(Iterable<String> handlerNames) =>
       _base.verifyCoverage(handlerNames);

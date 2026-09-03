@@ -16,57 +16,43 @@ void main() {
       expect(P3BrowserAuditViewport.mobile.height, 844);
     });
 
-    test('quality report binds screenshot DOM accessibility links and forms',
-        () {
-      final snapshot = P3BrowserQualitySnapshot(
-        pageId: 'page-1',
-        observationId: 'observation-1',
-        url: Uri.parse('http://127.0.0.1:8080/index.html'),
-        viewport: P3BrowserAuditViewport.desktop,
-        screenshotSha256: hash('screenshot'),
-        domSha256: hash('dom'),
-        accessibilitySha256: hash('accessibility'),
-        links: const <P3BrowserLinkCheck>[
-          P3BrowserLinkCheck(
-            href: '#data-fixture',
-            accessibleName: 'Local data',
-            statusCode: 200,
-            localOnly: true,
-          ),
-        ],
-        forms: const <P3BrowserFormCheck>[
-          P3BrowserFormCheck(
-            formId: 'profile-form',
-            labelledControls: 3,
-            totalControls: 3,
-            submitReachable: true,
-          ),
-        ],
-        accessibilityFindings: const <P3BrowserAccessibilityFinding>[
-          P3BrowserAccessibilityFinding(
-            ruleId: 'landmark-main',
-            selector: 'main',
-            message: 'Main landmark is present.',
-            severity: P3BrowserAccessibilitySeverity.info,
-          ),
-        ],
-      );
-      final report = P3BrowserQualityReport(
-        snapshot: snapshot,
-        visualDiff: P3BrowserVisualDiff(
-          baselineScreenshotSha256: hash('baseline'),
-          currentScreenshotSha256: hash('current'),
-          changedPixels: 100,
-          totalPixels: 1000000,
-        ),
-      );
-
-      expect(report.passed, isTrue);
-      expect(
-          report.snapshot.snapshotSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
-      expect(report.reportSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
-      expect(
-        P3BrowserQualityReport(
+    test(
+      'quality report binds screenshot DOM accessibility links and forms',
+      () {
+        final snapshot = P3BrowserQualitySnapshot(
+          pageId: 'page-1',
+          observationId: 'observation-1',
+          url: Uri.parse('http://127.0.0.1:8080/index.html'),
+          viewport: P3BrowserAuditViewport.desktop,
+          screenshotSha256: hash('screenshot'),
+          domSha256: hash('dom'),
+          accessibilitySha256: hash('accessibility'),
+          links: const <P3BrowserLinkCheck>[
+            P3BrowserLinkCheck(
+              href: '#data-fixture',
+              accessibleName: 'Local data',
+              statusCode: 200,
+              localOnly: true,
+            ),
+          ],
+          forms: const <P3BrowserFormCheck>[
+            P3BrowserFormCheck(
+              formId: 'profile-form',
+              labelledControls: 3,
+              totalControls: 3,
+              submitReachable: true,
+            ),
+          ],
+          accessibilityFindings: const <P3BrowserAccessibilityFinding>[
+            P3BrowserAccessibilityFinding(
+              ruleId: 'landmark-main',
+              selector: 'main',
+              message: 'Main landmark is present.',
+              severity: P3BrowserAccessibilitySeverity.info,
+            ),
+          ],
+        );
+        final report = P3BrowserQualityReport(
           snapshot: snapshot,
           visualDiff: P3BrowserVisualDiff(
             baselineScreenshotSha256: hash('baseline'),
@@ -74,10 +60,28 @@ void main() {
             changedPixels: 100,
             totalPixels: 1000000,
           ),
-        ).reportSha256,
-        report.reportSha256,
-      );
-    });
+        );
+
+        expect(report.passed, isTrue);
+        expect(
+          report.snapshot.snapshotSha256,
+          matches(RegExp(r'^[0-9a-f]{64}$')),
+        );
+        expect(report.reportSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
+        expect(
+          P3BrowserQualityReport(
+            snapshot: snapshot,
+            visualDiff: P3BrowserVisualDiff(
+              baselineScreenshotSha256: hash('baseline'),
+              currentScreenshotSha256: hash('current'),
+              changedPixels: 100,
+              totalPixels: 1000000,
+            ),
+          ).reportSha256,
+          report.reportSha256,
+        );
+      },
+    );
 
     test('visual and accessibility failures remain independently visible', () {
       final snapshot = P3BrowserQualitySnapshot(
@@ -159,63 +163,65 @@ void main() {
       );
     });
 
-    test('tab confusion stale targets and cross-profile access fail closed',
-        () {
-      guard.requireFreshTarget(
-        activePageId: 'page-a',
-        targetPageId: 'page-a',
-        currentObservationId: 'obs-2',
-        targetObservationId: 'obs-2',
-      );
-      guard.requireProfileIsolation(
-        activeProfileId: 'profile-a',
-        requestedProfileId: 'profile-a',
-      );
-
-      expect(
-        () => guard.requireFreshTarget(
-          activePageId: 'page-a',
-          targetPageId: 'page-b',
-          currentObservationId: 'obs-2',
-          targetObservationId: 'obs-2',
-        ),
-        throwsA(
-          isA<P3BrowserQualityException>().having(
-            (error) => error.code,
-            'code',
-            'browser_tab_confusion_blocked',
-          ),
-        ),
-      );
-      expect(
-        () => guard.requireFreshTarget(
+    test(
+      'tab confusion stale targets and cross-profile access fail closed',
+      () {
+        guard.requireFreshTarget(
           activePageId: 'page-a',
           targetPageId: 'page-a',
-          currentObservationId: 'obs-3',
+          currentObservationId: 'obs-2',
           targetObservationId: 'obs-2',
-        ),
-        throwsA(
-          isA<P3BrowserQualityException>().having(
-            (error) => error.code,
-            'code',
-            'browser_stale_target_blocked',
-          ),
-        ),
-      );
-      expect(
-        () => guard.requireProfileIsolation(
+        );
+        guard.requireProfileIsolation(
           activeProfileId: 'profile-a',
-          requestedProfileId: 'profile-b',
-        ),
-        throwsA(
-          isA<P3BrowserQualityException>().having(
-            (error) => error.code,
-            'code',
-            'browser_cross_profile_access_blocked',
+          requestedProfileId: 'profile-a',
+        );
+
+        expect(
+          () => guard.requireFreshTarget(
+            activePageId: 'page-a',
+            targetPageId: 'page-b',
+            currentObservationId: 'obs-2',
+            targetObservationId: 'obs-2',
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<P3BrowserQualityException>().having(
+              (error) => error.code,
+              'code',
+              'browser_tab_confusion_blocked',
+            ),
+          ),
+        );
+        expect(
+          () => guard.requireFreshTarget(
+            activePageId: 'page-a',
+            targetPageId: 'page-a',
+            currentObservationId: 'obs-3',
+            targetObservationId: 'obs-2',
+          ),
+          throwsA(
+            isA<P3BrowserQualityException>().having(
+              (error) => error.code,
+              'code',
+              'browser_stale_target_blocked',
+            ),
+          ),
+        );
+        expect(
+          () => guard.requireProfileIsolation(
+            activeProfileId: 'profile-a',
+            requestedProfileId: 'profile-b',
+          ),
+          throwsA(
+            isA<P3BrowserQualityException>().having(
+              (error) => error.code,
+              'code',
+              'browser_cross_profile_access_blocked',
+            ),
+          ),
+        );
+      },
+    );
 
     test('ordinary downloads quarantine and executable payloads block', () {
       expect(
@@ -254,67 +260,70 @@ void main() {
       );
       for (final recipe in P3BrowserTaskRecipes.all) {
         expect(recipe.steps, isNotEmpty);
-        expect(recipe.steps.every((step) => step.requiresFreshObservation),
-            isTrue);
+        expect(
+          recipe.steps.every((step) => step.requiresFreshObservation),
+          isTrue,
+        );
       }
     });
 
     test(
-        'recipe receipts bind recipe session page observation quality and output',
-        () {
-      final recipe = P3BrowserTaskRecipes.byKind(
-        P3BrowserTaskRecipeKind.dataExtraction,
-      );
-      final completed = recipe.steps.map((item) => item.id).toList();
-      final receipt = P3BrowserRecipeReceipt.issue(
-        recipe: recipe,
-        sessionId: 'session-fixture-1',
-        pageId: 'page-fixture-1',
-        observationSha256: hash('observation'),
-        input: const <String, Object?>{'selector': '#fixture-data'},
-        output: const <Object?>[
-          <String, Object?>{'id': 1, 'value': 'alpha'},
-          <String, Object?>{'id': 2, 'value': 'beta'},
-        ],
-        qualityReportSha256: hash('quality'),
-        completedStepIds: completed,
-      );
-      final changedOutput = P3BrowserRecipeReceipt.issue(
-        recipe: recipe,
-        sessionId: 'session-fixture-1',
-        pageId: 'page-fixture-1',
-        observationSha256: hash('observation'),
-        input: const <String, Object?>{'selector': '#fixture-data'},
-        output: const <Object?>[
-          <String, Object?>{'id': 1, 'value': 'changed'},
-        ],
-        qualityReportSha256: hash('quality'),
-        completedStepIds: completed,
-      );
-
-      expect(receipt.verify(), isTrue);
-      expect(receipt.receiptSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
-      expect(changedOutput.receiptSha256, isNot(receipt.receiptSha256));
-      expect(
-        () => P3BrowserRecipeReceipt.issue(
+      'recipe receipts bind recipe session page observation quality and output',
+      () {
+        final recipe = P3BrowserTaskRecipes.byKind(
+          P3BrowserTaskRecipeKind.dataExtraction,
+        );
+        final completed = recipe.steps.map((item) => item.id).toList();
+        final receipt = P3BrowserRecipeReceipt.issue(
           recipe: recipe,
           sessionId: 'session-fixture-1',
           pageId: 'page-fixture-1',
           observationSha256: hash('observation'),
-          input: const <String, Object?>{},
-          output: const <String, Object?>{},
+          input: const <String, Object?>{'selector': '#fixture-data'},
+          output: const <Object?>[
+            <String, Object?>{'id': 1, 'value': 'alpha'},
+            <String, Object?>{'id': 2, 'value': 'beta'},
+          ],
           qualityReportSha256: hash('quality'),
-          completedStepIds: completed.take(1).toList(),
-        ),
-        throwsA(
-          isA<P3BrowserQualityException>().having(
-            (error) => error.code,
-            'code',
-            'browser_recipe_steps_incomplete',
+          completedStepIds: completed,
+        );
+        final changedOutput = P3BrowserRecipeReceipt.issue(
+          recipe: recipe,
+          sessionId: 'session-fixture-1',
+          pageId: 'page-fixture-1',
+          observationSha256: hash('observation'),
+          input: const <String, Object?>{'selector': '#fixture-data'},
+          output: const <Object?>[
+            <String, Object?>{'id': 1, 'value': 'changed'},
+          ],
+          qualityReportSha256: hash('quality'),
+          completedStepIds: completed,
+        );
+
+        expect(receipt.verify(), isTrue);
+        expect(receipt.receiptSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
+        expect(changedOutput.receiptSha256, isNot(receipt.receiptSha256));
+        expect(
+          () => P3BrowserRecipeReceipt.issue(
+            recipe: recipe,
+            sessionId: 'session-fixture-1',
+            pageId: 'page-fixture-1',
+            observationSha256: hash('observation'),
+            input: const <String, Object?>{},
+            output: const <String, Object?>{},
+            qualityReportSha256: hash('quality'),
+            completedStepIds: completed.take(1).toList(),
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<P3BrowserQualityException>().having(
+              (error) => error.code,
+              'code',
+              'browser_recipe_steps_incomplete',
+            ),
+          ),
+        );
+      },
+    );
   });
 
   test('P3-016 fixture contains every deterministic browser task surface', () {
@@ -344,8 +353,11 @@ void main() {
       'request-takeover',
       'fixture-data',
     ]) {
-      expect(html, contains(marker),
-          reason: 'missing fixture surface: $marker');
+      expect(
+        html,
+        contains(marker),
+        reason: 'missing fixture surface: $marker',
+      );
     }
     expect(script, contains("window.open('popup.html'"));
     expect(script, contains('appendScrollBatch'));

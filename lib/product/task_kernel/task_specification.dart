@@ -66,27 +66,27 @@ class SpecificationClaim {
   /// A [userStated] claim -- the strongest kind, and the only kind that
   /// may be created directly from the user's own words.
   const SpecificationClaim.stated(String statement, {String source = ''})
-      : this(
-          statement: statement,
-          provenance: EvidenceProvenance.userStated,
-          source: source,
-        );
+    : this(
+        statement: statement,
+        provenance: EvidenceProvenance.userStated,
+        source: source,
+      );
 
   /// A claim deterministic code derived from stated or observed material.
   const SpecificationClaim.inferred(String statement, {String source = ''})
-      : this(
-          statement: statement,
-          provenance: EvidenceProvenance.inferred,
-          source: source,
-        );
+    : this(
+        statement: statement,
+        provenance: EvidenceProvenance.inferred,
+        source: source,
+      );
 
   /// A claim a model proposed. Never authoritative on its own.
   const SpecificationClaim.assumed(String statement, {String source = ''})
-      : this(
-          statement: statement,
-          provenance: EvidenceProvenance.assumed,
-          source: source,
-        );
+    : this(
+        statement: statement,
+        provenance: EvidenceProvenance.assumed,
+        source: source,
+      );
 
   final String statement;
   final EvidenceProvenance provenance;
@@ -105,23 +105,23 @@ class SpecificationClaim {
     String? statement,
     EvidenceProvenance? provenance,
     String? source,
-  }) =>
-      SpecificationClaim(
-        statement: statement ?? this.statement,
-        provenance: provenance ?? this.provenance,
-        source: source ?? this.source,
-      );
+  }) => SpecificationClaim(
+    statement: statement ?? this.statement,
+    provenance: provenance ?? this.provenance,
+    source: source ?? this.source,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'statement': statement,
-        'provenance': provenance.name,
-        if (source.isNotEmpty) 'source': source,
-      };
+    'statement': statement,
+    'provenance': provenance.name,
+    if (source.isNotEmpty) 'source': source,
+  };
 
   factory SpecificationClaim.fromJson(Map<String, dynamic> json) =>
       SpecificationClaim(
         statement: json['statement']?.toString() ?? '',
-        provenance: EvidenceProvenance.values
+        provenance:
+            EvidenceProvenance.values
                 .where((item) => item.name == json['provenance']?.toString())
                 .firstOrNull ??
             EvidenceProvenance.unknown,
@@ -154,10 +154,10 @@ class UnresolvedQuestion {
   final bool blocking;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'question': question,
-        if (options.isNotEmpty) 'options': options,
-        'blocking': blocking,
-      };
+    'question': question,
+    if (options.isNotEmpty) 'options': options,
+    'blocking': blocking,
+  };
 
   factory UnresolvedQuestion.fromJson(Map<String, dynamic> json) =>
       UnresolvedQuestion(
@@ -201,33 +201,33 @@ class TaskTargetRef {
     String? displayName,
     EvidenceProvenance? provenance,
     bool? resolved,
-  }) =>
-      TaskTargetRef(
-        kind: kind ?? this.kind,
-        value: value ?? this.value,
-        displayName: displayName ?? this.displayName,
-        provenance: provenance ?? this.provenance,
-        resolved: resolved ?? this.resolved,
-      );
+  }) => TaskTargetRef(
+    kind: kind ?? this.kind,
+    value: value ?? this.value,
+    displayName: displayName ?? this.displayName,
+    provenance: provenance ?? this.provenance,
+    resolved: resolved ?? this.resolved,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'kind': kind,
-        'value': value,
-        if (displayName.isNotEmpty) 'displayName': displayName,
-        'provenance': provenance.name,
-        'resolved': resolved,
-      };
+    'kind': kind,
+    'value': value,
+    if (displayName.isNotEmpty) 'displayName': displayName,
+    'provenance': provenance.name,
+    'resolved': resolved,
+  };
 
   factory TaskTargetRef.fromJson(Map<String, dynamic> json) => TaskTargetRef(
-        kind: json['kind']?.toString() ?? 'unknown',
-        value: json['value']?.toString() ?? '',
-        displayName: json['displayName']?.toString() ?? '',
-        provenance: EvidenceProvenance.values
-                .where((item) => item.name == json['provenance']?.toString())
-                .firstOrNull ??
-            EvidenceProvenance.unknown,
-        resolved: json['resolved'] == true,
-      );
+    kind: json['kind']?.toString() ?? 'unknown',
+    value: json['value']?.toString() ?? '',
+    displayName: json['displayName']?.toString() ?? '',
+    provenance:
+        EvidenceProvenance.values
+            .where((item) => item.name == json['provenance']?.toString())
+            .firstOrNull ??
+        EvidenceProvenance.unknown,
+    resolved: json['resolved'] == true,
+  );
 
   @override
   String toString() => '$kind:$value';
@@ -352,20 +352,22 @@ class TaskSpecification {
   /// the same structure share a key -- which is what lets reconciliation
   /// recognize "the same work" across a replan.
   String get contentKey => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'objective': objective.trim().toLowerCase(),
-          'subObjectives': subObjectives
+    canonicalJson(<String, dynamic>{
+      'objective': objective.trim().toLowerCase(),
+      'subObjectives':
+          subObjectives
               .map((item) => item.trim().toLowerCase())
               .toList(growable: false)
             ..sort(),
-          'hardConstraints': hardConstraints
+      'hardConstraints':
+          hardConstraints
               .map((item) => item.statement.trim().toLowerCase())
               .toList(growable: false)
             ..sort(),
-          'targets': targetRefs.map((item) => item.toString()).toList()..sort(),
-          'requestedMethod': requestedMethod.trim().toLowerCase(),
-        }),
-      );
+      'targets': targetRefs.map((item) => item.toString()).toList()..sort(),
+      'requestedMethod': requestedMethod.trim().toLowerCase(),
+    }),
+  );
 
   List<String> validate() {
     final errors = <String>[];
@@ -428,26 +430,25 @@ class TaskSpecification {
     TaskSpecificationSource? source,
     double? confidence,
     DateTime? createdAt,
-  }) =>
-      TaskSpecification(
-        id: id ?? this.id,
-        originalRequest: originalRequest ?? this.originalRequest,
-        objective: objective ?? this.objective,
-        subObjectives: subObjectives ?? this.subObjectives,
-        targetRefs: targetRefs ?? this.targetRefs,
-        hardConstraints: hardConstraints ?? this.hardConstraints,
-        preferences: preferences ?? this.preferences,
-        successCriteria: successCriteria ?? this.successCriteria,
-        assumptions: assumptions ?? this.assumptions,
-        unresolvedQuestions: unresolvedQuestions ?? this.unresolvedQuestions,
-        requestedMethod: requestedMethod ?? this.requestedMethod,
-        prohibitedEffects: prohibitedEffects ?? this.prohibitedEffects,
-        contextRefs: contextRefs ?? this.contextRefs,
-        capabilityHints: capabilityHints ?? this.capabilityHints,
-        source: source ?? this.source,
-        confidence: confidence ?? this.confidence,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  }) => TaskSpecification(
+    id: id ?? this.id,
+    originalRequest: originalRequest ?? this.originalRequest,
+    objective: objective ?? this.objective,
+    subObjectives: subObjectives ?? this.subObjectives,
+    targetRefs: targetRefs ?? this.targetRefs,
+    hardConstraints: hardConstraints ?? this.hardConstraints,
+    preferences: preferences ?? this.preferences,
+    successCriteria: successCriteria ?? this.successCriteria,
+    assumptions: assumptions ?? this.assumptions,
+    unresolvedQuestions: unresolvedQuestions ?? this.unresolvedQuestions,
+    requestedMethod: requestedMethod ?? this.requestedMethod,
+    prohibitedEffects: prohibitedEffects ?? this.prohibitedEffects,
+    contextRefs: contextRefs ?? this.contextRefs,
+    capabilityHints: capabilityHints ?? this.capabilityHints,
+    source: source ?? this.source,
+    confidence: confidence ?? this.confidence,
+    createdAt: createdAt ?? this.createdAt,
+  );
 
   /// Renders the specification for a planning model, preserving the
   /// semantic sections rather than collapsing them into prose.
@@ -477,10 +478,7 @@ class TaskSpecification {
         'PREFERENCES (trade off only when they conflict with the objective)',
         preferences.map((item) => item.statement),
       ),
-      block(
-        'SUCCESS CRITERIA',
-        successCriteria.map((item) => item.statement),
-      ),
+      block('SUCCESS CRITERIA', successCriteria.map((item) => item.statement)),
       block(
         'ASSUMPTIONS (believed, not established)',
         assumptions.map((item) => item.statement),
@@ -499,27 +497,26 @@ class TaskSpecification {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'originalRequest': originalRequest,
-        'objective': objective,
-        'subObjectives': subObjectives,
-        'targetRefs': targetRefs.map((item) => item.toJson()).toList(),
-        'hardConstraints':
-            hardConstraints.map((item) => item.toJson()).toList(),
-        'preferences': preferences.map((item) => item.toJson()).toList(),
-        'successCriteria':
-            successCriteria.map((item) => item.toJson()).toList(),
-        'assumptions': assumptions.map((item) => item.toJson()).toList(),
-        'unresolvedQuestions':
-            unresolvedQuestions.map((item) => item.toJson()).toList(),
-        'requestedMethod': requestedMethod,
-        'prohibitedEffects': prohibitedEffects,
-        'contextRefs': contextRefs,
-        'capabilityHints': capabilityHints,
-        'source': source.name,
-        'confidence': confidence,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'originalRequest': originalRequest,
+    'objective': objective,
+    'subObjectives': subObjectives,
+    'targetRefs': targetRefs.map((item) => item.toJson()).toList(),
+    'hardConstraints': hardConstraints.map((item) => item.toJson()).toList(),
+    'preferences': preferences.map((item) => item.toJson()).toList(),
+    'successCriteria': successCriteria.map((item) => item.toJson()).toList(),
+    'assumptions': assumptions.map((item) => item.toJson()).toList(),
+    'unresolvedQuestions': unresolvedQuestions
+        .map((item) => item.toJson())
+        .toList(),
+    'requestedMethod': requestedMethod,
+    'prohibitedEffects': prohibitedEffects,
+    'contextRefs': contextRefs,
+    'capabilityHints': capabilityHints,
+    'source': source.name,
+    'confidence': confidence,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
   factory TaskSpecification.fromJson(Map<String, dynamic> json) {
     List<SpecificationClaim> claims(Object? raw) =>
@@ -532,27 +529,30 @@ class TaskSpecification {
       originalRequest: json['originalRequest']?.toString() ?? '',
       objective: json['objective']?.toString() ?? '',
       subObjectives: stringList(json['subObjectives']),
-      targetRefs: (json['targetRefs'] is List
-              ? json['targetRefs'] as List
-              : const <Object>[])
-          .whereType<Map>()
-          .map((item) => TaskTargetRef.fromJson(mapValue(item)))
-          .toList(growable: false),
+      targetRefs:
+          (json['targetRefs'] is List
+                  ? json['targetRefs'] as List
+                  : const <Object>[])
+              .whereType<Map>()
+              .map((item) => TaskTargetRef.fromJson(mapValue(item)))
+              .toList(growable: false),
       hardConstraints: claims(json['hardConstraints']),
       preferences: claims(json['preferences']),
       successCriteria: claims(json['successCriteria']),
       assumptions: claims(json['assumptions']),
-      unresolvedQuestions: (json['unresolvedQuestions'] is List
-              ? json['unresolvedQuestions'] as List
-              : const <Object>[])
-          .whereType<Map>()
-          .map((item) => UnresolvedQuestion.fromJson(mapValue(item)))
-          .toList(growable: false),
+      unresolvedQuestions:
+          (json['unresolvedQuestions'] is List
+                  ? json['unresolvedQuestions'] as List
+                  : const <Object>[])
+              .whereType<Map>()
+              .map((item) => UnresolvedQuestion.fromJson(mapValue(item)))
+              .toList(growable: false),
       requestedMethod: json['requestedMethod']?.toString() ?? '',
       prohibitedEffects: stringList(json['prohibitedEffects']),
       contextRefs: stringList(json['contextRefs']),
       capabilityHints: stringList(json['capabilityHints']),
-      source: TaskSpecificationSource.values
+      source:
+          TaskSpecificationSource.values
               .where((item) => item.name == json['source']?.toString())
               .firstOrNull ??
           TaskSpecificationSource.deterministic,

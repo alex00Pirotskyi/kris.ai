@@ -9,9 +9,7 @@ String _nativePath(Directory root, List<String> parts) =>
 
 void main() {
   test('P2 and P3 packaged candidates include macOS Contents Resources', () {
-    final fixture = Directory.systemTemp.createTempSync(
-      'kristin-p2-p3-paths-',
-    );
+    final fixture = Directory.systemTemp.createTempSync('kristin-p2-p3-paths-');
     try {
       final data = Directory(_nativePath(fixture, <String>['kristin-data']));
       final executable = _nativePath(fixture, <String>[
@@ -62,9 +60,7 @@ void main() {
   });
 
   test('non-macOS packaged candidates stay beside the executable', () {
-    final fixture = Directory.systemTemp.createTempSync(
-      'kristin-p2-p3-paths-',
-    );
+    final fixture = Directory.systemTemp.createTempSync('kristin-p2-p3-paths-');
     try {
       final data = Directory(_nativePath(fixture, <String>['kristin-data']));
       final executable = _nativePath(fixture, <String>[

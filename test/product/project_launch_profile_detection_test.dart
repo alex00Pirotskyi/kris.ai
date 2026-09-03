@@ -33,45 +33,41 @@ void main() {
       );
     }
 
-    test('a Flutter project (pubspec.yaml) detects as a desktop launch kind',
-        () async {
-      await File(
-        '${root.path}${Platform.pathSeparator}pubspec.yaml',
-      ).writeAsString('name: fixture\nflutter:\n  sdk: flutter\n');
-      final profile = await diagnostics.executionProfile(projectAt(root));
-      expect(profile.type, 'Flutter');
-      expect(profile.runCommand, isNotNull);
-      expect(
-        detectProjectLaunchKind(profile.type),
-        ProjectLaunchKind.desktop,
-      );
-    });
-
     test(
-      'a Node project (package.json with a dev script) detects as a web '
-      'launch kind',
+      'a Flutter project (pubspec.yaml) detects as a desktop launch kind',
       () async {
         await File(
-          '${root.path}${Platform.pathSeparator}package.json',
-        ).writeAsString(
-          '{"name": "fixture", "scripts": {"dev": "vite"}}',
-        );
+          '${root.path}${Platform.pathSeparator}pubspec.yaml',
+        ).writeAsString('name: fixture\nflutter:\n  sdk: flutter\n');
         final profile = await diagnostics.executionProfile(projectAt(root));
-        expect(profile.type, 'Node.js / JavaScript');
+        expect(profile.type, 'Flutter');
         expect(profile.runCommand, isNotNull);
         expect(
           detectProjectLaunchKind(profile.type),
-          ProjectLaunchKind.web,
+          ProjectLaunchKind.desktop,
         );
       },
     );
 
-    test('an unrecognized project produces no preferred launch profile',
-        () async {
+    test('a Node project (package.json with a dev script) detects as a web '
+        'launch kind', () async {
+      await File(
+        '${root.path}${Platform.pathSeparator}package.json',
+      ).writeAsString('{"name": "fixture", "scripts": {"dev": "vite"}}');
       final profile = await diagnostics.executionProfile(projectAt(root));
-      expect(profile.type, 'Unknown');
-      expect(profile.runCommand, isNull);
+      expect(profile.type, 'Node.js / JavaScript');
+      expect(profile.runCommand, isNotNull);
+      expect(detectProjectLaunchKind(profile.type), ProjectLaunchKind.web);
     });
+
+    test(
+      'an unrecognized project produces no preferred launch profile',
+      () async {
+        final profile = await diagnostics.executionProfile(projectAt(root));
+        expect(profile.type, 'Unknown');
+        expect(profile.runCommand, isNull);
+      },
+    );
   });
   group('detectProjectLaunchKind', () {
     test('Flutter projects are desktop', () {
@@ -86,14 +82,10 @@ void main() {
     });
 
     test('Static website projects are web', () {
-      expect(
-        detectProjectLaunchKind('Static website'),
-        ProjectLaunchKind.web,
-      );
+      expect(detectProjectLaunchKind('Static website'), ProjectLaunchKind.web);
     });
 
-    test(
-        'unrecognized/unknown project types fall back to command, never '
+    test('unrecognized/unknown project types fall back to command, never '
         'a guessed web/server kind', () {
       expect(detectProjectLaunchKind('Unknown'), ProjectLaunchKind.command);
       expect(detectProjectLaunchKind('Dart'), ProjectLaunchKind.command);

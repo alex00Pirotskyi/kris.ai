@@ -895,8 +895,7 @@ void main() {
       expect(policy.requiresValidatedArtifact(reviewItem), isFalse);
     });
 
-    test('rejects an unrelated commerce wireframe even when the file exists',
-        () {
+    test('rejects an unrelated commerce wireframe even when the file exists', () {
       final assessment = policy.assess(
         item: item,
         request:
@@ -1148,19 +1147,19 @@ Accessibility notes cover ARIA labels, contrast, focus order, and screen-reader 
     test(
       'automatically inspects the exact expected artifact after mutation',
       () {
-        final target =
-            const AutomaticArtifactVerificationPolicy().inspectionTarget(
-          item: item,
-          mutationResult: const ToolResult(
-            ok: true,
-            summary: 'Created artifact.',
-            data: <String, dynamic>{
-              'relativePath': '`docs/design/wireframes.md`',
-            },
-            mutated: true,
-          ),
-          mutationPaths: const <String>{'`docs/design/wireframes.md`'},
-        );
+        final target = const AutomaticArtifactVerificationPolicy()
+            .inspectionTarget(
+              item: item,
+              mutationResult: const ToolResult(
+                ok: true,
+                summary: 'Created artifact.',
+                data: <String, dynamic>{
+                  'relativePath': '`docs/design/wireframes.md`',
+                },
+                mutated: true,
+              ),
+              mutationPaths: const <String>{'`docs/design/wireframes.md`'},
+            );
 
         expect(target, 'docs/design/wireframes.md');
       },

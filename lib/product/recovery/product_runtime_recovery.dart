@@ -18,17 +18,17 @@ final class ProductRuntimeFailureJournal implements FailureJournal {
 
   @override
   Future<void> recordFailure(FailureEvent event) => runtime.events.publish(
-        'recovery.failure_recorded',
-        event.id,
-        <String, dynamic>{'failure': event.toJson()},
-      );
+    'recovery.failure_recorded',
+    event.id,
+    <String, dynamic>{'failure': event.toJson()},
+  );
 
   @override
   Future<void> recordAttempt(RecoveryAttempt attempt) => runtime.events.publish(
-        'recovery.attempt_recorded',
-        attempt.failureId,
-        <String, dynamic>{'attempt': attempt.toJson()},
-      );
+    'recovery.attempt_recorded',
+    attempt.failureId,
+    <String, dynamic>{'attempt': attempt.toJson()},
+  );
 }
 
 final class ProductRuntimeRecoveryEventSink implements RecoveryEventSink {
@@ -66,9 +66,7 @@ final class ProductRuntimeRecoveryExperienceStore
       final raw = event.data['experience'];
       if (raw is! Map) continue;
       try {
-        loaded.add(
-          RecoveryExperience.fromJson(Map<String, dynamic>.from(raw)),
-        );
+        loaded.add(RecoveryExperience.fromJson(Map<String, dynamic>.from(raw)));
       } catch (_) {
         // Invalid old memory cannot become authority or block startup.
       }
@@ -83,19 +81,22 @@ final class ProductRuntimeRecoveryExperienceStore
   @override
   Future<void> record(RecoveryExperience experience) {
     final completer = Completer<void>();
-    _tail = _tail.then((_) async {
-      await _load();
-      await runtime.events.publish(
-        'recovery.experience',
-        experience.failureId ?? experience.id,
-        <String, dynamic>{'experience': experience.toJson()},
-      );
-      _items.add(experience);
-      _trim();
-      completer.complete();
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) completer.completeError(error, stackTrace);
-    });
+    _tail = _tail
+        .then((_) async {
+          await _load();
+          await runtime.events.publish(
+            'recovery.experience',
+            experience.failureId ?? experience.id,
+            <String, dynamic>{'experience': experience.toJson()},
+          );
+          _items.add(experience);
+          _trim();
+          completer.complete();
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted)
+            completer.completeError(error, stackTrace);
+        });
     return completer.future;
   }
 
@@ -106,11 +107,13 @@ final class ProductRuntimeRecoveryExperienceStore
   }) async {
     await _tail;
     await _load();
-    return List<RecoveryExperience>.unmodifiable(_items.where((item) {
-      if (item.failureSignature != failureSignature) return false;
-      return environmentFingerprint == null ||
-          item.environmentFingerprint == environmentFingerprint;
-    }));
+    return List<RecoveryExperience>.unmodifiable(
+      _items.where((item) {
+        if (item.failureSignature != failureSignature) return false;
+        return environmentFingerprint == null ||
+            item.environmentFingerprint == environmentFingerprint;
+      }),
+    );
   }
 
   void _trim() {
@@ -132,8 +135,9 @@ final class ProductRuntimeFailureSelfContextResolver
     if (failure.projectId != null) {
       project = await runtime.repositories.projects.get(failure.projectId!);
     }
-    final sourceRun =
-        failure.runId == null ? null : await runtime.getRun(failure.runId!);
+    final sourceRun = failure.runId == null
+        ? null
+        : await runtime.getRun(failure.runId!);
     project ??= sourceRun == null
         ? null
         : await runtime.repositories.projects.get(
@@ -177,8 +181,9 @@ final class ProductRuntimeRecoveryAuthorityRegistry {
     _providers[runtime] = provider;
   }
 
-  static RecoveryExternalAuthorityProvider? forRuntime(ProductRuntime runtime) =>
-      _providers[runtime];
+  static RecoveryExternalAuthorityProvider? forRuntime(
+    ProductRuntime runtime,
+  ) => _providers[runtime];
 }
 
 /// Canonical run grants prove ordinary permission scopes. Authority names that
@@ -204,8 +209,9 @@ final class ProductRuntimeRecoveryAuthorityGate
     final byName = <String, PermissionScope>{
       for (final scope in PermissionScope.values) scope.name: scope,
     };
-    final knownNames =
-        decision.requiredAuthority.where(byName.containsKey).toSet();
+    final knownNames = decision.requiredAuthority
+        .where(byName.containsKey)
+        .toSet();
     final externalNames = decision.requiredAuthority.difference(knownNames);
     final granted = <String>{};
     final missing = <String>{};
@@ -222,7 +228,9 @@ final class ProductRuntimeRecoveryAuthorityGate
     }
 
     if (externalNames.isNotEmpty) {
-      final provider = ProductRuntimeRecoveryAuthorityRegistry.forRuntime(runtime);
+      final provider = ProductRuntimeRecoveryAuthorityRegistry.forRuntime(
+        runtime,
+      );
       if (provider == null) {
         notEvaluated.addAll(externalNames);
       } else {
@@ -234,9 +242,7 @@ final class ProductRuntimeRecoveryAuthorityGate
         );
         granted.addAll(external.granted.intersection(externalNames));
         missing.addAll(external.missing.intersection(externalNames));
-        notEvaluated.addAll(
-          external.notEvaluated.intersection(externalNames),
-        );
+        notEvaluated.addAll(external.notEvaluated.intersection(externalNames));
         final unresolved = externalNames
             .difference(granted)
             .difference(missing)
@@ -249,7 +255,8 @@ final class ProductRuntimeRecoveryAuthorityGate
       }
     }
 
-    final allowed = missing.isEmpty &&
+    final allowed =
+        missing.isEmpty &&
         notEvaluated.isEmpty &&
         granted.containsAll(decision.requiredAuthority);
     return RecoveryAuthorityEvaluation(
@@ -257,8 +264,8 @@ final class ProductRuntimeRecoveryAuthorityGate
       reason: allowed
           ? 'Required recovery authority is explicitly proven for this operation.'
           : missing.isNotEmpty
-              ? 'Required recovery authority is explicitly absent.'
-              : 'Required recovery authority has not been evaluated.',
+          ? 'Required recovery authority is explicitly absent.'
+          : 'Required recovery authority has not been evaluated.',
       granted: granted,
       missing: missing,
       notEvaluated: notEvaluated,
@@ -499,7 +506,9 @@ final class ProductRuntimeRecoveryVerifier implements RecoveryVerifier {
 
     if (originalFailure.category == FailureCategory.process &&
         originalFailure.projectId != null) {
-      final status = await runtime.projectProcessStatus(originalFailure.projectId!);
+      final status = await runtime.projectProcessStatus(
+        originalFailure.projectId!,
+      );
       final running = status?.running == true;
       return RecoveryVerification(
         passed: running,
@@ -581,7 +590,8 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     RecoveryObjective objective,
   ) async {
     final failure = objective.failure;
-    final projectId = failure.projectId ??
+    final projectId =
+        failure.projectId ??
         failure.stateAfter['projectId']?.toString() ??
         failure.stateBefore['projectId']?.toString();
     if (projectId == null || projectId.isEmpty) {
@@ -597,9 +607,11 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         'The recovery project no longer exists.',
       );
     }
-    final source =
-        failure.runId == null ? null : await runtime.getRun(failure.runId!);
-    final model = source?.command.model ?? await _resolveModel(failure.modelExactId);
+    final source = failure.runId == null
+        ? null
+        : await runtime.getRun(failure.runId!);
+    final model =
+        source?.command.model ?? await _resolveModel(failure.modelExactId);
     if (model == null) {
       throw ProductException(
         'recovery_model_missing',
@@ -669,32 +681,33 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     );
     final prepared = PreparedCommand(
       id: newId('recovery_command'),
-      requestKey: Sha256.text(canonicalJson(<String, dynamic>{
-        'kind': 'autonomic_recovery',
-        'failureId': failure.id,
-        'projectId': project.id,
-        'planHash': planned.plan.contentHash,
-        'mode': mode.name,
-        'model': model.toJson(),
-      })),
+      requestKey: Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'kind': 'autonomic_recovery',
+          'failureId': failure.id,
+          'projectId': project.id,
+          'planHash': planned.plan.contentHash,
+          'mode': mode.name,
+          'model': model.toJson(),
+        }),
+      ),
       contract: compiled.contract,
       plan: compiled.plan,
       model: model,
       createdAt: DateTime.now().toUtc(),
     );
     await runtime.repositories.commands.put(prepared);
-    await runtime.audit.append(
-      'recovery.command_prepared',
-      prepared.id,
-      <String, dynamic>{
-        'failureId': failure.id,
-        'projectId': project.id,
-        'planHash': planned.plan.contentHash,
-        'requiredPermissions':
-            prepared.contract.requiredPermissions.map((scope) => scope.name).toList()
-              ..sort(),
-      },
-    );
+    await runtime.audit
+        .append('recovery.command_prepared', prepared.id, <String, dynamic>{
+          'failureId': failure.id,
+          'projectId': project.id,
+          'planHash': planned.plan.contentHash,
+          'requiredPermissions':
+              prepared.contract.requiredPermissions
+                  .map((scope) => scope.name)
+                  .toList()
+                ..sort(),
+        });
     await runtime.events.publish(
       'recovery.command_prepared',
       failure.id,
@@ -733,12 +746,14 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       beforeFingerprint: failure.stateBefore.isEmpty
           ? ''
           : Sha256.text(canonicalJson(failure.stateBefore)),
-      afterFingerprint: Sha256.text(canonicalJson(<String, Object?>{
-        'runId': terminal.id,
-        'state': terminal.state.name,
-        'summary': terminal.summary,
-        'evidence': evidence.map((item) => item.hash).toList(),
-      })),
+      afterFingerprint: Sha256.text(
+        canonicalJson(<String, Object?>{
+          'runId': terminal.id,
+          'state': terminal.state.name,
+          'summary': terminal.summary,
+          'evidence': evidence.map((item) => item.hash).toList(),
+        }),
+      ),
       // A succeeded recovery run has already crossed the governed runtime's
       // convergence/verifier boundary; this is semantic progress.
       materialProgress: true,
@@ -746,7 +761,9 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
   }
 
   @override
-  Future<RecoveryActionResult> continueOriginalTask(FailureEvent failure) async {
+  Future<RecoveryActionResult> continueOriginalTask(
+    FailureEvent failure,
+  ) async {
     final runId = failure.runId;
     if (runId == null) {
       return const RecoveryActionResult(
@@ -896,7 +913,8 @@ final class ProductRuntimeRecoveryHostRegistry {
     _hosts[runtime] = host;
   }
 
-  static KristinRecoveryHost? forRuntime(ProductRuntime runtime) => _hosts[runtime];
+  static KristinRecoveryHost? forRuntime(ProductRuntime runtime) =>
+      _hosts[runtime];
 }
 
 final class ProductRuntimeSelfRepairCoordinator
@@ -947,13 +965,14 @@ final class ProductRuntimeSelfRepairCoordinator
       );
     }
     final before = await host.inspect();
-    final after = await StagedSelfRepairCoordinator(host).activateVerifiedCandidate(
-      identity,
-      failureEvidence: failure.evidenceReferences,
-    );
+    final after = await StagedSelfRepairCoordinator(host)
+        .activateVerifiedCandidate(
+          identity,
+          failureEvidence: failure.evidenceReferences,
+        );
     final activated =
         after.current.artifactIdentity == identity.artifactIdentity &&
-            after.health == RecoveryHostHealth.healthy;
+        after.health == RecoveryHostHealth.healthy;
     if (!activated) {
       throw ProductException(
         'recovery_candidate_not_active',
@@ -1089,8 +1108,9 @@ final class ProductRuntimeAutonomicRecovery {
     final failure = FailureEvent(
       severity: FailureSeverity.error,
       category: _categoryFor(message, operation: operation),
-      subsystem:
-          operation.contains('.') ? operation.split('.').first : 'runtime',
+      subsystem: operation.contains('.')
+          ? operation.split('.').first
+          : 'runtime',
       operation: operation,
       message: message,
       projectId: projectId,
@@ -1136,8 +1156,9 @@ final class ProductRuntimeAutonomicRecovery {
   }
 
   String? _errorCode(String message) {
-    final match = RegExp(r'\b([a-z][a-z0-9_]{3,})\s*:')
-        .firstMatch(message.toLowerCase());
+    final match = RegExp(
+      r'\b([a-z][a-z0-9_]{3,})\s*:',
+    ).firstMatch(message.toLowerCase());
     return match?.group(1);
   }
 

@@ -81,31 +81,28 @@ void main() {
       expect(all, hasLength(1));
     });
 
-    test(
-      'the original admission reason and timestamp are preserved across '
-      'later touches; only lastMeaningfulActivityAt refreshes',
-      () async {
-        final first = await admission.admitOrTouch(
-          rootPath: projectDirectory.path,
-          name: 'My App',
-          reason: ProjectAdmissionReason.builtByKristin,
-        );
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-        final second = await admission.admitOrTouch(
-          rootPath: projectDirectory.path,
-          name: 'My App',
-          reason: ProjectAdmissionReason.successfullyVerified,
-        );
-        expect(second.admissionReason, ProjectAdmissionReason.builtByKristin);
-        expect(second.admittedAt, first.admittedAt);
-        expect(
-          second.lastMeaningfulActivityAt!.isAfter(
-            first.lastMeaningfulActivityAt!,
-          ),
-          isTrue,
-        );
-      },
-    );
+    test('the original admission reason and timestamp are preserved across '
+        'later touches; only lastMeaningfulActivityAt refreshes', () async {
+      final first = await admission.admitOrTouch(
+        rootPath: projectDirectory.path,
+        name: 'My App',
+        reason: ProjectAdmissionReason.builtByKristin,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      final second = await admission.admitOrTouch(
+        rootPath: projectDirectory.path,
+        name: 'My App',
+        reason: ProjectAdmissionReason.successfullyVerified,
+      );
+      expect(second.admissionReason, ProjectAdmissionReason.builtByKristin);
+      expect(second.admittedAt, first.admittedAt);
+      expect(
+        second.lastMeaningfulActivityAt!.isAfter(
+          first.lastMeaningfulActivityAt!,
+        ),
+        isTrue,
+      );
+    });
 
     test('touchExisting refreshes an already-resolved record by id', () async {
       final project = await admission.admitOrTouch(
@@ -184,22 +181,19 @@ void main() {
       expect(project.admissionReason, ProjectAdmissionReason.userCreated);
     });
 
-    test(
-      'a failing random-folder read does not admit a project '
-      '(inspectProject alone never calls admission)',
-      () async {
-        final project = await runtime.addProject(
-          name: 'Fixture project',
-          rootPath: projectDirectory.path,
-        );
-        // inspectProject is a read-only diagnostic peek, distinct from the
-        // analyze/test/build/run actions that admit/touch a project; it
-        // must not by itself change admission bookkeeping.
-        final before = await runtime.getProject(project.id);
-        await runtime.inspectProject(project.id);
-        final after = await runtime.getProject(project.id);
-        expect(after!.updatedAt, before!.updatedAt);
-      },
-    );
+    test('a failing random-folder read does not admit a project '
+        '(inspectProject alone never calls admission)', () async {
+      final project = await runtime.addProject(
+        name: 'Fixture project',
+        rootPath: projectDirectory.path,
+      );
+      // inspectProject is a read-only diagnostic peek, distinct from the
+      // analyze/test/build/run actions that admit/touch a project; it
+      // must not by itself change admission bookkeeping.
+      final before = await runtime.getProject(project.id);
+      await runtime.inspectProject(project.id);
+      final after = await runtime.getProject(project.id);
+      expect(after!.updatedAt, before!.updatedAt);
+    });
   });
 }

@@ -59,11 +59,7 @@ enum P3BrowserAuditViewport {
   final int height;
 }
 
-enum P3BrowserAccessibilitySeverity {
-  info,
-  warning,
-  error,
-}
+enum P3BrowserAccessibilitySeverity { info, warning, error }
 
 final class P3BrowserAccessibilityFinding {
   const P3BrowserAccessibilityFinding({
@@ -79,11 +75,11 @@ final class P3BrowserAccessibilityFinding {
   final P3BrowserAccessibilitySeverity severity;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'ruleId': ruleId,
-        'selector': selector,
-        'message': message,
-        'severity': severity.name,
-      };
+    'ruleId': ruleId,
+    'selector': selector,
+    'message': message,
+    'severity': severity.name,
+  };
 }
 
 final class P3BrowserLinkCheck {
@@ -103,12 +99,12 @@ final class P3BrowserLinkCheck {
       accessibleName.trim().isNotEmpty && statusCode >= 200 && statusCode < 400;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'href': href,
-        'accessibleName': accessibleName,
-        'statusCode': statusCode,
-        'localOnly': localOnly,
-        'passed': passed,
-      };
+    'href': href,
+    'accessibleName': accessibleName,
+    'statusCode': statusCode,
+    'localOnly': localOnly,
+    'passed': passed,
+  };
 }
 
 final class P3BrowserFormCheck {
@@ -128,12 +124,12 @@ final class P3BrowserFormCheck {
       totalControls > 0 && labelledControls == totalControls && submitReachable;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'formId': formId,
-        'labelledControls': labelledControls,
-        'totalControls': totalControls,
-        'submitReachable': submitReachable,
-        'passed': passed,
-      };
+    'formId': formId,
+    'labelledControls': labelledControls,
+    'totalControls': totalControls,
+    'submitReachable': submitReachable,
+    'passed': passed,
+  };
 }
 
 final class P3BrowserQualitySnapshot {
@@ -148,23 +144,21 @@ final class P3BrowserQualitySnapshot {
     required List<P3BrowserLinkCheck> links,
     required List<P3BrowserFormCheck> forms,
     required List<P3BrowserAccessibilityFinding> accessibilityFindings,
-  })  : links = List<P3BrowserLinkCheck>.unmodifiable(links),
-        forms = List<P3BrowserFormCheck>.unmodifiable(forms),
-        accessibilityFindings =
-            List<P3BrowserAccessibilityFinding>.unmodifiable(
-          accessibilityFindings,
-        ) {
+  }) : links = List<P3BrowserLinkCheck>.unmodifiable(links),
+       forms = List<P3BrowserFormCheck>.unmodifiable(forms),
+       accessibilityFindings = List<P3BrowserAccessibilityFinding>.unmodifiable(
+         accessibilityFindings,
+       ) {
     _require(_identity.hasMatch(pageId), 'browser_quality_page_id_invalid');
     _require(
       _identity.hasMatch(observationId),
       'browser_quality_observation_id_invalid',
     );
     _require(
-        url.hasScheme && url.host.isNotEmpty, 'browser_quality_url_invalid');
-    _requireSha256(
-      screenshotSha256,
-      'browser_quality_screenshot_hash_invalid',
+      url.hasScheme && url.host.isNotEmpty,
+      'browser_quality_url_invalid',
     );
+    _requireSha256(screenshotSha256, 'browser_quality_screenshot_hash_invalid');
     _requireSha256(domSha256, 'browser_quality_dom_hash_invalid');
     _requireSha256(
       accessibilitySha256,
@@ -190,23 +184,23 @@ final class P3BrowserQualitySnapshot {
   final List<P3BrowserAccessibilityFinding> accessibilityFindings;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'pageId': pageId,
-        'observationId': observationId,
-        'url': url.toString(),
-        'viewport': <String, Object?>{
-          'name': viewport.name,
-          'width': viewport.width,
-          'height': viewport.height,
-        },
-        'screenshotSha256': screenshotSha256,
-        'domSha256': domSha256,
-        'accessibilitySha256': accessibilitySha256,
-        'links': links.map((item) => item.toJson()).toList(growable: false),
-        'forms': forms.map((item) => item.toJson()).toList(growable: false),
-        'accessibilityFindings': accessibilityFindings
-            .map((item) => item.toJson())
-            .toList(growable: false),
-      };
+    'pageId': pageId,
+    'observationId': observationId,
+    'url': url.toString(),
+    'viewport': <String, Object?>{
+      'name': viewport.name,
+      'width': viewport.width,
+      'height': viewport.height,
+    },
+    'screenshotSha256': screenshotSha256,
+    'domSha256': domSha256,
+    'accessibilitySha256': accessibilitySha256,
+    'links': links.map((item) => item.toJson()).toList(growable: false),
+    'forms': forms.map((item) => item.toJson()).toList(growable: false),
+    'accessibilityFindings': accessibilityFindings
+        .map((item) => item.toJson())
+        .toList(growable: false),
+  };
 
   String get snapshotSha256 => Sha256.text(_canonicalJson(toJson()));
 }
@@ -248,52 +242,44 @@ final class P3BrowserVisualDiff {
   bool get passed => changedRatio <= maxChangedRatio;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'baselineScreenshotSha256': baselineScreenshotSha256,
-        'currentScreenshotSha256': currentScreenshotSha256,
-        'changedPixels': changedPixels,
-        'totalPixels': totalPixels,
-        'changedRatio': changedRatio,
-        'maxChangedRatio': maxChangedRatio,
-        'passed': passed,
-      };
+    'baselineScreenshotSha256': baselineScreenshotSha256,
+    'currentScreenshotSha256': currentScreenshotSha256,
+    'changedPixels': changedPixels,
+    'totalPixels': totalPixels,
+    'changedRatio': changedRatio,
+    'maxChangedRatio': maxChangedRatio,
+    'passed': passed,
+  };
 }
 
 final class P3BrowserQualityReport {
-  P3BrowserQualityReport({
-    required this.snapshot,
-    required this.visualDiff,
-  });
+  P3BrowserQualityReport({required this.snapshot, required this.visualDiff});
 
   final P3BrowserQualitySnapshot snapshot;
   final P3BrowserVisualDiff visualDiff;
 
   bool get accessibilityPassed => snapshot.accessibilityFindings.every(
-        (item) => item.severity != P3BrowserAccessibilitySeverity.error,
-      );
+    (item) => item.severity != P3BrowserAccessibilitySeverity.error,
+  );
   bool get linksPassed => snapshot.links.every((item) => item.passed);
   bool get formsPassed => snapshot.forms.every((item) => item.passed);
   bool get passed =>
       visualDiff.passed && accessibilityPassed && linksPassed && formsPassed;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'snapshot': snapshot.toJson(),
-        'snapshotSha256': snapshot.snapshotSha256,
-        'visualDiff': visualDiff.toJson(),
-        'accessibilityPassed': accessibilityPassed,
-        'linksPassed': linksPassed,
-        'formsPassed': formsPassed,
-        'passed': passed,
-      };
+    'snapshot': snapshot.toJson(),
+    'snapshotSha256': snapshot.snapshotSha256,
+    'visualDiff': visualDiff.toJson(),
+    'accessibilityPassed': accessibilityPassed,
+    'linksPassed': linksPassed,
+    'formsPassed': formsPassed,
+    'passed': passed,
+  };
 
   String get reportSha256 => Sha256.text(_canonicalJson(toJson()));
 }
 
-enum P3BrowserSecurityDecision {
-  allow,
-  quarantine,
-  block,
-  takeover,
-}
+enum P3BrowserSecurityDecision { allow, quarantine, block, takeover }
 
 final class P3BrowserSecurityGuard {
   const P3BrowserSecurityGuard();
@@ -331,10 +317,7 @@ final class P3BrowserSecurityGuard {
     required String currentObservationId,
     required String targetObservationId,
   }) {
-    _require(
-      activePageId == targetPageId,
-      'browser_tab_confusion_blocked',
-    );
+    _require(activePageId == targetPageId, 'browser_tab_confusion_blocked');
     _require(
       currentObservationId == targetObservationId,
       'browser_stale_target_blocked',
@@ -371,8 +354,8 @@ final class P3BrowserSecurityGuard {
 
   P3BrowserSecurityDecision classifyVisibleText(String visibleText) =>
       containsPromptInjection(visibleText)
-          ? P3BrowserSecurityDecision.takeover
-          : P3BrowserSecurityDecision.allow;
+      ? P3BrowserSecurityDecision.takeover
+      : P3BrowserSecurityDecision.allow;
 }
 
 enum P3BrowserTaskRecipeKind {
@@ -397,11 +380,11 @@ final class P3BrowserTaskRecipeStep {
   final bool mutating;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'operation': operation,
-        'requiresFreshObservation': requiresFreshObservation,
-        'mutating': mutating,
-      };
+    'id': id,
+    'operation': operation,
+    'requiresFreshObservation': requiresFreshObservation,
+    'mutating': mutating,
+  };
 }
 
 final class P3BrowserTaskRecipe {
@@ -418,11 +401,11 @@ final class P3BrowserTaskRecipe {
   final List<P3BrowserTaskRecipeStep> steps;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'kind': kind.name,
-        'description': description,
-        'steps': steps.map((item) => item.toJson()).toList(growable: false),
-      };
+    'id': id,
+    'kind': kind.name,
+    'description': description,
+    'steps': steps.map((item) => item.toJson()).toList(growable: false),
+  };
 }
 
 abstract final class P3BrowserTaskRecipes {
@@ -584,22 +567,21 @@ final class P3BrowserRecipeReceipt {
     required List<String> completedStepIds,
   }) {
     _require(
-        _identity.hasMatch(sessionId), 'browser_recipe_session_id_invalid');
+      _identity.hasMatch(sessionId),
+      'browser_recipe_session_id_invalid',
+    );
     _require(_identity.hasMatch(pageId), 'browser_recipe_page_id_invalid');
     _requireSha256(
       observationSha256,
       'browser_recipe_observation_hash_invalid',
     );
-    _requireSha256(
-      qualityReportSha256,
-      'browser_recipe_quality_hash_invalid',
-    );
+    _requireSha256(qualityReportSha256, 'browser_recipe_quality_hash_invalid');
     final expectedSteps = recipe.steps.map((item) => item.id).toList();
     _require(
       completedStepIds.length == expectedSteps.length &&
           completedStepIds.asMap().entries.every(
-                (entry) => entry.value == expectedSteps[entry.key],
-              ),
+            (entry) => entry.value == expectedSteps[entry.key],
+          ),
       'browser_recipe_steps_incomplete',
     );
     final inputSha = Sha256.text(_canonicalJson(input));
@@ -638,16 +620,16 @@ final class P3BrowserRecipeReceipt {
   final String receiptSha256;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'recipeId': recipeId,
-        'sessionId': sessionId,
-        'pageId': pageId,
-        'observationSha256': observationSha256,
-        'inputSha256': inputSha256,
-        'outputSha256': outputSha256,
-        'qualityReportSha256': qualityReportSha256,
-        'completedStepIds': completedStepIds,
-        'receiptSha256': receiptSha256,
-      };
+    'recipeId': recipeId,
+    'sessionId': sessionId,
+    'pageId': pageId,
+    'observationSha256': observationSha256,
+    'inputSha256': inputSha256,
+    'outputSha256': outputSha256,
+    'qualityReportSha256': qualityReportSha256,
+    'completedStepIds': completedStepIds,
+    'receiptSha256': receiptSha256,
+  };
 
   bool verify() {
     final payload = <String, Object?>{

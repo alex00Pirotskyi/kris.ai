@@ -92,20 +92,18 @@ final class P2BundledCurrentAccountRuntime {
           resources.sourceCommit == sourceCommit &&
           resources.sourceTree == sourceTree &&
           resources.runtimeBuildSha256 == runtimeBuildSha256 &&
-          resources.provisionedEnvironment[
-                  'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+          resources
+                  .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
               '1' &&
-          !resources.provisionedEnvironment
-              .containsKey('KRISTIN_OWNER_RISK_QA'),
+          !resources.provisionedEnvironment.containsKey(
+            'KRISTIN_OWNER_RISK_QA',
+          ),
       materialize: (destination) => _copyTree(bundledRoot, destination),
     );
     return true;
   }
 
-  static Future<void> _copyTree(
-    Directory source,
-    Directory destination,
-  ) async {
+  static Future<void> _copyTree(Directory source, Directory destination) async {
     if (await destination.exists()) {
       await destination.delete(recursive: true);
     }

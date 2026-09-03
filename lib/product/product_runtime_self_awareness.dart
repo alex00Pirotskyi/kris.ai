@@ -22,12 +22,14 @@ final class RuntimeCapabilityProvider
   final Future<CapabilityAvailability> Function(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) resolver;
+  )
+  resolver;
   final Future<CapabilityHealth> Function(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
     CapabilityAvailability availability,
-  )? healthResolver;
+  )?
+  healthResolver;
 
   @override
   Iterable<CapabilityDescriptor> describeCapabilities() => descriptors;
@@ -36,8 +38,7 @@ final class RuntimeCapabilityProvider
   Future<CapabilityAvailability> resolveAvailability(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) =>
-      resolver(descriptor, snapshot);
+  ) => resolver(descriptor, snapshot);
 
   @override
   Future<CapabilityHealth> resolveHealth(
@@ -53,8 +54,8 @@ final class RuntimeCapabilityProvider
       state: availability.state == CapabilityAvailabilityState.available
           ? CapabilityHealthState.healthy
           : availability.state == CapabilityAvailabilityState.degraded
-              ? CapabilityHealthState.degraded
-              : CapabilityHealthState.unknown,
+          ? CapabilityHealthState.degraded
+          : CapabilityHealthState.unknown,
       reasons: const <String>[
         'Runtime provider has not reported a separate direct health probe yet.',
       ],
@@ -77,31 +78,31 @@ SelfModelSessionOverlay productSelfOverlay({
   String key = 'chat',
   ProjectRecord? selectedProject,
   ModelIdentity? selectedModel,
-}) =>
-    SelfModelSessionOverlay(
-      key: key,
-      selectedProject: selectedProject == null
-          ? null
-          : <String, Object?>{
-              'id': selectedProject.id,
-              'name': selectedProject.name,
-              'rootPath': selectedProject.rootPath,
-            },
-      selectedModel: selectedModel == null
-          ? null
-          : <String, Object?>{
-              'providerId': selectedModel.providerId,
-              'name': selectedModel.name,
-              'digest': selectedModel.digest,
-              'exactId': selectedModel.exactId,
-            },
-    );
+}) => SelfModelSessionOverlay(
+  key: key,
+  selectedProject: selectedProject == null
+      ? null
+      : <String, Object?>{
+          'id': selectedProject.id,
+          'name': selectedProject.name,
+          'rootPath': selectedProject.rootPath,
+        },
+  selectedModel: selectedModel == null
+      ? null
+      : <String, Object?>{
+          'providerId': selectedModel.providerId,
+          'name': selectedModel.name,
+          'digest': selectedModel.digest,
+          'exactId': selectedModel.exactId,
+        },
+);
 
 /// Authoritative bounded ProductRuntime adapter. Provider discovery is cached
 /// independently from the five-second monitor tick and records each provider's
 /// success/failure instead of treating an empty aggregate list as proof that
 /// every provider was healthy.
-final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvider {
+final class ProductRuntimeSnapshotProvider
+    implements ApplicationSnapshotProvider {
   ProductRuntimeSnapshotProvider({
     required this.runtime,
     this.maxProjects = 20,
@@ -129,23 +130,27 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
     final projects = await runtime.listProjects();
     final boundedProjects = projects
         .take(maxProjects)
-        .map((project) => <String, Object?>{
-              'id': project.id,
-              'name': project.name,
-              'rootPath': project.rootPath,
-              'updatedAt': project.updatedAt.toIso8601String(),
-            })
+        .map(
+          (project) => <String, Object?>{
+            'id': project.id,
+            'name': project.name,
+            'rootPath': project.rootPath,
+            'updatedAt': project.updatedAt.toIso8601String(),
+          },
+        )
         .toList(growable: false);
 
     final runs = await runtime.listRuns(limit: maxRuns);
     final runState = <String, Object?>{
       'recent': runs
-          .map((run) => <String, Object?>{
-                'id': run.id,
-                'status': run.state.name,
-                'projectId': run.command.contract.projectId,
-                'updatedAt': run.updatedAt.toIso8601String(),
-              })
+          .map(
+            (run) => <String, Object?>{
+              'id': run.id,
+              'status': run.state.name,
+              'projectId': run.command.contract.projectId,
+              'updatedAt': run.updatedAt.toIso8601String(),
+            },
+          )
           .toList(growable: false),
     };
 
@@ -153,11 +158,13 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
     final models = _modelCache.take(maxModels).toList(growable: false);
     final selectedModel = overlay.selectedModel;
     final selectedExactId = selectedModel?['exactId']?.toString();
-    final selectedModelLive = selectedExactId != null &&
+    final selectedModelLive =
+        selectedExactId != null &&
         models.any((model) => model.exactId == selectedExactId);
     final selectedProject = overlay.selectedProject;
     final selectedProjectId = selectedProject?['id']?.toString();
-    final selectedProjectLive = selectedProjectId != null &&
+    final selectedProjectLive =
+        selectedProjectId != null &&
         projects.any((project) => project.id == selectedProjectId);
 
     final browser = runtime.p3BrowserRuntime;
@@ -165,12 +172,14 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
     final recentFailures = runs
         .where((run) => run.state == RunState.failed)
         .take(5)
-        .map((run) => <String, Object?>{
-              'runId': run.id,
-              'projectId': run.command.contract.projectId,
-              'failure': run.failure ?? '',
-              'updatedAt': run.updatedAt.toIso8601String(),
-            })
+        .map(
+          (run) => <String, Object?>{
+            'runId': run.id,
+            'projectId': run.command.contract.projectId,
+            'failure': run.failure ?? '',
+            'updatedAt': run.updatedAt.toIso8601String(),
+          },
+        )
         .toList(growable: false);
 
     final providerFailures = _providerCache
@@ -194,10 +203,7 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
       },
       selectedProject: selectedProject == null
           ? null
-          : <String, Object?>{
-              ...selectedProject,
-              'known': selectedProjectLive,
-            },
+          : <String, Object?>{...selectedProject, 'known': selectedProjectLive},
       knownProjects: boundedProjects,
       selectedModel: selectedModel == null
           ? null
@@ -206,13 +212,15 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
               'discovered': selectedModelLive,
             },
       availableModels: models
-          .map((model) => <String, Object?>{
-                'providerId': model.providerId,
-                'name': model.name,
-                'digest': model.digest,
-                'exactId': model.exactId,
-                'selected': model.exactId == selectedExactId,
-              })
+          .map(
+            (model) => <String, Object?>{
+              'providerId': model.providerId,
+              'name': model.name,
+              'digest': model.digest,
+              'exactId': model.exactId,
+              'selected': model.exactId == selectedExactId,
+            },
+          )
           .toList(growable: false),
       providers: List<Map<String, Object?>>.unmodifiable(_providerCache),
       runState: runState,
@@ -314,8 +322,8 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
       final started = Stopwatch()..start();
       try {
         final discovered = await provider.discover().timeout(
-              const Duration(seconds: 12),
-            );
+          const Duration(seconds: 12),
+        );
         started.stop();
         models.addAll(discovered);
         providers.add(<String, Object?>{
@@ -336,117 +344,313 @@ final class ProductRuntimeSnapshotProvider implements ApplicationSnapshotProvide
       }
     }
     models.sort((a, b) => a.exactId.compareTo(b.exactId));
-    providers.sort(
-      (a, b) => a['id'].toString().compareTo(b['id'].toString()),
-    );
+    providers.sort((a, b) => a['id'].toString().compareTo(b['id'].toString()));
     _modelCache = List<ModelIdentity>.unmodifiable(models);
     _providerCache = List<Map<String, Object?>>.unmodifiable(providers);
     _modelCapturedAt = now;
   }
 }
 
-List<CapabilitySatisfactionStep> _projectSatisfactionPath() =>
-    const <CapabilitySatisfactionStep>[
-      CapabilitySatisfactionStep(
-        id: 'select_project',
-        description:
-            'Select an existing project whose identity is present in the current project repository.',
-        condition: 'The selected project exists in a fresh project snapshot.',
-      ),
-    ];
+List<CapabilitySatisfactionStep>
+_projectSatisfactionPath() => const <CapabilitySatisfactionStep>[
+  CapabilitySatisfactionStep(
+    id: 'select_project',
+    description:
+        'Select an existing project whose identity is present in the current project repository.',
+    condition: 'The selected project exists in a fresh project snapshot.',
+  ),
+];
 
-List<CapabilitySatisfactionStep> _modelSatisfactionPath() =>
-    const <CapabilitySatisfactionStep>[
-      CapabilitySatisfactionStep(
-        id: 'select_live_model',
-        description:
-            'Select a model whose exact identity is present in fresh provider discovery.',
-        condition: 'The selected model appears in a fresh provider observation.',
-      ),
-    ];
+List<CapabilitySatisfactionStep>
+_modelSatisfactionPath() => const <CapabilitySatisfactionStep>[
+  CapabilitySatisfactionStep(
+    id: 'select_live_model',
+    description:
+        'Select a model whose exact identity is present in fresh provider discovery.',
+    condition: 'The selected model appears in a fresh provider observation.',
+  ),
+];
 
-KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime) {
+KristinCapabilityRegistry buildProductCapabilityRegistry(
+  ProductRuntime runtime,
+) {
   final registry = KristinCapabilityRegistry();
-  registry.register(ChatCapabilityProvider(
-    availabilityResolver: (capability, descriptor, snapshot) async {
-      final evidence = <KnowledgeEvidence>[
-        KnowledgeEvidence(
-          kind: KnowledgeEvidenceKind.observed,
-          source: 'product_runtime.chat_capability_resolver',
-          confidence: ObservationConfidence.high,
-          observedAt: snapshot.capturedAt,
-          expiresAt: descriptor.freshnessBudget == Duration.zero
-              ? snapshot.capturedAt
-              : snapshot.capturedAt.add(descriptor.freshnessBudget),
-        ),
-      ];
-      if (descriptor.projectRequired) {
-        final selected = snapshot.selectedProject;
-        if (selected == null || selected['known'] != true) {
+  registry.register(
+    ChatCapabilityProvider(
+      availabilityResolver: (capability, descriptor, snapshot) async {
+        final evidence = <KnowledgeEvidence>[
+          KnowledgeEvidence(
+            kind: KnowledgeEvidenceKind.observed,
+            source: 'product_runtime.chat_capability_resolver',
+            confidence: ObservationConfidence.high,
+            observedAt: snapshot.capturedAt,
+            expiresAt: descriptor.freshnessBudget == Duration.zero
+                ? snapshot.capturedAt
+                : snapshot.capturedAt.add(descriptor.freshnessBudget),
+          ),
+        ];
+        if (descriptor.projectRequired) {
+          final selected = snapshot.selectedProject;
+          if (selected == null || selected['known'] != true) {
+            return CapabilityAvailability(
+              capabilityId: descriptor.id,
+              state: CapabilityAvailabilityState.projectRequired,
+              reasons: const <String>[
+                'A live selected project is required for this capability.',
+              ],
+              missingPrerequisites: const <String>{'selectedProject'},
+              requiredAuthority: descriptor.permissionRequirements,
+              authorityObservation: descriptor.permissionRequirements.isEmpty
+                  ? AuthorityObservationState.notRequired
+                  : AuthorityObservationState.notEvaluated,
+              observedAt: snapshot.capturedAt,
+              evidence: evidence,
+              satisfactionPath: _projectSatisfactionPath(),
+            );
+          }
+        }
+        if (descriptor.modelProviderRequired) {
+          final selected = snapshot.selectedModel;
+          if (selected == null || selected['discovered'] != true) {
+            return CapabilityAvailability(
+              capabilityId: descriptor.id,
+              state: CapabilityAvailabilityState.modelProviderMissing,
+              reasons: <String>[
+                selected == null
+                    ? 'No model/provider is selected for substantial planning.'
+                    : 'Selected model ${selected['exactId']} is not present in fresh provider discovery.',
+              ],
+              missingPrerequisites: const <String>{'liveSelectedModel'},
+              requiredAuthority: descriptor.permissionRequirements,
+              authorityObservation: descriptor.permissionRequirements.isEmpty
+                  ? AuthorityObservationState.notRequired
+                  : AuthorityObservationState.notEvaluated,
+              observedAt: snapshot.capturedAt,
+              evidence: evidence,
+              satisfactionPath: _modelSatisfactionPath(),
+            );
+          }
+        }
+        if (capability.route == ChatExecutionRoute.researchSearch &&
+            snapshot.research['localOnly'] == true) {
           return CapabilityAvailability(
             capabilityId: descriptor.id,
-            state: CapabilityAvailabilityState.projectRequired,
+            state: CapabilityAvailabilityState.blocked,
             reasons: const <String>[
-              'A live selected project is required for this capability.',
+              'Web research is disabled by the current local-only setting.',
             ],
-            missingPrerequisites: const <String>{'selectedProject'},
+            missingPrerequisites: const <String>{'networkResearchEnabled'},
             requiredAuthority: descriptor.permissionRequirements,
-            authorityObservation: descriptor.permissionRequirements.isEmpty
-                ? AuthorityObservationState.notRequired
-                : AuthorityObservationState.notEvaluated,
+            authorityObservation: AuthorityObservationState.notEvaluated,
             observedAt: snapshot.capturedAt,
             evidence: evidence,
-            satisfactionPath: _projectSatisfactionPath(),
+            satisfactionPath: const <CapabilitySatisfactionStep>[
+              CapabilitySatisfactionStep(
+                id: 'enable_network_research',
+                description:
+                    'Change the governed local-only setting before attempting network research.',
+                condition:
+                    'Network research is enabled by user-controlled settings.',
+                automatic: false,
+              ),
+            ],
           );
         }
-      }
-      if (descriptor.modelProviderRequired) {
-        final selected = snapshot.selectedModel;
-        if (selected == null || selected['discovered'] != true) {
+        if (capability.route == ChatExecutionRoute.ownerMode) {
+          final available = snapshot.ownerMode['available'] == true;
+          final eligible = snapshot.ownerMode['completionEligible'] == true;
           return CapabilityAvailability(
             capabilityId: descriptor.id,
-            state: CapabilityAvailabilityState.modelProviderMissing,
+            state: !available
+                ? CapabilityAvailabilityState.ownerAuthorityUnavailable
+                : eligible
+                ? CapabilityAvailabilityState.approvalRequired
+                : CapabilityAvailabilityState.additionalAuthorityRequired,
             reasons: <String>[
-              selected == null
-                  ? 'No model/provider is selected for substantial planning.'
-                  : 'Selected model ${selected['exactId']} is not present in fresh provider discovery.',
+              if (!available)
+                'Owner Mode runtime is unavailable: ${snapshot.ownerMode['diagnosticCode']}.'
+              else if (!eligible)
+                'Owner Mode is present but its isolated authority service is not completion-eligible.'
+              else
+                'Owner Mode exists, but authority has not been evaluated for a concrete operation.',
             ],
-            missingPrerequisites: const <String>{'liveSelectedModel'},
-            requiredAuthority: descriptor.permissionRequirements,
-            authorityObservation: descriptor.permissionRequirements.isEmpty
-                ? AuthorityObservationState.notRequired
-                : AuthorityObservationState.notEvaluated,
+            requiredAuthority: <String>{
+              ...descriptor.permissionRequirements,
+              'owner',
+            },
+            currentAuthority: const <String>{},
+            authorityObservation: AuthorityObservationState.notEvaluated,
             observedAt: snapshot.capturedAt,
             evidence: evidence,
-            satisfactionPath: _modelSatisfactionPath(),
+            satisfactionPath: const <CapabilitySatisfactionStep>[
+              CapabilitySatisfactionStep(
+                id: 'verify_owner_runtime',
+                description:
+                    'Verify that the isolated Owner runtime is available and completion-eligible.',
+                condition: 'Owner runtime probe is healthy.',
+              ),
+              CapabilitySatisfactionStep(
+                id: 'obtain_owner_grant',
+                description:
+                    'Evaluate and obtain explicit Owner authority for the specific operation.',
+                condition:
+                    'The authority service returns a valid per-operation grant.',
+                requiredAuthority: <String>{'owner'},
+                automatic: false,
+              ),
+            ],
           );
         }
-      }
-      if (capability.route == ChatExecutionRoute.researchSearch &&
-          snapshot.research['localOnly'] == true) {
         return CapabilityAvailability(
           capabilityId: descriptor.id,
-          state: CapabilityAvailabilityState.blocked,
+          state: CapabilityAvailabilityState.available,
           reasons: const <String>[
-            'Web research is disabled by the current local-only setting.',
+            'Runtime prerequisites are currently satisfied.',
           ],
-          missingPrerequisites: const <String>{'networkResearchEnabled'},
           requiredAuthority: descriptor.permissionRequirements,
-          authorityObservation: AuthorityObservationState.notEvaluated,
+          authorityObservation: descriptor.permissionRequirements.isEmpty
+              ? AuthorityObservationState.notRequired
+              : AuthorityObservationState.notEvaluated,
           observedAt: snapshot.capturedAt,
           evidence: evidence,
-          satisfactionPath: const <CapabilitySatisfactionStep>[
-            CapabilitySatisfactionStep(
-              id: 'enable_network_research',
-              description:
-                  'Change the governed local-only setting before attempting network research.',
-              condition: 'Network research is enabled by user-controlled settings.',
-              automatic: false,
+        );
+      },
+    ),
+  );
+
+  registry.register(
+    RuntimeCapabilityProvider(
+      providerId: 'browser.runtime',
+      descriptors: const <CapabilityDescriptor>[
+        CapabilityDescriptor(
+          id: 'browser.navigate',
+          name: 'Browser navigation',
+          description:
+              'Open and inspect a public web page using the application-owned Browser runtime.',
+          semanticPurpose:
+              'Rendered-page observation for governed browsing/research flows.',
+          category: 'connections',
+          acceptedTargets: <String>{'url'},
+          riskClass: CapabilityRiskClass.readOnly,
+          readOnly: true,
+          networkRequired: true,
+          browserRequired: true,
+          directlyExecutable: false,
+          recoveryParticipant: true,
+          limitations: <String>[
+            'Availability depends on the packaged/provisioned Browser runtime.',
+          ],
+          freshnessBudget: Duration(seconds: 5),
+          healthFreshnessBudget: Duration(seconds: 35),
+          probeInterval: Duration(seconds: 30),
+          providerId: 'browser.runtime',
+        ),
+      ],
+      resolver: (descriptor, snapshot) async {
+        final available = snapshot.browser['available'] == true;
+        return CapabilityAvailability(
+          capabilityId: descriptor.id,
+          state: available
+              ? CapabilityAvailabilityState.available
+              : CapabilityAvailabilityState.browserUnavailable,
+          reasons: <String>[
+            available
+                ? 'The application-owned Browser runtime is provisioned.'
+                : 'Browser runtime unavailable: ${snapshot.browser['statusCode']}.',
+          ],
+          missingPrerequisites: available
+              ? const <String>{}
+              : const <String>{'browserRuntime'},
+          authorityObservation: AuthorityObservationState.notRequired,
+          observedAt: snapshot.capturedAt,
+          evidence: <KnowledgeEvidence>[
+            KnowledgeEvidence(
+              kind: KnowledgeEvidenceKind.observed,
+              source: 'ProductRuntime.p3BrowserRuntime',
+              confidence: ObservationConfidence.high,
+              observedAt: snapshot.capturedAt,
+              expiresAt: snapshot.capturedAt.add(descriptor.freshnessBudget),
+            ),
+          ],
+          satisfactionPath: available
+              ? const <CapabilitySatisfactionStep>[]
+              : const <CapabilitySatisfactionStep>[
+                  CapabilitySatisfactionStep(
+                    id: 'provision_browser_runtime',
+                    description:
+                        'Provision or refresh the application-owned Browser runtime.',
+                    condition: 'Browser runtime handle reports available.',
+                  ),
+                  CapabilitySatisfactionStep(
+                    id: 'probe_browser_runtime',
+                    description:
+                        'Run a lightweight Browser startup/shutdown probe.',
+                    condition: 'Browser consistency probe reports healthy.',
+                  ),
+                ],
+        );
+      },
+      healthResolver: (descriptor, snapshot, availability) async {
+        final available = snapshot.browser['available'] == true;
+        return CapabilityHealth(
+          capabilityId: descriptor.id,
+          state: available
+              ? CapabilityHealthState.degraded
+              : CapabilityHealthState.failing,
+          reasons: <String>[
+            available
+                ? 'Browser bundle exists; the startup probe is the stronger health signal.'
+                : 'Browser handle is not available: ${snapshot.browser['statusCode']}.',
+          ],
+          observedAt: snapshot.capturedAt,
+          expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
+          evidence: <KnowledgeEvidence>[
+            KnowledgeEvidence(
+              kind: KnowledgeEvidenceKind.observed,
+              source: 'ProductRuntime.p3BrowserRuntime.handle',
+              confidence: ObservationConfidence.high,
+              observedAt: snapshot.capturedAt,
+              expiresAt: snapshot.capturedAt.add(
+                descriptor.healthFreshnessBudget,
+              ),
             ),
           ],
         );
-      }
-      if (capability.route == ChatExecutionRoute.ownerMode) {
+      },
+    ),
+  );
+
+  registry.register(
+    RuntimeCapabilityProvider(
+      providerId: 'owner.recovery',
+      descriptors: const <CapabilityDescriptor>[
+        CapabilityDescriptor(
+          id: 'owner.recovery.actuate',
+          name: 'Owner recovery actuator',
+          description:
+              'Perform explicitly-authorized host-level recovery effects through Owner Mode.',
+          semanticPurpose:
+              'Controlled recovery actuator; capability knowledge never grants its authority.',
+          category: 'system',
+          riskClass: CapabilityRiskClass.sensitive,
+          readOnly: false,
+          mutatesHostState: true,
+          authorityClass: CapabilityAuthorityClass.owner,
+          permissionRequirements: <String>{'owner'},
+          filesystemRequired: true,
+          processRequired: true,
+          directlyExecutable: false,
+          recoveryParticipant: true,
+          limitations: <String>[
+            'Every effect remains subject to Owner Mode authority and approval policy.',
+          ],
+          freshnessBudget: Duration.zero,
+          healthFreshnessBudget: Duration(seconds: 12),
+          probeInterval: Duration(seconds: 10),
+          providerId: 'owner.recovery',
+        ),
+      ],
+      resolver: (descriptor, snapshot) async {
         final available = snapshot.ownerMode['available'] == true;
         final eligible = snapshot.ownerMode['completionEligible'] == true;
         return CapabilityAvailability(
@@ -454,267 +658,83 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(ProductRuntime runtime)
           state: !available
               ? CapabilityAvailabilityState.ownerAuthorityUnavailable
               : eligible
-                  ? CapabilityAvailabilityState.approvalRequired
-                  : CapabilityAvailabilityState.additionalAuthorityRequired,
+              ? CapabilityAvailabilityState.approvalRequired
+              : CapabilityAvailabilityState.additionalAuthorityRequired,
           reasons: <String>[
             if (!available)
-              'Owner Mode runtime is unavailable: ${snapshot.ownerMode['diagnosticCode']}.'
+              'Owner Mode runtime is unavailable.'
             else if (!eligible)
-              'Owner Mode is present but its isolated authority service is not completion-eligible.'
+              'Owner Mode exists but its isolated authority service is not completion-eligible.'
             else
-              'Owner Mode exists, but authority has not been evaluated for a concrete operation.',
+              'Owner recovery exists, but operation authority has not been evaluated.',
           ],
-          requiredAuthority: <String>{
-            ...descriptor.permissionRequirements,
-            'owner',
-          },
+          requiredAuthority: const <String>{'owner'},
           currentAuthority: const <String>{},
           authorityObservation: AuthorityObservationState.notEvaluated,
           observedAt: snapshot.capturedAt,
-          evidence: evidence,
+          evidence: <KnowledgeEvidence>[
+            KnowledgeEvidence(
+              kind: KnowledgeEvidenceKind.observed,
+              source: 'ProductRuntime.p2OwnerMode',
+              confidence: ObservationConfidence.high,
+              observedAt: snapshot.capturedAt,
+              expiresAt: snapshot.capturedAt,
+            ),
+          ],
           satisfactionPath: const <CapabilitySatisfactionStep>[
             CapabilitySatisfactionStep(
               id: 'verify_owner_runtime',
-              description:
-                  'Verify that the isolated Owner runtime is available and completion-eligible.',
-              condition: 'Owner runtime probe is healthy.',
+              description: 'Verify isolated Owner runtime readiness.',
+              condition: 'Owner runtime is available and completion-eligible.',
             ),
             CapabilitySatisfactionStep(
-              id: 'obtain_owner_grant',
+              id: 'obtain_owner_authority',
               description:
-                  'Evaluate and obtain explicit Owner authority for the specific operation.',
-              condition:
-                  'The authority service returns a valid per-operation grant.',
+                  'Evaluate and obtain explicit authority for the concrete recovery operation.',
+              condition: 'Authority service returns a valid grant.',
               requiredAuthority: <String>{'owner'},
               automatic: false,
             ),
           ],
         );
-      }
-      return CapabilityAvailability(
-        capabilityId: descriptor.id,
-        state: CapabilityAvailabilityState.available,
-        reasons: const <String>['Runtime prerequisites are currently satisfied.'],
-        requiredAuthority: descriptor.permissionRequirements,
-        authorityObservation: descriptor.permissionRequirements.isEmpty
-            ? AuthorityObservationState.notRequired
-            : AuthorityObservationState.notEvaluated,
-        observedAt: snapshot.capturedAt,
-        evidence: evidence,
-      );
-    },
-  ));
-
-  registry.register(RuntimeCapabilityProvider(
-    providerId: 'browser.runtime',
-    descriptors: const <CapabilityDescriptor>[
-      CapabilityDescriptor(
-        id: 'browser.navigate',
-        name: 'Browser navigation',
-        description:
-            'Open and inspect a public web page using the application-owned Browser runtime.',
-        semanticPurpose:
-            'Rendered-page observation for governed browsing/research flows.',
-        category: 'connections',
-        acceptedTargets: <String>{'url'},
-        riskClass: CapabilityRiskClass.readOnly,
-        readOnly: true,
-        networkRequired: true,
-        browserRequired: true,
-        directlyExecutable: false,
-        recoveryParticipant: true,
-        limitations: <String>[
-          'Availability depends on the packaged/provisioned Browser runtime.',
-        ],
-        freshnessBudget: Duration(seconds: 5),
-        healthFreshnessBudget: Duration(seconds: 35),
-        probeInterval: Duration(seconds: 30),
-        providerId: 'browser.runtime',
-      ),
-    ],
-    resolver: (descriptor, snapshot) async {
-      final available = snapshot.browser['available'] == true;
-      return CapabilityAvailability(
-        capabilityId: descriptor.id,
-        state: available
-            ? CapabilityAvailabilityState.available
-            : CapabilityAvailabilityState.browserUnavailable,
-        reasons: <String>[
-          available
-              ? 'The application-owned Browser runtime is provisioned.'
-              : 'Browser runtime unavailable: ${snapshot.browser['statusCode']}.',
-        ],
-        missingPrerequisites:
-            available ? const <String>{} : const <String>{'browserRuntime'},
-        authorityObservation: AuthorityObservationState.notRequired,
-        observedAt: snapshot.capturedAt,
-        evidence: <KnowledgeEvidence>[
-          KnowledgeEvidence(
-            kind: KnowledgeEvidenceKind.observed,
-            source: 'ProductRuntime.p3BrowserRuntime',
-            confidence: ObservationConfidence.high,
-            observedAt: snapshot.capturedAt,
-            expiresAt: snapshot.capturedAt.add(descriptor.freshnessBudget),
-          ),
-        ],
-        satisfactionPath: available
-            ? const <CapabilitySatisfactionStep>[]
-            : const <CapabilitySatisfactionStep>[
-                CapabilitySatisfactionStep(
-                  id: 'provision_browser_runtime',
-                  description:
-                      'Provision or refresh the application-owned Browser runtime.',
-                  condition: 'Browser runtime handle reports available.',
-                ),
-                CapabilitySatisfactionStep(
-                  id: 'probe_browser_runtime',
-                  description:
-                      'Run a lightweight Browser startup/shutdown probe.',
-                  condition: 'Browser consistency probe reports healthy.',
-                ),
-              ],
-      );
-    },
-    healthResolver: (descriptor, snapshot, availability) async {
-      final available = snapshot.browser['available'] == true;
-      return CapabilityHealth(
-        capabilityId: descriptor.id,
-        state: available
-            ? CapabilityHealthState.degraded
-            : CapabilityHealthState.failing,
-        reasons: <String>[
-          available
-              ? 'Browser bundle exists; the startup probe is the stronger health signal.'
-              : 'Browser handle is not available: ${snapshot.browser['statusCode']}.',
-        ],
-        observedAt: snapshot.capturedAt,
-        expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
-        evidence: <KnowledgeEvidence>[
-          KnowledgeEvidence(
-            kind: KnowledgeEvidenceKind.observed,
-            source: 'ProductRuntime.p3BrowserRuntime.handle',
-            confidence: ObservationConfidence.high,
-            observedAt: snapshot.capturedAt,
-            expiresAt:
-                snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
-          ),
-        ],
-      );
-    },
-  ));
-
-  registry.register(RuntimeCapabilityProvider(
-    providerId: 'owner.recovery',
-    descriptors: const <CapabilityDescriptor>[
-      CapabilityDescriptor(
-        id: 'owner.recovery.actuate',
-        name: 'Owner recovery actuator',
-        description:
-            'Perform explicitly-authorized host-level recovery effects through Owner Mode.',
-        semanticPurpose:
-            'Controlled recovery actuator; capability knowledge never grants its authority.',
-        category: 'system',
-        riskClass: CapabilityRiskClass.sensitive,
-        readOnly: false,
-        mutatesHostState: true,
-        authorityClass: CapabilityAuthorityClass.owner,
-        permissionRequirements: <String>{'owner'},
-        filesystemRequired: true,
-        processRequired: true,
-        directlyExecutable: false,
-        recoveryParticipant: true,
-        limitations: <String>[
-          'Every effect remains subject to Owner Mode authority and approval policy.',
-        ],
-        freshnessBudget: Duration.zero,
-        healthFreshnessBudget: Duration(seconds: 12),
-        probeInterval: Duration(seconds: 10),
-        providerId: 'owner.recovery',
-      ),
-    ],
-    resolver: (descriptor, snapshot) async {
-      final available = snapshot.ownerMode['available'] == true;
-      final eligible = snapshot.ownerMode['completionEligible'] == true;
-      return CapabilityAvailability(
-        capabilityId: descriptor.id,
-        state: !available
-            ? CapabilityAvailabilityState.ownerAuthorityUnavailable
-            : eligible
-                ? CapabilityAvailabilityState.approvalRequired
-                : CapabilityAvailabilityState.additionalAuthorityRequired,
-        reasons: <String>[
-          if (!available)
-            'Owner Mode runtime is unavailable.'
-          else if (!eligible)
-            'Owner Mode exists but its isolated authority service is not completion-eligible.'
-          else
-            'Owner recovery exists, but operation authority has not been evaluated.',
-        ],
-        requiredAuthority: const <String>{'owner'},
-        currentAuthority: const <String>{},
-        authorityObservation: AuthorityObservationState.notEvaluated,
-        observedAt: snapshot.capturedAt,
-        evidence: <KnowledgeEvidence>[
-          KnowledgeEvidence(
-            kind: KnowledgeEvidenceKind.observed,
-            source: 'ProductRuntime.p2OwnerMode',
-            confidence: ObservationConfidence.high,
-            observedAt: snapshot.capturedAt,
-            expiresAt: snapshot.capturedAt,
-          ),
-        ],
-        satisfactionPath: const <CapabilitySatisfactionStep>[
-          CapabilitySatisfactionStep(
-            id: 'verify_owner_runtime',
-            description: 'Verify isolated Owner runtime readiness.',
-            condition: 'Owner runtime is available and completion-eligible.',
-          ),
-          CapabilitySatisfactionStep(
-            id: 'obtain_owner_authority',
-            description:
-                'Evaluate and obtain explicit authority for the concrete recovery operation.',
-            condition: 'Authority service returns a valid grant.',
-            requiredAuthority: <String>{'owner'},
-            automatic: false,
-          ),
-        ],
-      );
-    },
-    healthResolver: (descriptor, snapshot, availability) async {
-      final available = snapshot.ownerMode['available'] == true;
-      final eligible = snapshot.ownerMode['completionEligible'] == true;
-      final isolated = snapshot.ownerMode['secureIsolationActive'] == true;
-      return CapabilityHealth(
-        capabilityId: descriptor.id,
-        state: !available
-            ? CapabilityHealthState.failing
-            : eligible && isolated
-                ? CapabilityHealthState.healthy
-                : CapabilityHealthState.degraded,
-        reasons: <String>[
-          if (!available)
-            'Owner runtime is unavailable.'
-          else if (!eligible || !isolated)
-            'Owner runtime exists but completion eligibility or secure isolation is not active.'
-          else
-            'Owner runtime is isolated and completion-eligible; operation authority is still separate.',
-        ],
-        observedAt: snapshot.capturedAt,
-        lastVerifiedAt: snapshot.capturedAt,
-        expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
-        evidence: <KnowledgeEvidence>[
-          KnowledgeEvidence(
-            kind: KnowledgeEvidenceKind.observed,
-            source: 'ProductRuntime.p2OwnerMode.health',
-            confidence: ObservationConfidence.high,
-            observedAt: snapshot.capturedAt,
-            expiresAt:
-                snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
-          ),
-        ],
-      );
-    },
-  ));
+      },
+      healthResolver: (descriptor, snapshot, availability) async {
+        final available = snapshot.ownerMode['available'] == true;
+        final eligible = snapshot.ownerMode['completionEligible'] == true;
+        final isolated = snapshot.ownerMode['secureIsolationActive'] == true;
+        return CapabilityHealth(
+          capabilityId: descriptor.id,
+          state: !available
+              ? CapabilityHealthState.failing
+              : eligible && isolated
+              ? CapabilityHealthState.healthy
+              : CapabilityHealthState.degraded,
+          reasons: <String>[
+            if (!available)
+              'Owner runtime is unavailable.'
+            else if (!eligible || !isolated)
+              'Owner runtime exists but completion eligibility or secure isolation is not active.'
+            else
+              'Owner runtime is isolated and completion-eligible; operation authority is still separate.',
+          ],
+          observedAt: snapshot.capturedAt,
+          lastVerifiedAt: snapshot.capturedAt,
+          expiresAt: snapshot.capturedAt.add(descriptor.healthFreshnessBudget),
+          evidence: <KnowledgeEvidence>[
+            KnowledgeEvidence(
+              kind: KnowledgeEvidenceKind.observed,
+              source: 'ProductRuntime.p2OwnerMode.health',
+              confidence: ObservationConfidence.high,
+              observedAt: snapshot.capturedAt,
+              expiresAt: snapshot.capturedAt.add(
+                descriptor.healthFreshnessBudget,
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
   return registry;
 }
 
@@ -800,12 +820,11 @@ final class ProductSelfAwarenessRuntime {
     String key = 'chat',
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) =>
-      productSelfOverlay(
-        key: key,
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
-      );
+  }) => productSelfOverlay(
+    key: key,
+    selectedProject: selectedProject,
+    selectedModel: selectedModel,
+  );
 
   Future<KristinSelfSnapshot> snapshot({
     ProjectRecord? selectedProject,
@@ -911,15 +930,14 @@ final class ProductSelfAwarenessRuntime {
     ModelIdentity? selectedModel,
     String sessionKey = 'chat',
     bool force = true,
-  }) =>
-      consistency.runDue(
-        force: force,
-        overlay: overlay(
-          key: sessionKey,
-          selectedProject: selectedProject,
-          selectedModel: selectedModel,
-        ),
-      );
+  }) => consistency.runDue(
+    force: force,
+    overlay: overlay(
+      key: sessionKey,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    ),
+  );
 
   Future<T> observeOperation<T>(
     String operation,
@@ -927,7 +945,10 @@ final class ProductSelfAwarenessRuntime {
     Future<T> Function() action, {
     bool stateChanging = true,
   }) async {
-    final actionNode = causalGraph.recordAction(operation, attributes: attributes);
+    final actionNode = causalGraph.recordAction(
+      operation,
+      attributes: attributes,
+    );
     try {
       final result = await action();
       if (stateChanging) {
@@ -992,8 +1013,9 @@ final class ProductSelfAwarenessRuntime {
       reason: 'durable_runtime_event',
       overlay: runtimeOverlay,
     );
-    _integrityByOverlay[runtimeOverlay.cacheKey] =
-        integrity.checkSnapshot(latest);
+    _integrityByOverlay[runtimeOverlay.cacheKey] = integrity.checkSnapshot(
+      latest,
+    );
   }
 
   Future<SelfConsistencyProbeResult> _probeBrowser(
@@ -1001,11 +1023,12 @@ final class ProductSelfAwarenessRuntime {
     SelfModelSessionOverlay overlay,
   ) async {
     final browser = runtime.p3BrowserRuntime;
-    final affected = snapshot.capabilities
-        .where((item) => item.descriptor.browserRequired)
-        .map((item) => item.descriptor.id)
-        .toSet()
-      ..add('browser.navigate');
+    final affected =
+        snapshot.capabilities
+            .where((item) => item.descriptor.browserRequired)
+            .map((item) => item.descriptor.id)
+            .toSet()
+          ..add('browser.navigate');
     if (!browser.available) {
       return SelfConsistencyProbeResult(
         probeId: 'browser.runtime.startup',
@@ -1045,12 +1068,16 @@ final class ProductSelfAwarenessRuntime {
     SelfModelSessionOverlay overlay,
   ) async {
     final owner = runtime.p2OwnerMode;
-    final affected = snapshot.capabilities
-        .where((item) =>
-            item.descriptor.authorityClass == CapabilityAuthorityClass.owner)
-        .map((item) => item.descriptor.id)
-        .toSet()
-      ..add('owner.recovery.actuate');
+    final affected =
+        snapshot.capabilities
+            .where(
+              (item) =>
+                  item.descriptor.authorityClass ==
+                  CapabilityAuthorityClass.owner,
+            )
+            .map((item) => item.descriptor.id)
+            .toSet()
+          ..add('owner.recovery.actuate');
     if (!owner.available) {
       return SelfConsistencyProbeResult(
         probeId: 'owner.runtime.readiness',
@@ -1089,7 +1116,8 @@ final class ProductSelfAwarenessRuntime {
       return SelfConsistencyProbeResult(
         probeId: 'model.selection.discovery',
         status: ProbeStatus.skipped,
-        message: 'No model is selected, so there is no model identity to probe.',
+        message:
+            'No model is selected, so there is no model identity to probe.',
       );
     }
     final exactId = selected['exactId']?.toString() ?? '';
@@ -1103,8 +1131,9 @@ final class ProductSelfAwarenessRuntime {
         forceRefresh: true,
         overlay: overlay,
       );
-      final present = refreshed.availableModels
-          .any((model) => model['exactId']?.toString() == exactId);
+      final present = refreshed.availableModels.any(
+        (model) => model['exactId']?.toString() == exactId,
+      );
       watch.stop();
       return SelfConsistencyProbeResult(
         probeId: 'model.selection.discovery',
@@ -1153,7 +1182,8 @@ KristinSelfModelService buildProductSelfModel(
   );
 }
 
-final class _FixedOverlaySnapshotProvider implements ApplicationSnapshotProvider {
+final class _FixedOverlaySnapshotProvider
+    implements ApplicationSnapshotProvider {
   const _FixedOverlaySnapshotProvider(this.delegate, this.fixedOverlay);
   final ApplicationSnapshotProvider delegate;
   final SelfModelSessionOverlay fixedOverlay;
@@ -1162,6 +1192,5 @@ final class _FixedOverlaySnapshotProvider implements ApplicationSnapshotProvider
   Future<ApplicationSnapshot> capture({
     bool forceRefresh = false,
     SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
-  }) =>
-      delegate.capture(forceRefresh: forceRefresh, overlay: fixedOverlay);
+  }) => delegate.capture(forceRefresh: forceRefresh, overlay: fixedOverlay);
 }

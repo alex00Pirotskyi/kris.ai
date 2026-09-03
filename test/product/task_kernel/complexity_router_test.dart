@@ -23,10 +23,7 @@ void main() {
     ),
   ];
 
-  RoutingDecision routeFor(
-    String input, {
-    TaskSpecification? specification,
-  }) {
+  RoutingDecision routeFor(String input, {TaskSpecification? specification}) {
     final decision = compiler.compile(input, knownTargets: knownTargets);
     return router.route(
       specification:

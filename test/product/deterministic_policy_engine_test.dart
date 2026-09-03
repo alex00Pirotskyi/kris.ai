@@ -54,23 +54,23 @@ void main() {
 
   test('overlay ordering produces byte-equivalent decisions', () {
     final raw = (fixture['cases'] as List).cast<Map>().firstWhere(
-          (item) => item['name'] == 'overlay_order_reference',
-        );
+      (item) => item['name'] == 'overlay_order_reference',
+    );
     final request = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(raw['request'])) as Map,
     );
     final forward = engine.evaluate(request);
     request['overlays'] = (request['overlays'] as List).reversed.toList(
-          growable: false,
-        );
+      growable: false,
+    );
     final reverse = engine.evaluate(request);
     expect(reverse, forward);
   });
 
   test('model text cannot approve or widen authority', () {
     final raw = (fixture['cases'] as List).cast<Map>().firstWhere(
-          (item) => item['name'] == 'model_cannot_approve',
-        );
+      (item) => item['name'] == 'model_cannot_approve',
+    );
     final result = engine.evaluate(
       Map<String, dynamic>.from(raw['request'] as Map),
     );
@@ -80,8 +80,8 @@ void main() {
 
   test('effective budgets are monotonic narrowing', () {
     final raw = (fixture['cases'] as List).cast<Map>().firstWhere(
-          (item) => item['name'] == 'project_write_inside_root',
-        );
+      (item) => item['name'] == 'project_write_inside_root',
+    );
     final source = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(raw['request'])) as Map,
     );

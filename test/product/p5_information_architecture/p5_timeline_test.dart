@@ -22,10 +22,9 @@ Future<void> _pump(
 }
 
 Finder _timelineRows() => find.byWidgetPredicate((widget) {
-      final key = widget.key;
-      return key is ValueKey<String> &&
-          key.value.startsWith('p5-timeline-row-');
-    });
+  final key = widget.key;
+  return key is ValueKey<String> && key.value.startsWith('p5-timeline-row-');
+});
 
 void main() {
   test('P5-008 deterministic source covers 10k events and all categories', () {
@@ -79,8 +78,9 @@ void main() {
     }
   });
 
-  testWidgets('P5-008 saved-run timeline virtualizes 10k events',
-      (tester) async {
+  testWidgets('P5-008 saved-run timeline virtualizes 10k events', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.runsActivity)
       ..selectRun('run.p5-complete-001');
@@ -96,8 +96,9 @@ void main() {
     expect(find.byKey(const Key('p5-timeline-row-10000')), findsNothing);
   });
 
-  testWidgets('P5-008 filtering keeps virtualization and category truth',
-      (tester) async {
+  testWidgets('P5-008 filtering keeps virtualization and category truth', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..selectWorkspace(P5WorkspaceId.runsActivity)
       ..selectRun('run.p5-complete-001');
@@ -110,12 +111,15 @@ void main() {
     expect(find.text('Showing 1000 of 10000'), findsOneWidget);
     expect(find.byKey(const Key('p5-timeline-row-5')), findsOneWidget);
     expect(
-        find.textContaining('Browser • Browser action recorded'), findsWidgets);
+      find.textContaining('Browser • Browser action recorded'),
+      findsWidgets,
+    );
     expect(_timelineRows().evaluate().length, lessThan(100));
   });
 
-  testWidgets('P5-008 current simulated run never fabricates saved timeline',
-      (tester) async {
+  testWidgets('P5-008 current simulated run never fabricates saved timeline', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..apply(P5PrototypeAction.reviewPlan)
       ..apply(P5PrototypeAction.startRun)
@@ -126,6 +130,8 @@ void main() {
     expect(find.byKey(const Key('current-run-detail')), findsOneWidget);
     expect(find.byKey(const Key('p5-run-timeline')), findsNothing);
     expect(
-        find.textContaining('No saved timeline is fabricated'), findsOneWidget);
+      find.textContaining('No saved timeline is fabricated'),
+      findsOneWidget,
+    );
   });
 }

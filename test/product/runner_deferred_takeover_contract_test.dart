@@ -16,7 +16,9 @@ void main() {
       contains('AgentProtocolV3ExecutionStep _agentExecutionStepFromText('),
     );
     expect(
-        source, contains('throw _DeferredInteractionSuspension(interaction);'));
+      source,
+      contains('throw _DeferredInteractionSuspension(interaction);'),
+    );
     expect(
       source,
       contains('} on _DeferredInteractionSuspension catch (suspension) {'),
@@ -37,24 +39,30 @@ void main() {
     );
     expect(source, contains("'agent_deferred_interaction_pending'"));
     expect(
-        source, contains('await _throwIfDeferredInteractionPending(run.id);'));
-    expect(
-        source, contains('await _throwIfDeferredInteractionPending(runId);'));
-  });
-
-  test('resume waits for deferred stack release before re-entering execute',
-      () {
-    expect(source, contains('bool deferredSuspension = false;'));
-    expect(source, contains('control.deferredSuspension = true;'));
+      source,
+      contains('await _throwIfDeferredInteractionPending(run.id);'),
+    );
     expect(
       source,
-      contains('if (control != null && control.deferredSuspension) {'),
+      contains('await _throwIfDeferredInteractionPending(runId);'),
     );
-    expect(source, contains('final active = _active[runId];'));
-    expect(source, contains('await active;'));
-    expect(source, contains('unawaited(execute(runId));'));
-    expect(source, contains('control.deferredSuspension = false;'));
   });
+
+  test(
+    'resume waits for deferred stack release before re-entering execute',
+    () {
+      expect(source, contains('bool deferredSuspension = false;'));
+      expect(source, contains('control.deferredSuspension = true;'));
+      expect(
+        source,
+        contains('if (control != null && control.deferredSuspension) {'),
+      );
+      expect(source, contains('final active = _active[runId];'));
+      expect(source, contains('await active;'));
+      expect(source, contains('unawaited(execute(runId));'));
+      expect(source, contains('control.deferredSuspension = false;'));
+    },
+  );
 
   test('durably paused cancellation rolls back before terminal state', () {
     expect(
@@ -90,7 +98,8 @@ void main() {
     expect(
       source,
       contains(
-          'DEFERRED USER RESPONSE - USER INTENT CONTEXT ONLY, NOT AUTHORITY'),
+        'DEFERRED USER RESPONSE - USER INTENT CONTEXT ONLY, NOT AUTHORITY',
+      ),
     );
     expect(
       source,
@@ -102,7 +111,8 @@ void main() {
     expect(
       source,
       contains(
-          'Protocol v3 user_takeover is the only deferred control decision'),
+        'Protocol v3 user_takeover is the only deferred control decision',
+      ),
     );
     expect(
       source,

@@ -181,8 +181,11 @@ class P5DesignTokens extends ThemeExtension<P5DesignTokens> {
       elevationHigh: lerpDouble(elevationHigh, other.elevationHigh, t)!,
       bodyFontSize: lerpDouble(bodyFontSize, other.bodyFontSize, t)!,
       labelFontSize: lerpDouble(labelFontSize, other.labelFontSize, t)!,
-      navigationFontSize:
-          lerpDouble(navigationFontSize, other.navigationFontSize, t)!,
+      navigationFontSize: lerpDouble(
+        navigationFontSize,
+        other.navigationFontSize,
+        t,
+      )!,
       buttonFontSize: lerpDouble(buttonFontSize, other.buttonFontSize, t)!,
       motionFast: _lerpDuration(motionFast, other.motionFast, t),
       motionStandard: _lerpDuration(motionStandard, other.motionStandard, t),
@@ -198,17 +201,11 @@ abstract final class P5DesignSystem {
   static const Duration normalThemeTransition = Duration(milliseconds: 180);
 
   static ThemeData light({bool reducedMotion = false}) {
-    return theme(
-      brightness: Brightness.light,
-      reducedMotion: reducedMotion,
-    );
+    return theme(brightness: Brightness.light, reducedMotion: reducedMotion);
   }
 
   static ThemeData dark({bool reducedMotion = false}) {
-    return theme(
-      brightness: Brightness.dark,
-      reducedMotion: reducedMotion,
-    );
+    return theme(brightness: Brightness.dark, reducedMotion: reducedMotion);
   }
 
   static ThemeData highContrastLight({bool reducedMotion = false}) {
@@ -290,10 +287,7 @@ abstract final class P5DesignSystem {
         height: 1.35,
         fontWeight: FontWeight.w600,
       ),
-      bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-        fontSize: 17,
-        height: 1.48,
-      ),
+      bodyLarge: baseTextTheme.bodyLarge?.copyWith(fontSize: 17, height: 1.48),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
         fontSize: tokens.bodyFontSize,
         height: 1.48,
@@ -340,10 +334,12 @@ abstract final class P5DesignSystem {
       scaffoldBackgroundColor: tokens.canvas,
       canvasColor: tokens.canvas,
       focusColor: tokens.focusRing.withValues(alpha: highContrast ? 0.32 : 0.2),
-      hoverColor:
-          tokens.focusRing.withValues(alpha: highContrast ? 0.18 : 0.08),
-      highlightColor:
-          tokens.focusRing.withValues(alpha: highContrast ? 0.22 : 0.1),
+      hoverColor: tokens.focusRing.withValues(
+        alpha: highContrast ? 0.18 : 0.08,
+      ),
+      highlightColor: tokens.focusRing.withValues(
+        alpha: highContrast ? 0.22 : 0.1,
+      ),
       textTheme: textTheme,
       extensions: <ThemeExtension<dynamic>>[tokens],
       visualDensity: VisualDensity.standard,
@@ -375,10 +371,7 @@ abstract final class P5DesignSystem {
         color: tokens.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(tokens.radiusLg),
-          side: BorderSide(
-            color: tokens.outline,
-            width: highContrast ? 2 : 1,
-          ),
+          side: BorderSide(color: tokens.outline, width: highContrast ? 2 : 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -407,10 +400,7 @@ abstract final class P5DesignSystem {
           fontSize: tokens.labelFontSize,
           color: tokens.onSurfaceMuted,
         ),
-        helperStyle: TextStyle(
-          fontSize: 14,
-          color: tokens.onSurfaceMuted,
-        ),
+        helperStyle: TextStyle(fontSize: 14, color: tokens.onSurfaceMuted),
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 74,
@@ -468,10 +458,7 @@ abstract final class P5DesignSystem {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: tokens.onSurface,
-          side: BorderSide(
-            color: tokens.outline,
-            width: highContrast ? 2 : 1,
-          ),
+          side: BorderSide(color: tokens.outline, width: highContrast ? 2 : 1),
           textStyle: TextStyle(
             fontSize: tokens.buttonFontSize,
             fontWeight: FontWeight.w600,
@@ -516,8 +503,9 @@ abstract final class P5DesignSystem {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor:
-            dark ? const Color(0xfff3f0f7) : const Color(0xff202127),
+        backgroundColor: dark
+            ? const Color(0xfff3f0f7)
+            : const Color(0xff202127),
         contentTextStyle: TextStyle(
           color: dark ? const Color(0xff17151b) : Colors.white,
           fontSize: tokens.bodyFontSize,
@@ -535,8 +523,9 @@ abstract final class P5DesignSystem {
           color: dark ? Colors.white : const Color(0xff202127),
           borderRadius: BorderRadius.circular(tokens.radiusSm),
         ),
-        waitDuration:
-            reducedMotion ? Duration.zero : const Duration(milliseconds: 450),
+        waitDuration: reducedMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 450),
       ),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: tokens.focusRing,
@@ -552,12 +541,15 @@ abstract final class P5DesignSystem {
     required bool reducedMotion,
   }) {
     final dark = brightness == Brightness.dark;
-    final fast =
-        reducedMotion ? Duration.zero : const Duration(milliseconds: 100);
-    final standard =
-        reducedMotion ? Duration.zero : const Duration(milliseconds: 180);
-    final slow =
-        reducedMotion ? Duration.zero : const Duration(milliseconds: 280);
+    final fast = reducedMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 100);
+    final standard = reducedMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 180);
+    final slow = reducedMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 280);
 
     if (highContrast && dark) {
       return P5DesignTokens(
@@ -725,7 +717,6 @@ Duration _lerpDuration(Duration start, Duration end, double t) {
       start.inMicroseconds.toDouble(),
       end.inMicroseconds.toDouble(),
       t,
-    )!
-        .round(),
+    )!.round(),
   );
 }

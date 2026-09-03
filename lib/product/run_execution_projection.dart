@@ -45,7 +45,8 @@ class RunExecutionProjection {
   static RunTimelineEntry fromEvent(EventEnvelope event) {
     final category = _categoryForType(event.type);
     final title = _titleForType(event.type, event.data);
-    final detail = event.data['message']?.toString() ??
+    final detail =
+        event.data['message']?.toString() ??
         event.data['error']?.toString() ??
         event.data['summary']?.toString() ??
         '';
@@ -63,17 +64,14 @@ class RunExecutionProjection {
   static RunTimelineEntry fromLive(LiveRunSignal signal) {
     final category = switch (signal.kind) {
       LiveRunSignalKind.modelProgress ||
-      LiveRunSignalKind.modelTextDelta =>
-        RunTimelineCategory.model,
+      LiveRunSignalKind.modelTextDelta => RunTimelineCategory.model,
       LiveRunSignalKind.toolStarted ||
       LiveRunSignalKind.toolOutput ||
       LiveRunSignalKind.toolCompleted ||
-      LiveRunSignalKind.toolFailed =>
-        RunTimelineCategory.terminal,
+      LiveRunSignalKind.toolFailed => RunTimelineCategory.terminal,
       LiveRunSignalKind.preflight => RunTimelineCategory.preflight,
       LiveRunSignalKind.steeringQueued ||
-      LiveRunSignalKind.steeringApplied =>
-        RunTimelineCategory.steering,
+      LiveRunSignalKind.steeringApplied => RunTimelineCategory.steering,
       _ => RunTimelineCategory.run,
     };
     final title = switch (signal.kind) {

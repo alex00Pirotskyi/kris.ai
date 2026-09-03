@@ -15,10 +15,8 @@ class PlanCompileRepairOutcome<TPlan, TCompiled> {
 }
 
 typedef PlanCompileAttempt<TPlan, TCompiled> = TCompiled Function(TPlan plan);
-typedef PlanCompileDiagnosticRepair<TPlan> = Future<TPlan> Function(
-  TPlan rejectedPlan,
-  PlanningFailure compileFailure,
-);
+typedef PlanCompileDiagnosticRepair<TPlan> =
+    Future<TPlan> Function(TPlan rejectedPlan, PlanningFailure compileFailure);
 
 /// Exactly one bounded repair for a plan that generated successfully but
 /// failed deterministic compilation.

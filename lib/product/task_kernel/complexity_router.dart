@@ -51,17 +51,17 @@ class ComplexityRouter {
   /// families plug in here rather than growing a parallel planner.
   static const Map<String, TaskFamily> _familyByCapability =
       <String, TaskFamily>{
-    'agent.create_project': TaskFamily.software,
-    'agent.modify_project': TaskFamily.software,
-    'agent.fix_project': TaskFamily.software,
-    'project.build': TaskFamily.software,
-    'research.search': TaskFamily.research,
-    'system.diagnose': TaskFamily.diagnostics,
-    'project.analyze': TaskFamily.diagnostics,
-    'project.review': TaskFamily.diagnostics,
-    'project.test': TaskFamily.diagnostics,
-    'owner.mode': TaskFamily.owner,
-  };
+        'agent.create_project': TaskFamily.software,
+        'agent.modify_project': TaskFamily.software,
+        'agent.fix_project': TaskFamily.software,
+        'project.build': TaskFamily.software,
+        'research.search': TaskFamily.research,
+        'system.diagnose': TaskFamily.diagnostics,
+        'project.analyze': TaskFamily.diagnostics,
+        'project.review': TaskFamily.diagnostics,
+        'project.test': TaskFamily.diagnostics,
+        'owner.mode': TaskFamily.owner,
+      };
 
   /// The family that will execute [capabilityId], defaulting to software.
   TaskFamily familyFor(String capabilityId) =>
@@ -80,7 +80,8 @@ class ComplexityRouter {
       return RoutingDecision(
         route: PlanningRoute.direct,
         family: family,
-        rationale: 'A blocking ambiguity must be resolved before planning: '
+        rationale:
+            'A blocking ambiguity must be resolved before planning: '
             '${specification.blockingQuestions.first.question}',
         requiresClarification: true,
       );
@@ -102,7 +103,8 @@ class ComplexityRouter {
       return RoutingDecision(
         route: PlanningRoute.direct,
         family: family,
-        rationale: 'No capability was identified, so there is nothing to '
+        rationale:
+            'No capability was identified, so there is nothing to '
             'decompose.',
       );
     }
@@ -115,7 +117,8 @@ class ComplexityRouter {
       return RoutingDecision(
         route: PlanningRoute.direct,
         family: family,
-        rationale: 'An explicit ${capability.canonicalSlash} invocation is '
+        rationale:
+            'An explicit ${capability.canonicalSlash} invocation is '
             'already fully specified; authority still applies.',
       );
     }
@@ -129,7 +132,8 @@ class ComplexityRouter {
         return RoutingDecision(
           route: PlanningRoute.compact,
           family: family,
-          rationale: 'The request has ${specification.subObjectives.length} '
+          rationale:
+              'The request has ${specification.subObjectives.length} '
               'independent sub-goals worth tracking and verifying, even '
               'though it is small enough to answer in one reply.',
         );
@@ -137,7 +141,8 @@ class ComplexityRouter {
       return RoutingDecision(
         route: PlanningRoute.direct,
         family: family,
-        rationale: '${capability.displayName} is a direct capability with no '
+        rationale:
+            '${capability.displayName} is a direct capability with no '
             'internal structure to decompose.',
       );
     }
@@ -149,7 +154,8 @@ class ComplexityRouter {
       return RoutingDecision(
         route: PlanningRoute.graph,
         family: family,
-        rationale: 'The request carries enough scope, constraints, and '
+        rationale:
+            'The request carries enough scope, constraints, and '
             'verification surface (weight $weight) to be worth a reviewed '
             'task graph.',
       );
@@ -157,7 +163,8 @@ class ComplexityRouter {
     return RoutingDecision(
       route: PlanningRoute.compact,
       family: family,
-      rationale: 'The request is small and well specified (weight $weight); '
+      rationale:
+          'The request is small and well specified (weight $weight); '
           'a compact plan is enough.',
     );
   }
@@ -178,10 +185,7 @@ class ComplexityRouter {
   /// cost. Below it, a compact plan does the same job with less ceremony.
   static const int _graphThreshold = 4;
 
-  int _weigh(
-    TaskSpecification specification,
-    KristinCapability capability,
-  ) {
+  int _weigh(TaskSpecification specification, KristinCapability capability) {
     var weight = 0;
     if (capability.actionClass == ChatActionClass.substantial) weight += 2;
     // Provisioning a brand-new project is inherently multi-stage --

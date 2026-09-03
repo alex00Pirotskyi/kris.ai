@@ -63,13 +63,14 @@ final class P5UiPerformanceSnapshot {
   final int largeCollectionSampleCount;
 
   bool get allMeasured => metrics.every(
-        (metric) => metric.state != P5UiPerformanceMetricState.notMeasured,
-      );
+    (metric) => metric.state != P5UiPerformanceMetricState.notMeasured,
+  );
 
   bool get meetsInitialTargets =>
       allMeasured &&
-      metrics
-          .every((metric) => metric.state == P5UiPerformanceMetricState.pass);
+      metrics.every(
+        (metric) => metric.state == P5UiPerformanceMetricState.pass,
+      );
 
   int get failedCount => metrics
       .where((metric) => metric.state == P5UiPerformanceMetricState.fail)
@@ -196,8 +197,8 @@ final class P5UiPerformanceMonitor extends ChangeNotifier {
     final worstMounted = largeCollections.isEmpty
         ? null
         : largeCollections
-            .map((sample) => sample.peakMountedItems)
-            .reduce(math.max);
+              .map((sample) => sample.peakMountedItems)
+              .reduce(math.max);
     final residentMiB = _residentMemoryBytes == null
         ? null
         : _residentMemoryBytes! / (1024 * 1024);
@@ -206,62 +207,60 @@ final class P5UiPerformanceMonitor extends ChangeNotifier {
       frameSampleCount: _frameDurationsMs.length,
       streamFlushSampleCount: _streamFlushDurationsMs.length,
       largeCollectionSampleCount: largeCollections.length,
-      metrics: List<P5UiPerformanceMetric>.unmodifiable(
-        <P5UiPerformanceMetric>[
-          _upperBoundMetric(
-            id: 'startup',
-            label: 'Startup → first frame',
-            value: _startupToFirstFrameMs?.toDouble(),
-            target: budgets.startupToFirstFrameMs.toDouble(),
-            unit: 'ms',
-            detail: 'Desktop UI startup instrumentation.',
-          ),
-          _upperBoundMetric(
-            id: 'frame-p95',
-            label: 'Frame time p95',
-            value: frameP95,
-            target: budgets.p95FrameMs,
-            unit: 'ms',
-            detail: '${_frameDurationsMs.length} recent frame samples.',
-          ),
-          _upperBoundMetric(
-            id: 'slow-frame-ratio',
-            label: 'Slow-frame ratio',
-            value: slowRatio == null ? null : slowRatio * 100,
-            target: budgets.maxSlowFrameRatio * 100,
-            unit: '%',
-            detail:
-                'Slow means > ${budgets.slowFrameThresholdMs.toStringAsFixed(0)} ms.',
-          ),
-          _upperBoundMetric(
-            id: 'stream-flush-p95',
-            label: 'Live stream UI flush p95',
-            value: streamP95,
-            target: budgets.streamFlushP95Ms,
-            unit: 'ms',
-            detail:
-                '${_streamFlushDurationsMs.length} non-empty coalesced flush samples.',
-          ),
-          _upperBoundMetric(
-            id: 'resident-memory',
-            label: 'Kristin resident memory',
-            value: residentMiB,
-            target: budgets.maxResidentMemoryMiB.toDouble(),
-            unit: 'MiB',
-            detail: 'Desktop process RSS only; model-host memory is separate.',
-          ),
-          _upperBoundMetric(
-            id: 'virtualization',
-            label: 'Large-list mounted item peak',
-            value: worstMounted?.toDouble(),
-            target: budgets.maxMountedItemsForLargeCollection.toDouble(),
-            unit: 'items',
-            detail: largeCollections.isEmpty
-                ? 'No collection ≥ ${budgets.virtualizedCollectionFloor} items observed.'
-                : '${largeCollections.length} large collection sample(s).',
-          ),
-        ],
-      ),
+      metrics: List<P5UiPerformanceMetric>.unmodifiable(<P5UiPerformanceMetric>[
+        _upperBoundMetric(
+          id: 'startup',
+          label: 'Startup → first frame',
+          value: _startupToFirstFrameMs?.toDouble(),
+          target: budgets.startupToFirstFrameMs.toDouble(),
+          unit: 'ms',
+          detail: 'Desktop UI startup instrumentation.',
+        ),
+        _upperBoundMetric(
+          id: 'frame-p95',
+          label: 'Frame time p95',
+          value: frameP95,
+          target: budgets.p95FrameMs,
+          unit: 'ms',
+          detail: '${_frameDurationsMs.length} recent frame samples.',
+        ),
+        _upperBoundMetric(
+          id: 'slow-frame-ratio',
+          label: 'Slow-frame ratio',
+          value: slowRatio == null ? null : slowRatio * 100,
+          target: budgets.maxSlowFrameRatio * 100,
+          unit: '%',
+          detail:
+              'Slow means > ${budgets.slowFrameThresholdMs.toStringAsFixed(0)} ms.',
+        ),
+        _upperBoundMetric(
+          id: 'stream-flush-p95',
+          label: 'Live stream UI flush p95',
+          value: streamP95,
+          target: budgets.streamFlushP95Ms,
+          unit: 'ms',
+          detail:
+              '${_streamFlushDurationsMs.length} non-empty coalesced flush samples.',
+        ),
+        _upperBoundMetric(
+          id: 'resident-memory',
+          label: 'Kristin resident memory',
+          value: residentMiB,
+          target: budgets.maxResidentMemoryMiB.toDouble(),
+          unit: 'MiB',
+          detail: 'Desktop process RSS only; model-host memory is separate.',
+        ),
+        _upperBoundMetric(
+          id: 'virtualization',
+          label: 'Large-list mounted item peak',
+          value: worstMounted?.toDouble(),
+          target: budgets.maxMountedItemsForLargeCollection.toDouble(),
+          unit: 'items',
+          detail: largeCollections.isEmpty
+              ? 'No collection ≥ ${budgets.virtualizedCollectionFloor} items observed.'
+              : '${largeCollections.length} large collection sample(s).',
+        ),
+      ]),
     );
   }
 
@@ -341,10 +340,7 @@ final class _VirtualizedCollectionSample {
 }
 
 class P5UiPerformanceDashboard extends StatelessWidget {
-  const P5UiPerformanceDashboard({
-    super.key,
-    required this.monitor,
-  });
+  const P5UiPerformanceDashboard({super.key, required this.monitor});
 
   final P5UiPerformanceMonitor monitor;
 
@@ -357,8 +353,8 @@ class P5UiPerformanceDashboard extends StatelessWidget {
         final overall = snapshot.meetsInitialTargets
             ? 'PASS'
             : snapshot.failedCount > 0
-                ? 'OVER BUDGET'
-                : 'CALIBRATING';
+            ? 'OVER BUDGET'
+            : 'CALIBRATING';
         return Semantics(
           container: true,
           label: 'UI performance dashboard: $overall',
@@ -447,10 +443,7 @@ class _P5PerformanceStatus extends StatelessWidget {
         border: Border.all(color: Theme.of(context).colorScheme.outline),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(
-        state,
-        style: Theme.of(context).textTheme.labelLarge,
-      ),
+      child: Text(state, style: Theme.of(context).textTheme.labelLarge),
     );
   }
 }

@@ -19,11 +19,13 @@ void _patch(Map<String, dynamic> target, String dotted, Object? value) {
 
 void main() {
   final root = Directory.current;
-  final catalog = jsonDecode(
-    File(
-      '${root.path}/config/access_profiles.v2.json',
-    ).readAsStringSync(),
-  ) as Map<String, dynamic>;
+  final catalog =
+      jsonDecode(
+            File(
+              '${root.path}/config/access_profiles.v2.json',
+            ).readAsStringSync(),
+          )
+          as Map<String, dynamic>;
   final rawProfiles = (catalog['profiles'] as List).cast<Map>();
   final byId = <String, Map<String, dynamic>>{
     for (final raw in rawProfiles)
@@ -50,11 +52,13 @@ void main() {
   });
 
   test('shared invalid policy vectors fail in Dart', () {
-    final fixture = jsonDecode(
-      File(
-        '${root.path}/evals/fixtures/p1_002_access_profiles/invalid_cases.json',
-      ).readAsStringSync(),
-    ) as Map<String, dynamic>;
+    final fixture =
+        jsonDecode(
+              File(
+                '${root.path}/evals/fixtures/p1_002_access_profiles/invalid_cases.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     for (final rawCase in fixture['cases'] as List) {
       final testCase = (rawCase as Map).cast<String, dynamic>();
       final value = _copy(byId[testCase['baseProfile']]!);

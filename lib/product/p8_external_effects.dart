@@ -11,27 +11,27 @@ enum ExternalEffectState {
 
 extension ExternalEffectStateWire on ExternalEffectState {
   String get wireName => switch (this) {
-        ExternalEffectState.planned => 'planned',
-        ExternalEffectState.authorized => 'authorized',
-        ExternalEffectState.started => 'started',
-        ExternalEffectState.observed => 'observed',
-        ExternalEffectState.committed => 'committed',
-        ExternalEffectState.compensated => 'compensated',
-        ExternalEffectState.unknown => 'unknown',
-        ExternalEffectState.reconciliationRequired => 'reconciliation_required',
-      };
+    ExternalEffectState.planned => 'planned',
+    ExternalEffectState.authorized => 'authorized',
+    ExternalEffectState.started => 'started',
+    ExternalEffectState.observed => 'observed',
+    ExternalEffectState.committed => 'committed',
+    ExternalEffectState.compensated => 'compensated',
+    ExternalEffectState.unknown => 'unknown',
+    ExternalEffectState.reconciliationRequired => 'reconciliation_required',
+  };
 
   static ExternalEffectState parse(String value) => switch (value) {
-        'planned' => ExternalEffectState.planned,
-        'authorized' => ExternalEffectState.authorized,
-        'started' => ExternalEffectState.started,
-        'observed' => ExternalEffectState.observed,
-        'committed' => ExternalEffectState.committed,
-        'compensated' => ExternalEffectState.compensated,
-        'unknown' => ExternalEffectState.unknown,
-        'reconciliation_required' => ExternalEffectState.reconciliationRequired,
-        _ => throw const FormatException('external_effect_state_invalid'),
-      };
+    'planned' => ExternalEffectState.planned,
+    'authorized' => ExternalEffectState.authorized,
+    'started' => ExternalEffectState.started,
+    'observed' => ExternalEffectState.observed,
+    'committed' => ExternalEffectState.committed,
+    'compensated' => ExternalEffectState.compensated,
+    'unknown' => ExternalEffectState.unknown,
+    'reconciliation_required' => ExternalEffectState.reconciliationRequired,
+    _ => throw const FormatException('external_effect_state_invalid'),
+  };
 }
 
 class ExternalEffectTransition {
@@ -48,16 +48,17 @@ class ExternalEffectTransition {
   final DateTime recordedAt;
 
   Map<String, Object> toJson() => <String, Object>{
-        'from': from.wireName,
-        'to': to.wireName,
-        'evidenceId': evidenceId,
-        'recordedAt': recordedAt.toUtc().toIso8601String(),
-      };
+    'from': from.wireName,
+    'to': to.wireName,
+    'evidenceId': evidenceId,
+    'recordedAt': recordedAt.toUtc().toIso8601String(),
+  };
 
   factory ExternalEffectTransition.fromJson(Map<String, Object?> json) {
     final evidenceId = json['evidenceId']?.toString().trim() ?? '';
-    final recordedAt =
-        DateTime.tryParse(json['recordedAt']?.toString() ?? '')?.toUtc();
+    final recordedAt = DateTime.tryParse(
+      json['recordedAt']?.toString() ?? '',
+    )?.toUtc();
     if (evidenceId.isEmpty || recordedAt == null) {
       throw const FormatException('external_effect_transition_invalid');
     }
@@ -99,11 +100,9 @@ class ExternalEffectReceipt {
       if (raw is! Map) {
         throw const FormatException('external_effect_transition_invalid');
       }
-      final transition = ExternalEffectTransition.fromJson(
-        <String, Object?>{
-          for (final entry in raw.entries) entry.key.toString(): entry.value,
-        },
-      );
+      final transition = ExternalEffectTransition.fromJson(<String, Object?>{
+        for (final entry in raw.entries) entry.key.toString(): entry.value,
+      });
       if (transition.from != receipt.state) {
         throw const FormatException('external_effect_transition_chain_invalid');
       }
@@ -131,9 +130,9 @@ class ExternalEffectReceipt {
       List<ExternalEffectTransition>.unmodifiable(_transitions);
 
   bool get retryAllowed => switch (_state) {
-        ExternalEffectState.planned || ExternalEffectState.authorized => true,
-        _ => false,
-      };
+    ExternalEffectState.planned || ExternalEffectState.authorized => true,
+    _ => false,
+  };
 
   bool get requiresReconciliation =>
       _state == ExternalEffectState.unknown ||
@@ -164,28 +163,27 @@ class ExternalEffectReceipt {
   }
 
   Map<String, Object> toJson() => <String, Object>{
-        'schemaVersion': '1.0.0',
-        'effectId': effectId,
-        'idempotencyKey': idempotencyKey,
-        'state': _state.wireName,
-        'retryAllowed': retryAllowed,
-        'requiresReconciliation': requiresReconciliation,
-        'transitions': _transitions
-            .map((transition) => transition.toJson())
-            .toList(growable: false),
-      };
+    'schemaVersion': '1.0.0',
+    'effectId': effectId,
+    'idempotencyKey': idempotencyKey,
+    'state': _state.wireName,
+    'retryAllowed': retryAllowed,
+    'requiresReconciliation': requiresReconciliation,
+    'transitions': _transitions
+        .map((transition) => transition.toJson())
+        .toList(growable: false),
+  };
 
-  static bool _allowed(
-    ExternalEffectState current,
-    ExternalEffectState next,
-  ) {
+  static bool _allowed(ExternalEffectState current, ExternalEffectState next) {
     return switch (current) {
       ExternalEffectState.planned => next == ExternalEffectState.authorized,
       ExternalEffectState.authorized => next == ExternalEffectState.started,
-      ExternalEffectState.started => next == ExternalEffectState.observed ||
-          next == ExternalEffectState.unknown,
-      ExternalEffectState.observed => next == ExternalEffectState.committed ||
-          next == ExternalEffectState.unknown,
+      ExternalEffectState.started =>
+        next == ExternalEffectState.observed ||
+            next == ExternalEffectState.unknown,
+      ExternalEffectState.observed =>
+        next == ExternalEffectState.committed ||
+            next == ExternalEffectState.unknown,
       ExternalEffectState.committed => next == ExternalEffectState.compensated,
       ExternalEffectState.unknown =>
         next == ExternalEffectState.reconciliationRequired,

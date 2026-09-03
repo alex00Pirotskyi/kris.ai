@@ -18,30 +18,33 @@ void main() {
       );
     });
 
-    test('rejects non-HTTPS and embedded credentials before network access',
-        () async {
-      await expectLater(
-        service.validateUri(Uri.parse('http://example.invalid/source')),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'research_scheme_rejected',
+    test(
+      'rejects non-HTTPS and embedded credentials before network access',
+      () async {
+        await expectLater(
+          service.validateUri(Uri.parse('http://example.invalid/source')),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'research_scheme_rejected',
+            ),
           ),
-        ),
-      );
-      await expectLater(
-        service.validateUri(
-            Uri.parse('https://user:secret@example.invalid/source')),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'research_credentials_rejected',
+        );
+        await expectLater(
+          service.validateUri(
+            Uri.parse('https://user:secret@example.invalid/source'),
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'research_credentials_rejected',
+            ),
+          ),
+        );
+      },
+    );
 
     test('rejects IPv4 loopback SSRF target', () async {
       await expectLater(

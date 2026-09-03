@@ -32,9 +32,7 @@ void main() {
     setUp(() async {
       root = await Directory.systemTemp.createTemp('kristin-lifecycle-');
       service = ManagedProcessService(
-        logDirectory: Directory(
-          '${root.path}${Platform.pathSeparator}logs',
-        ),
+        logDirectory: Directory('${root.path}${Platform.pathSeparator}logs'),
         redactor: SecretRedactor(),
       );
     });
@@ -46,83 +44,70 @@ void main() {
       }
     });
 
-    test(
-      'stopEphemeral terminates an ephemeral process but leaves a '
-      'persistUntilStopped one running',
-      () async {
-        final script = await _writeSleeperScript(root);
-        final ephemeral = await service.start(
-          executable: 'dart',
-          arguments: <String>[script.path],
-          workingDirectory: root.path,
-          environment: const <String, String>{},
-          runId: 'run-1',
-          workItemId: 'ephemeral',
-        );
-        final persistent = await service.start(
-          executable: 'dart',
-          arguments: <String>[script.path],
-          workingDirectory: root.path,
-          environment: const <String, String>{},
-          runId: 'run-2',
-          workItemId: 'persist-until-stopped',
-          lifecycle: ManagedProcessLifecycle.persistUntilStopped,
-        );
+    test('stopEphemeral terminates an ephemeral process but leaves a '
+        'persistUntilStopped one running', () async {
+      final script = await _writeSleeperScript(root);
+      final ephemeral = await service.start(
+        executable: 'dart',
+        arguments: <String>[script.path],
+        workingDirectory: root.path,
+        environment: const <String, String>{},
+        runId: 'run-1',
+        workItemId: 'ephemeral',
+      );
+      final persistent = await service.start(
+        executable: 'dart',
+        arguments: <String>[script.path],
+        workingDirectory: root.path,
+        environment: const <String, String>{},
+        runId: 'run-2',
+        workItemId: 'persist-until-stopped',
+        lifecycle: ManagedProcessLifecycle.persistUntilStopped,
+      );
 
-        await service.stopEphemeral();
-        await Future<void>.delayed(const Duration(milliseconds: 200));
+      await service.stopEphemeral();
+      await Future<void>.delayed(const Duration(milliseconds: 200));
 
-        final ephemeralStatus = await service.status(
-          ephemeral['id']!.toString(),
-        );
-        final persistentStatus = await service.status(
-          persistent['id']!.toString(),
-        );
-        expect(ephemeralStatus['running'], isFalse);
-        expect(persistentStatus['running'], isTrue);
+      final ephemeralStatus = await service.status(ephemeral['id']!.toString());
+      final persistentStatus = await service.status(
+        persistent['id']!.toString(),
+      );
+      expect(ephemeralStatus['running'], isFalse);
+      expect(persistentStatus['running'], isTrue);
 
-        // Clean up the still-running persistent process explicitly; it is
-        // deliberately not touched by stopEphemeral/stopAll semantics that
-        // matter for this test, but must not leak past it.
-        await service.stop(persistent['id']!.toString());
-      },
-    );
+      // Clean up the still-running persistent process explicitly; it is
+      // deliberately not touched by stopEphemeral/stopAll semantics that
+      // matter for this test, but must not leak past it.
+      await service.stop(persistent['id']!.toString());
+    });
   });
 
   group('ProcessIdentityProbe', () {
-    test(
-      'verify reports unverifiablePlatform when there is no recorded '
-      'identity to compare against, regardless of platform',
-      () async {
-        const probe = ProcessIdentityProbe();
-        expect(
-          await probe.verify(1234, null),
-          ProcessIdentityVerification.unverifiablePlatform,
-        );
-        expect(
-          await probe.verify(1234, ''),
-          ProcessIdentityVerification.unverifiablePlatform,
-        );
-      },
-    );
+    test('verify reports unverifiablePlatform when there is no recorded '
+        'identity to compare against, regardless of platform', () async {
+      const probe = ProcessIdentityProbe();
+      expect(
+        await probe.verify(1234, null),
+        ProcessIdentityVerification.unverifiablePlatform,
+      );
+      expect(
+        await probe.verify(1234, ''),
+        ProcessIdentityVerification.unverifiablePlatform,
+      );
+    });
 
     test(
       'a real running process is captured and verifies as alive; after it '
       'exits, the same recorded identity verifies as mismatchOrGone',
       () async {
-        final root = await Directory.systemTemp.createTemp(
-          'kristin-identity-',
-        );
+        final root = await Directory.systemTemp.createTemp('kristin-identity-');
         addTearDown(() async {
           if (await root.exists()) {
             await root.delete(recursive: true);
           }
         });
         final script = await _writeSleeperScript(root, seconds: 3);
-        final process = await Process.start(
-          'dart',
-          <String>[script.path],
-        );
+        final process = await Process.start('dart', <String>[script.path]);
         const probe = ProcessIdentityProbe();
         final token = await probe.capture(process.pid);
         expect(token, isNotNull);
@@ -175,9 +160,7 @@ void main() {
     late ProductRuntime runtime;
 
     setUp(() async {
-      temporary = await Directory.systemTemp.createTemp(
-        'kristin-reconcile-',
-      );
+      temporary = await Directory.systemTemp.createTemp('kristin-reconcile-');
       runtime = await ProductRuntime.initialize(
         dataRoot: '${temporary.path}${Platform.pathSeparator}app-data',
       );
@@ -195,10 +178,7 @@ void main() {
       'running, never silently trusted from a bare pid',
       () async {
         final script = await _writeSleeperScript(temporary);
-        final process = await Process.start(
-          'dart',
-          <String>[script.path],
-        );
+        final process = await Process.start('dart', <String>[script.path]);
         addTearDown(() => process.kill(ProcessSignal.sigkill));
         const probe = ProcessIdentityProbe();
         final identity = await probe.capture(process.pid);
@@ -224,46 +204,46 @@ void main() {
           : 'no process identity reader for this platform in Wave A',
     );
 
+    test('a session recorded with a mismatched/stale identity is reconciled '
+        'to interrupted, never assumed alive', () async {
+      await runtime.repositories.workflow.insertManagedProjectProcess(
+        id: 'reconcile-stale',
+        projectId: 'project-y',
+        lifecycle: ManagedProcessLifecycle.persistUntilStopped,
+        commandSha256: Sha256.text('gone'),
+        request: const <String, dynamic>{'executable': 'gone'},
+        pid: 999999,
+        processIdentity: 'linux:999999:1',
+      );
+
+      await runtime.reconcileProjectRuntimeSessions();
+
+      final row = await runtime.repositories.workflow.getManagedProjectProcess(
+        'reconcile-stale',
+      );
+      expect(row!.state, ProjectRuntimeState.interrupted);
+      expect(row.failureCode, isNotNull);
+    });
+
     test(
-      'a session recorded with a mismatched/stale identity is reconciled '
-      'to interrupted, never assumed alive',
+      'a session with no recorded pid is reconciled to interrupted',
       () async {
         await runtime.repositories.workflow.insertManagedProjectProcess(
-          id: 'reconcile-stale',
-          projectId: 'project-y',
+          id: 'reconcile-no-pid',
+          projectId: 'project-z',
           lifecycle: ManagedProcessLifecycle.persistUntilStopped,
-          commandSha256: Sha256.text('gone'),
-          request: const <String, dynamic>{'executable': 'gone'},
-          pid: 999999,
-          processIdentity: 'linux:999999:1',
+          commandSha256: Sha256.text('no-pid'),
+          request: const <String, dynamic>{'executable': 'no-pid'},
         );
 
         await runtime.reconcileProjectRuntimeSessions();
 
         final row = await runtime.repositories.workflow
-            .getManagedProjectProcess('reconcile-stale');
+            .getManagedProjectProcess('reconcile-no-pid');
         expect(row!.state, ProjectRuntimeState.interrupted);
-        expect(row.failureCode, isNotNull);
+        expect(row.failureCode, 'process_pid_missing');
       },
     );
-
-    test('a session with no recorded pid is reconciled to interrupted',
-        () async {
-      await runtime.repositories.workflow.insertManagedProjectProcess(
-        id: 'reconcile-no-pid',
-        projectId: 'project-z',
-        lifecycle: ManagedProcessLifecycle.persistUntilStopped,
-        commandSha256: Sha256.text('no-pid'),
-        request: const <String, dynamic>{'executable': 'no-pid'},
-      );
-
-      await runtime.reconcileProjectRuntimeSessions();
-
-      final row = await runtime.repositories.workflow
-          .getManagedProjectProcess('reconcile-no-pid');
-      expect(row!.state, ProjectRuntimeState.interrupted);
-      expect(row.failureCode, 'process_pid_missing');
-    });
   });
 
   group('ProductRuntime.startProject/stopProject durable persistence', () {
@@ -274,9 +254,7 @@ void main() {
 
     setUp(() async {
       runtimeClosed = false;
-      temporary = await Directory.systemTemp.createTemp(
-        'kristin-start-stop-',
-      );
+      temporary = await Directory.systemTemp.createTemp('kristin-start-stop-');
       projectDirectory = Directory(
         '${temporary.path}${Platform.pathSeparator}project',
       );
@@ -311,48 +289,43 @@ void main() {
       }
     });
 
-    test(
-      'starting a project writes a durable persist-until-stopped session, '
-      'and stopping it marks that session stopped',
-      () async {
-        final project = await runtime.addProject(
-          name: 'Sleeper project',
-          rootPath: projectDirectory.path,
-        );
+    test('starting a project writes a durable persist-until-stopped session, '
+        'and stopping it marks that session stopped', () async {
+      final project = await runtime.addProject(
+        name: 'Sleeper project',
+        rootPath: projectDirectory.path,
+      );
 
-        final status = await runtime.startProject(project.id);
-        expect(status.running, isTrue);
+      final status = await runtime.startProject(project.id);
+      expect(status.running, isTrue);
 
-        final sessions = await runtime.repositories.workflow
-            .listManagedProjectProcesses(projectId: project.id);
-        expect(sessions, hasLength(1));
-        expect(sessions.first.state, ProjectRuntimeState.running);
-        expect(
-          sessions.first.lifecycle,
-          ManagedProcessLifecycle.persistUntilStopped,
-        );
-        expect(sessions.first.pid, status.pid);
-        if (Platform.isLinux || Platform.isWindows) {
-          // No process-identity reader exists for this platform in Wave A
-          // (fails closed by design), so the column is legitimately null.
-          expect(sessions.first.processIdentity, isNotNull);
-        }
+      final sessions = await runtime.repositories.workflow
+          .listManagedProjectProcesses(projectId: project.id);
+      expect(sessions, hasLength(1));
+      expect(sessions.first.state, ProjectRuntimeState.running);
+      expect(
+        sessions.first.lifecycle,
+        ManagedProcessLifecycle.persistUntilStopped,
+      );
+      expect(sessions.first.pid, status.pid);
+      if (Platform.isLinux || Platform.isWindows) {
+        // No process-identity reader exists for this platform in Wave A
+        // (fails closed by design), so the column is legitimately null.
+        expect(sessions.first.processIdentity, isNotNull);
+      }
 
-        final launchProfiles =
-            await runtime.repositories.workflow.listProjectLaunchProfiles(
-          project.id,
-        );
-        expect(launchProfiles, hasLength(1));
-        expect(launchProfiles.first.preferred, isTrue);
+      final launchProfiles = await runtime.repositories.workflow
+          .listProjectLaunchProfiles(project.id);
+      expect(launchProfiles, hasLength(1));
+      expect(launchProfiles.first.preferred, isTrue);
 
-        final stopped = await runtime.stopProject(project.id);
-        expect(stopped!.running, isFalse);
+      final stopped = await runtime.stopProject(project.id);
+      expect(stopped!.running, isFalse);
 
-        final afterStop = await runtime.repositories.workflow
-            .getManagedProjectProcess(sessions.first.id);
-        expect(afterStop!.state, ProjectRuntimeState.stopped);
-      },
-    );
+      final afterStop = await runtime.repositories.workflow
+          .getManagedProjectProcess(sessions.first.id);
+      expect(afterStop!.state, ProjectRuntimeState.stopped);
+    });
 
     test(
       'closing the runtime does not kill a persist-until-stopped project '

@@ -67,16 +67,15 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     int maxLeafTasks = 25,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) =>
-      planning.generateTaskPlan(
-        promptVersion: promptVersion,
-        projectId: projectId,
-        model: model,
-        maxLeafTasks: maxLeafTasks,
-        capabilityBriefing: capabilityBriefing,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-      );
+  }) => planning.generateTaskPlan(
+    promptVersion: promptVersion,
+    projectId: projectId,
+    model: model,
+    maxLeafTasks: maxLeafTasks,
+    capabilityBriefing: capabilityBriefing,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+  );
 
   /// Deterministic code puts the specification's established content back
   /// onto the model's draft.
@@ -103,13 +102,10 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     }
 
     return draft.copyWith(
-      guardrails: merge(
-        draft.guardrails,
-        <String>[
-          ...specification.hardConstraints.map((claim) => claim.statement),
-          ...specification.prohibitedEffects.map((effect) => 'Never: $effect'),
-        ],
-      ),
+      guardrails: merge(draft.guardrails, <String>[
+        ...specification.hardConstraints.map((claim) => claim.statement),
+        ...specification.prohibitedEffects.map((effect) => 'Never: $effect'),
+      ]),
       acceptanceCriteria: merge(
         draft.acceptanceCriteria,
         specification.successCriteria.map((claim) => claim.statement),
@@ -157,7 +153,8 @@ UniversalTaskKernel buildUniversalTaskKernel({
   return UniversalTaskKernel(
     understanding: SemanticSlashUnderstandingService(
       model: ModelBackedUnderstanding(
-        generate: understandingGenerator ??
+        generate:
+            understandingGenerator ??
             (request) => models.providerFor(request.identity).generate(request),
       ),
     ),

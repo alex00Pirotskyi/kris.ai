@@ -95,10 +95,10 @@ final class P2ManagedAuthorizationRegistry {
   }
 
   Map<String, Object?> get provenance => <String, Object?>{
-        'implementation': 'P2ManagedAuthorizationRegistry',
-        'processBindings': _process.length,
-        'watchdogBindings': _watchdogs.length,
-        'exactIdentityRequired': true,
-        'syntheticFallback': false,
-      };
+    'implementation': 'P2ManagedAuthorizationRegistry',
+    'processBindings': _process.length,
+    'watchdogBindings': _watchdogs.length,
+    'exactIdentityRequired': true,
+    'syntheticFallback': false,
+  };
 }

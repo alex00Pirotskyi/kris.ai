@@ -21,7 +21,9 @@ void main() {
           selectedProjectId: 'kris-ai',
         ),
         const ModelTargetProvider(
-            models: <ModelIdentity>[], selectedModelId: null),
+          models: <ModelIdentity>[],
+          selectedModelId: null,
+        ),
         const ProviderTargetProvider(configuredProviderIds: <String>{'ollama'}),
         const WorkspaceTargetProvider(),
       ]);
@@ -41,20 +43,17 @@ void main() {
       );
     });
 
-    test(
-      'adding a new target family means adding one provider, not editing '
-      'the resolver',
-      () {
-        // A future target type (e.g. a desktop-file target) is just
-        // another ChatTargetProvider implementation appended to the
-        // provider list -- this test documents that ChatTargetResolver
-        // itself never needs to change shape to add one.
-        const extra = _FixtureTargetProvider();
-        final resolver = ChatTargetResolver(<ChatTargetProvider>[extra]);
-        final targets = resolver.resolve();
-        expect(targets.single.id, 'fixture');
-      },
-    );
+    test('adding a new target family means adding one provider, not editing '
+        'the resolver', () {
+      // A future target type (e.g. a desktop-file target) is just
+      // another ChatTargetProvider implementation appended to the
+      // provider list -- this test documents that ChatTargetResolver
+      // itself never needs to change shape to add one.
+      const extra = _FixtureTargetProvider();
+      final resolver = ChatTargetResolver(<ChatTargetProvider>[extra]);
+      final targets = resolver.resolve();
+      expect(targets.single.id, 'fixture');
+    });
   });
 
   group('ProjectTargetProvider', () {
@@ -98,8 +97,9 @@ void main() {
       );
       final targets = provider.resolve();
       final ollama = targets.firstWhere((target) => target.id == 'ollama');
-      final openai =
-          targets.firstWhere((target) => target.id == 'openai-compatible');
+      final openai = targets.firstWhere(
+        (target) => target.id == 'openai-compatible',
+      );
       expect(ollama.available, isTrue);
       expect(ollama.status, 'Configured');
       expect(openai.available, isFalse);
@@ -113,11 +113,11 @@ class _FixtureTargetProvider implements ChatTargetProvider {
 
   @override
   List<ChatTarget> resolve() => const <ChatTarget>[
-        ChatTarget(
-          id: 'fixture',
-          type: ChatTargetType.workspace,
-          displayName: 'Fixture',
-          aliases: <String>['fixture'],
-        ),
-      ];
+    ChatTarget(
+      id: 'fixture',
+      type: ChatTargetType.workspace,
+      displayName: 'Fixture',
+      aliases: <String>['fixture'],
+    ),
+  ];
 }

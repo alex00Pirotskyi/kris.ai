@@ -22,8 +22,8 @@ class SemanticSteeringResult {
   final String runnerInstruction;
 }
 
-typedef SemanticSteeringReplan = Future<UniversalTaskPlan> Function(
-    TaskSpecification specification);
+typedef SemanticSteeringReplan =
+    Future<UniversalTaskPlan> Function(TaskSpecification specification);
 
 /// Converts free-text mid-run direction into one typed specification patch.
 /// The classifier proposes meaning; deterministic patch validation applies it.

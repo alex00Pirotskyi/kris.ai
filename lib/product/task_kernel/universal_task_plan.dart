@@ -127,12 +127,12 @@ class UniversalTask {
   /// a generator happened to assign. Reconciliation matches on this, so
   /// a replan that re-emits the same work recognizes it as the same work.
   String get semanticKey => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'title': title.trim().toLowerCase(),
-          'objective': objective.trim().toLowerCase(),
-          'phase': phase.trim().toLowerCase(),
-        }),
-      );
+    canonicalJson(<String, dynamic>{
+      'title': title.trim().toLowerCase(),
+      'objective': objective.trim().toLowerCase(),
+      'phase': phase.trim().toLowerCase(),
+    }),
+  );
 
   UniversalTask copyWith({
     String? id,
@@ -158,31 +158,30 @@ class UniversalTask {
     bool? manual,
     bool? hidden,
     EvidenceProvenance? provenance,
-  }) =>
-      UniversalTask(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        objective: objective ?? this.objective,
-        instructions: instructions ?? this.instructions,
-        phase: phase ?? this.phase,
-        parentId: clearParentId ? null : (parentId ?? this.parentId),
-        dependencies: dependencies ?? this.dependencies,
-        acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
-        verificationSteps: verificationSteps ?? this.verificationSteps,
-        expectedArtifacts: expectedArtifacts ?? this.expectedArtifacts,
-        allowedTools: allowedTools ?? this.allowedTools,
-        requiredCapabilities: requiredCapabilities ?? this.requiredCapabilities,
-        complexity: complexity ?? this.complexity,
-        effortPoints: effortPoints ?? this.effortPoints,
-        uncertainty: uncertainty ?? this.uncertainty,
-        risk: risk ?? this.risk,
-        estimateConfidence: estimateConfidence ?? this.estimateConfidence,
-        maxAttempts: maxAttempts ?? this.maxAttempts,
-        enabled: enabled ?? this.enabled,
-        manual: manual ?? this.manual,
-        hidden: hidden ?? this.hidden,
-        provenance: provenance ?? this.provenance,
-      );
+  }) => UniversalTask(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    objective: objective ?? this.objective,
+    instructions: instructions ?? this.instructions,
+    phase: phase ?? this.phase,
+    parentId: clearParentId ? null : (parentId ?? this.parentId),
+    dependencies: dependencies ?? this.dependencies,
+    acceptanceCriteria: acceptanceCriteria ?? this.acceptanceCriteria,
+    verificationSteps: verificationSteps ?? this.verificationSteps,
+    expectedArtifacts: expectedArtifacts ?? this.expectedArtifacts,
+    allowedTools: allowedTools ?? this.allowedTools,
+    requiredCapabilities: requiredCapabilities ?? this.requiredCapabilities,
+    complexity: complexity ?? this.complexity,
+    effortPoints: effortPoints ?? this.effortPoints,
+    uncertainty: uncertainty ?? this.uncertainty,
+    risk: risk ?? this.risk,
+    estimateConfidence: estimateConfidence ?? this.estimateConfidence,
+    maxAttempts: maxAttempts ?? this.maxAttempts,
+    enabled: enabled ?? this.enabled,
+    manual: manual ?? this.manual,
+    hidden: hidden ?? this.hidden,
+    provenance: provenance ?? this.provenance,
+  );
 
   /// Builds a canonical task from Prompt Studio's PlanTaskRecord without
   /// losing phase/parentId -- the adapter that lets the software family
@@ -190,82 +189,81 @@ class UniversalTask {
   factory UniversalTask.fromPlanTask(
     PlanTaskRecord record, {
     Set<String> requiredCapabilities = const <String>{},
-  }) =>
-      UniversalTask(
-        id: record.id,
-        title: record.title,
-        objective: record.objective,
-        instructions: record.instructions,
-        phase: record.phase,
-        parentId: record.parentId,
-        dependencies: record.dependencies,
-        acceptanceCriteria: record.acceptanceCriteria,
-        verificationSteps: record.verificationSteps,
-        expectedArtifacts: record.expectedArtifacts,
-        allowedTools: record.allowedTools,
-        requiredCapabilities: requiredCapabilities,
-        complexity: record.complexity,
-        effortPoints: record.effortPoints,
-        uncertainty: record.uncertainty,
-        risk: record.risk,
-        estimateConfidence: record.estimateConfidence,
-        maxAttempts: record.maxAttempts,
-        enabled: record.enabled,
-        manual: record.manual,
-        provenance: EvidenceProvenance.assumed,
-      );
+  }) => UniversalTask(
+    id: record.id,
+    title: record.title,
+    objective: record.objective,
+    instructions: record.instructions,
+    phase: record.phase,
+    parentId: record.parentId,
+    dependencies: record.dependencies,
+    acceptanceCriteria: record.acceptanceCriteria,
+    verificationSteps: record.verificationSteps,
+    expectedArtifacts: record.expectedArtifacts,
+    allowedTools: record.allowedTools,
+    requiredCapabilities: requiredCapabilities,
+    complexity: record.complexity,
+    effortPoints: record.effortPoints,
+    uncertainty: record.uncertainty,
+    risk: record.risk,
+    estimateConfidence: record.estimateConfidence,
+    maxAttempts: record.maxAttempts,
+    enabled: record.enabled,
+    manual: record.manual,
+    provenance: EvidenceProvenance.assumed,
+  );
 
   /// Projects back into a PlanTaskRecord so Prompt Studio edits, displays
   /// and persists the very same plan Chat produced -- rather than forking
   /// a parallel copy of it.
   PlanTaskRecord toPlanTask() => PlanTaskRecord(
-        id: id,
-        phase: phase,
-        parentId: parentId,
-        title: title,
-        objective: objective,
-        instructions: instructions,
-        dependencies: dependencies,
-        acceptanceCriteria: acceptanceCriteria,
-        verificationSteps: verificationSteps,
-        expectedArtifacts: expectedArtifacts,
-        allowedTools: allowedTools,
-        complexity: complexity,
-        effortPoints: effortPoints,
-        uncertainty: uncertainty,
-        risk: risk,
-        estimateConfidence: estimateConfidence,
-        expectedModelTurns: 2,
-        expectedToolCalls: 4,
-        maxAttempts: maxAttempts,
-        enabled: enabled,
-        manual: manual,
-      );
+    id: id,
+    phase: phase,
+    parentId: parentId,
+    title: title,
+    objective: objective,
+    instructions: instructions,
+    dependencies: dependencies,
+    acceptanceCriteria: acceptanceCriteria,
+    verificationSteps: verificationSteps,
+    expectedArtifacts: expectedArtifacts,
+    allowedTools: allowedTools,
+    complexity: complexity,
+    effortPoints: effortPoints,
+    uncertainty: uncertainty,
+    risk: risk,
+    estimateConfidence: estimateConfidence,
+    expectedModelTurns: 2,
+    expectedToolCalls: 4,
+    maxAttempts: maxAttempts,
+    enabled: enabled,
+    manual: manual,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'title': title,
-        'objective': objective,
-        'instructions': instructions,
-        'phase': phase,
-        'parentId': parentId,
-        'dependencies': dependencies.toList()..sort(),
-        'acceptanceCriteria': acceptanceCriteria,
-        'verificationSteps': verificationSteps,
-        'expectedArtifacts': expectedArtifacts,
-        'allowedTools': allowedTools.toList()..sort(),
-        'requiredCapabilities': requiredCapabilities.toList()..sort(),
-        'complexity': complexity,
-        'effortPoints': effortPoints,
-        'uncertainty': uncertainty.name,
-        'risk': risk.name,
-        'estimateConfidence': estimateConfidence,
-        'maxAttempts': maxAttempts,
-        'enabled': enabled,
-        'manual': manual,
-        'hidden': hidden,
-        'provenance': provenance.name,
-      };
+    'id': id,
+    'title': title,
+    'objective': objective,
+    'instructions': instructions,
+    'phase': phase,
+    'parentId': parentId,
+    'dependencies': dependencies.toList()..sort(),
+    'acceptanceCriteria': acceptanceCriteria,
+    'verificationSteps': verificationSteps,
+    'expectedArtifacts': expectedArtifacts,
+    'allowedTools': allowedTools.toList()..sort(),
+    'requiredCapabilities': requiredCapabilities.toList()..sort(),
+    'complexity': complexity,
+    'effortPoints': effortPoints,
+    'uncertainty': uncertainty.name,
+    'risk': risk.name,
+    'estimateConfidence': estimateConfidence,
+    'maxAttempts': maxAttempts,
+    'enabled': enabled,
+    'manual': manual,
+    'hidden': hidden,
+    'provenance': provenance.name,
+  };
 
   factory UniversalTask.fromJson(Map<String, dynamic> json) {
     final parentId = json['parentId']?.toString().trim() ?? '';
@@ -286,11 +284,13 @@ class UniversalTask {
           .clamp(1, 10)
           .toInt(),
       effortPoints: int.tryParse(json['effortPoints']?.toString() ?? '') ?? 3,
-      uncertainty: PlanUncertainty.values
+      uncertainty:
+          PlanUncertainty.values
               .where((item) => item.name == json['uncertainty']?.toString())
               .firstOrNull ??
           PlanUncertainty.medium,
-      risk: PlanRisk.values
+      risk:
+          PlanRisk.values
               .where((item) => item.name == json['risk']?.toString())
               .firstOrNull ??
           PlanRisk.low,
@@ -304,7 +304,8 @@ class UniversalTask {
       enabled: json['enabled'] != false,
       manual: json['manual'] == true,
       hidden: json['hidden'] == true,
-      provenance: EvidenceProvenance.values
+      provenance:
+          EvidenceProvenance.values
               .where((item) => item.name == json['provenance']?.toString())
               .firstOrNull ??
           EvidenceProvenance.inferred,
@@ -383,24 +384,24 @@ class UniversalTaskPlan {
   int get maxComplexity => enabledTasks.isEmpty
       ? 1
       : enabledTasks
-          .map((task) => task.complexity)
-          .reduce((a, b) => a > b ? a : b);
+            .map((task) => task.complexity)
+            .reduce((a, b) => a > b ? a : b);
 
   /// Every capability any enabled task requires. The kernel intersects
   /// this with the governed registry; it never treats it as a grant.
   Set<String> get requiredCapabilities => <String>{
-        for (final task in enabledTasks) ...task.requiredCapabilities,
-      };
+    for (final task in enabledTasks) ...task.requiredCapabilities,
+  };
 
   String get contentHash => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'specification': specification.contentKey,
-          'family': family.name,
-          'route': route.name,
-          'title': title,
-          'tasks': tasks.map((task) => task.toJson()).toList(),
-        }),
-      );
+    canonicalJson(<String, dynamic>{
+      'specification': specification.contentKey,
+      'family': family.name,
+      'route': route.name,
+      'title': title,
+      'tasks': tasks.map((task) => task.toJson()).toList(),
+    }),
+  );
 
   List<String> validate() {
     final errors = <String>[];
@@ -495,59 +496,59 @@ class UniversalTaskPlan {
     String? previousPlanId,
     bool? conservative,
     DateTime? createdAt,
-  }) =>
-      UniversalTaskPlan(
-        id: id ?? this.id,
-        specification: specification ?? this.specification,
-        family: family ?? this.family,
-        route: route ?? this.route,
-        title: title ?? this.title,
-        rationale: rationale ?? this.rationale,
-        tasks: tasks ?? this.tasks,
-        revision: revision ?? this.revision,
-        previousPlanId: previousPlanId ?? this.previousPlanId,
-        conservative: conservative ?? this.conservative,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  }) => UniversalTaskPlan(
+    id: id ?? this.id,
+    specification: specification ?? this.specification,
+    family: family ?? this.family,
+    route: route ?? this.route,
+    title: title ?? this.title,
+    rationale: rationale ?? this.rationale,
+    tasks: tasks ?? this.tasks,
+    revision: revision ?? this.revision,
+    previousPlanId: previousPlanId ?? this.previousPlanId,
+    conservative: conservative ?? this.conservative,
+    createdAt: createdAt ?? this.createdAt,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'specification': specification.toJson(),
-        'family': family.name,
-        'route': route.name,
-        'title': title,
-        'rationale': rationale,
-        'tasks': tasks.map((task) => task.toJson()).toList(),
-        'revision': revision,
-        'previousPlanId': previousPlanId,
-        'conservative': conservative,
-        'contentHash': contentHash,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'specification': specification.toJson(),
+    'family': family.name,
+    'route': route.name,
+    'title': title,
+    'rationale': rationale,
+    'tasks': tasks.map((task) => task.toJson()).toList(),
+    'revision': revision,
+    'previousPlanId': previousPlanId,
+    'conservative': conservative,
+    'contentHash': contentHash,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+  };
 
-  factory UniversalTaskPlan.fromJson(Map<String, dynamic> json) =>
-      UniversalTaskPlan(
-        id: json['id']?.toString() ?? newId('universal_plan'),
-        specification:
-            TaskSpecification.fromJson(mapValue(json['specification'])),
-        family: TaskFamily.values
-                .where((item) => item.name == json['family']?.toString())
-                .firstOrNull ??
-            TaskFamily.software,
-        route: PlanningRoute.values
-                .where((item) => item.name == json['route']?.toString())
-                .firstOrNull ??
-            PlanningRoute.graph,
-        title: json['title']?.toString() ?? 'Task plan',
-        rationale: json['rationale']?.toString() ?? '',
-        tasks:
-            (json['tasks'] is List ? json['tasks'] as List : const <Object>[])
-                .whereType<Map>()
-                .map((item) => UniversalTask.fromJson(mapValue(item)))
-                .toList(growable: false),
-        revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
-        previousPlanId: json['previousPlanId']?.toString(),
-        conservative: json['conservative'] == true,
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-      );
+  factory UniversalTaskPlan.fromJson(
+    Map<String, dynamic> json,
+  ) => UniversalTaskPlan(
+    id: json['id']?.toString() ?? newId('universal_plan'),
+    specification: TaskSpecification.fromJson(mapValue(json['specification'])),
+    family:
+        TaskFamily.values
+            .where((item) => item.name == json['family']?.toString())
+            .firstOrNull ??
+        TaskFamily.software,
+    route:
+        PlanningRoute.values
+            .where((item) => item.name == json['route']?.toString())
+            .firstOrNull ??
+        PlanningRoute.graph,
+    title: json['title']?.toString() ?? 'Task plan',
+    rationale: json['rationale']?.toString() ?? '',
+    tasks: (json['tasks'] is List ? json['tasks'] as List : const <Object>[])
+        .whereType<Map>()
+        .map((item) => UniversalTask.fromJson(mapValue(item)))
+        .toList(growable: false),
+    revision: int.tryParse(json['revision']?.toString() ?? '') ?? 1,
+    previousPlanId: json['previousPlanId']?.toString(),
+    conservative: json['conservative'] == true,
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+  );
 }

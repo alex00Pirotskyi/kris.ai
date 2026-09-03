@@ -81,13 +81,12 @@ final class P2AutomationHostOperations
     String operation,
     Map<String, Object?> payload, {
     Duration deadline = const Duration(seconds: 30),
-  }) =>
-      _call(
-        bindingProvider.bindingFor(operation),
-        operation,
-        payload,
-        deadline: deadline,
-      );
+  }) => _call(
+    bindingProvider.bindingFor(operation),
+    operation,
+    payload,
+    deadline: deadline,
+  );
 
   P2OperationSupport _support(Object? raw) {
     if (raw is! Map) {
@@ -214,53 +213,47 @@ final class P2AutomationHostOperations
   Future<P2HostOperationResult> serviceStatus(
     String id,
     P2EffectBinding binding,
-  ) =>
-      _effect(binding, 'service.status', <String, Object?>{'serviceId': id});
+  ) => _effect(binding, 'service.status', <String, Object?>{'serviceId': id});
 
   @override
   Future<P2HostOperationResult> serviceStart(
     String id,
     P2EffectBinding binding,
-  ) =>
-      _effect(binding, 'service.start', <String, Object?>{'serviceId': id});
+  ) => _effect(binding, 'service.start', <String, Object?>{'serviceId': id});
 
   @override
   Future<P2HostOperationResult> serviceStop(
     String id,
     P2EffectBinding binding,
-  ) =>
-      _effect(binding, 'service.stop', <String, Object?>{'serviceId': id});
+  ) => _effect(binding, 'service.stop', <String, Object?>{'serviceId': id});
 
   @override
   Future<P2HostOperationResult> applicationOpen(
     String target,
     P2EffectBinding binding,
-  ) =>
-      _effect(binding, 'application.open', <String, Object?>{
-        'target': target,
-        'arguments': const <String>[],
-      });
+  ) => _effect(binding, 'application.open', <String, Object?>{
+    'target': target,
+    'arguments': const <String>[],
+  });
 
   Future<P2HostOperationResult> applicationOpenExecutable(
     String executable,
     List<String> arguments,
     P2EffectBinding binding, {
     String? cwd,
-  }) =>
-      _effect(binding, 'application.open', <String, Object?>{
-        'target': executable,
-        'arguments': arguments,
-        if (cwd != null) 'cwd': cwd,
-      });
+  }) => _effect(binding, 'application.open', <String, Object?>{
+    'target': executable,
+    'arguments': arguments,
+    if (cwd != null) 'cwd': cwd,
+  });
 
   @override
   Future<P2HostOperationResult> applicationClose(
     String identity,
     P2EffectBinding binding,
-  ) =>
-      _effect(binding, 'application.close', <String, Object?>{
-        'identity': identity,
-      });
+  ) => _effect(binding, 'application.close', <String, Object?>{
+    'identity': identity,
+  });
 
   @override
   Future<P2OperationSupport> clipboardSupport() async =>
@@ -271,9 +264,9 @@ final class P2AutomationHostOperations
 
   @override
   Future<P2OperationSupport> screenSupport() async => const P2OperationSupport(
-        P2SupportStatus.approvalRequired,
-        'interactive_desktop_lane_required',
-      );
+    P2SupportStatus.approvalRequired,
+    'interactive_desktop_lane_required',
+  );
 
   @override
   Future<String> readClipboard(P2EffectBinding binding) async {
@@ -303,14 +296,10 @@ final class P2AutomationHostOperations
     P2EffectBinding binding, {
     List<Map<String, int>> redactionZones = const <Map<String, int>>[],
   }) async {
-    final response = await _call(
-        binding,
-        'screen.capture',
-        <String, Object?>{
-          'redactionZones': redactionZones,
-          'ordinaryLogContent': false,
-        },
-        deadline: const Duration(seconds: 45));
+    final response = await _call(binding, 'screen.capture', <String, Object?>{
+      'redactionZones': redactionZones,
+      'ordinaryLogContent': false,
+    }, deadline: const Duration(seconds: 45));
     final output = response['output'];
     if (output is! Map || output['bytesBase64'] is! String) {
       throw StateError('screen_response_invalid');

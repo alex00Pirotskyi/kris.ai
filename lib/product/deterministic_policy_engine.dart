@@ -12,8 +12,8 @@ class DeterministicPolicyEngineV2 {
   DeterministicPolicyEngineV2({
     required Map<String, dynamic> accessCatalog,
     required Map<String, dynamic> policyConfig,
-  })  : _accessCatalog = _copy(accessCatalog),
-        _policyConfig = _copy(policyConfig);
+  }) : _accessCatalog = _copy(accessCatalog),
+       _policyConfig = _copy(policyConfig);
 
   final Map<String, dynamic> _accessCatalog;
   final Map<String, dynamic> _policyConfig;
@@ -86,8 +86,9 @@ class DeterministicPolicyEngineV2 {
         reasons.add('invalid_budget');
         budgets[field] = 0;
       } else {
-        budgets[field] =
-            requested < budgets[field]! ? requested : budgets[field]!;
+        budgets[field] = requested < budgets[field]!
+            ? requested
+            : budgets[field]!;
       }
     }
 
@@ -95,21 +96,22 @@ class DeterministicPolicyEngineV2 {
     final deniedCapabilities = <String>{};
     final deniedTools = <String>{};
     var forceDeny = false;
-    final overlays = _list(
-      request['overlays'] ?? <dynamic>[],
-      'overlays',
-    ).map((item) => _map(item, 'overlay')).toList(growable: false)
-      ..sort((left, right) {
-        final layer = _layerRank(
-          left['layer'],
-        ).compareTo(_layerRank(right['layer']));
-        return layer != 0
-            ? layer
-            : _string(
-                left['overlayId'],
-                'overlayId',
-              ).compareTo(_string(right['overlayId'], 'overlayId'));
-      });
+    final overlays =
+        _list(
+            request['overlays'] ?? <dynamic>[],
+            'overlays',
+          ).map((item) => _map(item, 'overlay')).toList(growable: false)
+          ..sort((left, right) {
+            final layer = _layerRank(
+              left['layer'],
+            ).compareTo(_layerRank(right['layer']));
+            return layer != 0
+                ? layer
+                : _string(
+                    left['overlayId'],
+                    'overlayId',
+                  ).compareTo(_string(right['overlayId'], 'overlayId'));
+          });
     for (final overlay in overlays) {
       deniedCapabilities.addAll(_strings(overlay['denyCapabilities']));
       deniedTools.addAll(_strings(overlay['denyTools']));
@@ -206,8 +208,7 @@ class DeterministicPolicyEngineV2 {
             scope['pathPrefixes'] = <String>{
               ..._strings(scope['pathPrefixes']),
               normalized,
-            }.toList()
-              ..sort();
+            }.toList()..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
@@ -222,8 +223,7 @@ class DeterministicPolicyEngineV2 {
             scope['networkDestinations'] = <String>{
               ..._strings(scope['networkDestinations']),
               destination.toLowerCase(),
-            }.toList()
-              ..sort();
+            }.toList()..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
@@ -237,8 +237,7 @@ class DeterministicPolicyEngineV2 {
             scope['browserProfiles'] = <String>{
               ..._strings(scope['browserProfiles']),
               browserProfile,
-            }.toList()
-              ..sort();
+            }.toList()..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
@@ -248,8 +247,7 @@ class DeterministicPolicyEngineV2 {
             scope['secretLeaseIds'] = <String>{
               ..._strings(scope['secretLeaseIds']),
               leaseId,
-            }.toList()
-              ..sort();
+            }.toList()..sort();
           } else {
             reasons.add('widening_exceeds_profile_ceiling');
           }
@@ -332,7 +330,8 @@ class DeterministicPolicyEngineV2 {
       reasons.add('unknown_effect_domain');
     }
 
-    final approvalRequired = approvalPolicy == 'always' ||
+    final approvalRequired =
+        approvalPolicy == 'always' ||
         (approvalPolicy == 'high_risk_only' && capability['risk'] == 'high');
     String status;
     List<String> reasonCodes;
@@ -347,10 +346,8 @@ class DeterministicPolicyEngineV2 {
       reasonCodes = <String>[];
     }
 
-    final decisionId = 'policy-${_fnv64(_canonical(<String, dynamic>{
-          'request': _normalizeRequestForHash(request),
-          'policyRevision': _policyConfig['policyRevision']
-        }))}';
+    final decisionId =
+        'policy-${_fnv64(_canonical(<String, dynamic>{'request': _normalizeRequestForHash(request), 'policyRevision': _policyConfig['policyRevision']}))}';
     final grantDraft = status == 'allow'
         ? <String, dynamic>{
             'issuer': <String, dynamic>{
@@ -401,33 +398,34 @@ class DeterministicPolicyEngineV2 {
     final paths = switch (filesystem['scope']) {
       'none' => <String>[],
       'project' => <String>[
-          _normalizePath(_string(context['projectRoot'], 'projectRoot')),
-        ],
+        _normalizePath(_string(context['projectRoot'], 'projectRoot')),
+      ],
       'current_account' => _strings(
-          context['currentAccountRoots'],
-        ).map(_normalizePath).toList(growable: false),
+        context['currentAccountRoots'],
+      ).map(_normalizePath).toList(growable: false),
       'sandbox' => <String>[
-          _normalizePath(_string(context['sandboxRoot'], 'sandboxRoot')),
-        ],
+        _normalizePath(_string(context['sandboxRoot'], 'sandboxRoot')),
+      ],
       _ => throw PolicyInputException('unsupported filesystem scope'),
     };
     final destinations = switch (network['scope']) {
       'none' => <String>[],
       'unrestricted' => <String>['*'],
       'allowlist' => _strings(
-          context[profileId == 'isolated_untrusted'
-              ? 'grantDestinations'
-              : 'projectDestinations'],
-        ),
+        context[profileId == 'isolated_untrusted'
+            ? 'grantDestinations'
+            : 'projectDestinations'],
+      ),
       _ => throw PolicyInputException('unsupported network scope'),
     };
     final browserProfiles = switch (browser['scope']) {
       'none' => <String>[],
       'isolated' => <String>['isolated'],
       'user_selected' => _strings(context['userSelectedBrowserProfiles']),
-      'unrestricted' => _strings(context['availableBrowserProfiles']).isEmpty
-          ? <String>['*']
-          : _strings(context['availableBrowserProfiles']),
+      'unrestricted' =>
+        _strings(context['availableBrowserProfiles']).isEmpty
+            ? <String>['*']
+            : _strings(context['availableBrowserProfiles']),
       _ => throw PolicyInputException('unsupported browser scope'),
     };
     return <String, dynamic>{
@@ -478,11 +476,11 @@ class DeterministicPolicyEngineV2 {
   }
 
   static int _layerRank(dynamic layer) => switch (layer) {
-        'organization' => 0,
-        'project' => 1,
-        'user' => 2,
-        _ => throw PolicyInputException('unknown overlay layer'),
-      };
+    'organization' => 0,
+    'project' => 1,
+    'user' => 2,
+    _ => throw PolicyInputException('unknown overlay layer'),
+  };
 
   static String _stricterApproval(String left, String right) {
     const ranks = <String, int>{'never': 0, 'high_risk_only': 1, 'always': 2};
@@ -566,9 +564,9 @@ class DeterministicPolicyEngineV2 {
     final value = host.trim().toLowerCase().replaceFirst(RegExp(r'[.]$'), '');
     for (final item in allowed) {
       final pattern = item.trim().toLowerCase().replaceFirst(
-            RegExp(r'[.]$'),
-            '',
-          );
+        RegExp(r'[.]$'),
+        '',
+      );
       if (pattern == '*') {
         return true;
       }
@@ -589,20 +587,21 @@ class DeterministicPolicyEngineV2 {
     Map<String, dynamic> request,
   ) {
     final result = _copy(request);
-    final overlays = _list(
-      result['overlays'] ?? <dynamic>[],
-      'overlays',
-    ).map((item) => _map(item, 'overlay')).toList(growable: false)
-      ..sort((left, right) {
-        final layer = _layerRank(
-          left['layer'],
-        ).compareTo(_layerRank(right['layer']));
-        return layer != 0
-            ? layer
-            : left['overlayId'].toString().compareTo(
-                  right['overlayId'].toString(),
-                );
-      });
+    final overlays =
+        _list(
+            result['overlays'] ?? <dynamic>[],
+            'overlays',
+          ).map((item) => _map(item, 'overlay')).toList(growable: false)
+          ..sort((left, right) {
+            final layer = _layerRank(
+              left['layer'],
+            ).compareTo(_layerRank(right['layer']));
+            return layer != 0
+                ? layer
+                : left['overlayId'].toString().compareTo(
+                    right['overlayId'].toString(),
+                  );
+          });
     result['overlays'] = overlays;
     return result;
   }

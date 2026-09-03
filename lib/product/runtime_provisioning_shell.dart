@@ -64,18 +64,15 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
   @override
   Widget build(BuildContext context) {
     final reducedMotion = WidgetsBinding
-        .instance.platformDispatcher.accessibilityFeatures.disableAnimations;
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
-      theme: _runtimeTheme(
-        Brightness.light,
-        reducedMotion: reducedMotion,
-      ),
-      darkTheme: _runtimeTheme(
-        Brightness.dark,
-        reducedMotion: reducedMotion,
-      ),
+      theme: _runtimeTheme(Brightness.light, reducedMotion: reducedMotion),
+      darkTheme: _runtimeTheme(Brightness.dark, reducedMotion: reducedMotion),
       highContrastTheme: _runtimeTheme(
         Brightness.light,
         highContrast: true,
@@ -87,8 +84,9 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
         reducedMotion: reducedMotion,
       ),
       themeMode: ThemeMode.system,
-      themeAnimationDuration:
-          P5DesignSystem.themeTransitionDuration(reducedMotion),
+      themeAnimationDuration: P5DesignSystem.themeTransitionDuration(
+        reducedMotion,
+      ),
       themeAnimationCurve: Curves.easeOutCubic,
       home: _ProvisioningMainShell(
         runtime: widget.runtime,
@@ -103,10 +101,7 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
 }
 
 class _ProvisioningMainShell extends StatefulWidget {
-  const _ProvisioningMainShell({
-    required this.runtime,
-    required this.chat,
-  });
+  const _ProvisioningMainShell({required this.runtime, required this.chat});
 
   final ProductRuntime runtime;
   final Widget chat;
@@ -292,11 +287,7 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
   Widget build(BuildContext context) {
     final ownerAvailable = _ownerMode.available;
     final qaPreview = _ownerMode.runtimeProvenance['qaPreview'] == true;
-    final pages = <Widget>[
-      widget.chat,
-      _experiencePage(),
-      _ownerPage(),
-    ];
+    final pages = <Widget>[widget.chat, _experiencePage(), _ownerPage()];
     final wide = MediaQuery.sizeOf(context).width >= 1100;
     final workspaceBody = wide
         ? Row(
@@ -322,8 +313,8 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
                       _ownerPreparing
                           ? Icons.hourglass_top
                           : ownerAvailable
-                              ? Icons.admin_panel_settings_outlined
-                              : Icons.admin_panel_settings_outlined,
+                          ? Icons.admin_panel_settings_outlined
+                          : Icons.admin_panel_settings_outlined,
                     ),
                     selectedIcon: Icon(
                       _ownerPreparing
@@ -335,7 +326,9 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
                 ],
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: IndexedStack(index: _index, children: pages)),
+              Expanded(
+                child: IndexedStack(index: _index, children: pages),
+              ),
             ],
           )
         : IndexedStack(index: _index, children: pages);
@@ -436,10 +429,10 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
       browserRuntimeStatusCode: _webReady
           ? 'p3_browser_runtime_available'
           : _webPreparing
-              ? 'p3_runtime_preparing'
-              : _webFailure == null
-                  ? 'p3_runtime_provisionable'
-                  : 'p3_runtime_prepare_failed',
+          ? 'p3_runtime_preparing'
+          : _webFailure == null
+          ? 'p3_runtime_provisionable'
+          : 'p3_runtime_prepare_failed',
       browserRuntimeProvenance: <String, Object?>{
         ...widget.runtime.p3BrowserRuntime.provenance,
         'provisionable': true,
@@ -452,12 +445,12 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
       ),
       browserSessionStarter: () =>
           widget.runtime.startProvisionedBrowserSessions(
-        stateDirectory: Directory(
-          '${widget.runtime.directories.cache.path}${Platform.pathSeparator}'
-          'p5-web-studio-browser',
-        ),
-        requestTimeout: const Duration(seconds: 60),
-      ),
+            stateDirectory: Directory(
+              '${widget.runtime.directories.cache.path}${Platform.pathSeparator}'
+              'p5-web-studio-browser',
+            ),
+            requestTimeout: const Duration(seconds: 60),
+          ),
       onOpenOwnerMode: () => _selectDestination(2),
     );
     if (_experienceController.state.workspace != P5WorkspaceId.webStudio ||
@@ -534,8 +527,8 @@ class _RuntimePreparingView extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(message, textAlign: TextAlign.center),
@@ -586,8 +579,8 @@ class _RuntimeFailureView extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
@@ -629,19 +622,19 @@ class _RuntimeStatusBanner extends StatelessWidget {
     required this.title,
     required this.message,
     required this.progress,
-  })  : diagnosticCode = null,
-        onRetry = null,
-        failure = false;
+  }) : diagnosticCode = null,
+       onRetry = null,
+       failure = false;
 
   const _RuntimeStatusBanner.failure({
     super.key,
     required this.title,
     required this.diagnosticCode,
     required this.onRetry,
-  })  : message =
-            'Kristin could not safely finish preparing the browser runtime.',
-        progress = null,
-        failure = true;
+  }) : message =
+           'Kristin could not safely finish preparing the browser runtime.',
+       progress = null,
+       failure = true;
 
   final String title;
   final String message;

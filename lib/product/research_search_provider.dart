@@ -41,10 +41,10 @@ class SearchProviderResult {
   final String snippet;
 
   Map<String, String> toMap() => <String, String>{
-        'title': title,
-        'url': url,
-        'snippet': snippet,
-      };
+    'title': title,
+    'url': url,
+    'snippet': snippet,
+  };
 }
 
 class SearchProviderResponse {
@@ -61,11 +61,11 @@ class SearchProviderResponse {
   final List<String> providerFailures;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'providerId': providerId,
-        'resultCount': results.length,
-        'fallbackUsed': fallbackUsed,
-        if (providerFailures.isNotEmpty) 'providerFailures': providerFailures,
-      };
+    'providerId': providerId,
+    'resultCount': results.length,
+    'fallbackUsed': fallbackUsed,
+    if (providerFailures.isNotEmpty) 'providerFailures': providerFailures,
+  };
 }
 
 class SearchProviderProbe {
@@ -84,11 +84,11 @@ class SearchProviderProbe {
   final List<String> providerFailures;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'available': available,
-        if (providerId.isNotEmpty) 'providerId': providerId,
-        'resultCount': resultCount,
-        if (providerFailures.isNotEmpty) 'providerFailures': providerFailures,
-      };
+    'available': available,
+    if (providerId.isNotEmpty) 'providerId': providerId,
+    'resultCount': resultCount,
+    if (providerFailures.isNotEmpty) 'providerFailures': providerFailures,
+  };
 }
 
 abstract interface class SearchProvider {
@@ -98,10 +98,7 @@ abstract interface class SearchProvider {
 }
 
 class SearchProviderRouter {
-  const SearchProviderRouter({
-    required this.builtIn,
-    this.preferred,
-  });
+  const SearchProviderRouter({required this.builtIn, this.preferred});
 
   final SearchProvider builtIn;
   final SearchProvider? preferred;
@@ -203,8 +200,8 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
     required this.timeout,
     required int maxBytes,
     SearchHttpTransport? transport,
-  })  : maxBytes = min(maxBytes, _maxBuiltInResponseBytes),
-        transport = transport ?? defaultSearchHttpTransport;
+  }) : maxBytes = min(maxBytes, _maxBuiltInResponseBytes),
+       transport = transport ?? defaultSearchHttpTransport;
 
   @override
   String get id => builtInSearchProviderId;
@@ -271,7 +268,7 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
     }
     final contentType =
         response.headers[HttpHeaders.contentTypeHeader]?.toLowerCase().trim() ??
-            '';
+        '';
     if (contentType.isNotEmpty && !contentType.startsWith('text/html')) {
       throw ProductException(
         'search_provider_mime_rejected',
@@ -307,17 +304,15 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
   }
 }
 
-typedef BraveSearchCallback = Future<List<Map<String, String>>> Function({
-  required String query,
-  required String apiKey,
-  required int count,
-});
+typedef BraveSearchCallback =
+    Future<List<Map<String, String>>> Function({
+      required String query,
+      required String apiKey,
+      required int count,
+    });
 
 class BraveSearchProvider implements SearchProvider {
-  const BraveSearchProvider({
-    required this.apiKey,
-    required this.callback,
-  });
+  const BraveSearchProvider({required this.apiKey, required this.callback});
 
   final String apiKey;
   final BraveSearchCallback callback;
@@ -381,9 +376,8 @@ class SearchHttpResponse {
   final List<int> body;
 }
 
-typedef SearchHttpTransport = Future<SearchHttpResponse> Function(
-  SearchHttpRequest request,
-);
+typedef SearchHttpTransport =
+    Future<SearchHttpResponse> Function(SearchHttpRequest request);
 
 Future<SearchHttpResponse> defaultSearchHttpTransport(
   SearchHttpRequest request,
@@ -550,9 +544,11 @@ List<SearchProviderResult> parseDuckDuckGoHtmlResults(
   }
   final results = <SearchProviderResult>[];
   final seen = <String>{};
-  for (var index = 0;
-      index < links.length && results.length < boundedLimit;
-      index++) {
+  for (
+    var index = 0;
+    index < links.length && results.length < boundedLimit;
+    index++
+  ) {
     final url = normalizePublicSearchResultUrl(links[index].href);
     if (url == null || !seen.add(url)) {
       continue;
@@ -564,13 +560,7 @@ List<SearchProviderResult> parseDuckDuckGoHtmlResults(
     final snippet = index < snippets.length
         ? _boundedText(snippets[index], _maxSearchSnippetCharacters)
         : '';
-    results.add(
-      SearchProviderResult(
-        title: title,
-        url: url,
-        snippet: snippet,
-      ),
-    );
+    results.add(SearchProviderResult(title: title, url: url, snippet: snippet));
   }
   return List<SearchProviderResult>.unmodifiable(results);
 }
@@ -682,7 +672,8 @@ bool _isPublicSearchHost(String host) {
         bytes[0] == 0xff) {
       return false;
     }
-    final mappedIpv4 = bytes.take(10).every((value) => value == 0) &&
+    final mappedIpv4 =
+        bytes.take(10).every((value) => value == 0) &&
         bytes[10] == 0xff &&
         bytes[11] == 0xff;
     if (mappedIpv4) {
@@ -734,9 +725,9 @@ String? _attribute(String attributes, String name) {
 
 String _plainHtmlText(String value) {
   final withoutTags = value.replaceAll(RegExp(r'<[^>]*>'), ' ');
-  return _decodeHtmlEntities(withoutTags)
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
+  return _decodeHtmlEntities(
+    withoutTags,
+  ).replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
 String _decodeHtmlEntities(String value) {
@@ -799,12 +790,11 @@ void _throwIfCancelledRaw(bool Function()? isCancelled) {
 Future<T> _awaitCancellationAware<T>(
   Future<T> operation,
   SearchProviderRequest request,
-) =>
-    _awaitCancellationAwareRaw(
-      operation,
-      request.cancellation,
-      request.isCancelled,
-    );
+) => _awaitCancellationAwareRaw(
+  operation,
+  request.cancellation,
+  request.isCancelled,
+);
 
 Future<T> _awaitCancellationAwareRaw<T>(
   Future<T> operation,

@@ -348,12 +348,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       loading = false;
       status = conversationSession.awaitingUserInput
           ? conversationSession.deferredUserPrompt ??
-              'Kristin needs your input before continuing.'
+                'Kristin needs your input before continuing.'
           : runAwaitingApproval
-              ? 'Permission review required'
-              : runExecuting
-                  ? 'Continuing active work'
-                  : 'Kristin is ready';
+          ? 'Permission review required'
+          : runExecuting
+          ? 'Continuing active work'
+          : 'Kristin is ready';
     });
   }
 
@@ -380,8 +380,9 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       RunState.failed,
       RunState.cancelled,
     }.contains(visibleRun.state);
-    final loadedEvidence =
-        newTerminal ? await runtime.evidenceForRun(visibleRun.id) : evidence;
+    final loadedEvidence = newTerminal
+        ? await runtime.evidenceForRun(visibleRun.id)
+        : evidence;
     final deferred = newTerminal
         ? null
         : await runtime.latestDeferredInteraction(visibleRun.id);
@@ -416,7 +417,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       completedTasks = _completedTasksFrom(visibleRun);
       awaitingPermission = visibleRun.state == RunState.awaitingApproval;
       if (conversationSession.awaitingUserInput) {
-        status = conversationSession.deferredUserPrompt ??
+        status =
+            conversationSession.deferredUserPrompt ??
             'Kristin needs your input before continuing.';
       } else if (visibleRun.state == RunState.awaitingApproval) {
         status = continuation == null
@@ -453,8 +455,10 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   }
 
   List<ChatTarget> _knownTargets() {
-    final providerIds =
-        runtime.models.providers().map((item) => item.id).toSet();
+    final providerIds = runtime.models
+        .providers()
+        .map((item) => item.id)
+        .toSet();
     return ChatTargetResolver(<ChatTargetProvider>[
       ProjectTargetProvider(
         projects: projects,
@@ -603,7 +607,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
         await _controlRun('cancel');
         return;
       }
-      final safeAlongsidePendingRun = decision.isInformational ||
+      final safeAlongsidePendingRun =
+          decision.isInformational ||
           (decision.capability != null &&
               decision.capability!.riskClass == ChatRiskClass.none);
       if (!safeAlongsidePendingRun) {
@@ -674,12 +679,12 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       error = null;
       final needsClarification =
           routingDecision?.requiresClarification == true &&
-              outcome.specification.blockingQuestions.isNotEmpty;
+          outcome.specification.blockingQuestions.isNotEmpty;
       status = needsClarification
           ? 'Kristin needs one clarification'
           : outcome.isSemantic
-              ? 'Review what Kristin understood'
-              : 'Review how Kristin interpreted this';
+          ? 'Review what Kristin understood'
+          : 'Review how Kristin interpreted this';
       if (needsClarification) {
         conversationSession.addAssistantMessage(
           outcome.specification.blockingQuestions.first.question,
@@ -721,11 +726,11 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       try {
         return await (kernel.understanding as SemanticSlashUnderstandingService)
             .understandWithSemanticContext(
-          decision: decision,
-          context: context.understandingContext,
-          modelIdentity: selectedModel!,
-          semanticRequest: semanticRequestOverride,
-        );
+              decision: decision,
+              context: context.understandingContext,
+              modelIdentity: selectedModel!,
+              semanticRequest: semanticRequestOverride,
+            );
       } catch (thrown, stackTrace) {
         final failure = classifyPlanningFailure(thrown, stackTrace: stackTrace);
         _mutate(() {
@@ -762,7 +767,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           return null;
         case PlanningFailureKind.providerUnavailable:
           _mutate(() {
-            status = 'Interpreting without the model '
+            status =
+                'Interpreting without the model '
                 '(${failure.message})';
             error = null;
           });
@@ -831,7 +837,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
       );
       routingDecision = routing;
       error = null;
-      final stillBlocked = routing.requiresClarification &&
+      final stillBlocked =
+          routing.requiresClarification &&
           outcome.specification.blockingQuestions.isNotEmpty;
       status = stillBlocked
           ? 'Kristin needs one clarification'

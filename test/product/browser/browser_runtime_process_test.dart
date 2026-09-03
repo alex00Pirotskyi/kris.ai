@@ -88,15 +88,13 @@ Map<String, Object?> _downloadReceiptEnvelope({
     'sourceUrl': 'https://example.test/export',
     'suggestedFilename': suggestedFilename,
     'content': <String, Object?>{
-      'relativePath': 'downloads/quarantine/$sessionKind/$scopeId/'
+      'relativePath':
+          'downloads/quarantine/$sessionKind/$scopeId/'
           '$downloadId/payload.bin',
       'bytes': 4,
       'sha256': Sha256.hex(<int>[1, 2, 3, 4]),
     },
-    'locator': <String, Object?>{
-      'strategy': 'testId',
-      'index': 0,
-    },
+    'locator': <String, Object?>{'strategy': 'testId', 'index': 0},
     'createdAt': '2026-08-17T00:00:00.000Z',
   };
   return <String, Object?>{
@@ -157,10 +155,7 @@ Map<String, Object?> _uploadReceiptEnvelope({
       'bytes': stageFile['bytes'],
       'sha256': stageFile['sha256'],
     },
-    'locator': <String, Object?>{
-      'strategy': 'label',
-      'index': 0,
-    },
+    'locator': <String, Object?>{'strategy': 'label', 'index': 0},
     'transferMode': 'in-memory-buffer',
     'createdAt': '2026-08-17T00:00:00.000Z',
   };
@@ -199,10 +194,7 @@ Map<String, Object?> _observationEnvelope() {
       'base64': base64Encode(screenshot),
       'mediaType': 'image/jpeg',
     },
-    'console': <String, Object?>{
-      'entries': <Object?>[],
-      'dropped': 0,
-    },
+    'console': <String, Object?>{'entries': <Object?>[], 'dropped': 0},
     'network': <String, Object?>{
       'requests': <Object?>[],
       'requestsDropped': 0,
@@ -431,78 +423,79 @@ void main() {
     },
   );
 
-  test('session launch plan binds exact quotas and strips parent PATH',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-session-plan-');
-    addTearDown(() => temp.delete(recursive: true));
-    final resources = await _resources(temp.absolute);
-    final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
-    await state.create();
-    const quotas = P3BrowserSessionQuotas(
-      maxSessions: 3,
-      maxPagesPerSession: 5,
-      maxPersistentProfiles: 7,
-    );
+  test(
+    'session launch plan binds exact quotas and strips parent PATH',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-session-plan-');
+      addTearDown(() => temp.delete(recursive: true));
+      final resources = await _resources(temp.absolute);
+      final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
+      await state.create();
+      const quotas = P3BrowserSessionQuotas(
+        maxSessions: 3,
+        maxPagesPerSession: 5,
+        maxPersistentProfiles: 7,
+      );
 
-    final plan = P3BrowserSessionLaunchPlan.create(
-      resources: resources,
-      stateDirectory: state.absolute,
-      quotas: quotas,
-    );
+      final plan = P3BrowserSessionLaunchPlan.create(
+        resources: resources,
+        stateDirectory: state.absolute,
+        quotas: quotas,
+      );
 
-    expect(plan.executable, resources.nodeExecutable);
-    expect(plan.arguments.first, resources.workerScript);
-    expect(plan.arguments[plan.arguments.indexOf('--mode') + 1], 'sessions');
-    expect(
-      plan.arguments[plan.arguments.indexOf('--max-sessions') + 1],
-      '3',
-    );
-    expect(
-      plan.arguments[plan.arguments.indexOf('--max-pages-per-session') + 1],
-      '5',
-    );
-    expect(
-      plan.arguments[plan.arguments.indexOf('--max-persistent-profiles') + 1],
-      '7',
-    );
-    expect(plan.quotas, quotas);
-    expect(plan.environment.containsKey('PATH'), isFalse);
-  });
+      expect(plan.executable, resources.nodeExecutable);
+      expect(plan.arguments.first, resources.workerScript);
+      expect(plan.arguments[plan.arguments.indexOf('--mode') + 1], 'sessions');
+      expect(plan.arguments[plan.arguments.indexOf('--max-sessions') + 1], '3');
+      expect(
+        plan.arguments[plan.arguments.indexOf('--max-pages-per-session') + 1],
+        '5',
+      );
+      expect(
+        plan.arguments[plan.arguments.indexOf('--max-persistent-profiles') + 1],
+        '7',
+      );
+      expect(plan.quotas, quotas);
+      expect(plan.environment.containsKey('PATH'), isFalse);
+    },
+  );
 
-  test('session launch plan rejects quota mutation after construction',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-session-mutate-');
-    addTearDown(() => temp.delete(recursive: true));
-    final resources = await _resources(temp.absolute);
-    final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
-    await state.create();
-    final valid = P3BrowserSessionLaunchPlan.create(
-      resources: resources,
-      stateDirectory: state.absolute,
-    );
-    final arguments = List<String>.from(valid.arguments);
-    arguments[arguments.indexOf('--max-sessions') + 1] = '16';
-    final mutated = P3BrowserSessionLaunchPlan(
-      executable: valid.executable,
-      arguments: arguments,
-      workingDirectory: valid.workingDirectory,
-      environment: valid.environment,
-      startupTimeout: valid.startupTimeout,
-      requestTimeout: valid.requestTimeout,
-      quotas: valid.quotas,
-    );
+  test(
+    'session launch plan rejects quota mutation after construction',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-session-mutate-');
+      addTearDown(() => temp.delete(recursive: true));
+      final resources = await _resources(temp.absolute);
+      final state = Directory('${temp.path}${Platform.pathSeparator}sessions');
+      await state.create();
+      final valid = P3BrowserSessionLaunchPlan.create(
+        resources: resources,
+        stateDirectory: state.absolute,
+      );
+      final arguments = List<String>.from(valid.arguments);
+      arguments[arguments.indexOf('--max-sessions') + 1] = '16';
+      final mutated = P3BrowserSessionLaunchPlan(
+        executable: valid.executable,
+        arguments: arguments,
+        workingDirectory: valid.workingDirectory,
+        environment: valid.environment,
+        startupTimeout: valid.startupTimeout,
+        requestTimeout: valid.requestTimeout,
+        quotas: valid.quotas,
+      );
 
-    expect(
-      mutated.validate,
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_session_quota_binding_invalid',
+      expect(
+        mutated.validate,
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_session_quota_binding_invalid',
+          ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   test('session ready handshake binds service mode and exact quotas', () async {
     final temp = await Directory.systemTemp.createTemp('p3-session-ready-');
@@ -701,74 +694,76 @@ void main() {
     );
   });
 
-  test('download receipt independently binds identity, path, payload and hash',
-      () {
-    final envelope = _downloadReceiptEnvelope();
-    expect(
-      envelope['receiptHash'],
-      'e39dd7a3849bea6dc1210691b3a4614c8bf13852b4e5e09d563b04d92e870c4e',
-    );
-    final receipt = P3BrowserDownloadReceipt.fromJson(envelope);
-    expect(receipt.downloadId, 'download_fixture');
-    expect(receipt.sessionKind, P3BrowserSessionKind.ephemeral);
-    expect(receipt.profileId, isNull);
-    expect(receipt.bytes, 4);
-    expect(receipt.suggestedFilename, 'report.csv');
-    expect(receipt.locatorStrategy, 'testId');
-    expect(receipt.locatorIndex, 0);
+  test(
+    'download receipt independently binds identity, path, payload and hash',
+    () {
+      final envelope = _downloadReceiptEnvelope();
+      expect(
+        envelope['receiptHash'],
+        'e39dd7a3849bea6dc1210691b3a4614c8bf13852b4e5e09d563b04d92e870c4e',
+      );
+      final receipt = P3BrowserDownloadReceipt.fromJson(envelope);
+      expect(receipt.downloadId, 'download_fixture');
+      expect(receipt.sessionKind, P3BrowserSessionKind.ephemeral);
+      expect(receipt.profileId, isNull);
+      expect(receipt.bytes, 4);
+      expect(receipt.suggestedFilename, 'report.csv');
+      expect(receipt.locatorStrategy, 'testId');
+      expect(receipt.locatorIndex, 0);
 
-    expect(
-      () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
-        ...envelope,
-        'sourceUrl': 'https://example.test/tampered',
-      }),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_download_receipt_hash_mismatch',
+      expect(
+        () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
+          ...envelope,
+          'sourceUrl': 'https://example.test/tampered',
+        }),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_download_receipt_hash_mismatch',
+          ),
         ),
-      ),
-    );
+      );
 
-    final wrongPath = Map<String, Object?>.from(envelope);
-    wrongPath['content'] = <String, Object?>{
-      ...Map<String, Object?>.from(envelope['content']! as Map),
-      'relativePath': '../escape/report.csv',
-    };
-    final wrongPathBase = Map<String, Object?>.from(wrongPath)
-      ..remove('receiptHash');
-    wrongPath['receiptHash'] = Sha256.text(canonicalJson(wrongPathBase));
-    expect(
-      () => P3BrowserDownloadReceipt.fromJson(wrongPath),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_download_receipt_invalid',
+      final wrongPath = Map<String, Object?>.from(envelope);
+      wrongPath['content'] = <String, Object?>{
+        ...Map<String, Object?>.from(envelope['content']! as Map),
+        'relativePath': '../escape/report.csv',
+      };
+      final wrongPathBase = Map<String, Object?>.from(wrongPath)
+        ..remove('receiptHash');
+      wrongPath['receiptHash'] = Sha256.text(canonicalJson(wrongPathBase));
+      expect(
+        () => P3BrowserDownloadReceipt.fromJson(wrongPath),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_download_receipt_invalid',
+          ),
         ),
-      ),
-    );
+      );
 
-    final persistent = _downloadReceiptEnvelope(
-      sessionKind: 'persistent',
-      profileId: 'work',
-    );
-    final persistentReceipt = P3BrowserDownloadReceipt.fromJson(persistent);
-    expect(persistentReceipt.profileId, 'work');
-    expect(
-      persistentReceipt.payloadRelativePath,
-      'downloads/quarantine/persistent/work/download_fixture/payload.bin',
-    );
+      final persistent = _downloadReceiptEnvelope(
+        sessionKind: 'persistent',
+        profileId: 'work',
+      );
+      final persistentReceipt = P3BrowserDownloadReceipt.fromJson(persistent);
+      expect(persistentReceipt.profileId, 'work');
+      expect(
+        persistentReceipt.payloadRelativePath,
+        'downloads/quarantine/persistent/work/download_fixture/payload.bin',
+      );
 
-    expect(
-      () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
-        ...envelope,
-        'unexpected': true,
-      }),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
+      expect(
+        () => P3BrowserDownloadReceipt.fromJson(<String, Object?>{
+          ...envelope,
+          'unexpected': true,
+        }),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
 
   test('upload policy and staging request enforce exact product bounds', () {
     final policy = P3BrowserUploadPolicy.fromJson(
@@ -835,9 +830,7 @@ void main() {
     );
 
     final request = P3BrowserUploadRequest(
-      locators: <P3BrowserLocator>[
-        P3BrowserLocator.label('Upload evidence'),
-      ],
+      locators: <P3BrowserLocator>[P3BrowserLocator.label('Upload evidence')],
       stage: stage,
       timeout: const Duration(seconds: 45),
     ).toJson();
@@ -866,10 +859,7 @@ void main() {
     );
 
     final persistent = P3BrowserUploadStage.fromJson(
-      _uploadStageEnvelope(
-        sessionKind: 'persistent',
-        profileId: 'work',
-      ),
+      _uploadStageEnvelope(sessionKind: 'persistent', profileId: 'work'),
     );
     expect(persistent.profileId, 'work');
     expect(
@@ -886,81 +876,84 @@ void main() {
     );
   });
 
-  test('upload receipt independently binds stage, browser effect, and hash',
-      () {
-    final envelope = _uploadReceiptEnvelope();
-    expect(
-      envelope['receiptHash'],
-      '6500b6211d64dfd0d84611fd3bc622e666195f838e39ead08d61755d63069d6d',
-    );
-    final receipt = P3BrowserUploadReceipt.fromJson(envelope);
-    expect(receipt.receiptId, 'uploadreceipt_fixture');
-    expect(receipt.stageId, 'uploadstage_fixture');
-    expect(
-      receipt.manifestHash,
-      '209d1dcb2cfe3bc1dac0375d68128d0223d1d76b28bcdb19f239701b8796b082',
-    );
-    expect(receipt.sessionId, 'session_one');
-    expect(receipt.pageId, 'page_one');
-    expect(receipt.fileName, 'evidence.bin');
-    expect(receipt.mimeType, 'application/octet-stream');
-    expect(receipt.bytes, 4);
-    expect(receipt.locatorStrategy, 'label');
-    expect(receipt.locatorIndex, 0);
-    expect(receipt.toJson()['transferMode'], 'in-memory-buffer');
+  test(
+    'upload receipt independently binds stage, browser effect, and hash',
+    () {
+      final envelope = _uploadReceiptEnvelope();
+      expect(
+        envelope['receiptHash'],
+        '6500b6211d64dfd0d84611fd3bc622e666195f838e39ead08d61755d63069d6d',
+      );
+      final receipt = P3BrowserUploadReceipt.fromJson(envelope);
+      expect(receipt.receiptId, 'uploadreceipt_fixture');
+      expect(receipt.stageId, 'uploadstage_fixture');
+      expect(
+        receipt.manifestHash,
+        '209d1dcb2cfe3bc1dac0375d68128d0223d1d76b28bcdb19f239701b8796b082',
+      );
+      expect(receipt.sessionId, 'session_one');
+      expect(receipt.pageId, 'page_one');
+      expect(receipt.fileName, 'evidence.bin');
+      expect(receipt.mimeType, 'application/octet-stream');
+      expect(receipt.bytes, 4);
+      expect(receipt.locatorStrategy, 'label');
+      expect(receipt.locatorIndex, 0);
+      expect(receipt.toJson()['transferMode'], 'in-memory-buffer');
 
-    final tampered = Map<String, Object?>.from(envelope);
-    tampered['file'] = <String, Object?>{
-      ...Map<String, Object?>.from(envelope['file']! as Map),
-      'bytes': 5,
-    };
-    expect(
-      () => P3BrowserUploadReceipt.fromJson(tampered),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_upload_receipt_hash_mismatch',
+      final tampered = Map<String, Object?>.from(envelope);
+      tampered['file'] = <String, Object?>{
+        ...Map<String, Object?>.from(envelope['file']! as Map),
+        'bytes': 5,
+      };
+      expect(
+        () => P3BrowserUploadReceipt.fromJson(tampered),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_upload_receipt_hash_mismatch',
+          ),
         ),
-      ),
-    );
+      );
 
-    final wrongTransfer = <String, Object?>{
-      ...envelope,
-      'transferMode': 'filesystem-path',
-    };
-    final wrongTransferBase = Map<String, Object?>.from(wrongTransfer)
-      ..remove('receiptHash');
-    wrongTransfer['receiptHash'] =
-        Sha256.text(canonicalJson(wrongTransferBase));
-    expect(
-      () => P3BrowserUploadReceipt.fromJson(wrongTransfer),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_upload_receipt_invalid',
-        ),
-      ),
-    );
-
-    final persistentStage = _uploadStageEnvelope(
-      sessionKind: 'persistent',
-      profileId: 'work',
-    );
-    final persistent = P3BrowserUploadReceipt.fromJson(
-      _uploadReceiptEnvelope(stageEnvelope: persistentStage),
-    );
-    expect(persistent.profileId, 'work');
-
-    expect(
-      () => P3BrowserUploadReceipt.fromJson(<String, Object?>{
+      final wrongTransfer = <String, Object?>{
         ...envelope,
-        'unexpected': true,
-      }),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
+        'transferMode': 'filesystem-path',
+      };
+      final wrongTransferBase = Map<String, Object?>.from(wrongTransfer)
+        ..remove('receiptHash');
+      wrongTransfer['receiptHash'] = Sha256.text(
+        canonicalJson(wrongTransferBase),
+      );
+      expect(
+        () => P3BrowserUploadReceipt.fromJson(wrongTransfer),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_upload_receipt_invalid',
+          ),
+        ),
+      );
+
+      final persistentStage = _uploadStageEnvelope(
+        sessionKind: 'persistent',
+        profileId: 'work',
+      );
+      final persistent = P3BrowserUploadReceipt.fromJson(
+        _uploadReceiptEnvelope(stageEnvelope: persistentStage),
+      );
+      expect(persistent.profileId, 'work');
+
+      expect(
+        () => P3BrowserUploadReceipt.fromJson(<String, Object?>{
+          ...envelope,
+          'unexpected': true,
+        }),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
 
   test('page observation validates canonical hash and screenshot binding', () {
     final envelope = _observationEnvelope();
@@ -995,9 +988,7 @@ void main() {
     expect(
       () => P3BrowserPageObservation.fromJson(<String, Object?>{
         ...envelope,
-        'observationHash': Sha256.text(
-          _canonicalTestJson(tamperedScreenshot),
-        ),
+        'observationHash': Sha256.text(_canonicalTestJson(tamperedScreenshot)),
         'observation': tamperedScreenshot,
       }),
       throwsA(
@@ -1010,138 +1001,70 @@ void main() {
     );
   });
 
-  test('structured action request and result reject ambiguity-prone payloads',
-      () {
-    final request = P3BrowserActionRequest(
-      action: P3BrowserActionKind.fill,
-      locators: <P3BrowserLocator>[
-        P3BrowserLocator.role('textbox', 'Email', exact: true),
-        P3BrowserLocator.label('Email address', exact: true),
-        P3BrowserLocator.css('#email'),
-      ],
-      value: 'person+secret@example.test',
-    );
-    final json = request.toJson();
-    expect(json['action'], 'fill');
-    expect((json['locators']! as List).length, 3);
-    expect(json.containsKey('x'), isFalse);
-    expect(json.containsKey('y'), isFalse);
-
-    final result = P3BrowserActionResult.fromJson(<String, Object?>{
-      'sessionId': 'session_one',
-      'pageId': 'page_one',
-      'action': 'fill',
-      'locatorStrategy': 'label',
-      'locatorIndex': 1,
-      'sensitiveInputProvided': true,
-      'beforeObservationHash': _hex('a', 64),
-      'afterObservationHash': _hex('b', 64),
-      'observationChanged': true,
-    });
-    expect(result.action, P3BrowserActionKind.fill);
-    expect(result.locatorStrategy, 'label');
-    expect(result.sensitiveInputProvided, isTrue);
-
-    expect(
-      () => P3BrowserActionRequest(
-        action: P3BrowserActionKind.drag,
+  test(
+    'structured action request and result reject ambiguity-prone payloads',
+    () {
+      final request = P3BrowserActionRequest(
+        action: P3BrowserActionKind.fill,
         locators: <P3BrowserLocator>[
-          P3BrowserLocator.testId('source'),
+          P3BrowserLocator.role('textbox', 'Email', exact: true),
+          P3BrowserLocator.label('Email address', exact: true),
+          P3BrowserLocator.css('#email'),
         ],
-      ).toJson(),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-    expect(
-      () => P3BrowserActionResult.fromJson(<String, Object?>{
+        value: 'person+secret@example.test',
+      );
+      final json = request.toJson();
+      expect(json['action'], 'fill');
+      expect((json['locators']! as List).length, 3);
+      expect(json.containsKey('x'), isFalse);
+      expect(json.containsKey('y'), isFalse);
+
+      final result = P3BrowserActionResult.fromJson(<String, Object?>{
         'sessionId': 'session_one',
         'pageId': 'page_one',
-        'action': 'click',
-        'locatorStrategy': 'role',
-        'locatorIndex': 0,
-        'sensitiveInputProvided': false,
+        'action': 'fill',
+        'locatorStrategy': 'label',
+        'locatorIndex': 1,
+        'sensitiveInputProvided': true,
         'beforeObservationHash': _hex('a', 64),
-        'afterObservationHash': _hex('a', 64),
+        'afterObservationHash': _hex('b', 64),
         'observationChanged': true,
-      }),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
+      });
+      expect(result.action, P3BrowserActionKind.fill);
+      expect(result.locatorStrategy, 'label');
+      expect(result.sensitiveInputProvided, isTrue);
+
+      expect(
+        () => P3BrowserActionRequest(
+          action: P3BrowserActionKind.drag,
+          locators: <P3BrowserLocator>[P3BrowserLocator.testId('source')],
+        ).toJson(),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+      expect(
+        () => P3BrowserActionResult.fromJson(<String, Object?>{
+          'sessionId': 'session_one',
+          'pageId': 'page_one',
+          'action': 'click',
+          'locatorStrategy': 'role',
+          'locatorIndex': 0,
+          'sensitiveInputProvided': false,
+          'beforeObservationHash': _hex('a', 64),
+          'afterObservationHash': _hex('a', 64),
+          'observationChanged': true,
+        }),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
 
   test(
-      'verified visual action request binds screenshot, confidence, and postcondition',
-      () {
-    final request = P3BrowserVisualActionRequest(
-      action: P3BrowserActionKind.click,
-      locators: <P3BrowserLocator>[
-        P3BrowserLocator.text('Continue', exact: true),
-      ],
-      visualSource: P3BrowserVisualSource(
-        observationHash: _hex('a', 64),
-        screenshotSha256: _hex('b', 64),
-        viewportWidth: 1280,
-        viewportHeight: 720,
-      ),
-      visualTarget: const P3BrowserVisualTarget(
-        x: 100,
-        y: 120,
-        width: 80,
-        height: 40,
-        confidence: 0.97,
-        description: 'Continue button',
-      ),
-      minimumConfidence: 0.95,
-      verification: const P3BrowserVisualVerification(
-        expectedUrlPrefix: 'https://example.test/',
-      ),
-    );
-
-    final json = request.toJson();
-    expect(json['action'], 'click');
-    expect(json['minimumConfidence'], 0.95);
-    expect(
-      (json['visualSource']! as Map)['observationHash'],
-      _hex('a', 64),
-    );
-    expect(
-      (json['visualTarget']! as Map)['confidence'],
-      0.97,
-    );
-    expect(json.containsKey('x'), isFalse);
-
-    expect(
-      () => P3BrowserVisualActionRequest(
-        action: P3BrowserActionKind.drag,
-        locators: <P3BrowserLocator>[
-          P3BrowserLocator.testId('source'),
-        ],
-        visualSource: P3BrowserVisualSource(
-          observationHash: _hex('a', 64),
-          screenshotSha256: _hex('b', 64),
-          viewportWidth: 1280,
-          viewportHeight: 720,
-        ),
-        visualTarget: const P3BrowserVisualTarget(
-          x: 1,
-          y: 1,
-          width: 20,
-          height: 20,
-          confidence: 1,
-          description: 'source',
-        ),
-      ).toJson(),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_action_target_locator_invalid',
-        ),
-      ),
-    );
-    expect(
-      () => P3BrowserVisualActionRequest(
+    'verified visual action request binds screenshot, confidence, and postcondition',
+    () {
+      final request = P3BrowserVisualActionRequest(
         action: P3BrowserActionKind.click,
         locators: <P3BrowserLocator>[
-          P3BrowserLocator.testId('button'),
+          P3BrowserLocator.text('Continue', exact: true),
         ],
         visualSource: P3BrowserVisualSource(
           observationHash: _hex('a', 64),
@@ -1150,29 +1073,88 @@ void main() {
           viewportHeight: 720,
         ),
         visualTarget: const P3BrowserVisualTarget(
-          x: 1,
-          y: 1,
-          width: 20,
-          height: 20,
-          confidence: 1,
-          description: 'button',
+          x: 100,
+          y: 120,
+          width: 80,
+          height: 40,
+          confidence: 0.97,
+          description: 'Continue button',
         ),
-        minimumConfidence: 0.89,
-      ).toJson(),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'browser_visual_confidence_invalid',
+        minimumConfidence: 0.95,
+        verification: const P3BrowserVisualVerification(
+          expectedUrlPrefix: 'https://example.test/',
         ),
-      ),
-    );
-  });
+      );
 
-  test('verified visual action result distinguishes execution from takeover',
-      () {
-    final executed = P3BrowserVisualActionResult.fromJson(
-      <String, Object?>{
+      final json = request.toJson();
+      expect(json['action'], 'click');
+      expect(json['minimumConfidence'], 0.95);
+      expect((json['visualSource']! as Map)['observationHash'], _hex('a', 64));
+      expect((json['visualTarget']! as Map)['confidence'], 0.97);
+      expect(json.containsKey('x'), isFalse);
+
+      expect(
+        () => P3BrowserVisualActionRequest(
+          action: P3BrowserActionKind.drag,
+          locators: <P3BrowserLocator>[P3BrowserLocator.testId('source')],
+          visualSource: P3BrowserVisualSource(
+            observationHash: _hex('a', 64),
+            screenshotSha256: _hex('b', 64),
+            viewportWidth: 1280,
+            viewportHeight: 720,
+          ),
+          visualTarget: const P3BrowserVisualTarget(
+            x: 1,
+            y: 1,
+            width: 20,
+            height: 20,
+            confidence: 1,
+            description: 'source',
+          ),
+        ).toJson(),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_action_target_locator_invalid',
+          ),
+        ),
+      );
+      expect(
+        () => P3BrowserVisualActionRequest(
+          action: P3BrowserActionKind.click,
+          locators: <P3BrowserLocator>[P3BrowserLocator.testId('button')],
+          visualSource: P3BrowserVisualSource(
+            observationHash: _hex('a', 64),
+            screenshotSha256: _hex('b', 64),
+            viewportWidth: 1280,
+            viewportHeight: 720,
+          ),
+          visualTarget: const P3BrowserVisualTarget(
+            x: 1,
+            y: 1,
+            width: 20,
+            height: 20,
+            confidence: 1,
+            description: 'button',
+          ),
+          minimumConfidence: 0.89,
+        ).toJson(),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'browser_visual_confidence_invalid',
+          ),
+        ),
+      );
+    },
+  );
+
+  test(
+    'verified visual action result distinguishes execution from takeover',
+    () {
+      final executed = P3BrowserVisualActionResult.fromJson(<String, Object?>{
         'sessionId': 'session_one',
         'pageId': 'page_one',
         'action': 'click',
@@ -1187,22 +1169,14 @@ void main() {
         'afterScreenshotSha256': _hex('2', 64),
         'observationChanged': true,
         'verified': true,
-      },
-    );
-    expect(
-      executed.disposition,
-      P3BrowserVisualActionDisposition.executed,
-    );
-    expect(
-      executed.executionMode,
-      P3BrowserVisualExecutionMode.visual,
-    );
-    expect(executed.structuredFailureCode, 'browser_locator_ambiguous');
-    expect(executed.visualConfidence, 0.97);
-    expect(executed.verified, isTrue);
+      });
+      expect(executed.disposition, P3BrowserVisualActionDisposition.executed);
+      expect(executed.executionMode, P3BrowserVisualExecutionMode.visual);
+      expect(executed.structuredFailureCode, 'browser_locator_ambiguous');
+      expect(executed.visualConfidence, 0.97);
+      expect(executed.verified, isTrue);
 
-    final paused = P3BrowserVisualActionResult.fromJson(
-      <String, Object?>{
+      final paused = P3BrowserVisualActionResult.fromJson(<String, Object?>{
         'sessionId': 'session_one',
         'pageId': 'page_one',
         'action': 'click',
@@ -1216,18 +1190,16 @@ void main() {
         'observationChanged': false,
         'verified': false,
         'pauseReason': 'browser_visual_target_low_confidence',
-      },
-    );
-    expect(
-      paused.disposition,
-      P3BrowserVisualActionDisposition.userTakeoverRequired,
-    );
-    expect(paused.afterObservationHash, isNull);
-    expect(paused.pauseReason, 'browser_visual_target_low_confidence');
+      });
+      expect(
+        paused.disposition,
+        P3BrowserVisualActionDisposition.userTakeoverRequired,
+      );
+      expect(paused.afterObservationHash, isNull);
+      expect(paused.pauseReason, 'browser_visual_target_low_confidence');
 
-    expect(
-      () => P3BrowserVisualActionResult.fromJson(
-        <String, Object?>{
+      expect(
+        () => P3BrowserVisualActionResult.fromJson(<String, Object?>{
           'sessionId': 'session_one',
           'pageId': 'page_one',
           'action': 'click',
@@ -1243,9 +1215,9 @@ void main() {
           'observationChanged': true,
           'verified': false,
           'pauseReason': 'browser_visual_target_low_confidence',
-        },
-      ),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
+        }),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
 }

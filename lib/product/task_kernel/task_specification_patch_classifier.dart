@@ -6,8 +6,8 @@ import '../storage_security.dart';
 import 'task_specification.dart';
 import 'task_specification_patch.dart';
 
-typedef TaskSpecificationPatchGeneration = Future<ModelGenerationResult>
-    Function(ModelGenerationRequest request);
+typedef TaskSpecificationPatchGeneration =
+    Future<ModelGenerationResult> Function(ModelGenerationRequest request);
 
 /// Model-backed semantic classifier for mid-task steering.
 ///
@@ -58,7 +58,8 @@ Schema:
 
 Do not invent permissions, capabilities, targets, facts, or constraints the user did not state. Do not convert a preference into a hard constraint. For clarificationAnswer, copy the exact pending question from the specification.
 ''',
-        userPrompt: 'ACTIVE SPECIFICATION\n'
+        userPrompt:
+            'ACTIVE SPECIFICATION\n'
             '${jsonEncode(specification.toJson())}\n\n'
             'USER STEERING MESSAGE\n$message',
         temperature: 0.0,

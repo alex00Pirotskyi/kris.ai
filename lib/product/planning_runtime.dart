@@ -592,38 +592,41 @@ class PreparedCommandService {
     required ModelIdentity model,
   }) {
     final completer = Completer<PreparedCommand>();
-    _tail = _tail.then((_) async {
-      final candidate = planner.prepare(
-        project: project,
-        mode: mode,
-        request: request,
-        model: model,
-      );
-      final existing = (await repositories.commands.all())
-          .where((command) => command.requestKey == candidate.requestKey)
-          .firstOrNull;
-      final prepared = existing ?? candidate;
-      if (existing == null) {
-        await repositories.commands.put(prepared);
-      }
-      await audit.append(
-        'command.prepared',
-        prepared.id,
-        prepared.toJson(),
-      );
-      await events.publish('command.prepared', prepared.id, <String, dynamic>{
-        'commandId': prepared.id,
-        'projectId': project.id,
-        'mode': mode.name,
-        'complexity': prepared.plan.complexity,
-        'reused': existing != null,
-      });
-      completer.complete(prepared);
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) {
-        completer.completeError(error, stackTrace);
-      }
-    });
+    _tail = _tail
+        .then((_) async {
+          final candidate = planner.prepare(
+            project: project,
+            mode: mode,
+            request: request,
+            model: model,
+          );
+          final existing = (await repositories.commands.all())
+              .where((command) => command.requestKey == candidate.requestKey)
+              .firstOrNull;
+          final prepared = existing ?? candidate;
+          if (existing == null) {
+            await repositories.commands.put(prepared);
+          }
+          await audit.append(
+            'command.prepared',
+            prepared.id,
+            prepared.toJson(),
+          );
+          await events
+              .publish('command.prepared', prepared.id, <String, dynamic>{
+                'commandId': prepared.id,
+                'projectId': project.id,
+                'mode': mode.name,
+                'complexity': prepared.plan.complexity,
+                'reused': existing != null,
+              });
+          completer.complete(prepared);
+        })
+        .catchError((Object error, StackTrace stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        });
     return completer.future;
   }
 }
@@ -679,14 +682,14 @@ class ToolLoopObservation {
   final int repetitions;
 
   ToolLoopObservation copyWith({int? repetitions}) => ToolLoopObservation(
-        tool: tool,
-        arguments: arguments,
-        result: result,
-        actionFingerprint: actionFingerprint,
-        outcomeFingerprint: outcomeFingerprint,
-        mutationEpoch: mutationEpoch,
-        repetitions: repetitions ?? this.repetitions,
-      );
+    tool: tool,
+    arguments: arguments,
+    result: result,
+    actionFingerprint: actionFingerprint,
+    outcomeFingerprint: outcomeFingerprint,
+    mutationEpoch: mutationEpoch,
+    repetitions: repetitions ?? this.repetitions,
+  );
 }
 
 class AgentLoopRecoveryDecision {
@@ -819,23 +822,30 @@ class AgentLoopRecoveryPolicy {
     final listing = successful
         .where((observation) => observation.tool == 'list_directory')
         .firstOrNull;
-    final hashedFiles = successful.where((observation) {
-      if (!const <String>{
-        'read_file',
-        'inspect_file',
-      }.contains(observation.tool)) {
-        return false;
-      }
-      return observation.result.data['sha256']?.toString().trim().isNotEmpty ==
-          true;
-    }).toList(growable: false);
-    final structural = successful.where((observation) {
-      return const <String>{
-        'index_project',
-        'git_status',
-        'git_diff',
-      }.contains(observation.tool);
-    }).toList(growable: false);
+    final hashedFiles = successful
+        .where((observation) {
+          if (!const <String>{
+            'read_file',
+            'inspect_file',
+          }.contains(observation.tool)) {
+            return false;
+          }
+          return observation.result.data['sha256']
+                  ?.toString()
+                  .trim()
+                  .isNotEmpty ==
+              true;
+        })
+        .toList(growable: false);
+    final structural = successful
+        .where((observation) {
+          return const <String>{
+            'index_project',
+            'git_status',
+            'git_diff',
+          }.contains(observation.tool);
+        })
+        .toList(growable: false);
 
     if (listing == null ||
         hashedFiles.isEmpty ||
@@ -849,12 +859,15 @@ class AgentLoopRecoveryPolicy {
 
     final entries = listing.result.data['entries'];
     final entryCount = entries is List ? entries.length : 0;
-    final fileDetails = hashedFiles.take(3).map((observation) {
-      final path =
-          observation.result.data['path']?.toString() ?? 'project file';
-      final hash = observation.result.data['sha256']?.toString() ?? '';
-      return '`$path` (SHA-256 `$hash`)';
-    }).join(', ');
+    final fileDetails = hashedFiles
+        .take(3)
+        .map((observation) {
+          final path =
+              observation.result.data['path']?.toString() ?? 'project file';
+          final hash = observation.result.data['sha256']?.toString() ?? '';
+          return '`$path` (SHA-256 `$hash`)';
+        })
+        .join(', ');
     final structureLabel = structural.isEmpty
         ? 'a second independently hashed project file'
         : structural.map((observation) => observation.tool).toSet().join(', ');
@@ -874,8 +887,8 @@ class AgentLoopRecoveryPolicy {
     required Set<String> usedRecoveryActions,
   }) {
     bool observedTool(String tool) => observations.any(
-          (observation) => observation.tool == tool && observation.result.ok,
-        );
+      (observation) => observation.tool == tool && observation.result.ok,
+    );
 
     bool unused(String key) => !usedRecoveryActions.contains(key);
 
@@ -1086,7 +1099,8 @@ class ArtifactEvidencePolicy {
 
   bool requiresValidatedArtifact(WorkItem item) {
     final label = '${item.title}\n${item.description}'.toLowerCase();
-    final boundedArtifactTask = RegExp(
+    final boundedArtifactTask =
+        RegExp(
           r'\b(?:wireframes?|user flows?|screen flows?)\b',
         ).hasMatch(label) ||
         label.contains('docs/testing/usability-checklist.md');
@@ -1169,7 +1183,8 @@ class ArtifactEvidencePolicy {
     final normalizedMutations = mutatedPaths.map(_normalizePath).toSet();
     final mutatedInRun = normalizedMutations.contains(observedPath);
 
-    final content = (result.data['content'] ?? result.data['textPreview'])
+    final content =
+        (result.data['content'] ?? result.data['textPreview'])
             ?.toString()
             .toLowerCase() ??
         '';
@@ -1240,7 +1255,8 @@ class ArtifactEvidencePolicy {
           'division',
           'operator buttons',
         ].any(content.contains);
-        final symbolicArithmetic = content.contains('+') &&
+        final symbolicArithmetic =
+            content.contains('+') &&
             content.contains('-') &&
             (content.contains('*') || content.contains('×')) &&
             (content.contains('/') || content.contains('÷'));
@@ -1335,8 +1351,9 @@ class ArtifactEvidencePolicy {
     final provenance = mutatedInRun
         ? 'The expected project artifact was changed in this run and has task-specific inspected coverage.'
         : 'The expected project artifact already satisfied the requested state and has task-specific inspected coverage; no unnecessary rewrite was required.';
-    final action =
-        mutatedInRun ? 'Created or updated and inspected' : 'Validated';
+    final action = mutatedInRun
+        ? 'Created or updated and inspected'
+        : 'Validated';
     return ArtifactEvidenceAssessment(
       state: ArtifactEvidenceState.complete,
       path: observedPath,
@@ -1564,11 +1581,12 @@ class AutomaticArtifactVerificationPolicy {
       return null;
     }
     final expected = evidencePolicy.expectedArtifactPaths(item).toSet();
-    final candidates = mutationPaths
-        .map(_canonicalPath)
-        .where(expected.contains)
-        .toList(growable: false)
-      ..sort();
+    final candidates =
+        mutationPaths
+            .map(_canonicalPath)
+            .where(expected.contains)
+            .toList(growable: false)
+          ..sort();
     return candidates.isEmpty ? null : candidates.first;
   }
 
@@ -1667,12 +1685,11 @@ class RunCoordinator {
   Future<RunRecord> createContinuationRun(
     PreparedCommand command, {
     required String sourceRunId,
-  }) =>
-      _createFreshRun(
-        command,
-        budget: AutonomyBudget.forPlan(command.plan),
-        sourceRunId: sourceRunId,
-      );
+  }) => _createFreshRun(
+    command,
+    budget: AutonomyBudget.forPlan(command.plan),
+    sourceRunId: sourceRunId,
+  );
 
   Future<RunRecord> interruptAwaitingApprovalForSteeringReplan(
     String runId,
@@ -1756,17 +1773,18 @@ class RunCoordinator {
     final existingRunIds = (await repositories.memoryEpisodes.all())
         .map((episode) => episode.runId)
         .toSet();
-    final terminalRuns = (await repositories.runs.all())
-        .where(
-          (run) => const <RunState>{
-            RunState.succeeded,
-            RunState.failed,
-            RunState.cancelled,
-            RunState.interrupted,
-          }.contains(run.state),
-        )
-        .toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+    final terminalRuns =
+        (await repositories.runs.all())
+            .where(
+              (run) => const <RunState>{
+                RunState.succeeded,
+                RunState.failed,
+                RunState.cancelled,
+                RunState.interrupted,
+              }.contains(run.state),
+            )
+            .toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     for (final run in terminalRuns.take(2000)) {
       if (!existingRunIds.contains(run.id)) {
         await _recordEpisode(run, reconciled: true);
@@ -1816,17 +1834,13 @@ class RunCoordinator {
       );
     }
     final instruction = await steering.queueDurable(runId, text, patch);
-    await _bestEffortEvent(
-      'steering.queued',
-      runId,
-      <String, dynamic>{
-        'runId': runId,
-        'instructionId': instruction.id,
-        'text': instruction.text,
-        'patch': instruction.patch.toJson(),
-        'grantsAuthority': false,
-      },
-    );
+    await _bestEffortEvent('steering.queued', runId, <String, dynamic>{
+      'runId': runId,
+      'instructionId': instruction.id,
+      'text': instruction.text,
+      'patch': instruction.patch.toJson(),
+      'grantsAuthority': false,
+    });
     return instruction;
   }
 
@@ -2035,10 +2049,9 @@ class RunCoordinator {
   }
 
   Future<void> _throwIfDeferredInteractionPending(String runId) async {
-    final pending = await AgentDeferredInteractionStore(repositories.workflow)
-        .pendingForRun(
-      runId,
-    );
+    final pending = await AgentDeferredInteractionStore(
+      repositories.workflow,
+    ).pendingForRun(runId);
     if (pending == null) {
       return;
     }
@@ -2200,18 +2213,12 @@ class RunCoordinator {
           await _bestEffortAudit(
             'run.cancel_rollback_failed',
             run.id,
-            <String, dynamic>{
-              'runId': run.id,
-              'error': failure,
-            },
+            <String, dynamic>{'runId': run.id, 'error': failure},
           );
           throw ProductException(
             'run_cancel_rollback_failed',
             'Kristin could not safely roll back the paused workspace.',
-            details: <String, dynamic>{
-              'runId': run.id,
-              'error': failure,
-            },
+            details: <String, dynamic>{'runId': run.id, 'error': failure},
           );
         }
         final completedAt = DateTime.now().toUtc();
@@ -2248,9 +2255,7 @@ class RunCoordinator {
             retryDisposition: 'terminal',
             startedAt: progress.startedAt,
             completedAt: completedAt,
-            details: const <String, dynamic>{
-              'durablePausedCancellation': true,
-            },
+            details: const <String, dynamic>{'durablePausedCancellation': true},
           );
         }
         try {
@@ -2504,8 +2509,8 @@ class RunCoordinator {
       }
       final provider = modelRegistry.providerFor(selectedModel);
       final installed = await provider.discover().timeout(
-            const Duration(minutes: 3),
-          );
+        const Duration(minutes: 3),
+      );
       final exact = installed
           .where(
             (identity) =>
@@ -2561,14 +2566,17 @@ class RunCoordinator {
         String? lastErrorCode;
         final firstAttempt =
             progress.state == WorkItemState.running && progress.attempts > 0
-                ? progress.attempts
-                : progress.attempts + 1;
-        for (var attempt = firstAttempt;
-            attempt <= progress.item.maxAttempts;
-            attempt++) {
+            ? progress.attempts
+            : progress.attempts + 1;
+        for (
+          var attempt = firstAttempt;
+          attempt <= progress.item.maxAttempts;
+          attempt++
+        ) {
           await _awaitControl(control, run.budget, started);
           var items = List<WorkItemProgress>.from(run.items);
-          final resumedAttempt = progress.state == WorkItemState.running &&
+          final resumedAttempt =
+              progress.state == WorkItemState.running &&
               progress.attempts == attempt;
           final attemptStartedAt = resumedAttempt
               ? progress.startedAt ?? DateTime.now().toUtc()
@@ -2669,7 +2677,8 @@ class RunCoordinator {
               startedAt: paused.items[itemIndex].startedAt,
               details: <String, dynamic>{
                 'interactionId': suspension.interaction.id,
-                'decisionKind': suspension.interaction.decision
+                'decisionKind':
+                    suspension.interaction.decision
                         .toJson()['action']
                         ?.toString() ??
                     '',
@@ -2681,7 +2690,8 @@ class RunCoordinator {
               'workItemId': progress.item.id,
               'attempt': attempt,
               'interactionId': suspension.interaction.id,
-              'decisionKind': suspension.interaction.decision
+              'decisionKind':
+                  suspension.interaction.decision
                       .toJson()['action']
                       ?.toString() ??
                   '',
@@ -2692,11 +2702,7 @@ class RunCoordinator {
               paused.id,
               pausedEvidence,
             );
-            await events.publish(
-              'run.paused',
-              paused.id,
-              pausedEvidence,
-            );
+            await events.publish('run.paused', paused.id, pausedEvidence);
             liveSignals.publish(
               LiveRunSignal.phase(
                 runId: paused.id,
@@ -2890,7 +2896,8 @@ class RunCoordinator {
       } catch (_) {}
       return run;
     } catch (error, stackTrace) {
-      final cancelled = control.cancellation.isCancelled ||
+      final cancelled =
+          control.cancellation.isCancelled ||
           (error is ProductException && error.code == 'cancelled');
       String? rollbackError;
       if (!transaction.isCommitted) {
@@ -2904,16 +2911,17 @@ class RunCoordinator {
       final failure = redactor.redact(
         '$error${rollbackError == null ? '' : ' Rollback error: $rollbackError'}',
       );
-      final committedAndComplete = transaction.isCommitted &&
+      final committedAndComplete =
+          transaction.isCommitted &&
           run.items.every((item) => item.state == WorkItemState.succeeded);
       run = run.copyWith(
         state: committedAndComplete
             ? RunState.succeeded
             : transaction.isCommitted
-                ? RunState.interrupted
-                : cancelled
-                    ? RunState.cancelled
-                    : RunState.failed,
+            ? RunState.interrupted
+            : cancelled
+            ? RunState.cancelled
+            : RunState.failed,
         completedAt: transaction.isCommitted && !committedAndComplete
             ? run.completedAt
             : DateTime.now().toUtc(),
@@ -2944,10 +2952,10 @@ class RunCoordinator {
       final terminalEvent = run.state == RunState.succeeded
           ? 'run.recovered_committed'
           : run.state == RunState.cancelled
-              ? 'run.cancelled'
-              : run.state == RunState.interrupted
-                  ? 'run.interrupted'
-                  : 'run.failed';
+          ? 'run.cancelled'
+          : run.state == RunState.interrupted
+          ? 'run.interrupted'
+          : 'run.failed';
       await _bestEffortAudit(terminalEvent, run.id, failureDiagnostics);
       await _bestEffortEvent(terminalEvent, run.id, <String, dynamic>{
         ...failureDiagnostics,
@@ -3044,7 +3052,8 @@ class RunCoordinator {
     final executionPhaseBudget = run.command.model.providerId == 'ollama'
         ? PhaseBudget.localExecution()
         : PhaseBudget.defaults('execution');
-    final conversational = run.command.contract.mode == CommandMode.ask &&
+    final conversational =
+        run.command.contract.mode == CommandMode.ask &&
         isConversationalRequest(run.command.contract.request) &&
         progress.item.allowedTools.isEmpty;
     final includeUnsuccessfulEpisodes = isFailureInvestigationRequest(
@@ -3078,7 +3087,8 @@ class RunCoordinator {
           retrieval.query,
           includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
         );
-        retrieval = cached ??
+        retrieval =
+            cached ??
             await knowledge.retrieve(
               project.id,
               retrieval.query,
@@ -3128,12 +3138,14 @@ class RunCoordinator {
       }
     }
 
-    final priorEvidence = (await repositories.evidence.all())
-        .where(
-          (item) => item.runId == run.id && item.workItemId == progress.item.id,
-        )
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final priorEvidence =
+        (await repositories.evidence.all())
+            .where(
+              (item) =>
+                  item.runId == run.id && item.workItemId == progress.item.id,
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final history = _priorEvidenceHistory(priorEvidence);
     bool isMaterialMutationEvidence(EvidenceRecord item) =>
         item.kind == EvidenceKind.mutation &&
@@ -3146,19 +3158,21 @@ class RunCoordinator {
           ..._mutationPathsFromPayload(item.payload),
     };
     const artifactPolicy = ArtifactEvidencePolicy();
-    final expectedArtifactPaths =
-        artifactPolicy.expectedArtifactPaths(progress.item).toSet();
+    final expectedArtifactPaths = artifactPolicy
+        .expectedArtifactPaths(progress.item)
+        .toSet();
     final artifactPathsNeedingMutation = <String>{};
     final artifactObservedHashes = <String, String>{};
     final reconstructedArtifactPaths = <String>{};
     for (final item in priorEvidence.reversed) {
       final data = mapValue(item.payload['data']);
-      final path = canonicalModelPathToken(
-        (data['path'] ?? data['relativePath'])?.toString() ?? '',
-      )
-          .replaceAll('\\', '/')
-          .replaceFirst(RegExp(r'^\./+'), '')
-          .replaceAll(RegExp(r'/+'), '/');
+      final path =
+          canonicalModelPathToken(
+                (data['path'] ?? data['relativePath'])?.toString() ?? '',
+              )
+              .replaceAll('\\', '/')
+              .replaceFirst(RegExp(r'^\./+'), '')
+              .replaceAll(RegExp(r'/+'), '/');
       if (path.isEmpty ||
           !expectedArtifactPaths.contains(path) ||
           !reconstructedArtifactPaths.add(path)) {
@@ -3186,8 +3200,9 @@ class RunCoordinator {
       }
     }
     bool evidenceSucceeded(EvidenceRecord item) => item.payload['ok'] != false;
-    final priorMutationEvidence =
-        priorEvidence.where(isMaterialMutationEvidence).toList(growable: false);
+    final priorMutationEvidence = priorEvidence
+        .where(isMaterialMutationEvidence)
+        .toList(growable: false);
     final priorVerificationEvidence = priorEvidence
         .where(
           (item) =>
@@ -3206,36 +3221,39 @@ class RunCoordinator {
               }.contains(item.kind),
         )
         .toList(growable: false);
-    final priorArtifactInspectionEvidence = priorEvidence.where((item) {
-      if (item.kind != EvidenceKind.command || !evidenceSucceeded(item)) {
-        return false;
-      }
-      final data = mapValue(item.payload['data']);
-      final path = canonicalModelPathToken(
-        (data['path'] ?? data['relativePath'])?.toString() ?? '',
-      )
-          .replaceAll('\\', '/')
-          .replaceFirst(RegExp(r'^\./+'), '')
-          .replaceAll(RegExp(r'/+'), '/');
-      return item.payload['automaticVerification'] == true ||
-          (path.isNotEmpty && expectedArtifactPaths.contains(path));
-    }).toList(growable: false);
+    final priorArtifactInspectionEvidence = priorEvidence
+        .where((item) {
+          if (item.kind != EvidenceKind.command || !evidenceSucceeded(item)) {
+            return false;
+          }
+          final data = mapValue(item.payload['data']);
+          final path =
+              canonicalModelPathToken(
+                    (data['path'] ?? data['relativePath'])?.toString() ?? '',
+                  )
+                  .replaceAll('\\', '/')
+                  .replaceFirst(RegExp(r'^\./+'), '')
+                  .replaceAll(RegExp(r'/+'), '/');
+          return item.payload['automaticVerification'] == true ||
+              (path.isNotEmpty && expectedArtifactPaths.contains(path));
+        })
+        .toList(growable: false);
 
     String priorObjectiveHash(EvidenceRecord item) {
       final data = mapValue(item.payload['data']);
       return data['afterSha256']?.toString().trim().isNotEmpty == true
           ? data['afterSha256'].toString().trim()
           : data['afterHash']?.toString().trim().isNotEmpty == true
-              ? data['afterHash'].toString().trim()
-              : data['sha256']?.toString().trim().isNotEmpty == true
-                  ? data['sha256'].toString().trim()
-                  : item.payload['governedEvidenceHash']
-                              ?.toString()
-                              .trim()
-                              .isNotEmpty ==
-                          true
-                      ? item.payload['governedEvidenceHash'].toString().trim()
-                      : item.hash;
+          ? data['afterHash'].toString().trim()
+          : data['sha256']?.toString().trim().isNotEmpty == true
+          ? data['sha256'].toString().trim()
+          : item.payload['governedEvidenceHash']
+                    ?.toString()
+                    .trim()
+                    .isNotEmpty ==
+                true
+          ? item.payload['governedEvidenceHash'].toString().trim()
+          : item.hash;
     }
 
     final deferredUserResponse = await _resolvedDeferredUserResponseEnvelope(
@@ -3252,16 +3270,16 @@ class RunCoordinator {
         : priorObjectiveHash(priorMutationEvidence.last);
     String? lastVerificationEvidenceHash =
         priorVerificationEvidence.lastOrNull == null
-            ? null
-            : priorObjectiveHash(priorVerificationEvidence.last);
+        ? null
+        : priorObjectiveHash(priorVerificationEvidence.last);
     String? lastObservationEvidenceHash =
         priorObservationEvidence.lastOrNull == null
-            ? null
-            : priorObjectiveHash(priorObservationEvidence.last);
+        ? null
+        : priorObjectiveHash(priorObservationEvidence.last);
     String? lastArtifactInspectionEvidenceHash =
         priorArtifactInspectionEvidence.lastOrNull == null
-            ? null
-            : priorObjectiveHash(priorArtifactInspectionEvidence.last);
+        ? null
+        : priorObjectiveHash(priorArtifactInspectionEvidence.last);
     // Progress-aware protocol recovery. A count of corrections alone
     // cannot distinguish a model that is improving from one restating
     // the same impossible action in a new shape, and each round trip on
@@ -3281,9 +3299,11 @@ class RunCoordinator {
       evidenceIds: priorEvidence.map((item) => item.id).toSet(),
       satisfiedCriteria: successfulVerification
           ? <String>{
-              for (var index = 0;
-                  index < progress.item.acceptanceCriteria.length;
-                  index++)
+              for (
+                var index = 0;
+                index < progress.item.acceptanceCriteria.length;
+                index++
+              )
                 if (_criterionEvidenceRequirement(
                       progress.item.acceptanceCriteria[index],
                     ) ==
@@ -3381,14 +3401,16 @@ class RunCoordinator {
         final envelope = AgentContextEnvelope(
           source: AgentContextSource.user,
           trust: AgentContextTrust.userIntent,
-          content:
-              immediateConstraintGuidance.map((value) => '- $value').join('\n'),
+          content: immediateConstraintGuidance
+              .map((value) => '- $value')
+              .join('\n'),
           metadata: const <String, Object?>{
             'authorityBearing': false,
             'pendingPlanReconciliation': true,
           },
         );
-        user = '$user\n\nNEW USER CONSTRAINTS PENDING PLAN RECONCILIATION\n'
+        user =
+            '$user\n\nNEW USER CONSTRAINTS PENDING PLAN RECONCILIATION\n'
             '${envelope.render()}\nRespect these constraints immediately for future '
             'decisions in this work item. They grant no authority. The task '
             'graph will be reconciled at the next verified work-item boundary.';
@@ -3534,13 +3556,14 @@ class RunCoordinator {
           control.deferredSuspension = true;
           late final AgentDeferredInteraction interaction;
           try {
-            interaction = await AgentDeferredInteractionStore(
-              repositories.workflow,
-            ).persist(
-              runId: current.id,
-              workItemId: progress.item.id,
-              step: executionStep,
-            );
+            interaction =
+                await AgentDeferredInteractionStore(
+                  repositories.workflow,
+                ).persist(
+                  runId: current.id,
+                  workItemId: progress.item.id,
+                  step: executionStep,
+                );
           } catch (_) {
             control.deferredSuspension = false;
             rethrow;
@@ -3577,14 +3600,10 @@ class RunCoordinator {
           elapsed: DateTime.now().toUtc().difference(started),
           fallbackAvailable: fallbackCandidate != null,
         );
-        await _publishRunSignal(
-          current.id,
-          progress.item.id,
-          recovery.reason,
-        );
+        await _publishRunSignal(current.id, progress.item.id, recovery.reason);
         final canRequestRepair =
             recovery.action == ProtocolRecoveryAction.requestCorrection &&
-                current.repairs < phaseRecoveryCeiling;
+            current.repairs < phaseRecoveryCeiling;
         if (canRequestRepair) {
           current = current.copyWith(repairs: current.repairs + 1);
           await _save(current);
@@ -3733,8 +3752,10 @@ class RunCoordinator {
               'correction':
                   'This item promises a project artifact or implementation. Read-only evidence is not completion evidence. Use an allowed governed mutation tool to create or update the required project-relative artifact, then inspect or verify it before completing.',
             });
-            await _bestEffortEvent(
-                'work_item.mutation_required', current.id, <String, dynamic>{
+            await _bestEffortEvent('work_item.mutation_required', current.id, <
+              String,
+              dynamic
+            >{
               'runId': current.id,
               'workItemId': progress.item.id,
               'attempt': progress.attempts,
@@ -3810,9 +3831,11 @@ class RunCoordinator {
         summary = action.summary.trim();
         if (!conversational && progress.item.acceptanceCriteria.isNotEmpty) {
           final criterionEvidence = <VerificationEvidence>[];
-          for (var index = 0;
-              index < progress.item.acceptanceCriteria.length;
-              index++) {
+          for (
+            var index = 0;
+            index < progress.item.acceptanceCriteria.length;
+            index++
+          ) {
             final evidence = _objectiveEvidenceForCriterion(
               runId: current.id,
               item: progress.item,
@@ -3990,9 +4013,11 @@ class RunCoordinator {
           current = current.copyWith(repairs: current.repairs + 1);
           await _save(current);
           final orderedArtifactPaths = expectedArtifactPaths.toList()..sort();
-          final recoveryArtifactPath =
-              orderedArtifactPaths.isEmpty ? '' : orderedArtifactPaths.first;
-          final artifactRecovery = _requiresProjectMutation(progress.item) &&
+          final recoveryArtifactPath = orderedArtifactPaths.isEmpty
+              ? ''
+              : orderedArtifactPaths.first;
+          final artifactRecovery =
+              _requiresProjectMutation(progress.item) &&
                   (itemMutations == 0 ||
                       artifactPathsNeedingMutation.isNotEmpty)
               ? const BoundedArtifactRecoveryPolicy().actionFor(
@@ -4005,7 +4030,8 @@ class RunCoordinator {
           final artifactRecoveryKey = artifactRecovery == null
               ? ''
               : _loopRecoveryActionKey(artifactRecovery);
-          final decision = artifactRecovery != null &&
+          final decision =
+              artifactRecovery != null &&
                   !usedLoopRecoveryActions.contains(artifactRecoveryKey)
               ? AgentLoopRecoveryDecision(
                   kind: AgentLoopRecoveryKind.redirect,
@@ -4166,10 +4192,7 @@ class RunCoordinator {
               workItemId: progress.item.id,
               tool: tool,
               kind: LiveRunSignalKind.toolOutput,
-              data: <String, dynamic>{
-                'stream': stream,
-                'delta': delta,
-              },
+              data: <String, dynamic>{'stream': stream, 'delta': delta},
             ),
           );
         },
@@ -4186,7 +4209,8 @@ class RunCoordinator {
       ToolResult result;
       try {
         result = await tools.execute(liveTool, action.arguments, context);
-        final output = result.data['output']?.toString() ??
+        final output =
+            result.data['output']?.toString() ??
             result.data['stdout']?.toString() ??
             result.data['text']?.toString() ??
             '';
@@ -4272,8 +4296,10 @@ class RunCoordinator {
           },
         );
         if (toolError.code == 'path_outside_project') {
-          await _bestEffortEvent(
-              'tool.path_recovery_rejected', current.id, <String, dynamic>{
+          await _bestEffortEvent('tool.path_recovery_rejected', current.id, <
+            String,
+            dynamic
+          >{
             'runId': current.id,
             'workItemId': progress.item.id,
             'attempt': progress.attempts,
@@ -4332,10 +4358,10 @@ class RunCoordinator {
         action.tool == 'research_fetch' || action.tool == 'research_search'
             ? EvidenceKind.research
             : result.mutated
-                ? EvidenceKind.mutation
-                : action.tool == 'verify_project'
-                    ? EvidenceKind.verification
-                    : EvidenceKind.command,
+            ? EvidenceKind.mutation
+            : action.tool == 'verify_project'
+            ? EvidenceKind.verification
+            : EvidenceKind.command,
         result.summary,
         <String, dynamic>{
           'tool': action.tool,
@@ -4345,12 +4371,12 @@ class RunCoordinator {
       );
       final objectiveResultHash =
           result.data['afterSha256']?.toString().trim().isNotEmpty == true
-              ? result.data['afterSha256'].toString().trim()
-              : result.data['afterHash']?.toString().trim().isNotEmpty == true
-                  ? result.data['afterHash'].toString().trim()
-                  : result.data['sha256']?.toString().trim().isNotEmpty == true
-                      ? result.data['sha256'].toString().trim()
-                      : governedEvidenceHash;
+          ? result.data['afterSha256'].toString().trim()
+          : result.data['afterHash']?.toString().trim().isNotEmpty == true
+          ? result.data['afterHash'].toString().trim()
+          : result.data['sha256']?.toString().trim().isNotEmpty == true
+          ? result.data['sha256'].toString().trim()
+          : governedEvidenceHash;
       if (result.ok &&
           const <String>{
             'list_directory',
@@ -4391,7 +4417,8 @@ class RunCoordinator {
       );
       final resultHash = Sha256.text(canonicalJson(result.toJson()));
       for (final path in mutationPaths) {
-        final hash = result.data['afterSha256']?.toString() ??
+        final hash =
+            result.data['afterSha256']?.toString() ??
             result.data['afterHash']?.toString() ??
             result.data['sha256']?.toString() ??
             resultHash;
@@ -4406,9 +4433,11 @@ class RunCoordinator {
       );
       final semanticCriteria = <String>{...semanticSnapshot.satisfiedCriteria};
       if (action.tool == 'verify_project') {
-        for (var index = 0;
-            index < progress.item.acceptanceCriteria.length;
-            index++) {
+        for (
+          var index = 0;
+          index < progress.item.acceptanceCriteria.length;
+          index++
+        ) {
           if (_criterionEvidenceRequirement(
                 progress.item.acceptanceCriteria[index],
               ) ==
@@ -4589,7 +4618,8 @@ class RunCoordinator {
             'attempt': progress.attempts,
             'turn': turn + 1,
             'tool': action.tool,
-            'path': result.data['relativePath']?.toString() ??
+            'path':
+                result.data['relativePath']?.toString() ??
                 result.data['path']?.toString() ??
                 '',
             'beforeHash': result.data['beforeHash']?.toString() ?? '',
@@ -4602,10 +4632,10 @@ class RunCoordinator {
       var artifactAssessmentResult = result;
       final automaticInspectionPath =
           const AutomaticArtifactVerificationPolicy().inspectionTarget(
-        item: progress.item,
-        mutationResult: result,
-        mutationPaths: mutationPaths,
-      );
+            item: progress.item,
+            mutationResult: result,
+            mutationPaths: mutationPaths,
+          );
       if (automaticInspectionPath != null) {
         if (phaseToolCalls >= executionPhaseBudget.maxToolCalls) {
           throw ProductException(
@@ -4665,9 +4695,9 @@ class RunCoordinator {
           if (inspectionResult.ok) {
             final inspectedArtifactHash =
                 inspectionResult.data['sha256']?.toString().trim().isNotEmpty ==
-                        true
-                    ? inspectionResult.data['sha256'].toString().trim()
-                    : automaticInspectionEvidenceHash;
+                    true
+                ? inspectionResult.data['sha256'].toString().trim()
+                : automaticInspectionEvidenceHash;
             lastObservationEvidenceHash = inspectedArtifactHash;
             lastArtifactInspectionEvidenceHash = inspectedArtifactHash;
           }
@@ -4835,12 +4865,13 @@ class RunCoordinator {
             'workItemId': progress.item.id,
             'attempt': progress.attempts,
             'reason': completion.reason,
-            'evidenceTools': staticObservations.values
-                .where((observation) => observation.result.ok)
-                .map((observation) => observation.tool)
-                .toSet()
-                .toList()
-              ..sort(),
+            'evidenceTools':
+                staticObservations.values
+                    .where((observation) => observation.result.ok)
+                    .map((observation) => observation.tool)
+                    .toSet()
+                    .toList()
+                  ..sort(),
             'observationCount': staticObservations.length,
             'summaryHash': Sha256.text(completion.summary),
             'budget': _budgetSnapshot(current),
@@ -4967,10 +4998,7 @@ class RunCoordinator {
             workItemId: item.id,
             tool: tool,
             kind: LiveRunSignalKind.toolOutput,
-            data: <String, dynamic>{
-              'stream': stream,
-              'delta': delta,
-            },
+            data: <String, dynamic>{'stream': stream, 'delta': delta},
           ),
         );
       },
@@ -5102,46 +5130,48 @@ ${skillEnvelope.render()}
     List<Map<String, dynamic>> history,
   ) {
     final start = max(0, history.length - 10);
-    return history.skip(start).map((entry) {
-      if (entry['coordinatorCorrection'] == true) {
-        final instruction = <Object?>[
-          entry['correction'],
-          entry['reason'],
-          entry['error']
-        ].map((value) => value?.toString().trim() ?? '').firstWhere(
-              (value) => value.isNotEmpty,
-              orElse: () => 'Choose a different schema-valid action.',
-            );
-        final requiredDecision =
-            entry['requiredActionExample'] ?? entry['example'];
-        return <String, dynamic>{
-          'instruction': instruction,
-          if (entry['errorCode'] != null) 'errorCode': entry['errorCode'],
-          if (entry['path'] != null) 'path': entry['path'],
-          if (entry['expectedPaths'] != null)
-            'expectedPaths': entry['expectedPaths'],
-          if (entry['missingCoverage'] != null)
-            'missingCoverage': entry['missingCoverage'],
-          if (requiredDecision != null)
-            'requiredNextDecision': _boundedHistoryValue(requiredDecision),
-        };
-      }
-      if (entry['priorAttemptEvidence'] == true) {
-        return <String, dynamic>{
-          'evidenceKind': entry['kind'],
-          'summary': entry['summary'],
-          'evidenceHash': entry['evidenceHash'],
-          'payload': entry['payload'],
-        };
-      }
-      return <String, dynamic>{
-        'tool': entry['tool'],
-        'arguments': entry['arguments'],
-        'result': entry['result'],
-        if ((entry['reason']?.toString().trim() ?? '').isNotEmpty)
-          'reason': entry['reason'],
-      };
-    }).toList(growable: false);
+    return history
+        .skip(start)
+        .map((entry) {
+          if (entry['coordinatorCorrection'] == true) {
+            final instruction =
+                <Object?>[entry['correction'], entry['reason'], entry['error']]
+                    .map((value) => value?.toString().trim() ?? '')
+                    .firstWhere(
+                      (value) => value.isNotEmpty,
+                      orElse: () => 'Choose a different schema-valid action.',
+                    );
+            final requiredDecision =
+                entry['requiredActionExample'] ?? entry['example'];
+            return <String, dynamic>{
+              'instruction': instruction,
+              if (entry['errorCode'] != null) 'errorCode': entry['errorCode'],
+              if (entry['path'] != null) 'path': entry['path'],
+              if (entry['expectedPaths'] != null)
+                'expectedPaths': entry['expectedPaths'],
+              if (entry['missingCoverage'] != null)
+                'missingCoverage': entry['missingCoverage'],
+              if (requiredDecision != null)
+                'requiredNextDecision': _boundedHistoryValue(requiredDecision),
+            };
+          }
+          if (entry['priorAttemptEvidence'] == true) {
+            return <String, dynamic>{
+              'evidenceKind': entry['kind'],
+              'summary': entry['summary'],
+              'evidenceHash': entry['evidenceHash'],
+              'payload': entry['payload'],
+            };
+          }
+          return <String, dynamic>{
+            'tool': entry['tool'],
+            'arguments': entry['arguments'],
+            'result': entry['result'],
+            if ((entry['reason']?.toString().trim() ?? '').isNotEmpty)
+              'reason': entry['reason'],
+          };
+        })
+        .toList(growable: false);
   }
 
   AgentContextSource _historyContextSource(Map<String, dynamic> entry) {
@@ -5204,15 +5234,17 @@ ${skillEnvelope.render()}
     final contractEnvelope = AgentContextEnvelope(
       source: AgentContextSource.coordinator,
       trust: AgentContextTrust.coordinatorGuidance,
-      content: const JsonEncoder.withIndent('  ')
-          .convert(_compactContractContext(run)),
+      content: const JsonEncoder.withIndent(
+        '  ',
+      ).convert(_compactContractContext(run)),
       metadata: const <String, Object?>{'authorityBearing': false},
     );
     final planEnvelope = AgentContextEnvelope(
       source: AgentContextSource.coordinator,
       trust: AgentContextTrust.coordinatorGuidance,
-      content: const JsonEncoder.withIndent('  ')
-          .convert(_compactPlanContext(run, item)),
+      content: const JsonEncoder.withIndent(
+        '  ',
+      ).convert(_compactPlanContext(run, item)),
       metadata: const <String, Object?>{'authorityBearing': false},
     );
     final itemEnvelope = AgentContextEnvelope(
@@ -5231,14 +5263,16 @@ ${skillEnvelope.render()}
       content: const JsonEncoder.withIndent('  ').convert(coordinatorHistory),
       metadata: const <String, Object?>{'authorityBearing': false},
     );
-    final historyEnvelopes = untrustedHistory.map((entry) {
-      return const AgentPromptInjectionGuard()
-          .wrapUntrusted(
-            source: _historyContextSource(entry),
-            content: jsonEncode(entry),
-          )
-          .toJson();
-    }).toList(growable: false);
+    final historyEnvelopes = untrustedHistory
+        .map((entry) {
+          return const AgentPromptInjectionGuard()
+              .wrapUntrusted(
+                source: _historyContextSource(entry),
+                content: jsonEncode(entry),
+              )
+              .toJson();
+        })
+        .toList(growable: false);
     return '''
 USER INTENT ENVELOPE
 ${userIntentEnvelope.render()}
@@ -5287,21 +5321,19 @@ Choose the single safest next action. Return one JSON object only.
     String text,
     WorkItem item, {
     required bool allowPlainCompletion,
-  }) =>
-      const AgentProtocolV3Adapter().parseExecutionStep(
-        text,
-        item: item,
-        allowPlainCompletion: allowPlainCompletion,
-      );
+  }) => const AgentProtocolV3Adapter().parseExecutionStep(
+    text,
+    item: item,
+    allowPlainCompletion: allowPlainCompletion,
+  );
 
   Future<AgentContextEnvelope?> _resolvedDeferredUserResponseEnvelope(
     String runId,
     String workItemId,
   ) async {
-    final interaction =
-        await AgentDeferredInteractionStore(repositories.workflow).latestForRun(
-      runId,
-    );
+    final interaction = await AgentDeferredInteractionStore(
+      repositories.workflow,
+    ).latestForRun(runId);
     final response = interaction?.userResponse?.trim() ?? '';
     if (interaction == null ||
         interaction.pending ||
@@ -5442,11 +5474,11 @@ Choose the single safest next action. Return one JSON object only.
   }
 
   bool _isMutationToolName(String name) => const <String>{
-        'write_file',
-        'write_binary_file',
-        'replace_text',
-        'apply_patch',
-      }.contains(name);
+    'write_file',
+    'write_binary_file',
+    'replace_text',
+    'apply_patch',
+  }.contains(name);
 
   bool _requiresInspectionEvidence(WorkItem item) {
     final label = '${item.title}\n${item.description}'.toLowerCase();
@@ -5621,48 +5653,48 @@ Choose the single safest next action. Return one JSON object only.
   }
 
   bool _isAgentProtocolError(ProductException error) => const <String>{
-        'model_json_invalid',
-        'model_action_invalid',
-        'model_completion_invalid',
-        'model_tool_not_allowed',
-        'model_decision_not_supported',
-        'agent_decision_schema_invalid',
-        'argument_required',
-        'argument_type_invalid',
-        'argument_unknown',
-        'argument_value_invalid',
-        'argument_format_invalid',
-        'argument_alias_conflict',
-        'inspection_evidence_missing',
-      }.contains(error.code);
+    'model_json_invalid',
+    'model_action_invalid',
+    'model_completion_invalid',
+    'model_tool_not_allowed',
+    'model_decision_not_supported',
+    'agent_decision_schema_invalid',
+    'argument_required',
+    'argument_type_invalid',
+    'argument_unknown',
+    'argument_value_invalid',
+    'argument_format_invalid',
+    'argument_alias_conflict',
+    'inspection_evidence_missing',
+  }.contains(error.code);
 
   bool _isRecoverableToolInputError(ProductException error) => const <String>{
-        'argument_missing',
-        'argument_required',
-        'argument_type_invalid',
-        'argument_unknown',
-        'argument_value_invalid',
-        'argument_format_invalid',
-        'argument_alias_conflict',
-        'path_absolute_rejected',
-        'path_scheme_rejected',
-        'path_outside_project',
-        'workspace_escape_rejected',
-        'path_traversal_rejected',
-        'path_missing',
-        'path_not_file',
-        'path_not_directory',
-        'stale_content',
-        'stale_existence',
-        'replacement_not_found',
-        'replacement_ambiguous',
-        'patch_empty',
-        'patch_hunk_not_found',
-        'patch_hunk_ambiguous',
-        'base64_invalid',
-        'process_scope_argument_rejected',
-        'process_path_outside_project',
-      }.contains(error.code);
+    'argument_missing',
+    'argument_required',
+    'argument_type_invalid',
+    'argument_unknown',
+    'argument_value_invalid',
+    'argument_format_invalid',
+    'argument_alias_conflict',
+    'path_absolute_rejected',
+    'path_scheme_rejected',
+    'path_outside_project',
+    'workspace_escape_rejected',
+    'path_traversal_rejected',
+    'path_missing',
+    'path_not_file',
+    'path_not_directory',
+    'stale_content',
+    'stale_existence',
+    'replacement_not_found',
+    'replacement_ambiguous',
+    'patch_empty',
+    'patch_hunk_not_found',
+    'patch_hunk_ambiguous',
+    'base64_invalid',
+    'process_scope_argument_rejected',
+    'process_path_outside_project',
+  }.contains(error.code);
 
   String _toolCorrection(ProductException error) {
     if (const <String>{
@@ -5737,25 +5769,28 @@ Choose the single safest next action. Return one JSON object only.
       return <Map<String, dynamic>>[];
     }
     final start = max(0, evidence.length - 8);
-    return evidence.skip(start).map((item) {
-      final redactedPayload = redactor.redactJson(item.payload);
-      final encoded = jsonEncode(redactedPayload);
-      final payload = encoded.length <= 2400
-          ? redactedPayload
-          : <String, dynamic>{
-              'payloadHash': Sha256.text(encoded),
-              'payloadPreview': _modelPreview(encoded, limit: 1400),
-              'truncated': true,
-            };
-      return <String, dynamic>{
-        'priorAttemptEvidence': true,
-        'kind': item.kind.name,
-        'summary': item.summary,
-        'evidenceHash': item.hash,
-        'createdAt': item.createdAt.toUtc().toIso8601String(),
-        'payload': payload,
-      };
-    }).toList(growable: true);
+    return evidence
+        .skip(start)
+        .map((item) {
+          final redactedPayload = redactor.redactJson(item.payload);
+          final encoded = jsonEncode(redactedPayload);
+          final payload = encoded.length <= 2400
+              ? redactedPayload
+              : <String, dynamic>{
+                  'payloadHash': Sha256.text(encoded),
+                  'payloadPreview': _modelPreview(encoded, limit: 1400),
+                  'truncated': true,
+                };
+          return <String, dynamic>{
+            'priorAttemptEvidence': true,
+            'kind': item.kind.name,
+            'summary': item.summary,
+            'evidenceHash': item.hash,
+            'createdAt': item.createdAt.toUtc().toIso8601String(),
+            'payload': payload,
+          };
+        })
+        .toList(growable: true);
   }
 
   Set<String> _mutationPathsFromPayload(Object? payload) {
@@ -5836,10 +5871,11 @@ Choose the single safest next action. Return one JSON object only.
 
   Future<void> _recordEpisode(RunRecord run, {bool reconciled = false}) async {
     try {
-      final evidence = (await repositories.evidence.all())
-          .where((item) => item.runId == run.id)
-          .toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      final evidence =
+          (await repositories.evidence.all())
+              .where((item) => item.runId == run.id)
+              .toList()
+            ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
       final episode = await knowledge.recordEpisode(
         run: run,
         evidence: evidence,
@@ -5907,8 +5943,8 @@ Choose the single safest next action. Return one JSON object only.
     );
     final failures =
         (int.tryParse(current?['consecutive_failures']?.toString() ?? '') ??
-                0) +
-            1;
+            0) +
+        1;
     final code = _errorCode(error).toLowerCase();
     final timeout = code.contains('timeout');
     final malformed = code.contains('protocol') || code.contains('schema');
@@ -5921,11 +5957,11 @@ Choose the single safest next action. Return one JSON object only.
       consecutiveFailures: failures,
       timeoutFailures:
           (int.tryParse(current?['timeout_failures']?.toString() ?? '') ?? 0) +
-              (timeout ? 1 : 0),
+          (timeout ? 1 : 0),
       malformedFailures:
           (int.tryParse(current?['malformed_failures']?.toString() ?? '') ??
-                  0) +
-              (malformed ? 1 : 0),
+              0) +
+          (malformed ? 1 : 0),
       cooldownSeconds:
           int.tryParse(current?['cooldown_seconds']?.toString() ?? '') ?? 120,
       openedAt: failures >= 3 ? DateTime.now().toUtc() : null,
@@ -5952,30 +5988,31 @@ Choose the single safest next action. Return one JSON object only.
       max(_minimumRecoverySafetyLimit, run.budget.maxRepairs);
 
   Map<String, dynamic> _budgetSnapshot(RunRecord run) => <String, dynamic>{
-        'modelRequests': run.modelRequests,
-        'maxModelRequests': run.budget.maxModelRequests,
-        'remainingModelRequests': max(
-          0,
-          run.budget.maxModelRequests - run.modelRequests,
-        ),
-        'toolCalls': run.toolCalls,
-        'maxToolCalls': run.budget.maxToolCalls,
-        'mutations': run.mutations,
-        'maxMutations': run.budget.maxMutations,
-        'repairs': run.repairs,
-        'maxRepairs': run.budget.maxRepairs,
-        'repairBudgetSemantic': 'outer_recovery_fuse',
-        'recoverySafetyTurns': run.repairs,
-        'recoverySafetyLimit': _recoverySafetyLimit(run),
-      };
+    'modelRequests': run.modelRequests,
+    'maxModelRequests': run.budget.maxModelRequests,
+    'remainingModelRequests': max(
+      0,
+      run.budget.maxModelRequests - run.modelRequests,
+    ),
+    'toolCalls': run.toolCalls,
+    'maxToolCalls': run.budget.maxToolCalls,
+    'mutations': run.mutations,
+    'maxMutations': run.budget.maxMutations,
+    'repairs': run.repairs,
+    'maxRepairs': run.budget.maxRepairs,
+    'repairBudgetSemantic': 'outer_recovery_fuse',
+    'recoverySafetyTurns': run.repairs,
+    'recoverySafetyLimit': _recoverySafetyLimit(run),
+  };
 
   int _agentTurnLimit(RunRecord run, {required bool conversational}) {
     final remaining = max(0, run.budget.maxModelRequests - run.modelRequests);
     if (remaining == 0) {
       return 0;
     }
-    final unfinished =
-        run.items.where((item) => item.state != WorkItemState.succeeded).length;
+    final unfinished = run.items
+        .where((item) => item.state != WorkItemState.succeeded)
+        .length;
     final fairShare = max(1, remaining ~/ max(1, unfinished));
     final configured = conversational
         ? min(4, run.budget.maxAgentTurnsPerAttempt)
@@ -6078,17 +6115,17 @@ Choose the single safest next action. Return one JSON object only.
   }
 
   bool _isStaticReadTool(String tool) => const <String>{
-        'list_directory',
-        'read_file',
-        'inspect_file',
-        'search_text',
-        'index_project',
-        'index_search',
-        'git_status',
-        'git_diff',
-        'knowledge_search',
-        'research_search',
-      }.contains(tool);
+    'list_directory',
+    'read_file',
+    'inspect_file',
+    'search_text',
+    'index_project',
+    'index_search',
+    'git_status',
+    'git_diff',
+    'knowledge_search',
+    'research_search',
+  }.contains(tool);
 
   bool _isLoopGuardedTool(String tool) =>
       _isStaticReadTool(tool) || _isMutationToolName(tool);
@@ -6103,14 +6140,13 @@ Choose the single safest next action. Return one JSON object only.
     AgentAction action, {
     required WorkspaceBoundary boundary,
     required int mutationEpoch,
-  }) =>
-      Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'tool': action.tool,
-          'arguments': _normalizedStaticToolArguments(action, boundary),
-          'mutationEpoch': mutationEpoch,
-        }),
-      );
+  }) => Sha256.text(
+    canonicalJson(<String, dynamic>{
+      'tool': action.tool,
+      'arguments': _normalizedStaticToolArguments(action, boundary),
+      'mutationEpoch': mutationEpoch,
+    }),
+  );
 
   Map<String, dynamic> _normalizedStaticToolArguments(
     AgentAction action,
@@ -6129,7 +6165,8 @@ Choose the single safest next action. Return one JSON object only.
       'apply_patch',
       'delete_file',
     }.contains(tool)) {
-      final rawPath = normalized['path']?.toString() ??
+      final rawPath =
+          normalized['path']?.toString() ??
           (const <String>{'list_directory', 'search_text'}.contains(tool)
               ? '.'
               : '');

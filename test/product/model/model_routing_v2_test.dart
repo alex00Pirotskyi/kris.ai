@@ -18,43 +18,43 @@ final class _MemoryDecisionStore implements ModelRoutingDecisionStoreV2 {
 }
 
 ModelDefinitionRegistry _registry() => ModelDefinitionRegistry(
-      providers: <ModelProviderDescriptor>[
-        ModelProviderDescriptor(
-          providerId: 'ollama.local',
-          displayName: 'Local Ollama',
-          dataBoundary: ModelDataBoundary.localOnly,
-        ),
+  providers: <ModelProviderDescriptor>[
+    ModelProviderDescriptor(
+      providerId: 'ollama.local',
+      displayName: 'Local Ollama',
+      dataBoundary: ModelDataBoundary.localOnly,
+    ),
+  ],
+  models: <ModelDefinition>[
+    ModelDefinition.evaluationOnly(
+      providerId: 'ollama.local',
+      modelId: 'qwen3:14b',
+      displayName: 'Qwen 3 14B',
+      digest: _digest,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      limits: ModelLimits(
+        evidenceLevel: ModelEvidenceLevel.measured,
+        contextWindowTokens: 32768,
+        maxOutputTokens: 4096,
+        maxConcurrentRequests: 1,
+        maxToolCallsPerTurn: 0,
+        supportsStreaming: true,
+      ),
+      toolProfile: ModelToolProfile(
+        evidenceLevel: ModelEvidenceLevel.measured,
+        supportsToolCalling: false,
+        supportsStructuredOutput: true,
+        supportsParallelToolCalls: false,
+      ),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      evaluationReasons: const <String>[
+        'host-controlled benchmark authority is not configured',
       ],
-      models: <ModelDefinition>[
-        ModelDefinition.evaluationOnly(
-          providerId: 'ollama.local',
-          modelId: 'qwen3:14b',
-          displayName: 'Qwen 3 14B',
-          digest: _digest,
-          parameterSize: '14B',
-          quantization: 'Q4_K_M',
-          limits: ModelLimits(
-            evidenceLevel: ModelEvidenceLevel.measured,
-            contextWindowTokens: 32768,
-            maxOutputTokens: 4096,
-            maxConcurrentRequests: 1,
-            maxToolCallsPerTurn: 0,
-            supportsStreaming: true,
-          ),
-          toolProfile: ModelToolProfile(
-            evidenceLevel: ModelEvidenceLevel.measured,
-            supportsToolCalling: false,
-            supportsStructuredOutput: true,
-            supportsParallelToolCalls: false,
-          ),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.noDirectCharge(),
-          evaluationReasons: const <String>[
-            'host-controlled benchmark authority is not configured',
-          ],
-        ),
-      ],
-    );
+    ),
+  ],
+);
 
 ModelIdentity _identity({String name = 'qwen3:14b', String digest = _digest}) =>
     ModelIdentity(
@@ -78,8 +78,8 @@ ModelRoutingPolicyV2 _policy({List<String>? executorPreferences}) {
           taskClassId: 'code-generation',
           preferredExactModelIds:
               role == ModelRoleV2.executor && executorPreferences != null
-                  ? executorPreferences
-                  : preferred,
+              ? executorPreferences
+              : preferred,
         ),
     ],
   );
@@ -88,23 +88,19 @@ ModelRoutingPolicyV2 _policy({List<String>? executorPreferences}) {
 ModelRoleRouterV2 _router({
   required ModelRoutingDecisionStoreV2 store,
   ModelRoutingPolicyV2? policy,
-}) =>
-    ModelRoleRouterV2(
-      registry: _registry(),
-      policy: policy ?? _policy(),
-      decisionStore: store,
-      clock: () => DateTime.utc(2026, 8, 23, 16),
-    );
+}) => ModelRoleRouterV2(
+  registry: _registry(),
+  policy: policy ?? _policy(),
+  decisionStore: store,
+  clock: () => DateTime.utc(2026, 8, 23, 16),
+);
 
 void main() {
   group('P6-002/P6-003 role-based model routing', () {
     test('every role is explicit and no model role can grant authority', () {
       const authority = ModelRoleAuthorityPolicyV2();
       expect(
-        authority.allows(
-          ModelRoleV2.planner,
-          ModelRoleOperationV2.proposePlan,
-        ),
+        authority.allows(ModelRoleV2.planner, ModelRoleOperationV2.proposePlan),
         isTrue,
       );
       expect(

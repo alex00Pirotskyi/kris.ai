@@ -14,16 +14,16 @@ enum AgentDecisionV3Kind {
 
 extension AgentDecisionV3KindWire on AgentDecisionV3Kind {
   String get wireName => switch (this) {
-        AgentDecisionV3Kind.terminal => 'terminal',
-        AgentDecisionV3Kind.browser => 'browser',
-        AgentDecisionV3Kind.research => 'research',
-        AgentDecisionV3Kind.data => 'data',
-        AgentDecisionV3Kind.userTakeover => 'user_takeover',
-        AgentDecisionV3Kind.wait => 'wait',
-        AgentDecisionV3Kind.delegate => 'delegate',
-        AgentDecisionV3Kind.complete => 'complete',
-        AgentDecisionV3Kind.fail => 'fail',
-      };
+    AgentDecisionV3Kind.terminal => 'terminal',
+    AgentDecisionV3Kind.browser => 'browser',
+    AgentDecisionV3Kind.research => 'research',
+    AgentDecisionV3Kind.data => 'data',
+    AgentDecisionV3Kind.userTakeover => 'user_takeover',
+    AgentDecisionV3Kind.wait => 'wait',
+    AgentDecisionV3Kind.delegate => 'delegate',
+    AgentDecisionV3Kind.complete => 'complete',
+    AgentDecisionV3Kind.fail => 'fail',
+  };
 }
 
 class AgentDecisionV3 {
@@ -64,33 +64,31 @@ class AgentDecisionV3 {
   final String reason;
 
   bool get requiresObjectivePostcondition => switch (kind) {
-        AgentDecisionV3Kind.terminal ||
-        AgentDecisionV3Kind.browser ||
-        AgentDecisionV3Kind.research ||
-        AgentDecisionV3Kind.data =>
-          true,
-        _ => false,
-      };
+    AgentDecisionV3Kind.terminal ||
+    AgentDecisionV3Kind.browser ||
+    AgentDecisionV3Kind.research ||
+    AgentDecisionV3Kind.data => true,
+    _ => false,
+  };
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'protocolVersion': protocolVersion,
-        'action': kind.wireName,
-        if (operation != null) 'operation': operation,
-        if (arguments.isNotEmpty) 'arguments': arguments,
-        if (expectedPostcondition != null)
-          'expectedPostcondition': expectedPostcondition,
-        if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
-        if (summary != null) 'summary': summary,
-        if (code != null) 'code': code,
-        if (retryable) 'retryable': true,
-        if (question != null) 'question': question,
-        if (delegateTo != null) 'delegateTo': delegateTo,
-        if (task != null) 'task': task,
-        if (waitUntil != null)
-          'waitUntil': waitUntil!.toUtc().toIso8601String(),
-        if (waitHandle != null) 'waitHandle': waitHandle,
-        if (reason.trim().isNotEmpty) 'reason': reason,
-      };
+    'protocolVersion': protocolVersion,
+    'action': kind.wireName,
+    if (operation != null) 'operation': operation,
+    if (arguments.isNotEmpty) 'arguments': arguments,
+    if (expectedPostcondition != null)
+      'expectedPostcondition': expectedPostcondition,
+    if (idempotencyKey != null) 'idempotencyKey': idempotencyKey,
+    if (summary != null) 'summary': summary,
+    if (code != null) 'code': code,
+    if (retryable) 'retryable': true,
+    if (question != null) 'question': question,
+    if (delegateTo != null) 'delegateTo': delegateTo,
+    if (task != null) 'task': task,
+    if (waitUntil != null) 'waitUntil': waitUntil!.toUtc().toIso8601String(),
+    if (waitHandle != null) 'waitHandle': waitHandle,
+    if (reason.trim().isNotEmpty) 'reason': reason,
+  };
 
   static AgentDecisionV3 fromJson(Map<String, Object?> json) {
     if (json['protocolVersion'] != protocolVersion) {
@@ -111,9 +109,7 @@ class AgentDecisionV3 {
       kind: kind,
       operation: _nonEmpty(json['operation']),
       arguments: rawArguments is Map
-          ? rawArguments.map(
-              (key, value) => MapEntry(key.toString(), value),
-            )
+          ? rawArguments.map((key, value) => MapEntry(key.toString(), value))
           : const <String, Object?>{},
       expectedPostcondition: _nonEmpty(json['expectedPostcondition']),
       idempotencyKey: _nonEmpty(json['idempotencyKey']),
@@ -132,42 +128,43 @@ class AgentDecisionV3 {
   static AgentDecisionV3 fromV1(AgentDecision decision) {
     return switch (decision) {
       ToolDecision tool => AgentDecisionV3(
-          kind: _domainForTool(tool.tool),
-          operation: tool.tool,
-          arguments: tool.arguments,
-          expectedPostcondition:
-              'Observe the tool-specific postcondition before completion.',
-          reason: tool.reason,
-        ),
+        kind: _domainForTool(tool.tool),
+        operation: tool.tool,
+        arguments: tool.arguments,
+        expectedPostcondition:
+            'Observe the tool-specific postcondition before completion.',
+        reason: tool.reason,
+      ),
       CompleteDecision complete => AgentDecisionV3(
-          kind: AgentDecisionV3Kind.complete,
-          summary: complete.summary,
-          reason: complete.reason,
-        ),
+        kind: AgentDecisionV3Kind.complete,
+        summary: complete.summary,
+        reason: complete.reason,
+      ),
       FailDecision fail => AgentDecisionV3(
-          kind: AgentDecisionV3Kind.fail,
-          summary: fail.summary,
-          code: fail.code,
-          retryable: fail.retryable,
-          reason: fail.reason,
-        ),
+        kind: AgentDecisionV3Kind.fail,
+        summary: fail.summary,
+        code: fail.code,
+        retryable: fail.retryable,
+        reason: fail.reason,
+      ),
       AskUserDecision ask => AgentDecisionV3(
-          kind: AgentDecisionV3Kind.userTakeover,
-          question: ask.question,
-          reason: ask.reason,
-        ),
+        kind: AgentDecisionV3Kind.userTakeover,
+        question: ask.question,
+        reason: ask.reason,
+      ),
       DelegateDecision delegate => AgentDecisionV3(
-          kind: AgentDecisionV3Kind.delegate,
-          delegateTo: delegate.delegateTo,
-          task: delegate.task,
-          arguments: delegate.inputs,
-          reason: delegate.reason,
-        ),
+        kind: AgentDecisionV3Kind.delegate,
+        delegateTo: delegate.delegateTo,
+        task: delegate.task,
+        arguments: delegate.inputs,
+        reason: delegate.reason,
+      ),
     };
   }
 
   void _validate() {
-    final effectful = kind == AgentDecisionV3Kind.terminal ||
+    final effectful =
+        kind == AgentDecisionV3Kind.terminal ||
         kind == AgentDecisionV3Kind.browser ||
         kind == AgentDecisionV3Kind.research ||
         kind == AgentDecisionV3Kind.data;
@@ -199,7 +196,8 @@ class AgentDecisionV3 {
           task == null ||
           task!.isEmpty) {
         throw const FormatException(
-            'agent_decision_v3_delegate_target_required');
+          'agent_decision_v3_delegate_target_required',
+        );
       }
       return;
     }

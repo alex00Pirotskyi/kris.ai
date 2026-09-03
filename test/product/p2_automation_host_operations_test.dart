@@ -8,39 +8,41 @@ import 'package:kristin_local_agent/product/p2_effect_boundary.dart';
 import 'p2_test_support.dart';
 
 void main() {
-  test('operation-unbound session grant can authorize sequenced operations',
-      () async {
-    final authority = TestEnvelopeAuthority(operationBoundGrants: false);
-    final grantDigest = 'c' * 64;
-    final opened = await authority.issue(
-      binding: testBinding('pty.open', taskId: 'P2-005'),
-      operation: 'pty.open',
-      payload: const <String, Object?>{'operation': 'pty.open'},
-      expectedGrantDigest: grantDigest,
-    );
-    final input = await authority.issue(
-      binding: testBinding('pty.input', taskId: 'P2-005'),
-      operation: 'pty.input',
-      payload: const <String, Object?>{'operation': 'pty.input'},
-      expectedGrantDigest: grantDigest,
-    );
+  test(
+    'operation-unbound session grant can authorize sequenced operations',
+    () async {
+      final authority = TestEnvelopeAuthority(operationBoundGrants: false);
+      final grantDigest = 'c' * 64;
+      final opened = await authority.issue(
+        binding: testBinding('pty.open', taskId: 'P2-005'),
+        operation: 'pty.open',
+        payload: const <String, Object?>{'operation': 'pty.open'},
+        expectedGrantDigest: grantDigest,
+      );
+      final input = await authority.issue(
+        binding: testBinding('pty.input', taskId: 'P2-005'),
+        operation: 'pty.input',
+        payload: const <String, Object?>{'operation': 'pty.input'},
+        expectedGrantDigest: grantDigest,
+      );
 
-    final openBinding = Map<String, Object?>.from(
-      opened.grantProof.capabilityGrant['binding']! as Map,
-    );
-    final inputBinding = Map<String, Object?>.from(
-      input.grantProof.capabilityGrant['binding']! as Map,
-    );
-    expect(openBinding.containsKey('operation'), isFalse);
-    expect(inputBinding.containsKey('operation'), isFalse);
-    expect(opened.grantProof.grantDigest, grantDigest);
-    expect(input.grantProof.grantDigest, grantDigest);
-    expect(opened.grantProof.scopeDigest, input.grantProof.scopeDigest);
-    expect(opened.grantProof.useNumber, 1);
-    expect(input.grantProof.useNumber, 2);
-    expect(() => opened.validate(), returnsNormally);
-    expect(() => input.validate(), returnsNormally);
-  });
+      final openBinding = Map<String, Object?>.from(
+        opened.grantProof.capabilityGrant['binding']! as Map,
+      );
+      final inputBinding = Map<String, Object?>.from(
+        input.grantProof.capabilityGrant['binding']! as Map,
+      );
+      expect(openBinding.containsKey('operation'), isFalse);
+      expect(inputBinding.containsKey('operation'), isFalse);
+      expect(opened.grantProof.grantDigest, grantDigest);
+      expect(input.grantProof.grantDigest, grantDigest);
+      expect(opened.grantProof.scopeDigest, input.grantProof.scopeDigest);
+      expect(opened.grantProof.useNumber, 1);
+      expect(input.grantProof.useNumber, 2);
+      expect(() => opened.validate(), returnsNormally);
+      expect(() => input.validate(), returnsNormally);
+    },
+  );
 
   test(
     'product host adapter routes package effect through exact envelope',
@@ -74,14 +76,9 @@ void main() {
         journal: journal,
         bindingProvider: _Bindings(),
       );
-      final plan = await adapter.plan(
-        'fixture',
-        'install',
-        <String>[
-          'fixture-sdk',
-        ],
-        testBinding('package.plan', taskId: 'P2-007'),
-      );
+      final plan = await adapter.plan('fixture', 'install', <String>[
+        'fixture-sdk',
+      ], testBinding('package.plan', taskId: 'P2-007'));
       final applied = await adapter.apply(
         plan,
         testBinding('package.apply', taskId: 'P2-007'),

@@ -85,14 +85,14 @@ void main() {
 }
 
 P2EffectBinding _binding(String operation) => P2EffectBinding(
-      runId: 'run',
-      taskId: 'task',
-      actorId: 'actor',
-      toolId: 'filesystem',
-      accessProfileId: 'owner',
-      capabilityId: 'filesystem.$operation',
-      operation: operation,
-    );
+  runId: 'run',
+  taskId: 'task',
+  actorId: 'actor',
+  toolId: 'filesystem',
+  accessProfileId: 'owner',
+  capabilityId: 'filesystem.$operation',
+  operation: operation,
+);
 
 class _Authorizer implements P2FilesystemAuthorizer {
   final List<String> operations = <String>[];

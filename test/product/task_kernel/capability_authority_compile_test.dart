@@ -48,23 +48,25 @@ void main() {
         ],
       );
 
-  test('compiled contract must contain scopes implied by requiredCapabilities',
-      () {
-    expect(
-      () => kernel.compile(
-        plan: planWithCapability('project.run'),
-        project: project,
-        mode: CommandMode.analyze,
-      ),
-      throwsA(
-        isA<ProductException>().having(
-          (error) => error.code,
-          'code',
-          'capability_authority_not_compiled',
+  test(
+    'compiled contract must contain scopes implied by requiredCapabilities',
+    () {
+      expect(
+        () => kernel.compile(
+          plan: planWithCapability('project.run'),
+          project: project,
+          mode: CommandMode.analyze,
         ),
-      ),
-    );
-  });
+        throwsA(
+          isA<ProductException>().having(
+            (error) => error.code,
+            'code',
+            'capability_authority_not_compiled',
+          ),
+        ),
+      );
+    },
+  );
 
   test('unknown model-authored capability fails closed after compilation', () {
     expect(

@@ -41,9 +41,9 @@ final class ApplicationRuntimeProvisioner {
     required Directory applicationDataRoot,
     String? executablePath,
     HttpClient Function()? httpClientFactory,
-  })  : applicationDataRoot = applicationDataRoot.absolute,
-        executablePath = executablePath ?? Platform.resolvedExecutable,
-        _httpClientFactory = httpClientFactory ?? HttpClient.new {
+  }) : applicationDataRoot = applicationDataRoot.absolute,
+       executablePath = executablePath ?? Platform.resolvedExecutable,
+       _httpClientFactory = httpClientFactory ?? HttpClient.new {
     _p2Slot = AtomicApplicationRuntimeSlot<P2RuntimeResourceSet>(
       applicationDataRoot: this.applicationDataRoot,
       runtimeKind: 'p2',
@@ -230,9 +230,7 @@ final class ApplicationRuntimeProvisioner {
 
   Future<void> close() => _progress.close();
 
-  Future<P2RuntimeResourceSet> _validateP2ApplicationRoot(
-    Directory root,
-  ) {
+  Future<P2RuntimeResourceSet> _validateP2ApplicationRoot(Directory root) {
     return P2ApplicationOwnedRuntimeResourceResolver(
       applicationDataRoot: root.absolute,
       executablePath:
@@ -270,9 +268,7 @@ final class ApplicationRuntimeProvisioner {
     }
   }
 
-  Future<P2RuntimeResourceSet?> _bundledP2(
-    bool currentAccountRequired,
-  ) async {
+  Future<P2RuntimeResourceSet?> _bundledP2(bool currentAccountRequired) async {
     final probeRoot = Directory(
       '${applicationDataRoot.path}${Platform.pathSeparator}runtime'
       '${Platform.pathSeparator}.bundled-p2-probe',
@@ -312,7 +308,8 @@ final class ApplicationRuntimeProvisioner {
     P2RuntimeResourceSet resources,
     bool currentAccountRequired,
   ) {
-    final currentAccount = resources
+    final currentAccount =
+        resources
             .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
         '1';
     final ownerRiskQa =
@@ -367,8 +364,9 @@ final class ApplicationRuntimeProvisioner {
       'tool${Platform.pathSeparator}configure-owner-risk-runtime.mjs',
     ];
     for (final relative in required) {
-      if (!await File('${root.path}${Platform.pathSeparator}$relative')
-          .exists()) {
+      if (!await File(
+        '${root.path}${Platform.pathSeparator}$relative',
+      ).exists()) {
         return false;
       }
     }
@@ -389,8 +387,11 @@ final class ApplicationRuntimeProvisioner {
       fraction: 0.2,
     );
     final acquisition = await _readAcquisitionLock(source.root);
-    final toolchain =
-        await _ensureNodeToolchain(source.root, acquisition, kind);
+    final toolchain = await _ensureNodeToolchain(
+      source.root,
+      acquisition,
+      kind,
+    );
     final materializer = File(
       '${source.root.path}${Platform.pathSeparator}tool'
       '${Platform.pathSeparator}application_runtime_materializer.mjs',
@@ -526,30 +527,27 @@ final class ApplicationRuntimeProvisioner {
     if (await extracted.exists()) await extracted.delete(recursive: true);
     await extracted.create(recursive: true);
     if (Platform.isWindows) {
-      final result = await _runBounded(
-        'powershell.exe',
-        <String>[
-          '-NoProfile',
-          '-NonInteractive',
-          '-Command',
-          '& { param([string]\$p,[string]\$d) '
-              'Expand-Archive -LiteralPath \$p -DestinationPath \$d -Force }',
-          archive.path,
-          extracted.path,
-        ],
-        timeout: const Duration(minutes: 3),
-      );
+      final result = await _runBounded('powershell.exe', <String>[
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        '& { param([string]\$p,[string]\$d) '
+            'Expand-Archive -LiteralPath \$p -DestinationPath \$d -Force }',
+        archive.path,
+        extracted.path,
+      ], timeout: const Duration(minutes: 3));
       if (result.exitCode != 0) {
         throw StateError(
           'application_runtime_node_extract_failed:${_boundedDiagnostic(result)}',
         );
       }
     } else {
-      final result = await _runBounded(
-        'tar',
-        <String>['-xzf', archive.path, '-C', extracted.path],
-        timeout: const Duration(minutes: 3),
-      );
+      final result = await _runBounded('tar', <String>[
+        '-xzf',
+        archive.path,
+        '-C',
+        extracted.path,
+      ], timeout: const Duration(minutes: 3));
       if (result.exitCode != 0) {
         throw StateError(
           'application_runtime_node_extract_failed:${_boundedDiagnostic(result)}',
@@ -607,15 +605,16 @@ final class ApplicationRuntimeProvisioner {
     final client = _httpClientFactory();
     client.connectionTimeout = const Duration(seconds: 20);
     try {
-      final request = await client.getUrl(source).timeout(
-            const Duration(seconds: 30),
-          );
+      final request = await client
+          .getUrl(source)
+          .timeout(const Duration(seconds: 30));
       request.headers.set(
         HttpHeaders.userAgentHeader,
         'KristinLocalAgent-RuntimeProvisioner/1',
       );
-      final response =
-          await request.close().timeout(const Duration(seconds: 45));
+      final response = await request.close().timeout(
+        const Duration(seconds: 45),
+      );
       if (response.statusCode != HttpStatus.ok) {
         throw StateError(
           'application_runtime_download_http_${response.statusCode}',
@@ -643,19 +642,18 @@ final class ApplicationRuntimeProvisioner {
 
   Future<String> _platformKey() async {
     if (Platform.isWindows) {
-      final raw = (Platform.environment['PROCESSOR_ARCHITEW6432'] ??
-              Platform.environment['PROCESSOR_ARCHITECTURE'] ??
-              '')
-          .toLowerCase();
+      final raw =
+          (Platform.environment['PROCESSOR_ARCHITEW6432'] ??
+                  Platform.environment['PROCESSOR_ARCHITECTURE'] ??
+                  '')
+              .toLowerCase();
       if (raw.contains('arm64')) return 'windows-arm64';
       if (raw.contains('amd64') || raw.contains('x86_64')) return 'windows-x64';
       return 'windows-x64';
     }
-    final result = await _runBounded(
-      'uname',
-      const <String>['-m'],
-      timeout: const Duration(seconds: 5),
-    );
+    final result = await _runBounded('uname', const <String>[
+      '-m',
+    ], timeout: const Duration(seconds: 5));
     if (result.exitCode != 0) {
       throw StateError('application_runtime_architecture_unknown');
     }
@@ -665,11 +663,11 @@ final class ApplicationRuntimeProvisioner {
   }
 
   Future<String> _git(Directory root, List<String> arguments) async {
-    final result = await _runBounded(
-      'git',
-      <String>['-C', root.path, ...arguments],
-      timeout: const Duration(seconds: 8),
-    );
+    final result = await _runBounded('git', <String>[
+      '-C',
+      root.path,
+      ...arguments,
+    ], timeout: const Duration(seconds: 8));
     if (result.exitCode != 0) {
       throw StateError('application_runtime_git_identity_unavailable');
     }
@@ -709,18 +707,14 @@ final class ApplicationRuntimeProvisioner {
 
   Future<void> _prepareWindowsBrowserAcl(Directory browserRoot) async {
     if (!Platform.isWindows || !await browserRoot.exists()) return;
-    final result = await _runBounded(
-      'icacls.exe',
-      <String>[
-        browserRoot.path,
-        '/grant',
-        '*S-1-15-2-1:(OI)(CI)(RX)',
-        '*S-1-15-2-2:(OI)(CI)(RX)',
-        '/T',
-        '/Q',
-      ],
-      timeout: const Duration(minutes: 2),
-    );
+    final result = await _runBounded('icacls.exe', <String>[
+      browserRoot.path,
+      '/grant',
+      '*S-1-15-2-1:(OI)(CI)(RX)',
+      '*S-1-15-2-2:(OI)(CI)(RX)',
+      '/T',
+      '/Q',
+    ], timeout: const Duration(minutes: 2));
     if (result.exitCode != 0) {
       throw StateError(
         'p3_windows_sandbox_acl_preparation_failed:${_boundedDiagnostic(result)}',
@@ -736,15 +730,11 @@ final class ApplicationRuntimeProvisioner {
     if (await destination.exists()) await destination.delete(recursive: true);
     await destination.create(recursive: true);
     if (!Platform.isWindows) {
-      final result = await _runBounded(
-        'cp',
-        <String>[
-          '-a',
-          '${source.path}${Platform.pathSeparator}.',
-          destination.path
-        ],
-        timeout: const Duration(minutes: 5),
-      );
+      final result = await _runBounded('cp', <String>[
+        '-a',
+        '${source.path}${Platform.pathSeparator}.',
+        destination.path,
+      ], timeout: const Duration(minutes: 5));
       if (result.exitCode != 0) {
         throw StateError(
           'application_runtime_bundle_copy_failed:${_boundedDiagnostic(result)}',
@@ -860,8 +850,9 @@ final class ApplicationRuntimeProvisioner {
   }
 
   static String _boundedDiagnostic(_BoundedProcessResult result) {
-    final value =
-        '${result.stderr}\n${result.stdout}'.replaceAll('\u0000', '').trim();
+    final value = '${result.stderr}\n${result.stdout}'
+        .replaceAll('\u0000', '')
+        .trim();
     if (value.isEmpty) return 'exit_${result.exitCode}';
     return value.length <= 2048 ? value : value.substring(value.length - 2048);
   }
@@ -885,13 +876,12 @@ final class AtomicApplicationRuntimeSlot<T> {
   final Map<String, Future<T>> _inFlight = <String, Future<T>>{};
 
   Directory get _slotRoot => Directory(
-        '${applicationDataRoot.path}${Platform.pathSeparator}runtime'
-        '${Platform.pathSeparator}$runtimeKind',
-      );
+    '${applicationDataRoot.path}${Platform.pathSeparator}runtime'
+    '${Platform.pathSeparator}$runtimeKind',
+  );
 
-  Directory get _current => Directory(
-        '${_slotRoot.path}${Platform.pathSeparator}current',
-      );
+  Directory get _current =>
+      Directory('${_slotRoot.path}${Platform.pathSeparator}current');
 
   Future<T> ensure({
     required String targetIdentity,
@@ -903,17 +893,18 @@ final class AtomicApplicationRuntimeSlot<T> {
     final existing = _inFlight[targetIdentity];
     if (existing != null) return existing;
     late final Future<T> future;
-    future = _ensure(
-      targetIdentity: targetIdentity,
-      repair: repair,
-      matches: matches,
-      materialize: materialize,
-      onPhase: onPhase,
-    ).whenComplete(() {
-      if (identical(_inFlight[targetIdentity], future)) {
-        _inFlight.remove(targetIdentity);
-      }
-    });
+    future =
+        _ensure(
+          targetIdentity: targetIdentity,
+          repair: repair,
+          matches: matches,
+          materialize: materialize,
+          onPhase: onPhase,
+        ).whenComplete(() {
+          if (identical(_inFlight[targetIdentity], future)) {
+            _inFlight.remove(targetIdentity);
+          }
+        });
     _inFlight[targetIdentity] = future;
     return future;
   }
@@ -990,8 +981,9 @@ final class AtomicApplicationRuntimeSlot<T> {
     final previous = <Directory>[];
     await for (final entity in _slotRoot.list(followLinks: false)) {
       if (entity is! Directory) continue;
-      final name =
-          entity.uri.pathSegments.where((value) => value.isNotEmpty).last;
+      final name = entity.uri.pathSegments
+          .where((value) => value.isNotEmpty)
+          .last;
       if (name.startsWith('staging-')) staging.add(entity);
       if (name.startsWith('previous-')) previous.add(entity);
     }

@@ -319,14 +319,8 @@ void main() {
       final timestamp = DateTime.utc(2026, 7, 22).toIso8601String();
       await legacyProjects.writeAsString(
         '${const JsonEncoder.withIndent('  ').convert(<Map<String, dynamic>>[
-              <String, dynamic>{
-                'id': 'legacy-project',
-                'name': 'Legacy project',
-                'rootPath': root.path,
-                'createdAt': timestamp,
-                'updatedAt': timestamp
-              },
-            ])}\n',
+          <String, dynamic>{'id': 'legacy-project', 'name': 'Legacy project', 'rootPath': root.path, 'createdAt': timestamp, 'updatedAt': timestamp},
+        ])}\n',
         flush: true,
       );
       await legacySettings.writeAsString(
@@ -380,8 +374,8 @@ void main() {
       );
       await validProjects.writeAsString(
         '${jsonEncode(<Map<String, dynamic>>[
-              <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
-            ])}\n',
+          <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
+        ])}\n',
         flush: true,
       );
       await corruptSettings.writeAsString('{not-json', flush: true);
@@ -497,8 +491,7 @@ void main() {
           (await store!.latestCheckpoint(
             'run-transaction',
             kind: 'workspace_rolled_back',
-          ))
-              ?.kind,
+          ))?.kind,
           'workspace_rolled_back',
         );
       },
@@ -530,66 +523,67 @@ void main() {
       }
     });
 
-    test('applies cleanly on top of 001-006 and creates the new schema',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      expect(store!.schemaVersion, 7);
-      final report = await store!.verifyIntegrity();
-      expect(report.ok, isTrue);
-    });
-
-    test('reopening an already-migrated database is an idempotent no-op',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      await store!.close();
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      expect(store!.schemaVersion, 7);
-      expect((await store!.verifyIntegrity()).ok, isTrue);
-    });
+    test(
+      'applies cleanly on top of 001-006 and creates the new schema',
+      () async {
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        expect(store!.schemaVersion, 7);
+        final report = await store!.verifyIntegrity();
+        expect(report.ok, isTrue);
+      },
+    );
 
     test(
-      'a foreign schema_migrations row for version 7 with a different '
-      'digest is rejected, never silently accepted',
+      'reopening an already-migrated database is an idempotent no-op',
       () async {
         store = await DurableWorkflowStore.open(
           databaseFile: databaseFile,
           migrationBackupDirectory: backupDirectory,
         );
         await store!.close();
-        store = null;
-
-        final raw = sqlite3.sqlite3.open(databaseFile.path);
-        raw.execute(
-          "UPDATE schema_migrations SET sha256 = "
-          "'0000000000000000000000000000000000000000000000000000000000000000' "
-          'WHERE version = 7',
+        store = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
         );
-        raw.dispose();
-
-        await expectLater(
-          DurableWorkflowStore.open(
-            databaseFile: databaseFile,
-            migrationBackupDirectory: backupDirectory,
-          ),
-          throwsA(
-            isA<WorkflowStorageException>().having(
-              (error) => error.code,
-              'code',
-              'workflow_migration_drift',
-            ),
-          ),
-        );
+        expect(store!.schemaVersion, 7);
+        expect((await store!.verifyIntegrity()).ok, isTrue);
       },
     );
+
+    test('a foreign schema_migrations row for version 7 with a different '
+        'digest is rejected, never silently accepted', () async {
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+      await store!.close();
+      store = null;
+
+      final raw = sqlite3.sqlite3.open(databaseFile.path);
+      raw.execute(
+        "UPDATE schema_migrations SET sha256 = "
+        "'0000000000000000000000000000000000000000000000000000000000000000' "
+        'WHERE version = 7',
+      );
+      raw.dispose();
+
+      await expectLater(
+        DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        ),
+        throwsA(
+          isA<WorkflowStorageException>().having(
+            (error) => error.code,
+            'code',
+            'workflow_migration_drift',
+          ),
+        ),
+      );
+    });
 
     test(
       'a database with migration 007 objects already present but no '
@@ -638,116 +632,114 @@ void main() {
       },
     );
 
-    test('managed project process rows persist through insert/update/list',
-        () async {
-      store = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      await store!.insertManagedProjectProcess(
-        id: 'process-1',
-        projectId: 'project-1',
-        lifecycle: ManagedProcessLifecycle.persistUntilStopped,
-        commandSha256: Sha256.text('npm run dev'),
-        request: <String, dynamic>{'executable': 'npm'},
-        launchProfileId: 'profile-1',
-        kind: ProjectLaunchKind.web,
-        pid: 4242,
-        processIdentity: 'linux:4242:123',
-        port: 5173,
-      );
-
-      final fetched = await store!.getManagedProjectProcess('process-1');
-      expect(fetched, isNotNull);
-      expect(fetched!.projectId, 'project-1');
-      expect(fetched.state, ProjectRuntimeState.running);
-      expect(fetched.lifecycle, ManagedProcessLifecycle.persistUntilStopped);
-      expect(fetched.pid, 4242);
-      expect(fetched.processIdentity, 'linux:4242:123');
-      expect(fetched.kind, ProjectLaunchKind.web);
-      expect(fetched.port, 5173);
-
-      final listed = await store!.listManagedProjectProcesses(
-        projectId: 'project-1',
-        states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
-      );
-      expect(listed, hasLength(1));
-      expect(listed.first.id, 'process-1');
-
-      await store!.updateManagedProjectProcessState(
-        id: 'process-1',
-        state: ProjectRuntimeState.stopped,
-        exitCode: 0,
-        completedAt: DateTime.utc(2026, 8, 26),
-      );
-      final stopped = await store!.getManagedProjectProcess('process-1');
-      expect(stopped!.state, ProjectRuntimeState.stopped);
-      expect(stopped.exitCode, 0);
-      expect(stopped.running, isFalse);
-
-      final stillRunning = await store!.listManagedProjectProcesses(
-        projectId: 'project-1',
-        states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
-      );
-      expect(stillRunning, isEmpty);
-    });
-
     test(
-      'launch profiles upsert by (project, identity) and preferred is '
-      'exclusive per project',
+      'managed project process rows persist through insert/update/list',
       () async {
         store = await DurableWorkflowStore.open(
           databaseFile: databaseFile,
           migrationBackupDirectory: backupDirectory,
         );
-
-        final dev = await store!.upsertProjectLaunchProfile(
+        await store!.insertManagedProjectProcess(
+          id: 'process-1',
           projectId: 'project-1',
+          lifecycle: ManagedProcessLifecycle.persistUntilStopped,
+          commandSha256: Sha256.text('npm run dev'),
+          request: <String, dynamic>{'executable': 'npm'},
+          launchProfileId: 'profile-1',
           kind: ProjectLaunchKind.web,
-          label: 'Node application',
-          executable: 'npm',
-          arguments: const <String>['run', 'dev'],
-          workingDirectory: '/tmp/project-1',
-          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
-          source: ProjectLaunchProfileSource.detected,
-          preferred: true,
-        );
-        expect(dev.preferred, isTrue);
-
-        // Re-detecting the exact same command must refresh, not duplicate.
-        final devAgain = await store!.upsertProjectLaunchProfile(
-          projectId: 'project-1',
-          kind: ProjectLaunchKind.web,
-          label: 'Node application',
-          executable: 'npm',
-          arguments: const <String>['run', 'dev'],
-          workingDirectory: '/tmp/project-1',
-          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
-          source: ProjectLaunchProfileSource.learned,
-          preferred: true,
-        );
-        expect(devAgain.id, dev.id);
-
-        final start = await store!.upsertProjectLaunchProfile(
-          projectId: 'project-1',
-          kind: ProjectLaunchKind.web,
-          label: 'Node application (start)',
-          executable: 'npm',
-          arguments: const <String>['start'],
-          workingDirectory: '/tmp/project-1',
-          openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
-          source: ProjectLaunchProfileSource.detected,
-          preferred: true,
+          pid: 4242,
+          processIdentity: 'linux:4242:123',
+          port: 5173,
         );
 
-        final profiles = await store!.listProjectLaunchProfiles('project-1');
-        expect(profiles, hasLength(2));
-        final preferredProfiles =
-            profiles.where((profile) => profile.preferred);
-        expect(preferredProfiles, hasLength(1));
-        expect(preferredProfiles.single.id, start.id);
+        final fetched = await store!.getManagedProjectProcess('process-1');
+        expect(fetched, isNotNull);
+        expect(fetched!.projectId, 'project-1');
+        expect(fetched.state, ProjectRuntimeState.running);
+        expect(fetched.lifecycle, ManagedProcessLifecycle.persistUntilStopped);
+        expect(fetched.pid, 4242);
+        expect(fetched.processIdentity, 'linux:4242:123');
+        expect(fetched.kind, ProjectLaunchKind.web);
+        expect(fetched.port, 5173);
+
+        final listed = await store!.listManagedProjectProcesses(
+          projectId: 'project-1',
+          states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
+        );
+        expect(listed, hasLength(1));
+        expect(listed.first.id, 'process-1');
+
+        await store!.updateManagedProjectProcessState(
+          id: 'process-1',
+          state: ProjectRuntimeState.stopped,
+          exitCode: 0,
+          completedAt: DateTime.utc(2026, 8, 26),
+        );
+        final stopped = await store!.getManagedProjectProcess('process-1');
+        expect(stopped!.state, ProjectRuntimeState.stopped);
+        expect(stopped.exitCode, 0);
+        expect(stopped.running, isFalse);
+
+        final stillRunning = await store!.listManagedProjectProcesses(
+          projectId: 'project-1',
+          states: const <ProjectRuntimeState>{ProjectRuntimeState.running},
+        );
+        expect(stillRunning, isEmpty);
       },
     );
+
+    test('launch profiles upsert by (project, identity) and preferred is '
+        'exclusive per project', () async {
+      store = await DurableWorkflowStore.open(
+        databaseFile: databaseFile,
+        migrationBackupDirectory: backupDirectory,
+      );
+
+      final dev = await store!.upsertProjectLaunchProfile(
+        projectId: 'project-1',
+        kind: ProjectLaunchKind.web,
+        label: 'Node application',
+        executable: 'npm',
+        arguments: const <String>['run', 'dev'],
+        workingDirectory: '/tmp/project-1',
+        openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+        source: ProjectLaunchProfileSource.detected,
+        preferred: true,
+      );
+      expect(dev.preferred, isTrue);
+
+      // Re-detecting the exact same command must refresh, not duplicate.
+      final devAgain = await store!.upsertProjectLaunchProfile(
+        projectId: 'project-1',
+        kind: ProjectLaunchKind.web,
+        label: 'Node application',
+        executable: 'npm',
+        arguments: const <String>['run', 'dev'],
+        workingDirectory: '/tmp/project-1',
+        openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+        source: ProjectLaunchProfileSource.learned,
+        preferred: true,
+      );
+      expect(devAgain.id, dev.id);
+
+      final start = await store!.upsertProjectLaunchProfile(
+        projectId: 'project-1',
+        kind: ProjectLaunchKind.web,
+        label: 'Node application (start)',
+        executable: 'npm',
+        arguments: const <String>['start'],
+        workingDirectory: '/tmp/project-1',
+        openBehavior: ProjectLaunchOpenBehavior.openWebStudio,
+        source: ProjectLaunchProfileSource.detected,
+        preferred: true,
+      );
+
+      final profiles = await store!.listProjectLaunchProfiles('project-1');
+      expect(profiles, hasLength(2));
+      final preferredProfiles = profiles.where((profile) => profile.preferred);
+      expect(preferredProfiles, hasLength(1));
+      expect(preferredProfiles.single.id, start.id);
+    });
   });
 }
 

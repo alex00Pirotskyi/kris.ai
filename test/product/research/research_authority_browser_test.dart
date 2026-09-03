@@ -9,47 +9,55 @@ import 'package:kristin_local_agent/product/research/research_browser_adapter.da
 import 'package:kristin_local_agent/product/research/research_runtime.dart';
 
 void main() {
-  test('research authority migrates, backs up, and detects corruption',
-      () async {
-    final root = await Directory.systemTemp.createTemp('p4-authority-');
-    final backup = Directory('${root.path}-backup');
-    addTearDown(() async {
-      if (await root.exists()) await root.delete(recursive: true);
-      if (await backup.exists()) await backup.delete(recursive: true);
-    });
-    final store = P4JsonResearchAuthorityStore(root);
-    await P4ResearchAuthorityMigrator.initial().migrate(store);
-    expect(await store.schemaVersion(), p4ResearchAuthorityVersion);
-    await store.put('web_sources', 'source-1', <String, Object?>{
-      'canonicalUrl': 'https://example.com/source',
-      'contentHash': 'a' * 64,
-    });
-    expect(
-        (await store.get('web_sources', 'source-1'))?['entity'], 'web_sources');
-    final receipt = await p4BackupAuthority(store, backup);
-    expect(receipt.files, greaterThanOrEqualTo(2));
-    expect(receipt.manifestSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
+  test(
+    'research authority migrates, backs up, and detects corruption',
+    () async {
+      final root = await Directory.systemTemp.createTemp('p4-authority-');
+      final backup = Directory('${root.path}-backup');
+      addTearDown(() async {
+        if (await root.exists()) await root.delete(recursive: true);
+        if (await backup.exists()) await backup.delete(recursive: true);
+      });
+      final store = P4JsonResearchAuthorityStore(root);
+      await P4ResearchAuthorityMigrator.initial().migrate(store);
+      expect(await store.schemaVersion(), p4ResearchAuthorityVersion);
+      await store.put('web_sources', 'source-1', <String, Object?>{
+        'canonicalUrl': 'https://example.com/source',
+        'contentHash': 'a' * 64,
+      });
+      expect(
+        (await store.get('web_sources', 'source-1'))?['entity'],
+        'web_sources',
+      );
+      final receipt = await p4BackupAuthority(store, backup);
+      expect(receipt.files, greaterThanOrEqualTo(2));
+      expect(receipt.manifestSha256, matches(RegExp(r'^[0-9a-f]{64}$')));
 
-    final record = File(
-      '${root.path}${Platform.pathSeparator}web_sources'
-      '${Platform.pathSeparator}source-1.json',
-    );
-    await record.writeAsString('{bad-json', flush: true);
-    await expectLater(
-        store.verifyIntegrity(), throwsA(isA<P4ResearchException>()));
-  });
+      final record = File(
+        '${root.path}${Platform.pathSeparator}web_sources'
+        '${Platform.pathSeparator}source-1.json',
+      );
+      await record.writeAsString('{bad-json', flush: true);
+      await expectLater(
+        store.verifyIntegrity(),
+        throwsA(isA<P4ResearchException>()),
+      );
+    },
+  );
 
-  test('rendered fetch distinguishes browser evidence and always closes page',
-      () async {
-    final backend = _RenderedBackend(_observation());
-    final result = await P4RenderedResearchFetcher(backend).fetch(
-      Uri.parse('https://example.com/rendered'),
-    );
-    expect(result.rendered, isTrue);
-    expect(result.finalUrl.toString(), 'https://example.com/rendered');
-    expect(result.dom, contains('<main>Rendered</main>'));
-    expect(backend.closeCalls, 1);
-  });
+  test(
+    'rendered fetch distinguishes browser evidence and always closes page',
+    () async {
+      final backend = _RenderedBackend(_observation());
+      final result = await P4RenderedResearchFetcher(
+        backend,
+      ).fetch(Uri.parse('https://example.com/rendered'));
+      expect(result.rendered, isTrue);
+      expect(result.finalUrl.toString(), 'https://example.com/rendered');
+      expect(result.dom, contains('<main>Rendered</main>'));
+      expect(backend.closeCalls, 1);
+    },
+  );
 
   test('dataset join and version diff preserve deterministic lineage', () {
     final join = P4DatasetJoiner.leftJoin(

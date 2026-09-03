@@ -29,11 +29,7 @@ class ModelRegistryValidationException implements Exception {
 
 enum ModelSupportStatus { evaluationOnly, approved }
 
-enum ModelDataBoundary {
-  localOnly,
-  customerManagedEndpoint,
-  thirdPartyService,
-}
+enum ModelDataBoundary { localOnly, customerManagedEndpoint, thirdPartyService }
 
 enum ModelEvidenceLevel { unknown, declared, measured }
 
@@ -43,34 +39,33 @@ enum ModelResolutionDisposition { registeredIdentity, evaluationOnly }
 
 extension ModelSupportStatusWireName on ModelSupportStatus {
   String get wireName => switch (this) {
-        ModelSupportStatus.evaluationOnly => 'evaluation_only',
-        ModelSupportStatus.approved => 'approved',
-      };
+    ModelSupportStatus.evaluationOnly => 'evaluation_only',
+    ModelSupportStatus.approved => 'approved',
+  };
 }
 
 extension ModelDataBoundaryWireName on ModelDataBoundary {
   String get wireName => switch (this) {
-        ModelDataBoundary.localOnly => 'local_only',
-        ModelDataBoundary.customerManagedEndpoint =>
-          'customer_managed_endpoint',
-        ModelDataBoundary.thirdPartyService => 'third_party_service',
-      };
+    ModelDataBoundary.localOnly => 'local_only',
+    ModelDataBoundary.customerManagedEndpoint => 'customer_managed_endpoint',
+    ModelDataBoundary.thirdPartyService => 'third_party_service',
+  };
 }
 
 extension ModelEvidenceLevelWireName on ModelEvidenceLevel {
   String get wireName => switch (this) {
-        ModelEvidenceLevel.unknown => 'unknown',
-        ModelEvidenceLevel.declared => 'declared',
-        ModelEvidenceLevel.measured => 'measured',
-      };
+    ModelEvidenceLevel.unknown => 'unknown',
+    ModelEvidenceLevel.declared => 'declared',
+    ModelEvidenceLevel.measured => 'measured',
+  };
 }
 
 extension ModelCostKindWireName on ModelCostKind {
   String get wireName => switch (this) {
-        ModelCostKind.unknown => 'unknown',
-        ModelCostKind.noDirectCharge => 'no_direct_charge',
-        ModelCostKind.metered => 'metered',
-      };
+    ModelCostKind.unknown => 'unknown',
+    ModelCostKind.noDirectCharge => 'no_direct_charge',
+    ModelCostKind.metered => 'metered',
+  };
 }
 
 ModelSupportStatus _parseSupportStatus(Object? raw, String path) {
@@ -78,8 +73,8 @@ ModelSupportStatus _parseSupportStatus(Object? raw, String path) {
     'evaluation_only' => ModelSupportStatus.evaluationOnly,
     'approved' => ModelSupportStatus.approved,
     _ => throw ModelRegistryValidationException(
-        '$path must be evaluation_only or approved',
-      ),
+      '$path must be evaluation_only or approved',
+    ),
   };
 }
 
@@ -89,8 +84,8 @@ ModelDataBoundary _parseDataBoundary(Object? raw, String path) {
     'customer_managed_endpoint' => ModelDataBoundary.customerManagedEndpoint,
     'third_party_service' => ModelDataBoundary.thirdPartyService,
     _ => throw ModelRegistryValidationException(
-        '$path has an unsupported data boundary',
-      ),
+      '$path has an unsupported data boundary',
+    ),
   };
 }
 
@@ -100,8 +95,8 @@ ModelEvidenceLevel _parseEvidenceLevel(Object? raw, String path) {
     'declared' => ModelEvidenceLevel.declared,
     'measured' => ModelEvidenceLevel.measured,
     _ => throw ModelRegistryValidationException(
-        '$path has an unsupported evidence level',
-      ),
+      '$path has an unsupported evidence level',
+    ),
   };
 }
 
@@ -111,8 +106,8 @@ ModelCostKind _parseCostKind(Object? raw, String path) {
     'no_direct_charge' => ModelCostKind.noDirectCharge,
     'metered' => ModelCostKind.metered,
     _ => throw ModelRegistryValidationException(
-        '$path has an unsupported cost kind',
-      ),
+      '$path has an unsupported cost kind',
+    ),
   };
 }
 
@@ -130,11 +125,7 @@ List<Object?> _objectList(Object? raw, String path) {
   return List<Object?>.from(raw);
 }
 
-String _requiredString(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+String _requiredString(Map<String, Object?> json, String key, String path) {
   final value = json[key];
   if (value is! String || value.trim().isEmpty) {
     throw ModelRegistryValidationException('$path.$key must be non-empty');
@@ -142,11 +133,7 @@ String _requiredString(
   return value;
 }
 
-String? _optionalString(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+String? _optionalString(Map<String, Object?> json, String key, String path) {
   final value = json[key];
   if (value == null) {
     return null;
@@ -203,19 +190,17 @@ void _rejectUnknownKeys(
   }
 }
 
-List<String> _stringList(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
-  return _objectList(json[key] ?? const <Object?>[], '$path.$key').map((value) {
-    if (value is! String) {
-      throw ModelRegistryValidationException(
-        '$path.$key must contain only strings',
-      );
-    }
-    return value;
-  }).toList(growable: false);
+List<String> _stringList(Map<String, Object?> json, String key, String path) {
+  return _objectList(json[key] ?? const <Object?>[], '$path.$key')
+      .map((value) {
+        if (value is! String) {
+          throw ModelRegistryValidationException(
+            '$path.$key must contain only strings',
+          );
+        }
+        return value;
+      })
+      .toList(growable: false);
 }
 
 List<String> _canonicalIds(
@@ -307,7 +292,8 @@ Object? _canonicalizeJson(Object? value, String path) {
   if (value is num) {
     if (!value.isFinite) {
       throw ModelRegistryValidationException(
-          '$path contains non-finite number');
+        '$path contains non-finite number',
+      );
     }
     return value;
   }
@@ -328,8 +314,7 @@ Object? _canonicalizeJson(Object? value, String path) {
         );
       }
       return key;
-    }).toList()
-      ..sort();
+    }).toList()..sort();
     final result = SplayTreeMap<String, Object?>();
     for (final key in keys) {
       result[key] = _canonicalizeJson(value[key], '$path.$key');
@@ -444,17 +429,20 @@ String _sha256Digest(List<int> input) {
     final w = List<int>.filled(64, 0);
     for (var index = 0; index < 16; index++) {
       final base = offset + index * 4;
-      w[index] = ((bytes[base] << 24) |
+      w[index] =
+          ((bytes[base] << 24) |
               (bytes[base + 1] << 16) |
               (bytes[base + 2] << 8) |
               bytes[base + 3]) &
           mask;
     }
     for (var index = 16; index < 64; index++) {
-      final s0 = _rotr32(w[index - 15], 7) ^
+      final s0 =
+          _rotr32(w[index - 15], 7) ^
           _rotr32(w[index - 15], 18) ^
           (w[index - 15] >> 3);
-      final s1 = _rotr32(w[index - 2], 17) ^
+      final s1 =
+          _rotr32(w[index - 2], 17) ^
           _rotr32(w[index - 2], 19) ^
           (w[index - 2] >> 10);
       w[index] = (w[index - 16] + s0 + w[index - 7] + s1) & mask;
@@ -514,9 +502,7 @@ DateTime _parseUtcTimestamp(String raw, String path) {
     );
   }
   if (!value.isUtc) {
-    throw ModelRegistryValidationException(
-      '$path must include a UTC offset',
-    );
+    throw ModelRegistryValidationException('$path must include a UTC offset');
   }
   return value.toUtc();
 }
@@ -581,23 +567,19 @@ class ModelLimits {
   }
 
   factory ModelLimits.unknown() => ModelLimits(
-        evidenceLevel: ModelEvidenceLevel.unknown,
-        supportsStreaming: false,
-      );
+    evidenceLevel: ModelEvidenceLevel.unknown,
+    supportsStreaming: false,
+  );
 
   factory ModelLimits.fromJson(Map<String, Object?> json) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'evidenceLevel',
-        'contextWindowTokens',
-        'maxOutputTokens',
-        'maxConcurrentRequests',
-        'maxToolCallsPerTurn',
-        'supportsStreaming',
-      },
-      'limits',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'evidenceLevel',
+      'contextWindowTokens',
+      'maxOutputTokens',
+      'maxConcurrentRequests',
+      'maxToolCallsPerTurn',
+      'supportsStreaming',
+    }, 'limits');
     return ModelLimits(
       evidenceLevel: _parseEvidenceLevel(
         json['evidenceLevel'],
@@ -605,8 +587,11 @@ class ModelLimits {
       ),
       contextWindowTokens: _optionalInt(json, 'contextWindowTokens', 'limits'),
       maxOutputTokens: _optionalInt(json, 'maxOutputTokens', 'limits'),
-      maxConcurrentRequests:
-          _optionalInt(json, 'maxConcurrentRequests', 'limits'),
+      maxConcurrentRequests: _optionalInt(
+        json,
+        'maxConcurrentRequests',
+        'limits',
+      ),
       maxToolCallsPerTurn: _optionalInt(json, 'maxToolCallsPerTurn', 'limits'),
       supportsStreaming: _requiredBool(json, 'supportsStreaming', 'limits'),
     );
@@ -662,13 +647,13 @@ class ModelLimits {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'evidenceLevel': evidenceLevel.wireName,
-        'contextWindowTokens': contextWindowTokens,
-        'maxOutputTokens': maxOutputTokens,
-        'maxConcurrentRequests': maxConcurrentRequests,
-        'maxToolCallsPerTurn': maxToolCallsPerTurn,
-        'supportsStreaming': supportsStreaming,
-      };
+    'evidenceLevel': evidenceLevel.wireName,
+    'contextWindowTokens': contextWindowTokens,
+    'maxOutputTokens': maxOutputTokens,
+    'maxConcurrentRequests': maxConcurrentRequests,
+    'maxToolCallsPerTurn': maxToolCallsPerTurn,
+    'supportsStreaming': supportsStreaming,
+  };
 }
 
 class ModelToolProfile {
@@ -679,45 +664,53 @@ class ModelToolProfile {
     required this.supportsParallelToolCalls,
     Iterable<String> supportedToolClasses = const <String>[],
   }) : supportedToolClasses = _canonicalIds(
-          supportedToolClasses,
-          path: 'toolProfile.supportedToolClasses',
-          pattern: _stableIdPattern,
-        ) {
+         supportedToolClasses,
+         path: 'toolProfile.supportedToolClasses',
+         pattern: _stableIdPattern,
+       ) {
     _validate();
   }
 
   factory ModelToolProfile.unknown() => ModelToolProfile(
-        evidenceLevel: ModelEvidenceLevel.unknown,
-        supportsToolCalling: false,
-        supportsStructuredOutput: false,
-        supportsParallelToolCalls: false,
-      );
+    evidenceLevel: ModelEvidenceLevel.unknown,
+    supportsToolCalling: false,
+    supportsStructuredOutput: false,
+    supportsParallelToolCalls: false,
+  );
 
   factory ModelToolProfile.fromJson(Map<String, Object?> json) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'evidenceLevel',
-        'supportsToolCalling',
-        'supportsStructuredOutput',
-        'supportsParallelToolCalls',
-        'supportedToolClasses',
-      },
-      'toolProfile',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'evidenceLevel',
+      'supportsToolCalling',
+      'supportsStructuredOutput',
+      'supportsParallelToolCalls',
+      'supportedToolClasses',
+    }, 'toolProfile');
     return ModelToolProfile(
       evidenceLevel: _parseEvidenceLevel(
         json['evidenceLevel'],
         'toolProfile.evidenceLevel',
       ),
-      supportsToolCalling:
-          _requiredBool(json, 'supportsToolCalling', 'toolProfile'),
-      supportsStructuredOutput:
-          _requiredBool(json, 'supportsStructuredOutput', 'toolProfile'),
-      supportsParallelToolCalls:
-          _requiredBool(json, 'supportsParallelToolCalls', 'toolProfile'),
-      supportedToolClasses:
-          _stringList(json, 'supportedToolClasses', 'toolProfile'),
+      supportsToolCalling: _requiredBool(
+        json,
+        'supportsToolCalling',
+        'toolProfile',
+      ),
+      supportsStructuredOutput: _requiredBool(
+        json,
+        'supportsStructuredOutput',
+        'toolProfile',
+      ),
+      supportsParallelToolCalls: _requiredBool(
+        json,
+        'supportsParallelToolCalls',
+        'toolProfile',
+      ),
+      supportedToolClasses: _stringList(
+        json,
+        'supportedToolClasses',
+        'toolProfile',
+      ),
     );
   }
 
@@ -749,12 +742,12 @@ class ModelToolProfile {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'evidenceLevel': evidenceLevel.wireName,
-        'supportsToolCalling': supportsToolCalling,
-        'supportsStructuredOutput': supportsStructuredOutput,
-        'supportsParallelToolCalls': supportsParallelToolCalls,
-        'supportedToolClasses': supportedToolClasses,
-      };
+    'evidenceLevel': evidenceLevel.wireName,
+    'supportsToolCalling': supportsToolCalling,
+    'supportsStructuredOutput': supportsStructuredOutput,
+    'supportsParallelToolCalls': supportsParallelToolCalls,
+    'supportedToolClasses': supportedToolClasses,
+  };
 }
 
 class ModelCostProfile {
@@ -769,10 +762,8 @@ class ModelCostProfile {
     _validate();
   }
 
-  factory ModelCostProfile.unknown() => ModelCostProfile(
-        kind: ModelCostKind.unknown,
-        estimated: false,
-      );
+  factory ModelCostProfile.unknown() =>
+      ModelCostProfile(kind: ModelCostKind.unknown, estimated: false);
 
   factory ModelCostProfile.noDirectCharge({bool estimated = false}) =>
       ModelCostProfile(
@@ -786,36 +777,37 @@ class ModelCostProfile {
     double? outputPerMillionTokens,
     double? perRequest,
     bool estimated = false,
-  }) =>
-      ModelCostProfile(
-        kind: ModelCostKind.metered,
-        currencyCode: currencyCode,
-        inputPerMillionTokens: inputPerMillionTokens,
-        outputPerMillionTokens: outputPerMillionTokens,
-        perRequest: perRequest,
-        estimated: estimated,
-      );
+  }) => ModelCostProfile(
+    kind: ModelCostKind.metered,
+    currencyCode: currencyCode,
+    inputPerMillionTokens: inputPerMillionTokens,
+    outputPerMillionTokens: outputPerMillionTokens,
+    perRequest: perRequest,
+    estimated: estimated,
+  );
 
   factory ModelCostProfile.fromJson(Map<String, Object?> json) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'kind',
-        'currencyCode',
-        'inputPerMillionTokens',
-        'outputPerMillionTokens',
-        'perRequest',
-        'estimated',
-      },
-      'cost',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'kind',
+      'currencyCode',
+      'inputPerMillionTokens',
+      'outputPerMillionTokens',
+      'perRequest',
+      'estimated',
+    }, 'cost');
     return ModelCostProfile(
       kind: _parseCostKind(json['kind'], 'cost.kind'),
       currencyCode: _optionalString(json, 'currencyCode', 'cost'),
-      inputPerMillionTokens:
-          _optionalDouble(json, 'inputPerMillionTokens', 'cost'),
-      outputPerMillionTokens:
-          _optionalDouble(json, 'outputPerMillionTokens', 'cost'),
+      inputPerMillionTokens: _optionalDouble(
+        json,
+        'inputPerMillionTokens',
+        'cost',
+      ),
+      outputPerMillionTokens: _optionalDouble(
+        json,
+        'outputPerMillionTokens',
+        'cost',
+      ),
       perRequest: _optionalDouble(json, 'perRequest', 'cost'),
       estimated: _requiredBool(json, 'estimated', 'cost'),
     );
@@ -869,13 +861,13 @@ class ModelCostProfile {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'kind': kind.wireName,
-        'currencyCode': currencyCode,
-        'inputPerMillionTokens': inputPerMillionTokens,
-        'outputPerMillionTokens': outputPerMillionTokens,
-        'perRequest': perRequest,
-        'estimated': estimated,
-      };
+    'kind': kind.wireName,
+    'currencyCode': currencyCode,
+    'inputPerMillionTokens': inputPerMillionTokens,
+    'outputPerMillionTokens': outputPerMillionTokens,
+    'perRequest': perRequest,
+    'estimated': estimated,
+  };
 }
 
 /// Caller-supplied verification inputs for benchmark execution receipts.
@@ -890,10 +882,10 @@ final class ModelBenchmarkTrustContext {
   ModelBenchmarkTrustContext({
     required ProtectedKeyRegistryV2 trustedKeys,
     required Map<String, String> candidateTreesByCommit,
-  })  : _trustedKeys = trustedKeys,
-        _candidateTreesByCommit = UnmodifiableMapView<String, String>(
-          SplayTreeMap<String, String>.from(candidateTreesByCommit),
-        ) {
+  }) : _trustedKeys = trustedKeys,
+       _candidateTreesByCommit = UnmodifiableMapView<String, String>(
+         SplayTreeMap<String, String>.from(candidateTreesByCommit),
+       ) {
     for (final entry in _candidateTreesByCommit.entries) {
       _canonicalGitObjectId(entry.key, 'benchmarkTrust.candidateCommit');
       _canonicalGitObjectId(entry.value, 'benchmarkTrust.candidateTree');
@@ -991,29 +983,27 @@ class ModelBenchmarkEvidence {
   factory ModelBenchmarkEvidence._fromEvidencePayload({
     required Map<String, Object?> payload,
   }) {
-    final canonicalPayload =
-        _canonicalJson(payload, 'benchmark.evidence.payload');
-    final parsed =
-        (jsonDecode(canonicalPayload) as Map).cast<String, Object?>();
-    _rejectUnknownKeys(
-      parsed,
-      const <String>{
-        'schemaVersion',
-        'kind',
-        'candidateCommit',
-        'candidateTree',
-        'executionId',
-        'benchmarkId',
-        'taskClassId',
-        'modelDigest',
-        'score',
-        'scoreUnit',
-        'higherIsBetter',
-        'sampleCount',
-        'measuredAt',
-      },
+    final canonicalPayload = _canonicalJson(
+      payload,
       'benchmark.evidence.payload',
     );
+    final parsed = (jsonDecode(canonicalPayload) as Map)
+        .cast<String, Object?>();
+    _rejectUnknownKeys(parsed, const <String>{
+      'schemaVersion',
+      'kind',
+      'candidateCommit',
+      'candidateTree',
+      'executionId',
+      'benchmarkId',
+      'taskClassId',
+      'modelDigest',
+      'score',
+      'scoreUnit',
+      'higherIsBetter',
+      'sampleCount',
+      'measuredAt',
+    }, 'benchmark.evidence.payload');
     if (_requiredString(
           parsed,
           'schemaVersion',
@@ -1043,11 +1033,7 @@ class ModelBenchmarkEvidence {
     _validateStableId(benchmarkId, 'benchmark.benchmarkId');
     _validateStableId(taskClassId, 'benchmark.taskClassId');
     final modelDigest = _canonicalSha256(
-      _requiredString(
-        parsed,
-        'modelDigest',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'modelDigest', 'benchmark.evidence.payload'),
       'benchmark.modelDigest',
     );
     final score = _optionalDouble(
@@ -1081,27 +1067,15 @@ class ModelBenchmarkEvidence {
       );
     }
     final measuredAt = _parseUtcTimestamp(
-      _requiredString(
-        parsed,
-        'measuredAt',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'measuredAt', 'benchmark.evidence.payload'),
       'benchmark.measuredAt',
     );
     final candidateCommit = _canonicalGitObjectId(
-      _requiredString(
-        parsed,
-        'candidateCommit',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'candidateCommit', 'benchmark.evidence.payload'),
       'benchmark.candidateCommit',
     );
     final candidateTree = _canonicalGitObjectId(
-      _requiredString(
-        parsed,
-        'candidateTree',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'candidateTree', 'benchmark.evidence.payload'),
       'benchmark.candidateTree',
     );
     final executionId = _requiredString(
@@ -1138,38 +1112,26 @@ class ModelBenchmarkEvidence {
     Map<String, Object?> json, {
     ModelBenchmarkTrustContext? trustContext,
   }) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'benchmarkId',
-        'taskClassId',
-        'modelDigest',
-        'score',
-        'scoreUnit',
-        'higherIsBetter',
-        'sampleCount',
-        'measuredAt',
-        'executionId',
-        'evidence',
-      },
-      'benchmark',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'benchmarkId',
+      'taskClassId',
+      'modelDigest',
+      'score',
+      'scoreUnit',
+      'higherIsBetter',
+      'sampleCount',
+      'measuredAt',
+      'executionId',
+      'evidence',
+    }, 'benchmark');
     final evidence = _objectMap(json['evidence'], 'benchmark.evidence');
-    _rejectUnknownKeys(
-      evidence,
-      const <String>{
-        'locationKind',
-        'sha256',
-        'payload',
-        'authority',
-      },
-      'benchmark.evidence',
-    );
-    if (_requiredString(
-          evidence,
-          'locationKind',
-          'benchmark.evidence',
-        ) !=
+    _rejectUnknownKeys(evidence, const <String>{
+      'locationKind',
+      'sha256',
+      'payload',
+      'authority',
+    }, 'benchmark.evidence');
+    if (_requiredString(evidence, 'locationKind', 'benchmark.evidence') !=
         _benchmarkEvidenceLocationKind) {
       throw const ModelRegistryValidationException(
         'benchmark.evidence.locationKind must be embedded_content_addressed',
@@ -1179,10 +1141,13 @@ class ModelBenchmarkEvidence {
       _requiredString(evidence, 'sha256', 'benchmark.evidence'),
       'benchmark.evidence.sha256',
     );
-    final payload =
-        _objectMap(evidence['payload'], 'benchmark.evidence.payload');
-    final verified =
-        ModelBenchmarkEvidence._fromEvidencePayload(payload: payload);
+    final payload = _objectMap(
+      evidence['payload'],
+      'benchmark.evidence.payload',
+    );
+    final verified = ModelBenchmarkEvidence._fromEvidencePayload(
+      payload: payload,
+    );
     if (verified.evidenceSha256 != expectedSha) {
       throw ModelRegistryValidationException(
         'benchmark evidence digest mismatch: expected $expectedSha, '
@@ -1196,7 +1161,8 @@ class ModelBenchmarkEvidence {
     );
     final score = _optionalDouble(json, 'score', 'benchmark');
     final sampleCount = _optionalInt(json, 'sampleCount', 'benchmark');
-    final topLevelMatches = _requiredString(json, 'benchmarkId', 'benchmark') ==
+    final topLevelMatches =
+        _requiredString(json, 'benchmarkId', 'benchmark') ==
             verified.benchmarkId &&
         _requiredString(json, 'taskClassId', 'benchmark') ==
             verified.taskClassId &&
@@ -1225,16 +1191,12 @@ class ModelBenchmarkEvidence {
         rawAuthority,
         'benchmark.evidence.authority',
       );
-      _rejectUnknownKeys(
-        authority,
-        const <String>{'kind', 'keyId', 'signature'},
-        'benchmark.evidence.authority',
-      );
-      if (_requiredString(
-            authority,
-            'kind',
-            'benchmark.evidence.authority',
-          ) !=
+      _rejectUnknownKeys(authority, const <String>{
+        'kind',
+        'keyId',
+        'signature',
+      }, 'benchmark.evidence.authority');
+      if (_requiredString(authority, 'kind', 'benchmark.evidence.authority') !=
           _benchmarkEvidenceAuthorityKind) {
         throw const ModelRegistryValidationException(
           'benchmark evidence authority kind must be ed25519_protected_key',
@@ -1245,10 +1207,7 @@ class ModelBenchmarkEvidence {
         'keyId',
         'benchmark.evidence.authority',
       );
-      _validateStableId(
-        authorityKeyId,
-        'benchmark.evidence.authority.keyId',
-      );
+      _validateStableId(authorityKeyId, 'benchmark.evidence.authority.keyId');
       authoritySignatureHex = _requiredString(
         authority,
         'signature',
@@ -1315,27 +1274,27 @@ class ModelBenchmarkEvidence {
   String get evidenceLocationKind => _benchmarkEvidenceLocationKind;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'benchmarkId': benchmarkId,
-        'taskClassId': taskClassId,
-        'modelDigest': modelDigest,
-        'score': score,
-        'scoreUnit': scoreUnit,
-        'higherIsBetter': higherIsBetter,
-        'sampleCount': sampleCount,
-        'measuredAt': measuredAt.toIso8601String(),
-        'executionId': executionId,
-        'evidence': <String, Object?>{
-          'locationKind': _benchmarkEvidenceLocationKind,
-          'sha256': evidenceSha256,
-          'payload': jsonDecode(evidencePayloadJson),
-          if (authorityKeyId != null && authoritySignatureHex != null)
-            'authority': <String, Object?>{
-              'kind': _benchmarkEvidenceAuthorityKind,
-              'keyId': authorityKeyId,
-              'signature': authoritySignatureHex,
-            },
+    'benchmarkId': benchmarkId,
+    'taskClassId': taskClassId,
+    'modelDigest': modelDigest,
+    'score': score,
+    'scoreUnit': scoreUnit,
+    'higherIsBetter': higherIsBetter,
+    'sampleCount': sampleCount,
+    'measuredAt': measuredAt.toIso8601String(),
+    'executionId': executionId,
+    'evidence': <String, Object?>{
+      'locationKind': _benchmarkEvidenceLocationKind,
+      'sha256': evidenceSha256,
+      'payload': jsonDecode(evidencePayloadJson),
+      if (authorityKeyId != null && authoritySignatureHex != null)
+        'authority': <String, Object?>{
+          'kind': _benchmarkEvidenceAuthorityKind,
+          'keyId': authorityKeyId,
+          'signature': authoritySignatureHex,
         },
-      };
+    },
+  };
 }
 
 class CredentialReferenceRequirement {
@@ -1354,14 +1313,13 @@ class CredentialReferenceRequirement {
     }
   }
 
-  factory CredentialReferenceRequirement.fromJson(
-    Map<String, Object?> json,
-  ) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{'referenceId', 'resolver', 'required', 'purpose'},
-      'credential',
-    );
+  factory CredentialReferenceRequirement.fromJson(Map<String, Object?> json) {
+    _rejectUnknownKeys(json, const <String>{
+      'referenceId',
+      'resolver',
+      'required',
+      'purpose',
+    }, 'credential');
     return CredentialReferenceRequirement(
       referenceId: _requiredString(json, 'referenceId', 'credential'),
       resolver: _requiredString(json, 'resolver', 'credential'),
@@ -1376,11 +1334,11 @@ class CredentialReferenceRequirement {
   final String purpose;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'referenceId': referenceId,
-        'resolver': resolver,
-        'required': required,
-        'purpose': purpose,
-      };
+    'referenceId': referenceId,
+    'resolver': resolver,
+    'required': required,
+    'purpose': purpose,
+  };
 }
 
 class ModelProviderDescriptor {
@@ -1391,12 +1349,11 @@ class ModelProviderDescriptor {
     Iterable<CredentialReferenceRequirement> credentialRequirements =
         const <CredentialReferenceRequirement>[],
   }) : credentialRequirements =
-            List<CredentialReferenceRequirement>.unmodifiable(
-          credentialRequirements.toList()
-            ..sort(
-              (left, right) => left.referenceId.compareTo(right.referenceId),
-            ),
-        ) {
+           List<CredentialReferenceRequirement>.unmodifiable(
+             credentialRequirements.toList()..sort(
+               (left, right) => left.referenceId.compareTo(right.referenceId),
+             ),
+           ) {
     if (providerId != providerId.trim() ||
         !_providerIdPattern.hasMatch(providerId)) {
       throw ModelRegistryValidationException(
@@ -1420,29 +1377,28 @@ class ModelProviderDescriptor {
   }
 
   factory ModelProviderDescriptor.fromJson(Map<String, Object?> json) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'providerId',
-        'displayName',
-        'dataBoundary',
-        'credentialRequirements',
-      },
-      'provider',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'providerId',
+      'displayName',
+      'dataBoundary',
+      'credentialRequirements',
+    }, 'provider');
     return ModelProviderDescriptor(
       providerId: _requiredString(json, 'providerId', 'provider'),
       displayName: _requiredString(json, 'displayName', 'provider'),
-      dataBoundary:
-          _parseDataBoundary(json['dataBoundary'], 'provider.dataBoundary'),
-      credentialRequirements: _objectList(
-        json['credentialRequirements'] ?? const <Object?>[],
-        'provider.credentialRequirements',
-      ).map(
-        (raw) => CredentialReferenceRequirement.fromJson(
-          _objectMap(raw, 'provider.credentialRequirements[]'),
-        ),
+      dataBoundary: _parseDataBoundary(
+        json['dataBoundary'],
+        'provider.dataBoundary',
       ),
+      credentialRequirements:
+          _objectList(
+            json['credentialRequirements'] ?? const <Object?>[],
+            'provider.credentialRequirements',
+          ).map(
+            (raw) => CredentialReferenceRequirement.fromJson(
+              _objectMap(raw, 'provider.credentialRequirements[]'),
+            ),
+          ),
     );
   }
 
@@ -1452,13 +1408,13 @@ class ModelProviderDescriptor {
   final List<CredentialReferenceRequirement> credentialRequirements;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'providerId': providerId,
-        'displayName': displayName,
-        'dataBoundary': dataBoundary.wireName,
-        'credentialRequirements': credentialRequirements
-            .map((requirement) => requirement.toJson())
-            .toList(growable: false),
-      };
+    'providerId': providerId,
+    'displayName': displayName,
+    'dataBoundary': dataBoundary.wireName,
+    'credentialRequirements': credentialRequirements
+        .map((requirement) => requirement.toJson())
+        .toList(growable: false),
+  };
 }
 
 class ModelDefinition {
@@ -1478,8 +1434,8 @@ class ModelDefinition {
     required List<String> approvedTaskClasses,
     required ModelSupportStatus supportStatus,
     required this.evaluationReasons,
-  })  : _approvedTaskClasses = approvedTaskClasses,
-        _supportStatus = supportStatus {
+  }) : _approvedTaskClasses = approvedTaskClasses,
+       _supportStatus = supportStatus {
     _validateIdentity();
   }
 
@@ -1581,10 +1537,12 @@ class ModelDefinition {
       }
     }
     if (canonicalBenchmarks.isNotEmpty) {
-      final candidateCommits =
-          canonicalBenchmarks.map((item) => item.candidateCommit).toSet();
-      final candidateTrees =
-          canonicalBenchmarks.map((item) => item.candidateTree).toSet();
+      final candidateCommits = canonicalBenchmarks
+          .map((item) => item.candidateCommit)
+          .toSet();
+      final candidateTrees = canonicalBenchmarks
+          .map((item) => item.candidateTree)
+          .toSet();
       if (candidateCommits.length != 1 || candidateTrees.length != 1) {
         blockers.add(
           'benchmark evidence must bind one exact candidate commit/tree',
@@ -1600,9 +1558,7 @@ class ModelDefinition {
     if (limits.isCompleteForApproval && toolProfile.isMeasured) {
       final maxToolCalls = limits.maxToolCallsPerTurn!;
       if (toolProfile.supportsToolCalling && maxToolCalls == 0) {
-        blockers.add(
-          'tool calling is enabled but the tool-call limit is zero',
-        );
+        blockers.add('tool calling is enabled but the tool-call limit is zero');
       }
       if (!toolProfile.supportsToolCalling && maxToolCalls != 0) {
         blockers.add(
@@ -1659,63 +1615,58 @@ class ModelDefinition {
   factory ModelDefinition.fromLegacyIdentity(
     ModelIdentity identity, {
     required ModelDataBoundary dataBoundary,
-  }) =>
-      ModelDefinition.evaluationOnly(
-        providerId: identity.providerId,
-        modelId: identity.name,
-        displayName: identity.name,
-        digest: _canonicalSha256OrNull(
-          identity.digest,
-          'discovered.digest',
-        ),
-        parameterSize: _nonBlankOrNull(identity.parameterSize),
-        quantization: _nonBlankOrNull(identity.quantization),
-        limits: ModelLimits.unknown(),
-        toolProfile: ModelToolProfile.unknown(),
-        dataBoundary: dataBoundary,
-        cost: ModelCostProfile.unknown(),
-        evaluationReasons: const <String>[
-          'discovered model is not present in the approved registry',
-          'limits, tool profile, cost, and benchmark evidence are unknown',
-        ],
-      );
+  }) => ModelDefinition.evaluationOnly(
+    providerId: identity.providerId,
+    modelId: identity.name,
+    displayName: identity.name,
+    digest: _canonicalSha256OrNull(identity.digest, 'discovered.digest'),
+    parameterSize: _nonBlankOrNull(identity.parameterSize),
+    quantization: _nonBlankOrNull(identity.quantization),
+    limits: ModelLimits.unknown(),
+    toolProfile: ModelToolProfile.unknown(),
+    dataBoundary: dataBoundary,
+    cost: ModelCostProfile.unknown(),
+    evaluationReasons: const <String>[
+      'discovered model is not present in the approved registry',
+      'limits, tool profile, cost, and benchmark evidence are unknown',
+    ],
+  );
 
   factory ModelDefinition.fromJson(
     Map<String, Object?> json, {
     ModelBenchmarkTrustContext? benchmarkTrust,
   }) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{
-        'providerId',
-        'modelId',
-        'displayName',
-        'digest',
-        'parameterSize',
-        'quantization',
-        'aliases',
-        'limits',
-        'toolProfile',
-        'dataBoundary',
-        'cost',
-        'benchmarks',
-        'approvedTaskClasses',
-        'supportStatus',
-        'evaluationReasons',
-      },
-      'model',
+    _rejectUnknownKeys(json, const <String>{
+      'providerId',
+      'modelId',
+      'displayName',
+      'digest',
+      'parameterSize',
+      'quantization',
+      'aliases',
+      'limits',
+      'toolProfile',
+      'dataBoundary',
+      'cost',
+      'benchmarks',
+      'approvedTaskClasses',
+      'supportStatus',
+      'evaluationReasons',
+    }, 'model');
+    final supportStatus = _parseSupportStatus(
+      json['supportStatus'],
+      'model.supportStatus',
     );
-    final supportStatus =
-        _parseSupportStatus(json['supportStatus'], 'model.supportStatus');
-    final benchmarks = _objectList(
-      json['benchmarks'] ?? const <Object?>[],
-      'model.benchmarks',
-    ).map(
-      (raw) => ModelBenchmarkEvidence.fromJson(
-        _objectMap(raw, 'model.benchmarks[]'),
-        trustContext: benchmarkTrust,
-      ),
-    );
+    final benchmarks =
+        _objectList(
+          json['benchmarks'] ?? const <Object?>[],
+          'model.benchmarks',
+        ).map(
+          (raw) => ModelBenchmarkEvidence.fromJson(
+            _objectMap(raw, 'model.benchmarks[]'),
+            trustContext: benchmarkTrust,
+          ),
+        );
     final common = (
       providerId: _requiredString(json, 'providerId', 'model'),
       modelId: _requiredString(json, 'modelId', 'model'),
@@ -1724,20 +1675,21 @@ class ModelDefinition {
       parameterSize: _optionalString(json, 'parameterSize', 'model'),
       quantization: _optionalString(json, 'quantization', 'model'),
       aliases: _stringList(json, 'aliases', 'model'),
-      limits: ModelLimits.fromJson(
-        _objectMap(json['limits'], 'model.limits'),
-      ),
+      limits: ModelLimits.fromJson(_objectMap(json['limits'], 'model.limits')),
       toolProfile: ModelToolProfile.fromJson(
         _objectMap(json['toolProfile'], 'model.toolProfile'),
       ),
-      dataBoundary:
-          _parseDataBoundary(json['dataBoundary'], 'model.dataBoundary'),
-      cost: ModelCostProfile.fromJson(
-        _objectMap(json['cost'], 'model.cost'),
+      dataBoundary: _parseDataBoundary(
+        json['dataBoundary'],
+        'model.dataBoundary',
       ),
+      cost: ModelCostProfile.fromJson(_objectMap(json['cost'], 'model.cost')),
     );
-    final approvedTaskClasses =
-        _stringList(json, 'approvedTaskClasses', 'model');
+    final approvedTaskClasses = _stringList(
+      json,
+      'approvedTaskClasses',
+      'model',
+    );
     final evaluationReasons = _stringList(json, 'evaluationReasons', 'model');
     if (supportStatus == ModelSupportStatus.evaluationOnly &&
         approvedTaskClasses.isNotEmpty) {
@@ -1753,35 +1705,35 @@ class ModelDefinition {
     }
     return switch (supportStatus) {
       ModelSupportStatus.evaluationOnly => ModelDefinition.evaluationOnly(
-          providerId: common.providerId,
-          modelId: common.modelId,
-          displayName: common.displayName,
-          digest: common.digest,
-          parameterSize: common.parameterSize,
-          quantization: common.quantization,
-          aliases: common.aliases,
-          limits: common.limits,
-          toolProfile: common.toolProfile,
-          dataBoundary: common.dataBoundary,
-          cost: common.cost,
-          benchmarks: benchmarks,
-          evaluationReasons: evaluationReasons,
-        ),
+        providerId: common.providerId,
+        modelId: common.modelId,
+        displayName: common.displayName,
+        digest: common.digest,
+        parameterSize: common.parameterSize,
+        quantization: common.quantization,
+        aliases: common.aliases,
+        limits: common.limits,
+        toolProfile: common.toolProfile,
+        dataBoundary: common.dataBoundary,
+        cost: common.cost,
+        benchmarks: benchmarks,
+        evaluationReasons: evaluationReasons,
+      ),
       ModelSupportStatus.approved => ModelDefinition.approved(
-          providerId: common.providerId,
-          modelId: common.modelId,
-          displayName: common.displayName,
-          digest: common.digest,
-          parameterSize: common.parameterSize,
-          quantization: common.quantization,
-          aliases: common.aliases,
-          limits: common.limits,
-          toolProfile: common.toolProfile,
-          dataBoundary: common.dataBoundary,
-          cost: common.cost,
-          benchmarks: benchmarks,
-          approvedTaskClasses: approvedTaskClasses,
-        ),
+        providerId: common.providerId,
+        modelId: common.modelId,
+        displayName: common.displayName,
+        digest: common.digest,
+        parameterSize: common.parameterSize,
+        quantization: common.quantization,
+        aliases: common.aliases,
+        limits: common.limits,
+        toolProfile: common.toolProfile,
+        dataBoundary: common.dataBoundary,
+        cost: common.cost,
+        benchmarks: benchmarks,
+        approvedTaskClasses: approvedTaskClasses,
+      ),
     };
   }
 
@@ -1890,18 +1842,18 @@ class ModelDefinition {
 
 class ModelRegistryMetadata {
   ModelRegistryMetadata._(ModelDefinition definition)
-      : providerId = definition.providerId,
-        modelId = definition.modelId,
-        displayName = definition.displayName,
-        digest = definition.digest,
-        parameterSize = definition.parameterSize,
-        quantization = definition.quantization,
-        aliases = definition.aliases,
-        limits = definition.limits,
-        toolProfile = definition.toolProfile,
-        dataBoundary = definition.dataBoundary,
-        cost = definition.cost,
-        benchmarks = definition.benchmarks;
+    : providerId = definition.providerId,
+      modelId = definition.modelId,
+      displayName = definition.displayName,
+      digest = definition.digest,
+      parameterSize = definition.parameterSize,
+      quantization = definition.quantization,
+      aliases = definition.aliases,
+      limits = definition.limits,
+      toolProfile = definition.toolProfile,
+      dataBoundary = definition.dataBoundary,
+      cost = definition.cost,
+      benchmarks = definition.benchmarks;
 
   final String providerId;
   final String modelId;
@@ -1919,19 +1871,19 @@ class ModelRegistryMetadata {
   String get registryKey => '$providerId::$modelId';
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'providerId': providerId,
-        'modelId': modelId,
-        'displayName': displayName,
-        'digest': digest,
-        'parameterSize': parameterSize,
-        'quantization': quantization,
-        'aliases': aliases,
-        'limits': limits.toJson(),
-        'toolProfile': toolProfile.toJson(),
-        'dataBoundary': dataBoundary.wireName,
-        'cost': cost.toJson(),
-        'benchmarks': benchmarks.map((item) => item.toJson()).toList(),
-      };
+    'providerId': providerId,
+    'modelId': modelId,
+    'displayName': displayName,
+    'digest': digest,
+    'parameterSize': parameterSize,
+    'quantization': quantization,
+    'aliases': aliases,
+    'limits': limits.toJson(),
+    'toolProfile': toolProfile.toJson(),
+    'dataBoundary': dataBoundary.wireName,
+    'cost': cost.toJson(),
+    'benchmarks': benchmarks.map((item) => item.toJson()).toList(),
+  };
 }
 
 class ResolvedModel {
@@ -2030,11 +1982,11 @@ class ModelDefinitionRegistry {
     Map<String, Object?> json, {
     ModelBenchmarkTrustContext? benchmarkTrust,
   }) {
-    _rejectUnknownKeys(
-      json,
-      const <String>{'schemaVersion', 'providers', 'models'},
-      'registry',
-    );
+    _rejectUnknownKeys(json, const <String>{
+      'schemaVersion',
+      'providers',
+      'models',
+    }, 'registry');
     if (json['schemaVersion'] != 2) {
       throw const ModelRegistryValidationException(
         'model registry schemaVersion must be 2',
@@ -2070,20 +2022,14 @@ class ModelDefinitionRegistry {
   ModelProviderDescriptor? provider(String providerId) =>
       _providers[providerId];
 
-  ModelDefinition? _lookupDefinition(
-    String providerId,
-    String modelIdOrAlias,
-  ) {
+  ModelDefinition? _lookupDefinition(String providerId, String modelIdOrAlias) {
     final key = '$providerId::$modelIdOrAlias';
     return _models[key] ?? _aliases[key];
   }
 
   /// Metadata lookup is non-authoritative. It intentionally omits approval
   /// status, approved task classes, and approval predicates.
-  ModelRegistryMetadata? lookup(
-    String providerId,
-    String modelIdOrAlias,
-  ) {
+  ModelRegistryMetadata? lookup(String providerId, String modelIdOrAlias) {
     final definition = _lookupDefinition(providerId, modelIdOrAlias);
     return definition == null ? null : ModelRegistryMetadata._(definition);
   }
@@ -2108,10 +2054,7 @@ class ModelDefinitionRegistry {
         providerId: identity.providerId,
         modelId: quarantineModelId,
         displayName: identity.name,
-        digest: _canonicalSha256OrNull(
-          identity.digest,
-          'discovered.digest',
-        ),
+        digest: _canonicalSha256OrNull(identity.digest, 'discovered.digest'),
         parameterSize: _nonBlankOrNull(identity.parameterSize),
         quantization: _nonBlankOrNull(identity.quantization),
         limits: ModelLimits.unknown(),
@@ -2146,10 +2089,11 @@ class ModelDefinitionRegistry {
       model: ModelRegistryMetadata._(definition),
       disposition:
           definition._supportStatus == ModelSupportStatus.evaluationOnly
-              ? ModelResolutionDisposition.evaluationOnly
-              : ModelResolutionDisposition.registeredIdentity,
-      evaluationReasons:
-          List<String>.unmodifiable(definition.evaluationReasons),
+          ? ModelResolutionDisposition.evaluationOnly
+          : ModelResolutionDisposition.registeredIdentity,
+      evaluationReasons: List<String>.unmodifiable(
+        definition.evaluationReasons,
+      ),
     );
   }
 
@@ -2176,8 +2120,8 @@ class ModelDefinitionRegistry {
   /// Non-authoritative runtime metadata only. Approval policy is deliberately
   /// not serializable through the runtime registry API.
   Map<String, Object?> toMetadataJson() => <String, Object?>{
-        'schemaVersion': 2,
-        'providers': providers.map((provider) => provider.toJson()).toList(),
-        'models': models.map((model) => model.toJson()).toList(),
-      };
+    'schemaVersion': 2,
+    'providers': providers.map((provider) => provider.toJson()).toList(),
+    'models': models.map((model) => model.toJson()).toList(),
+  };
 }

@@ -57,7 +57,9 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
     });
     final result = await _perform<ModelGenerationResult>(
       'Thinking',
-      () => runtime.models.providerFor(activeModel).generate(
+      () => runtime.models
+          .providerFor(activeModel)
+          .generate(
             ModelGenerationRequest(
               identity: activeModel,
               commandId: newId('chat_info'),
@@ -138,7 +140,9 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
     }
 
     if (asksChanges) {
-      final since = DateTime.now().toUtc().subtract(const Duration(minutes: 15));
+      final since = DateTime.now().toUtc().subtract(
+        const Duration(minutes: 15),
+      );
       final changes = await dispatcher.selfChangesSince(
         since,
         selectedProject: selectedProject,
@@ -156,13 +160,17 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
           );
         }
         if (change.capabilityChanges.isNotEmpty) {
-          parts.add(change.capabilityChanges.map((item) {
-            final availability =
-                '${item.previousAvailability?.name ?? 'unknown'}→${item.nextAvailability.name}';
-            final health =
-                '${item.previousHealth?.name ?? 'unknown'}→${item.nextHealth.name}';
-            return '${item.capabilityId} availability $availability, health $health';
-          }).join('; '));
+          parts.add(
+            change.capabilityChanges
+                .map((item) {
+                  final availability =
+                      '${item.previousAvailability?.name ?? 'unknown'}→${item.nextAvailability.name}';
+                  final health =
+                      '${item.previousHealth?.name ?? 'unknown'}→${item.nextHealth.name}';
+                  return '${item.capabilityId} availability $availability, health $health';
+                })
+                .join('; '),
+          );
         }
         lines.add(
           '${change.observedAt.toLocal().toIso8601String()}: ${parts.join(' | ')}',
@@ -195,7 +203,8 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       final details = violations
           .take(8)
           .map(
-            (item) => '- ${item.severity.name}: ${item.invariantId}: ${item.message}',
+            (item) =>
+                '- ${item.severity.name}: ${item.invariantId}: ${item.message}',
           )
           .join('\n');
       return 'My self-model currently has $available operational capabilities and $blocked blocked or unhealthy capabilities. I also see these integrity findings:\n$details';
@@ -211,13 +220,16 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
           .take(18)
           .map((item) => '${item.descriptor.name} (${item.descriptor.id})')
           .join(', ');
-      final blockers = snapshot.blocked.take(6).map((item) {
-        final reasons = <String>[
-          ...item.availability.reasons,
-          ...?item.health?.reasons,
-        ];
-        return '- ${item.descriptor.id}: ${reasons.isEmpty ? item.availability.state.name : reasons.first}';
-      }).join('\n');
+      final blockers = snapshot.blocked
+          .take(6)
+          .map((item) {
+            final reasons = <String>[
+              ...item.availability.reasons,
+              ...?item.health?.reasons,
+            ];
+            return '- ${item.descriptor.id}: ${reasons.isEmpty ? item.availability.state.name : reasons.first}';
+          })
+          .join('\n');
       return 'Right now I report ${snapshot.available.length} operational capabilities. '
           '${operational.isEmpty ? 'None are currently operational.' : operational}. '
           'I also know ${snapshot.blocked.length} capabilities that are currently blocked or unhealthy.'

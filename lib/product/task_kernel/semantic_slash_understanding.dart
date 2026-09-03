@@ -13,18 +13,15 @@ import 'task_understanding.dart';
 /// but the command capability and deterministically resolved targets are
 /// reasserted after validation.
 class SemanticSlashUnderstandingService extends UnderstandingService {
-  const SemanticSlashUnderstandingService({
-    super.deterministic,
-    super.model,
-  });
+  const SemanticSlashUnderstandingService({super.deterministic, super.model});
 
   static const Set<ChatExecutionRoute> _semanticCommandRoutes =
       <ChatExecutionRoute>{
-    ChatExecutionRoute.createProject,
-    ChatExecutionRoute.modifyProject,
-    ChatExecutionRoute.fixProject,
-    ChatExecutionRoute.researchSearch,
-  };
+        ChatExecutionRoute.createProject,
+        ChatExecutionRoute.modifyProject,
+        ChatExecutionRoute.fixProject,
+        ChatExecutionRoute.researchSearch,
+      };
 
   @override
   bool warrantsModelUnderstanding(ChatInteractionDecision decision) {
@@ -112,10 +109,7 @@ class SemanticSlashUnderstandingService extends UnderstandingService {
         cancellation: cancellation,
         isCancelled: isCancelled,
       );
-      return _normalizeModelOutcome(
-        decision: decision,
-        outcome: outcome,
-      );
+      return _normalizeModelOutcome(decision: decision, outcome: outcome);
     } catch (error, stackTrace) {
       final failure = classifyPlanningFailure(error, stackTrace: stackTrace);
       if (failure.allowsConservativeFallback) {
@@ -132,8 +126,9 @@ class SemanticSlashUnderstandingService extends UnderstandingService {
     required ChatInteractionDecision decision,
     required UnderstandingOutcome outcome,
   }) {
-    final lockedCapability =
-        decision.parsed.hasExplicitCommand ? decision.capability : null;
+    final lockedCapability = decision.parsed.hasExplicitCommand
+        ? decision.capability
+        : null;
     final rejections = <String>[...outcome.rejections];
     if (lockedCapability != null) {
       for (final capabilityId in outcome.capabilityHints) {
@@ -146,8 +141,9 @@ class SemanticSlashUnderstandingService extends UnderstandingService {
       }
     }
 
-    final targetIds =
-        outcome.specification.targetRefs.map((target) => target.value).toSet();
+    final targetIds = outcome.specification.targetRefs
+        .map((target) => target.value)
+        .toSet();
     final targets = <TaskTargetRef>[
       ...outcome.specification.targetRefs,
       for (final target in decision.targets)
@@ -203,7 +199,8 @@ class SemanticSlashUnderstandingService extends UnderstandingService {
         code: lockedCapability == null
             ? 'semantic_clarification_specification_invalid'
             : 'semantic_slash_specification_invalid',
-        message: 'The semantic interpretation did not validate: '
+        message:
+            'The semantic interpretation did not validate: '
             '${errors.join(' ')}',
         details: <String, dynamic>{'errors': errors},
       );
@@ -216,9 +213,10 @@ class SemanticSlashUnderstandingService extends UnderstandingService {
     );
   }
 
-  static String _semanticPayload(ChatInteractionDecision decision) =>
-      decision.parsed.arguments
-          .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim();
+  static String _semanticPayload(ChatInteractionDecision decision) => decision
+      .parsed
+      .arguments
+      .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 }

@@ -16,11 +16,7 @@ enum KristinConversationSpeaker { user, assistant, system }
 
 /// How the current plan came to be. This belongs to the canonical
 /// conversation session rather than a particular Chat surface.
-enum ChatPlanningPath {
-  deterministic,
-  model,
-  fallback,
-}
+enum ChatPlanningPath { deterministic, model, fallback }
 
 class KristinConversationMessage {
   const KristinConversationMessage({
@@ -55,10 +51,10 @@ class KristinConversationSession {
     this.maxLiveSignals = 600,
     this.maxProtocolCharacters = 18000,
     this.maxToolOutputCharacters = 12000,
-  })  : assert(maxMessages > 0),
-        assert(maxLiveSignals > 0),
-        assert(maxProtocolCharacters > 0),
-        assert(maxToolOutputCharacters > 0);
+  }) : assert(maxMessages > 0),
+       assert(maxLiveSignals > 0),
+       assert(maxProtocolCharacters > 0),
+       assert(maxToolOutputCharacters > 0);
 
   final int maxMessages;
   final int maxLiveSignals;
@@ -228,10 +224,7 @@ class KristinConversationSession {
       'Question: $normalizedQuestion\nUser answer: $normalizedAnswer',
     );
     if (_clarificationEvidence.length > 12) {
-      _clarificationEvidence.removeRange(
-        0,
-        _clarificationEvidence.length - 12,
-      );
+      _clarificationEvidence.removeRange(0, _clarificationEvidence.length - 12);
     }
   }
 
@@ -272,22 +265,20 @@ class KristinConversationSession {
   KristinConversationMessage addAssistantMessage(
     String text, {
     DateTime? createdAt,
-  }) =>
-      _addMessage(
-        KristinConversationSpeaker.assistant,
-        text,
-        createdAt: createdAt,
-      );
+  }) => _addMessage(
+    KristinConversationSpeaker.assistant,
+    text,
+    createdAt: createdAt,
+  );
 
   KristinConversationMessage addSystemMessage(
     String text, {
     DateTime? createdAt,
-  }) =>
-      _addMessage(
-        KristinConversationSpeaker.system,
-        text,
-        createdAt: createdAt,
-      );
+  }) => _addMessage(
+    KristinConversationSpeaker.system,
+    text,
+    createdAt: createdAt,
+  );
 
   /// Starts a provisional assistant transcript message backed by actual model
   /// deltas. Until a visible delta arrives no placeholder is inserted; the UI

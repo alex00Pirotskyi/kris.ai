@@ -35,13 +35,13 @@ final class P3BrowserTakeoverController {
   int _generation = 0;
 
   P3BrowserTakeoverSnapshot get current => P3BrowserTakeoverSnapshot(
-        state: _state,
-        sessionId: _sessionId,
-        pageId: _pageId,
-        reason: _reason,
-        lastObservationHash: _lastObservationHash,
-        generation: _generation,
-      );
+    state: _state,
+    sessionId: _sessionId,
+    pageId: _pageId,
+    reason: _reason,
+    lastObservationHash: _lastObservationHash,
+    generation: _generation,
+  );
 
   bool get automationAllowed => _state == P3BrowserTakeoverState.automated;
 

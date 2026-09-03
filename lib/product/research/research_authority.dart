@@ -52,13 +52,12 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
   }
 
   File _record(String entity, String id) => File(
-        '${root.path}${Platform.pathSeparator}$entity'
-        '${Platform.pathSeparator}${_requireId(id)}.json',
-      );
+    '${root.path}${Platform.pathSeparator}$entity'
+    '${Platform.pathSeparator}${_requireId(id)}.json',
+  );
 
-  File get _version => File(
-        '${root.path}${Platform.pathSeparator}schema-version.txt',
-      );
+  File get _version =>
+      File('${root.path}${Platform.pathSeparator}schema-version.txt');
 
   @override
   Future<String?> schemaVersion() async {
@@ -79,11 +78,7 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
   }
 
   @override
-  Future<void> put(
-    String entity,
-    String id,
-    Map<String, Object?> value,
-  ) async {
+  Future<void> put(String entity, String id, Map<String, Object?> value) async {
     _requireEntity(entity);
     final file = _record(entity, id);
     final canonical = canonicalJson(<String, Object?>{
@@ -110,21 +105,18 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
   @override
   Future<List<Map<String, Object?>>> list(String entity) async {
     _requireEntity(entity);
-    final directory = Directory(
-      '${root.path}${Platform.pathSeparator}$entity',
-    );
+    final directory = Directory('${root.path}${Platform.pathSeparator}$entity');
     if (!await directory.exists()) return const <Map<String, Object?>>[];
     final output = <Map<String, Object?>>[];
     await for (final child in directory.list(followLinks: false)) {
       if (child is! File || !child.path.endsWith('.json')) continue;
-      final filename =
-          child.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
+      final filename = child.uri.pathSegments
+          .where((segment) => segment.isNotEmpty)
+          .last;
       final id = filename.substring(0, filename.length - '.json'.length);
-      output.add(await _readRecord(
-        child,
-        expectedEntity: entity,
-        expectedId: id,
-      ));
+      output.add(
+        await _readRecord(child, expectedEntity: entity, expectedId: id),
+      );
     }
     output.sort((a, b) => '${a['id']}'.compareTo('${b['id']}'));
     return List<Map<String, Object?>>.unmodifiable(output);
@@ -165,17 +157,17 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
   Future<void> backupTo(Directory target) async {
     if (await target.exists()) {
       throw const P4ResearchException(
-          'research_authority_backup_target_exists');
+        'research_authority_backup_target_exists',
+      );
     }
     await target.create(recursive: true);
     if (!await root.exists()) return;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
       if (entity is Directory) continue;
       if (entity is! File) continue;
-      final relative = entity.path.substring(root.path.length).replaceFirst(
-            RegExp(r'^[\\/]'),
-            '',
-          );
+      final relative = entity.path
+          .substring(root.path.length)
+          .replaceFirst(RegExp(r'^[\\/]'), '');
       final destination = File(
         '${target.path}${Platform.pathSeparator}$relative',
       );
@@ -219,13 +211,12 @@ final class P4ResearchAuthorityMigrator {
     try {
       while (current != p4ResearchAuthorityVersion) {
         final migration = migrations
-            .where(
-              (item) => item.fromVersion == current,
-            )
+            .where((item) => item.fromVersion == current)
             .firstOrNull;
         if (migration == null) {
           throw const P4ResearchException(
-              'research_authority_migration_missing');
+            'research_authority_migration_missing',
+          );
         }
         await migration.apply(store);
         await store.setSchemaVersion(migration.toVersion);
@@ -279,10 +270,9 @@ Future<P4AuthorityBackupReceipt> p4BackupAuthority(
   final entries = <String>[];
   await for (final entity in target.list(recursive: true, followLinks: false)) {
     if (entity is! File) continue;
-    final relative = entity.path.substring(target.path.length).replaceFirst(
-          RegExp(r'^[\\/]'),
-          '',
-        );
+    final relative = entity.path
+        .substring(target.path.length)
+        .replaceFirst(RegExp(r'^[\\/]'), '');
     final bytes = await entity.readAsBytes();
     entries.add('$relative:${Sha256.hex(bytes)}');
   }

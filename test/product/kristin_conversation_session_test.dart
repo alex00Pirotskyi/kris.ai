@@ -38,8 +38,10 @@ void main() {
     expect(session.state, isA<ChatCompleted>());
     expect(session.detachFinishedRun(), isTrue);
 
-    expect(session.messages.map((message) => message.text),
-        <String>['hello', 'done']);
+    expect(session.messages.map((message) => message.text), <String>[
+      'hello',
+      'done',
+    ]);
     expect(session.selectedProjectId, 'project-after');
     expect(session.selectedModelId, 'model-after');
     expect(session.composerDraft, isEmpty);
@@ -259,29 +261,31 @@ void main() {
     expect(session.liveSignals.last.sequence, 3);
   });
 
-  test('beginning live execution resets and primes the canonical projection',
-      () {
-    final session = KristinConversationSession();
-    session.restoreRun(_run(id: 'run-a', state: RunState.running));
-    session.recordLiveSignal(
-      _signal('run-a', 1, LiveRunSignalKind.modelProgress),
-    );
+  test(
+    'beginning live execution resets and primes the canonical projection',
+    () {
+      final session = KristinConversationSession();
+      session.restoreRun(_run(id: 'run-a', state: RunState.running));
+      session.recordLiveSignal(
+        _signal('run-a', 1, LiveRunSignalKind.modelProgress),
+      );
 
-    expect(session.liveSignals, isNotEmpty);
-    expect(session.liveProgressText, 'progress');
+      expect(session.liveSignals, isNotEmpty);
+      expect(session.liveProgressText, 'progress');
 
-    session.beginLiveExecution();
+      session.beginLiveExecution();
 
-    expect(session.liveSignals, isEmpty);
-    expect(session.liveAssistantProtocolText, isEmpty);
-    expect(session.liveAssistantText, isEmpty);
-    expect(session.liveProgressText, 'Starting the first safe step.');
-    expect(session.liveToolName, isEmpty);
-    expect(session.liveToolOutput, isEmpty);
+      expect(session.liveSignals, isEmpty);
+      expect(session.liveAssistantProtocolText, isEmpty);
+      expect(session.liveAssistantText, isEmpty);
+      expect(session.liveProgressText, 'Starting the first safe step.');
+      expect(session.liveToolName, isEmpty);
+      expect(session.liveToolOutput, isEmpty);
 
-    session.showLiveProgress('Continuing with your answer.');
-    expect(session.liveProgressText, 'Continuing with your answer.');
-  });
+      session.showLiveProgress('Continuing with your answer.');
+      expect(session.liveProgressText, 'Continuing with your answer.');
+    },
+  );
 
   test('visible transcript is bounded and never accepts blank messages', () {
     final session = KristinConversationSession(maxMessages: 2);
@@ -307,22 +311,21 @@ AgentDeferredInteraction _interaction({
   required String runId,
   required AgentDeferredInteractionStatus status,
   String? userResponse,
-}) =>
-    AgentDeferredInteraction(
-      id: 'interaction-a',
-      runId: runId,
-      workItemId: 'work-a',
-      decision: AgentDecisionV3(
-        kind: AgentDecisionV3Kind.userTakeover,
-        question: 'Which target should I use?',
-        reason: 'The target is ambiguous.',
-      ),
-      status: status,
-      createdAt: DateTime.utc(2026, 8, 29),
-      updatedAt: DateTime.utc(2026, 8, 29),
-      checkpointId: 'checkpoint-a',
-      userResponse: userResponse,
-    );
+}) => AgentDeferredInteraction(
+  id: 'interaction-a',
+  runId: runId,
+  workItemId: 'work-a',
+  decision: AgentDecisionV3(
+    kind: AgentDecisionV3Kind.userTakeover,
+    question: 'Which target should I use?',
+    reason: 'The target is ambiguous.',
+  ),
+  status: status,
+  createdAt: DateTime.utc(2026, 8, 29),
+  updatedAt: DateTime.utc(2026, 8, 29),
+  checkpointId: 'checkpoint-a',
+  userResponse: userResponse,
+);
 
 LiveRunSignal _signal(String runId, int sequence, LiveRunSignalKind kind) =>
     LiveRunSignal(

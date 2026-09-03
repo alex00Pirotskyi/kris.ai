@@ -5,14 +5,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('P3 in-app acquisition is pinned and application owned', () {
-    final lock = jsonDecode(
-      File(
-        'config/application_runtime_acquisition.v1.json',
-      ).readAsStringSync(),
-    ) as Map<String, dynamic>;
+    final lock =
+        jsonDecode(
+              File(
+                'config/application_runtime_acquisition.v1.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
     final network = lock['networkAcquisition'] as Map<String, dynamic>;
-    final windows = (lock['platforms'] as Map<String, dynamic>)['windows-x64']
-        as Map<String, dynamic>;
+    final windows =
+        (lock['platforms'] as Map<String, dynamic>)['windows-x64']
+            as Map<String, dynamic>;
     final node = windows['node'] as Map<String, dynamic>;
     final p3 = windows['p3'] as Map<String, dynamic>;
 
@@ -29,10 +32,7 @@ void main() {
     expect(network['globalBrowserFallback'], isFalse);
     expect(network['systemChromeFallback'], isFalse);
     expect(node['url'], startsWith('https://nodejs.org/dist/v24.18.0/'));
-    expect(
-      node['archiveSha256'],
-      matches(RegExp(r'^[0-9a-f]{64}$')),
-    );
+    expect(node['archiveSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
     expect(
       node['executableSha256'],
       '9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de',
@@ -131,10 +131,7 @@ void main() {
         'lib/product/product_runtime_provisioning.dart',
       ).readAsStringSync();
 
-      expect(
-        bridge,
-        contains('_runtimeProvisioningStates[this] = created;'),
-      );
+      expect(bridge, contains('_runtimeProvisioningStates[this] = created;'));
       expect(bridge, contains('_attachProvisionedResearchBrowser(this);'));
       expect(bridge, contains('P4BrowserAwareResearchService'));
       expect(bridge, contains('attachRenderedPageLoader'));

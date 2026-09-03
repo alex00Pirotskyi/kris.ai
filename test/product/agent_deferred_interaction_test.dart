@@ -37,102 +37,106 @@ void main() {
       }
     });
 
-    test('user takeover survives restart and response grants no authority',
-        () async {
-      final run = _run(id: 'run-user', state: RunState.running);
-      await workflow!.saveRun(run);
-      var interactions = AgentDeferredInteractionStore(workflow!);
+    test(
+      'user takeover survives restart and response grants no authority',
+      () async {
+        final run = _run(id: 'run-user', state: RunState.running);
+        await workflow!.saveRun(run);
+        var interactions = AgentDeferredInteractionStore(workflow!);
 
-      final pending = await interactions.persist(
-        runId: run.id,
-        workItemId: 'work-a',
-        step: AgentProtocolV3DeferredStep(
-          decision: AgentDecisionV3(
-            kind: AgentDecisionV3Kind.userTakeover,
-            question: 'Which target should I use?',
-            reason: 'The target is ambiguous.',
-          ),
-        ),
-      );
-
-      expect(pending.pending, isTrue);
-      expect(pending.awaitingUserResponse, isTrue);
-      expect(pending.userResponseGrantsAuthority, isFalse);
-      expect(pending.decision.question, 'Which target should I use?');
-
-      await workflow!.close();
-      workflow = await DurableWorkflowStore.open(
-        databaseFile: databaseFile,
-        migrationBackupDirectory: backupDirectory,
-      );
-      interactions = AgentDeferredInteractionStore(workflow!);
-
-      final restored = await interactions.pendingForRun(run.id);
-      expect(restored?.id, pending.id);
-      expect(restored?.workItemId, 'work-a');
-      expect(restored?.decision.kind, AgentDecisionV3Kind.userTakeover);
-
-      final resolved = await interactions.recordUserResponse(
-        runId: run.id,
-        response: '  Use the staging target.  ',
-      );
-      expect(resolved.status, AgentDeferredInteractionStatus.resolved);
-      expect(resolved.userResponse, 'Use the staging target.');
-      expect(resolved.userResponseGrantsAuthority, isFalse);
-      expect(await interactions.pendingForRun(run.id), isNull);
-      expect((await workflow!.getRun(run.id))?.state, RunState.running);
-
-      final events = await workflow!.eventsForRun(run.id);
-      expect(
-        events.map((event) => event.type),
-        containsAllInOrder(<String>[
-          'run.snapshot',
-          'agent.deferred.requested',
-          'agent.deferred.user_response_recorded',
-        ]),
-      );
-      expect(events.last.data['grantsAuthority'], isFalse);
-    });
-
-    test('a run cannot accumulate two unresolved deferred interactions',
-        () async {
-      final run = _run(id: 'run-duplicate', state: RunState.running);
-      await workflow!.saveRun(run);
-      final interactions = AgentDeferredInteractionStore(workflow!);
-      final first = AgentProtocolV3DeferredStep(
-        decision: AgentDecisionV3(
-          kind: AgentDecisionV3Kind.userTakeover,
-          question: 'Choose one.',
-        ),
-      );
-      final second = AgentProtocolV3DeferredStep(
-        decision: AgentDecisionV3(
-          kind: AgentDecisionV3Kind.wait,
-          waitHandle: 'job-42',
-        ),
-      );
-
-      await interactions.persist(
-        runId: run.id,
-        workItemId: 'work-a',
-        step: first,
-      );
-
-      await expectLater(
-        interactions.persist(
+        final pending = await interactions.persist(
           runId: run.id,
           workItemId: 'work-a',
-          step: second,
-        ),
-        throwsA(
-          isA<AgentDeferredInteractionException>().having(
-            (error) => error.code,
-            'code',
-            'agent_deferred_interaction_active',
+          step: AgentProtocolV3DeferredStep(
+            decision: AgentDecisionV3(
+              kind: AgentDecisionV3Kind.userTakeover,
+              question: 'Which target should I use?',
+              reason: 'The target is ambiguous.',
+            ),
           ),
-        ),
-      );
-    });
+        );
+
+        expect(pending.pending, isTrue);
+        expect(pending.awaitingUserResponse, isTrue);
+        expect(pending.userResponseGrantsAuthority, isFalse);
+        expect(pending.decision.question, 'Which target should I use?');
+
+        await workflow!.close();
+        workflow = await DurableWorkflowStore.open(
+          databaseFile: databaseFile,
+          migrationBackupDirectory: backupDirectory,
+        );
+        interactions = AgentDeferredInteractionStore(workflow!);
+
+        final restored = await interactions.pendingForRun(run.id);
+        expect(restored?.id, pending.id);
+        expect(restored?.workItemId, 'work-a');
+        expect(restored?.decision.kind, AgentDecisionV3Kind.userTakeover);
+
+        final resolved = await interactions.recordUserResponse(
+          runId: run.id,
+          response: '  Use the staging target.  ',
+        );
+        expect(resolved.status, AgentDeferredInteractionStatus.resolved);
+        expect(resolved.userResponse, 'Use the staging target.');
+        expect(resolved.userResponseGrantsAuthority, isFalse);
+        expect(await interactions.pendingForRun(run.id), isNull);
+        expect((await workflow!.getRun(run.id))?.state, RunState.running);
+
+        final events = await workflow!.eventsForRun(run.id);
+        expect(
+          events.map((event) => event.type),
+          containsAllInOrder(<String>[
+            'run.snapshot',
+            'agent.deferred.requested',
+            'agent.deferred.user_response_recorded',
+          ]),
+        );
+        expect(events.last.data['grantsAuthority'], isFalse);
+      },
+    );
+
+    test(
+      'a run cannot accumulate two unresolved deferred interactions',
+      () async {
+        final run = _run(id: 'run-duplicate', state: RunState.running);
+        await workflow!.saveRun(run);
+        final interactions = AgentDeferredInteractionStore(workflow!);
+        final first = AgentProtocolV3DeferredStep(
+          decision: AgentDecisionV3(
+            kind: AgentDecisionV3Kind.userTakeover,
+            question: 'Choose one.',
+          ),
+        );
+        final second = AgentProtocolV3DeferredStep(
+          decision: AgentDecisionV3(
+            kind: AgentDecisionV3Kind.wait,
+            waitHandle: 'job-42',
+          ),
+        );
+
+        await interactions.persist(
+          runId: run.id,
+          workItemId: 'work-a',
+          step: first,
+        );
+
+        await expectLater(
+          interactions.persist(
+            runId: run.id,
+            workItemId: 'work-a',
+            step: second,
+          ),
+          throwsA(
+            isA<AgentDeferredInteractionException>().having(
+              (error) => error.code,
+              'code',
+              'agent_deferred_interaction_active',
+            ),
+          ),
+        );
+      },
+    );
 
     test('conversation input cannot resolve a durable wait', () async {
       final run = _run(id: 'run-wait', state: RunState.running);

@@ -59,10 +59,10 @@ final class P3ProductRuntimeBrowserHandle {
     required Directory? stateDirectory,
     required String statusCode,
     required Map<String, Object?> provenance,
-  })  : _service = service,
-        _stateDirectory = stateDirectory,
-        _statusCode = statusCode,
-        _provenance = Map<String, Object?>.unmodifiable(provenance);
+  }) : _service = service,
+       _stateDirectory = stateDirectory,
+       _statusCode = statusCode,
+       _provenance = Map<String, Object?>.unmodifiable(provenance);
 
   factory P3ProductRuntimeBrowserHandle.blocked(String statusCode) =>
       P3ProductRuntimeBrowserHandle._(
@@ -392,7 +392,7 @@ class ProductRuntime {
   }
 
   Future<P3ProductRuntimeBrowserHandle>
-      refreshProvisionedBrowserRuntime() async {
+  refreshProvisionedBrowserRuntime() async {
     final refreshed = await P3ProductRuntimeBrowserHandle.open(
       applicationDataRoot: directories.root,
       stateDirectory: Directory(
@@ -558,8 +558,8 @@ class ProductRuntime {
           final provider = models.providerFor(model);
           if (model.providerId == 'ollama') {
             final discovered = await provider.discover().timeout(
-                  const Duration(seconds: 12),
-                );
+              const Duration(seconds: 12),
+            );
             final exact = discovered.where((candidate) {
               if (candidate.name != model.name) return false;
               if (model.digest.isEmpty || candidate.digest.isEmpty) return true;
@@ -665,10 +665,9 @@ class ProductRuntime {
             return 100;
           }
 
-          final candidates = references
-              .where((item) => score(item) < 100)
-              .toList()
-            ..sort((left, right) => score(left).compareTo(score(right)));
+          final candidates =
+              references.where((item) => score(item) < 100).toList()
+                ..sort((left, right) => score(left).compareTo(score(right)));
           if (candidates.isEmpty) {
             stopwatch.stop();
             return RunCapabilityProbeResult(
@@ -1135,7 +1134,8 @@ class ProductRuntime {
     } else {
       try {
         final knownModels = discoveredModels ?? await discoverModels();
-        final report = depth == CapabilityDoctorDepth.quick &&
+        final report =
+            depth == CapabilityDoctorDepth.quick &&
                 projectReport?.projectId == projectId
             ? projectReport!
             : await inspectProject(
@@ -1226,13 +1226,17 @@ class ProductRuntime {
   }
 
   Future<RunRecord?> steeringContinuationForSourceRun(
-      String sourceRunId) async {
-    final records = (await repositories.runSteeringRecords.all())
-        .where((record) =>
-            record.runId == sourceRunId &&
-            (record.continuationRunId?.trim().isNotEmpty ?? false))
-        .toList(growable: false)
-      ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
+    String sourceRunId,
+  ) async {
+    final records =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == sourceRunId &&
+                  (record.continuationRunId?.trim().isNotEmpty ?? false),
+            )
+            .toList(growable: false)
+          ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
     final continuationId = records.firstOrNull?.continuationRunId;
     if (continuationId == null || continuationId.trim().isEmpty) return null;
     final continuation = await repositories.runs.get(continuationId);
@@ -1247,8 +1251,9 @@ class ProductRuntime {
     if (source == null) {
       throw ProductException('run_missing', 'Run not found.');
     }
-    final context =
-        await repositories.commandPlanningContexts.get(source.command.id);
+    final context = await repositories.commandPlanningContexts.get(
+      source.command.id,
+    );
     if (context == null) {
       throw ProductException(
         'steering_context_missing',
@@ -1269,8 +1274,9 @@ class ProductRuntime {
 
     final current = await repositories.runs.get(runId) ?? source;
     if (current.state == RunState.awaitingApproval) {
-      final retired =
-          await runs.interruptAwaitingApprovalForSteeringReplan(runId);
+      final retired = await runs.interruptAwaitingApprovalForSteeringReplan(
+        runId,
+      );
       await _materializePendingSteeringContinuation(retired);
     }
     final record = await repositories.runSteeringRecords.get(queued.id);
@@ -1414,8 +1420,7 @@ class ProductRuntime {
 
   Future<String?> pickProjectFolder({
     String prompt = 'Choose a project folder',
-  }) =>
-      diagnostics.pickFolder(prompt: prompt);
+  }) => diagnostics.pickFolder(prompt: prompt);
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
@@ -1638,11 +1643,9 @@ class ProductRuntime {
   Future<AgentDeferredInteraction> recordDeferredUserResponse({
     required String runId,
     required String response,
-  }) =>
-      AgentDeferredInteractionStore(repositories.workflow).recordUserResponse(
-        runId: runId,
-        response: response,
-      );
+  }) => AgentDeferredInteractionStore(
+    repositories.workflow,
+  ).recordUserResponse(runId: runId, response: response);
 
   Future<List<RunRecord>> listRuns({String? projectId, int limit = 100}) async {
     var runs = await repositories.runs.all();
@@ -1673,13 +1676,12 @@ class ProductRuntime {
     required String title,
     required String content,
     Set<String> tags = const <String>{},
-  }) =>
-      knowledge.addNote(
-        projectId: projectId,
-        title: title,
-        content: content,
-        tags: tags,
-      );
+  }) => knowledge.addNote(
+    projectId: projectId,
+    title: title,
+    content: content,
+    tags: tags,
+  );
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -1711,10 +1713,10 @@ class ProductRuntime {
     });
     await events
         .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
-      'episodeId': episode.id,
-      'projectId': episode.projectId,
-      'pinned': episode.pinned,
-    });
+          'episodeId': episode.id,
+          'projectId': episode.projectId,
+          'pinned': episode.pinned,
+        });
     return episode;
   }
 
@@ -1730,14 +1732,13 @@ class ProductRuntime {
     int limit = 12,
     bool includeEpisodes = true,
     bool includeUnsuccessfulEpisodes = false,
-  }) =>
-      knowledge.retrieve(
-        projectId,
-        query,
-        limit: limit,
-        includeEpisodes: includeEpisodes,
-        includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
-      );
+  }) => knowledge.retrieve(
+    projectId,
+    query,
+    limit: limit,
+    includeEpisodes: includeEpisodes,
+    includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
+  );
 
   Future<KnowledgeStats> knowledgeStats(String projectId) =>
       knowledge.stats(projectId);
@@ -1801,12 +1802,13 @@ class ProductRuntime {
       description: description.trim(),
       systemPrompt: systemPrompt.trim(),
       userPrompt: userPrompt.trim(),
-      variables: variables
-          .map((value) => value.trim())
-          .where((value) => value.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort(),
+      variables:
+          variables
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort(),
       tags: tags
           .map((value) => value.trim().toLowerCase())
           .where((value) => value.isNotEmpty)
@@ -1837,15 +1839,14 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateClarification(
-        goal: goal,
-        model: model,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateClarification(
+    goal: goal,
+    model: model,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   /// The universal task kernel.
   ///
@@ -1899,8 +1900,9 @@ class ProductRuntime {
       context: PlanningContext(
         project: project,
         model: model,
-        availableCapabilityIds:
-            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableCapabilityIds: kKristinCapabilities
+            .map((item) => item.id)
+            .toSet(),
         availableToolNames: tools.names,
         consumedCoordinatorCapabilities: consumed,
         localOnly: _settings.localOnly,
@@ -1928,7 +1930,8 @@ class ProductRuntime {
       ),
       contract: compiled.contract,
       plan: compiled.plan,
-      model: model ??
+      model:
+          model ??
           ModelIdentity(
             providerId: 'none',
             name: 'unselected',
@@ -1964,8 +1967,9 @@ class ProductRuntime {
       });
     }
     final contextNow = DateTime.now().toUtc();
-    final existingContext =
-        await repositories.commandPlanningContexts.get(command.id);
+    final existingContext = await repositories.commandPlanningContexts.get(
+      command.id,
+    );
     await repositories.commandPlanningContexts.put(
       CommandPlanningContextRecord(
         commandId: command.id,
@@ -2023,16 +2027,19 @@ class ProductRuntime {
   }
 
   Future<void> _materializePendingSteeringContinuation(RunRecord source) async {
-    final durable = (await repositories.runSteeringRecords.all())
-        .where((record) =>
-            record.runId == source.id &&
-            const <RunSteeringRecordState>{
-              RunSteeringRecordState.pending,
-              RunSteeringRecordState.replanning,
-            }.contains(record.state) &&
-            record.patch.requiresReplan)
-        .toList(growable: false)
-      ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+    final durable =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == source.id &&
+                  const <RunSteeringRecordState>{
+                    RunSteeringRecordState.pending,
+                    RunSteeringRecordState.replanning,
+                  }.contains(record.state) &&
+                  record.patch.requiresReplan,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
     if (durable.isEmpty) return;
     final already = durable
         .map((record) => record.continuationRunId)
@@ -2041,8 +2048,9 @@ class ProductRuntime {
         .firstOrNull;
     if (already != null) return;
 
-    final context =
-        await repositories.commandPlanningContexts.get(source.command.id);
+    final context = await repositories.commandPlanningContexts.get(
+      source.command.id,
+    );
     if (context == null) {
       throw ProductException(
         'steering_replan_context_missing',
@@ -2060,12 +2068,15 @@ class ProductRuntime {
     }
 
     var revisedSpecification = context.specification;
-    final semanticHistory = (await repositories.runSteeringRecords.all())
-        .where((record) =>
-            record.runId == source.id &&
-            record.state != RunSteeringRecordState.cleared)
-        .toList(growable: false)
-      ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+    final semanticHistory =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == source.id &&
+                  record.state != RunSteeringRecordState.cleared,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
     for (final record in semanticHistory) {
       revisedSpecification = record.patch.applyForReplan(revisedSpecification);
     }
@@ -2083,8 +2094,9 @@ class ProductRuntime {
       context: PlanningContext(
         project: project,
         model: source.command.model,
-        availableCapabilityIds:
-            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableCapabilityIds: kKristinCapabilities
+            .map((item) => item.id)
+            .toSet(),
         availableToolNames: tools.names,
         consumedCoordinatorCapabilities:
             context.consumedCoordinatorCapabilities,
@@ -2202,8 +2214,9 @@ class ProductRuntime {
       command,
       sourceRunId: source.id,
     );
-    final instructions =
-        durable.map(RunSteeringInstruction.fromRecord).toList(growable: false);
+    final instructions = durable
+        .map(RunSteeringInstruction.fromRecord)
+        .toList(growable: false);
     await runSteering.markContinuationReady(
       source.id,
       instructions,
@@ -2220,14 +2233,16 @@ class ProductRuntime {
       'reconciliation': reconciliation.reconciliations
           .map((value) => value.toJson())
           .toList(),
-      'sourceRequiredPermissions': source.command.contract.requiredPermissions
-          .map((value) => value.name)
-          .toList()
-        ..sort(),
-      'requiredPermissions': command.contract.requiredPermissions
-          .map((value) => value.name)
-          .toList()
-        ..sort(),
+      'sourceRequiredPermissions':
+          source.command.contract.requiredPermissions
+              .map((value) => value.name)
+              .toList()
+            ..sort(),
+      'requiredPermissions':
+          command.contract.requiredPermissions
+              .map((value) => value.name)
+              .toList()
+            ..sort(),
       'authorityInherited': false,
       'continuationState': continuation.state.name,
     };
@@ -2247,23 +2262,22 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generatePrompt(
-        goal: goal,
-        model: model,
-        action: action,
-        current: current,
-        feedback: feedback,
-        clarification: clarification,
-        clarificationAnswers: clarificationAnswers,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generatePrompt(
+    goal: goal,
+    model: model,
+    action: action,
+    current: current,
+    feedback: feedback,
+    clarification: clarification,
+    clarificationAnswers: clarificationAnswers,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
-      saveGeneratedPrompt({
+  saveGeneratedPrompt({
     String? id,
     required String goal,
     required PromptStudioDraft draft,
@@ -2305,37 +2319,34 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateTaskPlan(
-        promptVersion: promptVersion,
-        projectId: projectId,
-        model: model,
-        depth: depth,
-        maxLeafTasks: maxLeafTasks,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateTaskPlan(
+    promptVersion: promptVersion,
+    projectId: projectId,
+    model: model,
+    depth: depth,
+    maxLeafTasks: maxLeafTasks,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<List<TaskPlanRecord>> listTaskPlans({
     String? promptId,
     String? projectId,
-  }) =>
-      promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
+  }) => promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
 
   Future<TaskPlanRecord> updateTaskPlan(
     TaskPlanRecord plan, {
     required List<PlanTaskRecord> tasks,
     String? title,
     String? rationale,
-  }) =>
-      promptPlanning.updateTaskPlan(
-        plan,
-        tasks: tasks,
-        title: title,
-        rationale: rationale,
-      );
+  }) => promptPlanning.updateTaskPlan(
+    plan,
+    tasks: tasks,
+    title: title,
+    rationale: rationale,
+  );
 
   Future<PreparedCommand> prepareTaskPlan({
     required TaskPlanRecord plan,
@@ -2544,9 +2555,9 @@ class ProductRuntime {
     final response = await router.search(
       SearchProviderRequest(query: query, count: count.clamp(1, 20).toInt()),
     );
-    return response.results.map((result) => result.toMap()).toList(
-          growable: false,
-        );
+    return response.results
+        .map((result) => result.toMap())
+        .toList(growable: false);
   }
 
   Future<ProjectProcessStatus> startProject(String projectId) async {
@@ -2603,18 +2614,18 @@ class ProductRuntime {
     // entry, this record survives an application restart and is what
     // restart reconciliation (see reconcileProjectRuntimeSessions) consults.
     final launchKind = detectProjectLaunchKind(profile.type);
-    final launchProfile =
-        await repositories.workflow.upsertProjectLaunchProfile(
-      projectId: project.id,
-      kind: launchKind,
-      label: command.label,
-      executable: command.executable,
-      arguments: command.arguments,
-      workingDirectory: project.rootPath,
-      openBehavior: openBehaviorForLaunchKind(launchKind),
-      source: ProjectLaunchProfileSource.detected,
-      preferred: true,
-    );
+    final launchProfile = await repositories.workflow
+        .upsertProjectLaunchProfile(
+          projectId: project.id,
+          kind: launchKind,
+          label: command.label,
+          executable: command.executable,
+          arguments: command.arguments,
+          workingDirectory: project.rootPath,
+          openBehavior: openBehaviorForLaunchKind(launchKind),
+          source: ProjectLaunchProfileSource.detected,
+          preferred: true,
+        );
     final processIdentity = await _processIdentity.capture(result.pid);
     await repositories.workflow.insertManagedProjectProcess(
       id: processId,
@@ -2695,8 +2706,8 @@ class ProductRuntime {
         state: ProjectRuntimeState.interrupted,
         failureCode:
             verification == ProcessIdentityVerification.unverifiablePlatform
-                ? 'process_identity_unverifiable'
-                : 'process_identity_mismatch_or_gone',
+            ? 'process_identity_unverifiable'
+            : 'process_identity_mismatch_or_gone',
         completedAt: DateTime.now().toUtc(),
       );
     }
@@ -2780,7 +2791,8 @@ class ProductRuntime {
     var alive = true;
     for (var attempt = 0; attempt < 10 && alive; attempt++) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
-      alive = await _processIdentity.verify(pid, session.processIdentity) ==
+      alive =
+          await _processIdentity.verify(pid, session.processIdentity) ==
           ProcessIdentityVerification.alive;
     }
     if (alive) {
@@ -2918,12 +2930,11 @@ class ProductRuntime {
     required String label,
     required String environmentKey,
     String description = '',
-  }) =>
-      secrets.registerReference(
-        label: label,
-        environmentKey: environmentKey,
-        description: description,
-      );
+  }) => secrets.registerReference(
+    label: label,
+    environmentKey: environmentKey,
+    description: description,
+  );
 
   Future<List<SecretReference>> listSecretReferences() =>
       repositories.secretReferences.all();
@@ -2936,16 +2947,15 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) =>
-      mcp.trust(
-        projectId: projectId,
-        label: label,
-        executablePath: executablePath,
-        arguments: arguments,
-        allowedTools: allowedTools,
-        protocolVersion: protocolVersion,
-        validity: validity,
-      );
+  }) => mcp.trust(
+    projectId: projectId,
+    label: label,
+    executablePath: executablePath,
+    arguments: arguments,
+    allowedTools: allowedTools,
+    protocolVersion: protocolVersion,
+    validity: validity,
+  );
 
   Future<List<McpTrustRecord>> listMcpTrust() => mcp.repository.all();
   Future<void> revokeMcpTrust(String id) => mcp.revoke(id);
@@ -2955,13 +2965,12 @@ class ProductRuntime {
     required Set<String> scopes,
     String? projectId,
     Duration validity = const Duration(days: 30),
-  }) =>
-      tokens.issue(
-        label: label,
-        scopes: scopes,
-        projectId: projectId,
-        validity: validity,
-      );
+  }) => tokens.issue(
+    label: label,
+    scopes: scopes,
+    projectId: projectId,
+    validity: validity,
+  );
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);

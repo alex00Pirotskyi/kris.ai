@@ -136,24 +136,24 @@ class McpServerDescriptorV2 {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'publisher': publisher,
-        'version': version,
-        'transport': transport,
-        'executablePath': executablePath,
-        'executableSha256': executableSha256,
-        'arguments': arguments,
-        'tools': tools.toList()..sort(),
-        'resources': resources.toList()..sort(),
-        'prompts': prompts.toList()..sort(),
-        'roots': roots.toList()..sort(),
-        'networkDestinations': networkDestinations.toList()..sort(),
-        'secretIds': secretIds.toList()..sort(),
-        'retentionDays': retentionDays,
-        'executionMode': executionMode == McpExecutionModeV2.isolated
-            ? 'isolated'
-            : 'owner_host',
-      };
+    'id': id,
+    'publisher': publisher,
+    'version': version,
+    'transport': transport,
+    'executablePath': executablePath,
+    'executableSha256': executableSha256,
+    'arguments': arguments,
+    'tools': tools.toList()..sort(),
+    'resources': resources.toList()..sort(),
+    'prompts': prompts.toList()..sort(),
+    'roots': roots.toList()..sort(),
+    'networkDestinations': networkDestinations.toList()..sort(),
+    'secretIds': secretIds.toList()..sort(),
+    'retentionDays': retentionDays,
+    'executionMode': executionMode == McpExecutionModeV2.isolated
+        ? 'isolated'
+        : 'owner_host',
+  };
 }
 
 class McpRegistryRecordV2 {
@@ -177,29 +177,30 @@ class McpRegistryRecordV2 {
   final DateTime installedAt;
   final DateTime? updatedAt;
 
-  McpRegistryRecordV2 copyWith(
-          {McpLifecycleStateV2? state, DateTime? updatedAt}) =>
-      McpRegistryRecordV2(
-        id: id,
-        projectId: projectId,
-        descriptor: descriptor,
-        manifestSha256: manifestSha256,
-        signerKeyId: signerKeyId,
-        state: state ?? this.state,
-        installedAt: installedAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  McpRegistryRecordV2 copyWith({
+    McpLifecycleStateV2? state,
+    DateTime? updatedAt,
+  }) => McpRegistryRecordV2(
+    id: id,
+    projectId: projectId,
+    descriptor: descriptor,
+    manifestSha256: manifestSha256,
+    signerKeyId: signerKeyId,
+    state: state ?? this.state,
+    installedAt: installedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'descriptor': descriptor.toJson(),
-        'manifestSha256': manifestSha256,
-        'signerKeyId': signerKeyId,
-        'state': state.name,
-        'installedAt': installedAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt?.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'projectId': projectId,
+    'descriptor': descriptor.toJson(),
+    'manifestSha256': manifestSha256,
+    'signerKeyId': signerKeyId,
+    'state': state.name,
+    'installedAt': installedAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt?.toUtc().toIso8601String(),
+  };
 
   factory McpRegistryRecordV2.fromJson(Map<String, dynamic> json) =>
       McpRegistryRecordV2(
@@ -207,7 +208,8 @@ class McpRegistryRecordV2 {
         projectId: json['projectId']?.toString() ?? '',
         descriptor: McpServerDescriptorV2.fromPayload(
           Map<String, Object?>.from(
-              json['descriptor'] as Map? ?? const <String, Object?>{}),
+            json['descriptor'] as Map? ?? const <String, Object?>{},
+          ),
         ),
         manifestSha256: json['manifestSha256']?.toString() ?? '',
         signerKeyId: json['signerKeyId']?.toString() ?? '',
@@ -233,13 +235,14 @@ class McpExecutionGrantV2 {
     Set<String> allowedNetworkDestinations = const <String>{},
     Set<String> allowedSecretIds = const <String>{},
     this.allowOwnerHostExecution = false,
-  })  : allowedTools = Set<String>.unmodifiable(allowedTools),
-        allowedResources = Set<String>.unmodifiable(allowedResources),
-        allowedPrompts = Set<String>.unmodifiable(allowedPrompts),
-        allowedRoots = Set<String>.unmodifiable(allowedRoots),
-        allowedNetworkDestinations =
-            Set<String>.unmodifiable(allowedNetworkDestinations),
-        allowedSecretIds = Set<String>.unmodifiable(allowedSecretIds);
+  }) : allowedTools = Set<String>.unmodifiable(allowedTools),
+       allowedResources = Set<String>.unmodifiable(allowedResources),
+       allowedPrompts = Set<String>.unmodifiable(allowedPrompts),
+       allowedRoots = Set<String>.unmodifiable(allowedRoots),
+       allowedNetworkDestinations = Set<String>.unmodifiable(
+         allowedNetworkDestinations,
+       ),
+       allowedSecretIds = Set<String>.unmodifiable(allowedSecretIds);
 
   final String projectId;
   final String serverId;
@@ -307,16 +310,17 @@ class McpRegistryV2 {
     required this.audit,
     required Map<String, McpDescriptorTrustKeyV2> trustedKeys,
     McpExecutionBackendV2 backend = const McpUnavailableExecutionBackendV2(),
-  })  : _trustedKeys =
-            Map<String, McpDescriptorTrustKeyV2>.unmodifiable(trustedKeys),
-        _backend = backend,
-        _repository = SqliteEntityRepository<McpRegistryRecordV2>(
-          store: workflow,
-          collection: 'mcp_registry_v2',
-          fromJson: McpRegistryRecordV2.fromJson,
-          toJson: (value) => value.toJson(),
-          idOf: (value) => value.id,
-        );
+  }) : _trustedKeys = Map<String, McpDescriptorTrustKeyV2>.unmodifiable(
+         trustedKeys,
+       ),
+       _backend = backend,
+       _repository = SqliteEntityRepository<McpRegistryRecordV2>(
+         store: workflow,
+         collection: 'mcp_registry_v2',
+         fromJson: McpRegistryRecordV2.fromJson,
+         toJson: (value) => value.toJson(),
+         idOf: (value) => value.id,
+       );
 
   final AuditChain audit;
   final Map<String, McpDescriptorTrustKeyV2> _trustedKeys;
@@ -496,10 +500,12 @@ class McpRegistryV2 {
         'Signed MCP updates must advance the semantic version.',
       );
     }
-    final scopeChanged = !_setsEqual(
-            candidate.descriptor.tools, current.descriptor.tools) ||
+    final scopeChanged =
+        !_setsEqual(candidate.descriptor.tools, current.descriptor.tools) ||
         !_setsEqual(
-            candidate.descriptor.resources, current.descriptor.resources) ||
+          candidate.descriptor.resources,
+          current.descriptor.resources,
+        ) ||
         !_setsEqual(candidate.descriptor.prompts, current.descriptor.prompts) ||
         !_setsEqual(candidate.descriptor.roots, current.descriptor.roots) ||
         !_setsEqual(
@@ -507,7 +513,9 @@ class McpRegistryV2 {
           current.descriptor.networkDestinations,
         ) ||
         !_setsEqual(
-            candidate.descriptor.secretIds, current.descriptor.secretIds) ||
+          candidate.descriptor.secretIds,
+          current.descriptor.secretIds,
+        ) ||
         candidate.descriptor.executionMode != current.descriptor.executionMode;
     final next = McpRegistryRecordV2(
       id: current.id,
@@ -537,9 +545,9 @@ class McpRegistryV2 {
 
   static bool _isNewerVersion(String candidate, String current) {
     List<int>? parse(String value) {
-      final match = RegExp(r'^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$').firstMatch(
-        value.trim(),
-      );
+      final match = RegExp(
+        r'^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$',
+      ).firstMatch(value.trim());
       if (match == null) {
         return null;
       }
@@ -628,9 +636,7 @@ class McpRegistryV2 {
     }
     await _backend.stop(id);
     await _repository.remove(id);
-    await audit.append('mcp.v2.removed', id, <String, dynamic>{
-      'serverId': id,
-    });
+    await audit.append('mcp.v2.removed', id, <String, dynamic>{'serverId': id});
   }
 
   Future<McpBackendReceiptV2> start({
@@ -749,23 +755,23 @@ class McpRegistryV2 {
     }
     final allowed = switch (current.state) {
       McpLifecycleStateV2.installed => <McpLifecycleStateV2>{
-          McpLifecycleStateV2.enabled,
-          McpLifecycleStateV2.disabled,
-          McpLifecycleStateV2.revoked,
-        },
+        McpLifecycleStateV2.enabled,
+        McpLifecycleStateV2.disabled,
+        McpLifecycleStateV2.revoked,
+      },
       McpLifecycleStateV2.enabled => <McpLifecycleStateV2>{
-          McpLifecycleStateV2.disabled,
-          McpLifecycleStateV2.revoked,
-        },
+        McpLifecycleStateV2.disabled,
+        McpLifecycleStateV2.revoked,
+      },
       McpLifecycleStateV2.running => <McpLifecycleStateV2>{
-          McpLifecycleStateV2.enabled,
-          McpLifecycleStateV2.disabled,
-          McpLifecycleStateV2.revoked,
-        },
+        McpLifecycleStateV2.enabled,
+        McpLifecycleStateV2.disabled,
+        McpLifecycleStateV2.revoked,
+      },
       McpLifecycleStateV2.disabled => <McpLifecycleStateV2>{
-          McpLifecycleStateV2.enabled,
-          McpLifecycleStateV2.revoked,
-        },
+        McpLifecycleStateV2.enabled,
+        McpLifecycleStateV2.revoked,
+      },
       McpLifecycleStateV2.revoked => const <McpLifecycleStateV2>{},
     };
     if (!allowed.contains(state)) {
@@ -794,7 +800,9 @@ class McpRegistryV2 {
     final record = await _repository.get(id);
     if (record == null) {
       throw ProductException(
-          'mcp_server_unregistered', 'MCP server is not registered.');
+        'mcp_server_unregistered',
+        'MCP server is not registered.',
+      );
     }
     return record;
   }

@@ -10,15 +10,14 @@ import 'task_kernel/task_specification_patch.dart';
 
 extension RunSteeringPatchSemantics on TaskSpecificationPatch {
   bool get requiresReplan => switch (kind) {
-        TaskSpecificationPatchKind.preference => false,
-        TaskSpecificationPatchKind.objective ||
-        TaskSpecificationPatchKind.hardConstraint ||
-        TaskSpecificationPatchKind.requestedMethod ||
-        TaskSpecificationPatchKind.priority ||
-        TaskSpecificationPatchKind.stopCondition ||
-        TaskSpecificationPatchKind.clarificationAnswer =>
-          true,
-      };
+    TaskSpecificationPatchKind.preference => false,
+    TaskSpecificationPatchKind.objective ||
+    TaskSpecificationPatchKind.hardConstraint ||
+    TaskSpecificationPatchKind.requestedMethod ||
+    TaskSpecificationPatchKind.priority ||
+    TaskSpecificationPatchKind.stopCondition ||
+    TaskSpecificationPatchKind.clarificationAnswer => true,
+  };
 
   bool get grantsAuthority => false;
 
@@ -26,16 +25,15 @@ extension RunSteeringPatchSemantics on TaskSpecificationPatch {
       applyTo(specification);
 
   String renderForExecutor() => switch (kind) {
-        TaskSpecificationPatchKind.objective => 'Objective: $value',
-        TaskSpecificationPatchKind.hardConstraint => 'Hard constraint: $value',
-        TaskSpecificationPatchKind.preference => 'Preference: $value',
-        TaskSpecificationPatchKind.requestedMethod =>
-          'Requested method: $value',
-        TaskSpecificationPatchKind.priority => 'Priority: $value',
-        TaskSpecificationPatchKind.stopCondition => 'Stop condition: $value',
-        TaskSpecificationPatchKind.clarificationAnswer =>
-          'Clarification — $question: $value',
-      };
+    TaskSpecificationPatchKind.objective => 'Objective: $value',
+    TaskSpecificationPatchKind.hardConstraint => 'Hard constraint: $value',
+    TaskSpecificationPatchKind.preference => 'Preference: $value',
+    TaskSpecificationPatchKind.requestedMethod => 'Requested method: $value',
+    TaskSpecificationPatchKind.priority => 'Priority: $value',
+    TaskSpecificationPatchKind.stopCondition => 'Stop condition: $value',
+    TaskSpecificationPatchKind.clarificationAnswer =>
+      'Clarification — $question: $value',
+  };
 }
 
 class RunSteeringInstruction {
@@ -58,15 +56,15 @@ class RunSteeringInstruction {
   final String reconciliationSummary;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'runId': runId,
-        'text': text,
-        'patch': patch.toJson(),
-        'createdAt': createdAt.toIso8601String(),
-        if (continuationRunId != null) 'continuationRunId': continuationRunId,
-        if (reconciliationSummary.isNotEmpty)
-          'reconciliationSummary': reconciliationSummary,
-      };
+    'id': id,
+    'runId': runId,
+    'text': text,
+    'patch': patch.toJson(),
+    'createdAt': createdAt.toIso8601String(),
+    if (continuationRunId != null) 'continuationRunId': continuationRunId,
+    if (reconciliationSummary.isNotEmpty)
+      'reconciliationSummary': reconciliationSummary,
+  };
 
   factory RunSteeringInstruction.fromRecord(RunSteeringRecord record) =>
       RunSteeringInstruction(
@@ -83,10 +81,7 @@ class RunSteeringInstruction {
 }
 
 class RunSteeringService {
-  RunSteeringService({
-    required this.liveSignals,
-    this.repository,
-  });
+  RunSteeringService({required this.liveSignals, this.repository});
 
   final LiveRunSignalBus liveSignals;
   final EntityRepository<RunSteeringRecord>? repository;
@@ -139,16 +134,17 @@ class RunSteeringService {
     return List<RunSteeringInstruction>.unmodifiable(queue);
   }
 
-  Future<List<RunSteeringInstruction>> takePendingDurable(
-    String runId,
-  ) async {
-    final values = (await _durableRepository.all())
-        .where((record) =>
-            record.runId == runId &&
-            record.state == RunSteeringRecordState.pending &&
-            !record.patch.requiresReplan)
-        .toList(growable: false)
-      ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+  Future<List<RunSteeringInstruction>> takePendingDurable(String runId) async {
+    final values =
+        (await _durableRepository.all())
+            .where(
+              (record) =>
+                  record.runId == runId &&
+                  record.state == RunSteeringRecordState.pending &&
+                  !record.patch.requiresReplan,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
     return List<RunSteeringInstruction>.unmodifiable(
       values.map(RunSteeringInstruction.fromRecord),
     );
@@ -191,16 +187,19 @@ class RunSteeringService {
   }
 
   Future<List<RunSteeringInstruction>> pendingReplan(String runId) async {
-    final values = (await _durableRepository.all())
-        .where((record) =>
-            record.runId == runId &&
-            const <RunSteeringRecordState>{
-              RunSteeringRecordState.pending,
-              RunSteeringRecordState.replanning,
-            }.contains(record.state) &&
-            record.patch.requiresReplan)
-        .toList(growable: false)
-      ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+    final values =
+        (await _durableRepository.all())
+            .where(
+              (record) =>
+                  record.runId == runId &&
+                  const <RunSteeringRecordState>{
+                    RunSteeringRecordState.pending,
+                    RunSteeringRecordState.replanning,
+                  }.contains(record.state) &&
+                  record.patch.requiresReplan,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
     return values
         .map(RunSteeringInstruction.fromRecord)
         .toList(growable: false);

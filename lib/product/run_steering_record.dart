@@ -34,32 +34,31 @@ class RunSteeringRecord {
     DateTime? appliedAt,
     String? continuationRunId,
     List<Map<String, dynamic>>? reconciliation,
-  }) =>
-      RunSteeringRecord(
-        id: id,
-        runId: runId,
-        text: text,
-        patch: patch,
-        state: state ?? this.state,
-        createdAt: createdAt,
-        workItemId: workItemId ?? this.workItemId,
-        appliedAt: appliedAt ?? this.appliedAt,
-        continuationRunId: continuationRunId ?? this.continuationRunId,
-        reconciliation: reconciliation ?? this.reconciliation,
-      );
+  }) => RunSteeringRecord(
+    id: id,
+    runId: runId,
+    text: text,
+    patch: patch,
+    state: state ?? this.state,
+    createdAt: createdAt,
+    workItemId: workItemId ?? this.workItemId,
+    appliedAt: appliedAt ?? this.appliedAt,
+    continuationRunId: continuationRunId ?? this.continuationRunId,
+    reconciliation: reconciliation ?? this.reconciliation,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'runId': runId,
-        'text': text,
-        'patch': patch.toJson(),
-        'state': state.name,
-        'createdAt': createdAt.toIso8601String(),
-        if (workItemId != null) 'workItemId': workItemId,
-        if (appliedAt != null) 'appliedAt': appliedAt!.toIso8601String(),
-        if (continuationRunId != null) 'continuationRunId': continuationRunId,
-        if (reconciliation.isNotEmpty) 'reconciliation': reconciliation,
-      };
+    'id': id,
+    'runId': runId,
+    'text': text,
+    'patch': patch.toJson(),
+    'state': state.name,
+    'createdAt': createdAt.toIso8601String(),
+    if (workItemId != null) 'workItemId': workItemId,
+    if (appliedAt != null) 'appliedAt': appliedAt!.toIso8601String(),
+    if (continuationRunId != null) 'continuationRunId': continuationRunId,
+    if (reconciliation.isNotEmpty) 'reconciliation': reconciliation,
+  };
 
   factory RunSteeringRecord.fromJson(Map<String, dynamic> json) =>
       RunSteeringRecord(
@@ -67,7 +66,8 @@ class RunSteeringRecord {
         runId: json['runId']?.toString() ?? '',
         text: json['text']?.toString() ?? '',
         patch: TaskSpecificationPatch.fromJson(mapValue(json['patch'])),
-        state: RunSteeringRecordState.values
+        state:
+            RunSteeringRecordState.values
                 .where((value) => value.name == json['state']?.toString())
                 .firstOrNull ??
             RunSteeringRecordState.pending,
@@ -75,12 +75,13 @@ class RunSteeringRecord {
         workItemId: _nullable(json['workItemId']),
         appliedAt: _date(json['appliedAt']),
         continuationRunId: _nullable(json['continuationRunId']),
-        reconciliation: (json['reconciliation'] is List
-                ? json['reconciliation'] as List
-                : const <Object>[])
-            .whereType<Map>()
-            .map((value) => mapValue(value))
-            .toList(growable: false),
+        reconciliation:
+            (json['reconciliation'] is List
+                    ? json['reconciliation'] as List
+                    : const <Object>[])
+                .whereType<Map>()
+                .map((value) => mapValue(value))
+                .toList(growable: false),
       );
 }
 

@@ -38,29 +38,28 @@ class ProjectManagerV2Service {
   }
 
   Future<Map<String, dynamic>> status(String projectRoot) => _invoke(<String>[
-        'status',
-        '--project',
-        projectRoot,
-        '--data-root',
-        dataRoot,
-        '--json',
-      ]);
+    'status',
+    '--project',
+    projectRoot,
+    '--data-root',
+    dataRoot,
+    '--json',
+  ]);
 
   Future<Map<String, dynamic>> execute(
     String projectRoot,
     String action, {
     String? runId,
-  }) =>
-      _invoke(<String>[
-        'action',
-        action,
-        '--project',
-        projectRoot,
-        '--data-root',
-        dataRoot,
-        if (runId != null) ...<String>['--run-id', runId],
-        '--json',
-      ]);
+  }) => _invoke(<String>[
+    'action',
+    action,
+    '--project',
+    projectRoot,
+    '--data-root',
+    dataRoot,
+    if (runId != null) ...<String>['--run-id', runId],
+    '--json',
+  ]);
 
   Future<Map<String, dynamic>> start(String projectRoot, {String? runId}) =>
       _invoke(<String>[
@@ -74,14 +73,8 @@ class ProjectManagerV2Service {
       ]);
 
   Future<Map<String, dynamic>> processStatus(String processId) => _invoke(
-        <String>[
-          'process-status',
-          processId,
-          '--data-root',
-          dataRoot,
-          '--json'
-        ],
-      );
+    <String>['process-status', processId, '--data-root', dataRoot, '--json'],
+  );
 
   Future<Map<String, dynamic>> stop(String processId) =>
       _invoke(<String>['stop', processId, '--data-root', dataRoot, '--json']);

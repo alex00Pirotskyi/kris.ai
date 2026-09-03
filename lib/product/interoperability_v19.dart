@@ -27,18 +27,18 @@ class SignedManifestEnvelope {
   final DateTime signedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'schemaVersion': interoperabilityV19SchemaVersion,
-        'manifestType': manifestType,
-        'manifest': manifest,
-        'manifestSha256': manifestSha256,
-        'signature': signature,
-        'signedAt': signedAt.toUtc().toIso8601String(),
-        'signer': <String, String>{
-          'keyId': signerKeyId,
-          'algorithm': 'Ed25519',
-          'publicKey': signerPublicKey,
-        },
-      };
+    'schemaVersion': interoperabilityV19SchemaVersion,
+    'manifestType': manifestType,
+    'manifest': manifest,
+    'manifestSha256': manifestSha256,
+    'signature': signature,
+    'signedAt': signedAt.toUtc().toIso8601String(),
+    'signer': <String, String>{
+      'keyId': signerKeyId,
+      'algorithm': 'Ed25519',
+      'publicKey': signerPublicKey,
+    },
+  };
 }
 
 class CapabilityManifest {
@@ -124,9 +124,9 @@ class AuditChain {
   final int recordCount;
 
   AuditVerificationResultV19 verify() => AuditVerificationResultV19(
-        verified: headSha256.isNotEmpty && recordCount >= 0,
-        recordCount: recordCount,
-      );
+    verified: headSha256.isNotEmpty && recordCount >= 0,
+    recordCount: recordCount,
+  );
 }
 
 class UpdatePolicyVerifier {

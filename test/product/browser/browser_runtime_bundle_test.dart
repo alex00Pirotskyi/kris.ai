@@ -69,8 +69,8 @@ Future<Directory> _writeBundle(
 
   final automationHostTree =
       await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
-    worker.parent.parent,
-  );
+        worker.parent.parent,
+      );
   final browserTree = await P3ApplicationOwnedBrowserRuntimeResolver.treeSha256(
     browser.parent,
     allowInternalSymlinks: withInternalBrowserSymlinks,
@@ -146,7 +146,8 @@ void main() {
       final root = await _writeBundle(temp);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: temp.absolute,
-        executablePath: '${temp.path}${Platform.pathSeparator}app'
+        executablePath:
+            '${temp.path}${Platform.pathSeparator}app'
             '${Platform.pathSeparator}kristin',
       );
 
@@ -170,10 +171,7 @@ void main() {
       if (Platform.isWindows) return;
       final temp = await Directory.systemTemp.createTemp('p3-browser-links-');
       addTearDown(() => temp.delete(recursive: true));
-      final root = await _writeBundle(
-        temp,
-        withInternalBrowserSymlinks: true,
-      );
+      final root = await _writeBundle(temp, withInternalBrowserSymlinks: true);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: temp.absolute,
       );

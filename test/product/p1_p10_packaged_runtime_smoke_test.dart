@@ -75,8 +75,9 @@ Future<Map<String, Object?>> _runHostedLinuxQualificationProbe({
     mode: ProcessStartMode.normal,
   );
   final stderr = StringBuffer();
-  final stderrSubscription =
-      process.stderr.transform(utf8.decoder).listen(stderr.write);
+  final stderrSubscription = process.stderr
+      .transform(utf8.decoder)
+      .listen(stderr.write);
   try {
     final line = await process.stdout
         .transform(utf8.decoder)
@@ -137,60 +138,42 @@ void main() {
       _PackagedQualificationSandboxMode.required,
     );
     expect(
-      _qualificationSandboxMode(
-        const <String, String>{
-          'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'required',
-        },
-        hostIsLinux: true,
-      ),
+      _qualificationSandboxMode(const <String, String>{
+        'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'required',
+      }, hostIsLinux: true),
       _PackagedQualificationSandboxMode.required,
     );
     expect(
-      _qualificationSandboxMode(
-        const <String, String>{
-          'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'disabled',
-        },
-        hostIsLinux: true,
-      ),
+      _qualificationSandboxMode(const <String, String>{
+        'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'disabled',
+      }, hostIsLinux: true),
       _PackagedQualificationSandboxMode.disabled,
     );
     expect(
-      () => _qualificationSandboxMode(
-        const <String, String>{
-          'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'disabled',
-        },
-        hostIsLinux: false,
-      ),
+      () => _qualificationSandboxMode(const <String, String>{
+        'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'disabled',
+      }, hostIsLinux: false),
       throwsStateError,
     );
     expect(
-      () => _qualificationSandboxMode(
-        const <String, String>{
-          'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'permissive',
-        },
-        hostIsLinux: true,
-      ),
+      () => _qualificationSandboxMode(const <String, String>{
+        'KRISTIN_PACKAGED_BROWSER_SANDBOX_MODE': 'permissive',
+      }, hostIsLinux: true),
       throwsStateError,
     );
     expect(
-      _qualificationSandboxMode(
-        const <String, String>{
-          'GITHUB_ACTIONS': 'true',
-          'RUNNER_OS': 'Linux',
-        },
-        hostIsLinux: true,
-      ),
+      _qualificationSandboxMode(const <String, String>{
+        'GITHUB_ACTIONS': 'true',
+        'RUNNER_OS': 'Linux',
+      }, hostIsLinux: true),
       _PackagedQualificationSandboxMode.required,
     );
     expect(
-      _qualificationSandboxMode(
-        const <String, String>{
-          'GITHUB_ACTIONS': 'true',
-          'RUNNER_OS': 'Linux',
-          'KRISTIN_PACKAGED_APP_EXECUTABLE': '/tmp/Kristin',
-        },
-        hostIsLinux: true,
-      ),
+      _qualificationSandboxMode(const <String, String>{
+        'GITHUB_ACTIONS': 'true',
+        'RUNNER_OS': 'Linux',
+        'KRISTIN_PACKAGED_APP_EXECUTABLE': '/tmp/Kristin',
+      }, hostIsLinux: true),
       _PackagedQualificationSandboxMode.disabled,
     );
   });
@@ -228,10 +211,7 @@ void main() {
         );
         expect(handle.available, true, reason: handle.failureCode);
         final owner = handle.runtime!;
-        handle.activateEffectContext(
-          runId: 'p1-p10-package',
-          taskId: 'P1-P10',
-        );
+        handle.activateEffectContext(runId: 'p1-p10-package', taskId: 'P1-P10');
         await owner.controller.enable(
           unattended: true,
           approvalPolicy: P2OwnerApprovalPolicy.destructiveOnly,
@@ -310,7 +290,8 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip:
-        executable.isEmpty ? 'requires packaged P2+P3 product payload' : false,
+    skip: executable.isEmpty
+        ? 'requires packaged P2+P3 product payload'
+        : false,
   );
 }

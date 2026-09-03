@@ -65,13 +65,13 @@ class P5ShellLayoutState {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': 1,
-        'leftRailWidth': leftRailWidth,
-        'inspectorWidth': inspectorWidth,
-        'activityDrawerHeight': activityDrawerHeight,
-        'inspectorOpen': inspectorOpen,
-        'activityDrawerOpen': activityDrawerOpen,
-      };
+    'schemaVersion': 1,
+    'leftRailWidth': leftRailWidth,
+    'inspectorWidth': inspectorWidth,
+    'activityDrawerHeight': activityDrawerHeight,
+    'inspectorOpen': inspectorOpen,
+    'activityDrawerOpen': activityDrawerOpen,
+  };
 
   static P5ShellLayoutState fromJson(Object? value) {
     if (value is! Map) {
@@ -117,12 +117,12 @@ class P5ShellLayoutState {
 
   @override
   int get hashCode => Object.hash(
-        leftRailWidth,
-        inspectorWidth,
-        activityDrawerHeight,
-        inspectorOpen,
-        activityDrawerOpen,
-      );
+    leftRailWidth,
+    inspectorWidth,
+    activityDrawerHeight,
+    inspectorOpen,
+    activityDrawerOpen,
+  );
 }
 
 abstract interface class P5ShellLayoutPersistence {

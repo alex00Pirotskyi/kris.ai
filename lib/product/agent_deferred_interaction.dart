@@ -217,20 +217,14 @@ class AgentDeferredInteractionStore {
       throw AgentDeferredInteractionException(
         'agent_deferred_run_terminal',
         'A terminal run cannot accept a deferred interaction.',
-        details: <String, dynamic>{
-          'runId': runId,
-          'state': run.state.name,
-        },
+        details: <String, dynamic>{'runId': runId, 'state': run.state.name},
       );
     }
     if (!run.items.any((progress) => progress.item.id == workItemId)) {
       throw AgentDeferredInteractionException(
         'agent_deferred_work_item_missing',
         'Work item $workItemId does not belong to run $runId.',
-        details: <String, dynamic>{
-          'runId': runId,
-          'workItemId': workItemId,
-        },
+        details: <String, dynamic>{'runId': runId, 'workItemId': workItemId},
       );
     }
     return run;
@@ -243,17 +237,16 @@ class AgentDeferredInteractionStore {
     required DateTime createdAt,
     required DateTime updatedAt,
     String? userResponse,
-  }) =>
-      <String, dynamic>{
-        'schemaVersion': schemaVersion,
-        'interactionId': interactionId,
-        'status': status.name,
-        'decision': decision.toJson(),
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'updatedAt': updatedAt.toUtc().toIso8601String(),
-        if (userResponse != null) 'userResponse': userResponse,
-        'userResponseGrantsAuthority': false,
-      };
+  }) => <String, dynamic>{
+    'schemaVersion': schemaVersion,
+    'interactionId': interactionId,
+    'status': status.name,
+    'decision': decision.toJson(),
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'updatedAt': updatedAt.toUtc().toIso8601String(),
+    if (userResponse != null) 'userResponse': userResponse,
+    'userResponseGrantsAuthority': false,
+  };
 
   AgentDeferredInteraction _decode(WorkflowCheckpoint checkpoint) {
     final state = checkpoint.state;
@@ -278,9 +271,7 @@ class AgentDeferredInteractionStore {
     AgentDecisionV3 decision;
     try {
       decision = AgentDecisionV3.fromJson(
-        rawDecision.map(
-          (key, value) => MapEntry(key.toString(), value),
-        ),
+        rawDecision.map((key, value) => MapEntry(key.toString(), value)),
       );
     } on FormatException {
       throw _corrupt(checkpoint, 'decision');
@@ -325,14 +316,13 @@ class AgentDeferredInteractionStore {
   AgentDeferredInteractionException _corrupt(
     WorkflowCheckpoint checkpoint,
     String field,
-  ) =>
-      AgentDeferredInteractionException(
-        'agent_deferred_checkpoint_corrupt',
-        'Deferred interaction checkpoint ${checkpoint.id} is invalid.',
-        details: <String, dynamic>{
-          'runId': checkpoint.runId,
-          'checkpointId': checkpoint.id,
-          'field': field,
-        },
-      );
+  ) => AgentDeferredInteractionException(
+    'agent_deferred_checkpoint_corrupt',
+    'Deferred interaction checkpoint ${checkpoint.id} is invalid.',
+    details: <String, dynamic>{
+      'runId': checkpoint.runId,
+      'checkpointId': checkpoint.id,
+      'field': field,
+    },
+  );
 }

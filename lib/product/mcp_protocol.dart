@@ -3,16 +3,10 @@ import 'storage_security.dart';
 const String mcpCurrentStableProtocolVersion = '2026-07-28';
 const String mcpLegacyProtocolVersion = '2024-11-05';
 
-enum McpProtocolEra {
-  legacyInitialize,
-  modernStateless,
-}
+enum McpProtocolEra { legacyInitialize, modernStateless }
 
 class McpToolCatalogPage {
-  const McpToolCatalogPage({
-    required this.toolNames,
-    required this.nextCursor,
-  });
+  const McpToolCatalogPage({required this.toolNames, required this.nextCursor});
 
   final Set<String> toolNames;
   final String? nextCursor;
@@ -23,10 +17,7 @@ class McpToolCatalogPage {
 /// Only revisions explicitly listed by [McpProtocolRegistry] are accepted by
 /// production trust records. Draft and unknown revision strings fail closed.
 class McpProtocolAdapter {
-  const McpProtocolAdapter._({
-    required this.version,
-    required this.era,
-  });
+  const McpProtocolAdapter._({required this.version, required this.era});
 
   final String version;
   final McpProtocolEra era;
@@ -49,8 +40,9 @@ class McpProtocolAdapter {
     final meta = rawMeta == null
         ? <String, dynamic>{}
         : _stringKeyedMap(rawMeta, code: 'mcp_request_meta_invalid');
-    final reserved =
-        meta.keys.where(_isReservedMcpMetaKey).toList(growable: false);
+    final reserved = meta.keys
+        .where(_isReservedMcpMetaKey)
+        .toList(growable: false);
     if (reserved.isNotEmpty) {
       throw ProductException(
         'mcp_reserved_meta_rejected',
@@ -64,7 +56,7 @@ class McpProtocolAdapter {
       'version': clientVersion,
     };
     meta['io.modelcontextprotocol/clientCapabilities'] = <String, dynamic>{
-      ...clientCapabilities
+      ...clientCapabilities,
     };
     decorated['_meta'] = meta;
     return decorated;
@@ -130,10 +122,7 @@ class McpProtocolAdapter {
       throw ProductException(
         'mcp_protocol_version_mismatch',
         'The MCP server does not advertise the explicitly trusted protocol version.',
-        details: <String, dynamic>{
-          'requested': version,
-          'supported': sorted,
-        },
+        details: <String, dynamic>{'requested': version, 'supported': sorted},
       );
     }
     return _validateCapabilityFloor(
@@ -324,10 +313,7 @@ bool _isReservedMcpMetaKey(String key) {
   return secondLabel == 'modelcontextprotocol' || secondLabel == 'mcp';
 }
 
-Map<String, dynamic> _stringKeyedMap(
-  Object? value, {
-  required String code,
-}) {
+Map<String, dynamic> _stringKeyedMap(Object? value, {required String code}) {
   if (value is! Map) {
     throw ProductException(code, 'Expected a JSON object.');
   }
