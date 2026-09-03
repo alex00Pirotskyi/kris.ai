@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:kristin_local_agent/product/domain.dart';
 import 'package:kristin_local_agent/product/product_runtime.dart';
-import 'package:kristin_local_agent/product/storage_security.dart';
 
 const candidateSha = 'e59583b170b2a5d333a3c6eff5243725daef0d54';
 
