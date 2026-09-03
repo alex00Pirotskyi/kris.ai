@@ -5,7 +5,7 @@ on:
       - automation/one-kristin-product-gates-dispatch-20260902
     paths:
       - .github/workflows/exact-live-steering-dogfood.yml
-      - tool/ci/exact_live_steering_dogfood.dart
+      - tool/ci/exact_live_steering_dogfood_v2.dart
 permissions:
   contents: read
 jobs:
@@ -31,7 +31,7 @@ jobs:
           ref: automation/one-kristin-product-gates-dispatch-20260902
           path: _dogfood_harness
           sparse-checkout: |
-            tool/ci/exact_live_steering_dogfood.dart
+            tool/ci/exact_live_steering_dogfood_v2.dart
           sparse-checkout-cone-mode: false
           fetch-depth: 1
       - name: Set up Flutter
@@ -53,7 +53,7 @@ jobs:
       - name: Materialize external driver without changing tracked product source
         shell: bash
         run: |
-          cp _dogfood_harness/tool/ci/exact_live_steering_dogfood.dart tool/exact_live_steering_dogfood.dart
+          cp _dogfood_harness/tool/ci/exact_live_steering_dogfood_v2.dart tool/exact_live_steering_dogfood.dart
           test "$(git rev-parse HEAD)" = "e59583b170b2a5d333a3c6eff5243725daef0d54"
           git diff --exit-code -- lib test pubspec.yaml SOURCE_MANIFEST.sha256
       - name: Analyze external driver against exact candidate APIs
