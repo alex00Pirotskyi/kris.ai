@@ -9,9 +9,13 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       _newChat();
       return;
     }
+    if (id == 'utility.time') {
+      await _runUtilityTime(decision);
+      return;
+    }
     if (id == 'system.help') {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(_capabilityHelpText()));
+        conversationSession.addAssistantMessage(_capabilityHelpText());
         status = 'Kristin is ready';
       });
       return;
@@ -48,13 +52,11 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         'a separate approval.';
   }
 
-  Future<void> _answerInformational(
-    ChatInteractionDecision decision,
-  ) async {
+  Future<void> _answerInformational(ChatInteractionDecision decision) async {
     final local = await _tryLocalAnswer(decision);
     if (local != null) {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(local));
+        conversationSession.addAssistantMessage(local);
         status = 'Kristin is ready';
       });
       return;
@@ -128,7 +130,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     if (visible.isEmpty) visible = 'The model returned an empty answer.';
     _mutate(() {
-      transcript.add(_ChatLine.assistant(visible));
+      conversationSession.addAssistantMessage(visible);
       status = 'Kristin is ready';
     });
   }
@@ -141,13 +143,13 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
   Future<void> _answerTargetReference(ChatInteractionDecision decision) async {
     if (decision.targets.isEmpty) {
       _mutate(() {
-        transcript.add(_ChatLine.assistant(
+        conversationSession.addAssistantMessage(
           decision.unresolvedMentions.isEmpty
               ? "I'm not sure what that refers to. Type @ to see projects, "
                   'models, providers, and workspaces I know about.'
               : "I don't have a match for "
                   '${decision.unresolvedMentions.map((value) => '@$value').join(', ')}.',
-        ));
+        );
         status = 'Kristin is ready';
       });
       return;
@@ -156,7 +158,9 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       final names =
           decision.targets.map((target) => target.displayName).join(', ');
       _mutate(() {
-        transcript.add(_ChatLine.assistant('Which one did you mean: $names?'));
+        conversationSession.addAssistantMessage(
+          'Which one did you mean: $names?',
+        );
         status = 'Kristin is ready';
       });
       return;
@@ -171,27 +175,28 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           if (projects.any((item) => item.id == target.id)) {
             selectedProjectId = target.id;
           }
-          transcript.add(_ChatLine.assistant(
+          conversationSession.addAssistantMessage(
             "We're talking about ${target.displayName}. It is currently "
             '$state.',
-          ));
+          );
           status = 'Kristin is ready';
         });
         return;
       case ChatTargetType.model:
         _mutate(() {
-          transcript.add(_ChatLine.assistant(
+          conversationSession.addAssistantMessage(
             '${target.displayName} is available'
             '${target.id == selectedModelId ? ' and currently selected' : ''}. '
             'Say "use ${target.displayName}" or `/use @${_slug(target.displayName)}` to switch to it.',
-          ));
+          );
           status = 'Kristin is ready';
         });
         return;
       case ChatTargetType.provider:
         _mutate(() {
-          transcript.add(
-              _ChatLine.assistant('${target.displayName}: ${target.status}.'));
+          conversationSession.addAssistantMessage(
+            '${target.displayName}: ${target.status}.',
+          );
           status = 'Kristin is ready';
         });
         return;
@@ -199,8 +204,9 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       case ChatTargetType.capability:
       case ChatTargetType.runtime:
         _mutate(() {
-          transcript
-              .add(_ChatLine.assistant('Referencing ${target.displayName}.'));
+          conversationSession.addAssistantMessage(
+            'Referencing ${target.displayName}.',
+          );
           status = 'Kristin is ready';
         });
         return;
@@ -277,9 +283,10 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     // Entity discovery: Kristin already holds the canonical project/model
     // list in memory, so these are answered directly rather than asking
     // the user to already know names/IDs they have never been shown.
-    if (RegExp(r'\bwhat\s+projects\b|\bwhich\s+projects?\b|'
-            r'\b(?:list|show)\s+(?:my\s+)?projects\b')
-        .hasMatch(text)) {
+    if (RegExp(
+      r'\bwhat\s+projects\b|\bwhich\s+projects?\b|'
+      r'\b(?:list|show)\s+(?:my\s+)?projects\b',
+    ).hasMatch(text)) {
       if (projects.isEmpty) {
         return "You don't have any projects yet. Describe what you want to "
             'build and I will set one up.';
@@ -298,10 +305,11 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return 'You have ${projects.length} project(s):\n${lines.join('\n')}';
     }
 
-    if (RegExp(r"what.?s\s+(?:currently\s+)?running|"
-            r'which\s+(?:project|one)\s+is\s+running|'
-            r'which\s+projects?\s+can\s+i\s+run')
-        .hasMatch(text)) {
+    if (RegExp(
+      r"what.?s\s+(?:currently\s+)?running|"
+      r'which\s+(?:project|one)\s+is\s+running|'
+      r'which\s+projects?\s+can\s+i\s+run',
+    ).hasMatch(text)) {
       if (RegExp(r'\bcan\s+i\s+run\b').hasMatch(text)) {
         if (projects.isEmpty) return "You don't have any projects yet.";
         final names = projects.map((project) => project.name).join(', ');
@@ -317,16 +325,19 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           '${running.length == 1 ? 'is' : 'are'} currently running.';
     }
 
-    if (RegExp(r'\bwhat\s+models\b|\bwhich\s+models?\b|'
-            r'\b(?:list|show)\s+(?:my\s+)?models\b')
-        .hasMatch(text)) {
+    if (RegExp(
+      r'\bwhat\s+models\b|\bwhich\s+models?\b|'
+      r'\b(?:list|show)\s+(?:my\s+)?models\b',
+    ).hasMatch(text)) {
       if (models.isEmpty) {
         return 'No models are currently available. Connect a provider '
             'first.';
       }
       final lines = models
-          .map((model) =>
-              '- ${model.exactId}${model.exactId == selectedModelId ? ' (selected)' : ''}')
+          .map(
+            (model) =>
+                '- ${model.exactId}${model.exactId == selectedModelId ? ' (selected)' : ''}',
+          )
           .join('\n');
       return 'Available models:\n$lines';
     }
@@ -373,6 +384,18 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     final decision = pendingDecision;
     final history = understandingHistory;
     if (decision == null || history == null) return;
+
+    if (routingDecision?.requiresClarification == true ||
+        taskSpecification?.blockingQuestions.isNotEmpty == true) {
+      final question = taskSpecification?.blockingQuestions.first.question ??
+          'I need one clarification before I can continue safely.';
+      _mutate(() {
+        status = 'Reply in Chat: $question';
+        error = null;
+      });
+      composerFocus.requestFocus();
+      return;
+    }
 
     if (decision.unresolvedMentions.isNotEmpty) {
       _showError(
@@ -452,7 +475,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
     if (model == null) {
       _showError(
-          'Connect an AI model before Kristin creates the execution plan.');
+        'Connect an AI model before Kristin creates the execution plan.',
+      );
       return;
     }
 
@@ -461,8 +485,10 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     // understanding step was skipped (an explicit command, for example).
     final specification = _specificationFor(decision, request);
     final routing = routingDecision ??
-        runtime.taskKernel
-            .route(specification: specification, decision: decision);
+        runtime.taskKernel.route(
+          specification: specification,
+          decision: decision,
+        );
     if (!routing.plans) {
       // The router decided this does not deserve a plan after all.
       await _executeSmallAction(decision, request);
@@ -559,10 +585,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           case PlanningFailureKind.cancelled:
             error = null;
             status = 'Planning cancelled';
-            transcript.add(
-              _ChatLine.assistant(
-                'I stopped planning. Nothing was prepared and nothing ran.',
-              ),
+            conversationSession.addAssistantMessage(
+              'I stopped planning. Nothing was prepared and nothing ran.',
             );
           case PlanningFailureKind.providerUnavailable:
             error = runtime.redactor.redact(
@@ -694,6 +718,9 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       case ChatExecutionRoute.researchSearch:
         await _runResearchSearch(decision, project: project);
         return;
+      case ChatExecutionRoute.utilityTime:
+        await _runUtilityTime(decision);
+        return;
       case ChatExecutionRoute.connectProvider:
         await _openSettings(initialSection: 1);
         _finishDirectAction('Provider settings are ready.');
@@ -752,89 +779,107 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     final effectiveQuery = query.isEmpty ? decision.parsed.originalText : query;
-
-    // The SAME universal kernel plans research. "Weather in Nha Trang and
-    // the time in New York" decomposes into two independent retrievals, a
-    // freshness check and one synthesis -- a real graph that really
-    // executes. It stays behind Details: a two-fact question does not
-    // deserve four task cards, and universal task planning is not the
-    // same thing as always showing a plan.
     final plan = await _researchPlan(decision);
-    final subjects = plan == null
-        ? <String>[effectiveQuery]
-        : plan.tasks
-            .where((task) => task.phase == 'Retrieval')
-            .map((task) => task.title.replaceFirst('Obtain ', ''))
-            .toList(growable: false);
-    final queries = subjects.isEmpty ? <String>[effectiveQuery] : subjects;
-
-    final merged = <Map<String, String>>[];
-    final seenUrls = <String>{};
-    for (final subject in queries) {
-      final result = await _perform<ChatResearchResult>(
-        queries.length == 1
-            ? 'Searching current public sources'
-            : 'Searching current public sources for $subject',
-        () => dispatcher.search(query: subject, projectId: project?.id),
-      );
-      if (result == null) return;
-      for (final entry in result.results) {
-        if (seenUrls.add(entry['url'] ?? '')) merged.add(entry);
+    if (plan == null) {
+      final deterministicTime = _timeEvidenceForResearch(effectiveQuery);
+      final raw = deterministicTime != null
+          ? <Map<String, String>>[deterministicTime]
+          : (await _perform<ChatResearchResult>(
+              'Searching current public sources',
+              () => dispatcher.search(
+                query: effectiveQuery,
+                projectId: project?.id,
+              ),
+            ))
+              ?.results;
+      if (raw == null) return;
+      if (raw.isEmpty) {
+        _finishDirectAction(
+          'No attributable evidence was found for "$effectiveQuery".',
+        );
+        return;
       }
-    }
-    if (merged.isEmpty) {
-      _finishDirectAction(
-        'No public sources were found for "$effectiveQuery". There is not '
-        'enough evidence to answer.',
+      final answer = await _synthesizeResearchAnswer(
+        effectiveQuery,
+        ChatResearchResult(query: effectiveQuery, results: raw),
       );
+      if (mounted) _finishDirectAction(answer);
       return;
     }
-    if (plan != null) {
-      _mutate(() {
-        canonicalPlan = plan;
-        planningPath = ChatPlanningPath.model;
-      });
-    }
-    final answer = await _synthesizeResearchAnswer(
-      effectiveQuery,
-      ChatResearchResult(query: effectiveQuery, results: merged),
+
+    final titles = <String, String>{
+      for (final task in plan.tasks) task.id: task.title,
+    };
+    final execution = await _perform<ResearchTaskExecutionResult>(
+      'Executing the research graph',
+      () => const ResearchTaskFamilyExecutor().execute(
+        plan: plan,
+        onStateChanged: (node) {
+          if (!mounted) return;
+          _mutate(() {
+            conversationSession.showLiveProgress(
+              '${titles[node.taskId] ?? node.taskId} — ${node.state.name}',
+            );
+          });
+        },
+        search: (subject) async {
+          final deterministicTime = _timeEvidenceForResearch(subject);
+          if (deterministicTime != null) {
+            return <Map<String, String>>[deterministicTime];
+          }
+          final result = await dispatcher.search(
+            query: subject,
+            projectId: project?.id,
+          );
+          return result.results;
+        },
+        synthesize: (request, sources) => _synthesizeResearchAnswer(
+          request,
+          ChatResearchResult(query: request, results: sources),
+        ),
+      ),
     );
-    if (!mounted) return;
-    _finishDirectAction(answer);
+    if (execution == null || !mounted) return;
+    _mutate(() {
+      canonicalPlan = plan;
+      planningPath = ChatPlanningPath.model;
+    });
+    _finishDirectAction(execution.answer);
   }
 
-  /// The compact research graph for this request, or null when the
-  /// request has no internal structure worth decomposing (one fact, one
-  /// search, one answer -- planning it would be ceremony).
   Future<UniversalTaskPlan?> _researchPlan(
     ChatInteractionDecision decision,
   ) async {
-    final specification = taskSpecification;
+    final specification = taskSpecification ??
+        const DeterministicUnderstanding().understand(decision).specification;
+    final context = PlanningContext(
+      project: selectedProject,
+      model: selectedModel,
+      availableCapabilityIds:
+          kKristinCapabilities.map((item) => item.id).toSet(),
+      availableToolNames: runtime.tools.names,
+    );
     final routing = routingDecision;
-    if (specification == null ||
-        routing == null ||
-        routing.route == PlanningRoute.direct ||
-        routing.family != TaskFamily.research) {
-      return null;
-    }
     try {
-      final result = await runtime.taskKernel.plan(
+      if (routing != null &&
+          routing.family == TaskFamily.research &&
+          routing.route != PlanningRoute.direct) {
+        final result = await runtime.taskKernel.plan(
+          specification: specification,
+          routing: routing,
+          context: context,
+        );
+        return result.plan;
+      }
+      return await const ResearchTaskFamilyPlanner().plan(
         specification: specification,
-        routing: routing,
-        context: PlanningContext(
-          project: selectedProject,
-          model: selectedModel,
-          availableCapabilityIds:
-              kKristinCapabilities.map((item) => item.id).toSet(),
-          availableToolNames: runtime.tools.names,
-        ),
+        route: PlanningRoute.compact,
+        context: context,
       );
-      return result.plan;
-    } catch (_) {
-      // Research answers the user either way; a planning failure here
-      // costs the internal graph, never the answer. The failure is not
-      // laundered into a conservative software plan -- the kernel
-      // refuses that for non-software families.
+    } catch (failure) {
+      _mutate(() {
+        planningFailure = classifyPlanningFailure(failure);
+      });
       return null;
     }
   }
@@ -858,9 +903,11 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     }
 
     final evidence = topResults
-        .map((entry) => 'Title: ${entry['title']}\n'
-            'URL: ${entry['url']}\n'
-            'Snippet: ${entry['snippet']}')
+        .map(
+          (entry) => 'Title: ${entry['title']}\n'
+              'URL: ${entry['url']}\n'
+              'Snippet: ${entry['snippet']}',
+        )
         .join('\n\n');
     final response = await _perform<ModelGenerationResult>(
       'Reading sources',
@@ -924,54 +971,251 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
   /// architecture is identical to a software plan's -- specification,
   /// plan, verification, evidence.
   Future<void> _runDiagnosticsThroughKernel() async {
+    final plan = await _diagnosticsPlan();
+    if (plan == null) {
+      final report = await _perform<CapabilityDoctorReport>(
+        'Checking Kristin readiness',
+        () => dispatcher.diagnose(
+          projectId: selectedProjectId,
+          discoveredModels: models,
+        ),
+      );
+      if (report == null) return;
+      _finishDirectAction(_diagnosticReadinessAnswer(report));
+      return;
+    }
+
+    final titles = <String, String>{
+      for (final task in plan.tasks) task.id: task.title,
+    };
+    final execution = await _perform<DiagnosticsTaskExecutionResult>(
+      'Executing the diagnostic graph',
+      () => const DiagnosticsTaskFamilyExecutor().execute(
+        plan: plan,
+        onStateChanged: (node) {
+          if (!mounted) return;
+          _mutate(() {
+            conversationSession.showLiveProgress(
+              '${titles[node.taskId] ?? node.taskId} — ${node.state.name}',
+            );
+          });
+        },
+        collect: () => dispatcher.diagnose(
+          projectId: selectedProjectId,
+          discoveredModels: models,
+        ),
+      ),
+    );
+    if (execution == null || !mounted) return;
+    _mutate(() {
+      canonicalPlan = plan;
+      planningPath = ChatPlanningPath.model;
+    });
+    _finishDirectAction(execution.answer);
+  }
+
+  Future<UniversalTaskPlan?> _diagnosticsPlan() async {
     final specification = taskSpecification;
+    if (specification == null) return null;
+    final context = PlanningContext(
+      project: selectedProject,
+      model: selectedModel,
+      availableCapabilityIds:
+          kKristinCapabilities.map((item) => item.id).toSet(),
+      availableToolNames: runtime.tools.names,
+    );
     final routing = routingDecision;
-    if (specification != null &&
-        routing != null &&
-        routing.family == TaskFamily.diagnostics &&
-        routing.route != PlanningRoute.direct) {
-      try {
+    try {
+      if (routing != null &&
+          routing.family == TaskFamily.diagnostics &&
+          routing.route != PlanningRoute.direct) {
         final result = await runtime.taskKernel.plan(
           specification: specification,
           routing: routing,
-          context: PlanningContext(
-            project: selectedProject,
-            model: selectedModel,
-            availableCapabilityIds:
-                kKristinCapabilities.map((item) => item.id).toSet(),
-            availableToolNames: runtime.tools.names,
-          ),
+          context: context,
         );
-        _mutate(() {
-          canonicalPlan = result.plan;
-          planningPath = ChatPlanningPath.model;
-        });
-      } catch (_) {
-        // The diagnostic still runs; only the internal graph is lost.
+        return result.plan;
       }
+      return await const DiagnosticsTaskFamilyPlanner().plan(
+        specification: specification,
+        route: PlanningRoute.compact,
+        context: context,
+      );
+    } catch (failure) {
+      _mutate(() {
+        planningFailure = classifyPlanningFailure(failure);
+      });
+      return null;
     }
-    final report = await _perform<CapabilityDoctorReport>(
-      'Checking Kristin readiness',
-      () => dispatcher.diagnose(
-        projectId: selectedProjectId,
-        discoveredModels: models,
-      ),
-    );
-    if (report == null) return;
-    // Evidence-backed: the answer names the checks it is based on rather
-    // than asserting health.
+  }
+
+  String _diagnosticReadinessAnswer(CapabilityDoctorReport report) {
     final failing = report.checks
         .where((check) => !check.ready)
         .map((check) => check.title)
         .take(4)
         .toList(growable: false);
-    _finishDirectAction(
-      report.coreReady
-          ? 'Kristin readiness is healthy: ${report.readyCount}/${report.checks.length} checks ready.'
-          : 'Kristin readiness needs attention: '
-              '${report.readyCount}/${report.checks.length} checks ready. '
-              'Not ready: ${failing.join(', ')}.',
+    return report.coreReady
+        ? 'Kristin readiness is healthy: ${report.readyCount}/${report.checks.length} checks ready.'
+        : 'Kristin readiness needs attention: '
+            '${report.readyCount}/${report.checks.length} checks ready. '
+            'Not ready: ${failing.join(', ')}.';
+  }
+
+  Future<void> _runUtilityTime(ChatInteractionDecision decision) async {
+    final location = _timeLocationFrom(decision.parsed);
+    if (location == null) {
+      _showError(
+        'Name a city or IANA timezone, for example `/time New York` or `/time America/New_York`.',
+      );
+      return;
+    }
+    final result = await _perform<UtilityTimeResult>(
+      'Reading deterministic timezone data',
+      () async => _resolveUtilityTime(location),
     );
+    if (result == null) return;
+    _finishDirectAction(_formatUtilityTime(result));
+  }
+
+  Map<String, String>? _timeEvidenceForResearch(String text) {
+    final location = _timeLocationFromText(text);
+    if (location == null) return null;
+    final result = _resolveUtilityTime(location);
+    return <String, String>{
+      'title': 'Deterministic local time — ${result.requestedLocation}',
+      'url': 'kristin://utility.time/${Uri.encodeComponent(result.timeZoneId)}',
+      'snippet': _formatUtilityTime(result),
+    };
+  }
+
+  UtilityTimeResult _resolveUtilityTime(String location) {
+    try {
+      return UtilityTimeService().currentTime(location);
+    } on UtilityTimeException catch (failure) {
+      throw ProductException(
+        failure.code,
+        failure.message,
+        details: <String, dynamic>{
+          if (failure.candidates.isNotEmpty) 'candidates': failure.candidates,
+        },
+      );
+    }
+  }
+
+  String? _timeLocationFrom(ParsedChatInput parsed) {
+    if (parsed.hasExplicitCommand) {
+      final explicit = parsed.arguments
+          .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      return explicit.isEmpty ? null : explicit;
+    }
+    return _timeLocationFromText(parsed.originalText);
+  }
+
+  String? _timeLocationFromText(String text) {
+    final match = RegExp(
+      r'\b(?:time|local time)\s+(?:in|at)\s+(.+?)(?:[?.!,;]|$)',
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    if (match != null) return match.group(1)?.trim();
+    final natural = RegExp(
+      r"\bwhat(?:\s+is|'s)?\s+(?:the\s+)?(?:local\s+)?time\s+(?:in|at)\s+(.+?)(?:[?.!,;]|$)",
+      caseSensitive: false,
+    ).firstMatch(text.trim());
+    return natural?.group(1)?.trim();
+  }
+
+  String _formatUtilityTime(UtilityTimeResult result) {
+    String two(int value) => value.toString().padLeft(2, '0');
+    final local = result.localTime;
+    final offsetMinutes = result.utcOffset.inMinutes;
+    final sign = offsetMinutes < 0 ? '-' : '+';
+    final absolute = offsetMinutes.abs();
+    final offset = '$sign${two(absolute ~/ 60)}:${two(absolute % 60)}';
+    return 'Current time in ${result.requestedLocation}: '
+        '${local.year.toString().padLeft(4, '0')}-${two(local.month)}-${two(local.day)} '
+        '${two(local.hour)}:${two(local.minute)}:${two(local.second)} '
+        '${result.abbreviation} (UTC$offset, ${result.timeZoneId}).';
+  }
+
+  Future<void> _applySemanticSteering(String request) async {
+    final run = currentRun;
+    if (run == null) return;
+    conversationSession.addUserMessage(request);
+    composerController.clear();
+
+    final specification = taskSpecification;
+    final model = selectedModel;
+    if (specification == null || model == null) {
+      final queued = await _perform<dynamic>(
+        'Applying your direction',
+        () => runtime.steerRun(run.id, request),
+      );
+      if (queued != null) {
+        _mutate(() {
+          conversationSession.showLiveProgress(
+            'Your direction is queued for the next safe step.',
+          );
+        });
+      }
+      return;
+    }
+
+    final routing = routingDecision;
+    final coordinator = SemanticSteeringCoordinator();
+    final classifier = ModelTaskSpecificationPatchClassifier(
+      model: model,
+      generate: (generation) =>
+          runtime.models.providerFor(model).generate(generation),
+    );
+    final semantic = await _perform<SemanticSteeringResult>(
+      'Understanding your direction',
+      () => coordinator.apply(
+        specification: specification,
+        userMessage: request,
+        classifier: classifier,
+        previousPlan: canonicalPlan,
+        completed: completedTasks,
+        replan: canonicalPlan != null && routing != null && routing.plans
+            ? (revisedSpecification) async {
+                final result = await runtime.taskKernel.plan(
+                  specification: revisedSpecification,
+                  routing: routing,
+                  context: PlanningContext(
+                    project: selectedProject,
+                    model: model,
+                    availableCapabilityIds:
+                        kKristinCapabilities.map((item) => item.id).toSet(),
+                    availableToolNames: runtime.tools.names,
+                  ),
+                );
+                return result.plan;
+              }
+            : null,
+      ),
+    );
+    if (semantic == null || !mounted) return;
+
+    final queued = await _perform<dynamic>(
+      'Applying your direction',
+      () => runtime.steerRun(run.id, semantic.runnerInstruction),
+    );
+    if (queued == null || !mounted) return;
+    _mutate(() {
+      taskSpecification = semantic.specification;
+      if (semantic.reconciliation != null) {
+        canonicalPlan = semantic.reconciliation!.plan;
+        lastReconciliation = semantic.reconciliation;
+      }
+      conversationSession.showLiveProgress(
+        semantic.reconciliation == null
+            ? 'Semantic ${semantic.patch.kind.name} direction queued for the next safe step.'
+            : 'Semantic direction queued; ${semantic.reconciliation!.summary}.',
+      );
+      status = 'Active task updated without granting new authority';
+    });
   }
 
   Future<void> _runDiagnosticAction({
@@ -1010,7 +1254,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
 
   void _finishDirectAction(String message) {
     _mutate(() {
-      transcript.add(_ChatLine.assistant(message));
+      conversationSession.addAssistantMessage(message);
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
@@ -1111,7 +1355,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       );
     }
     _mutate(() {
-      transcript.add(_ChatLine.assistant('I did not execute the action.'));
+      conversationSession.addAssistantMessage('I did not execute the action.');
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
@@ -1120,6 +1364,17 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       activeRequest = '';
       status = 'Kristin is ready';
     });
+  }
+
+  Future<RunRecord> _awaitRunStartTransition(RunRecord run) async {
+    var latest = run;
+    for (var attempt = 0; attempt < 60; attempt++) {
+      final refreshed = await runtime.getRun(run.id);
+      if (refreshed != null) latest = refreshed;
+      if (latest.state != RunState.awaitingApproval) return latest;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    return latest;
   }
 
   Future<void> _startPrepared() async {
@@ -1138,25 +1393,17 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       }
       await runtime.approve(
         runId: run.id,
-        scopes: Set<PermissionScope>.from(
-          command.contract.requiredPermissions,
-        ),
+        scopes: Set<PermissionScope>.from(command.contract.requiredPermissions),
       );
       currentRun = run;
       unawaited(runtime.execute(run.id));
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-      return await runtime.getRun(run.id) ?? run;
+      return await _awaitRunStartTransition(run);
     });
     if (started == null || !mounted) return;
     _mutate(() {
       currentRun = started;
       awaitingPermission = false;
-      liveSignals.clear();
-      liveAssistantProtocolText = '';
-      liveAssistantText = '';
-      liveProgressText = 'Starting the first safe step.';
-      liveToolName = '';
-      liveToolOutput = '';
+      conversationSession.beginLiveExecution();
       status = 'Kristin is working';
     });
   }
@@ -1190,8 +1437,9 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
     ];
     if (values.length > 6) values.removeRange(0, values.length - 6);
     _mutate(() {
-      understandingHistory =
-          UnderstandingHistory(List<UnderstandingDraft>.unmodifiable(values));
+      understandingHistory = UnderstandingHistory(
+        List<UnderstandingDraft>.unmodifiable(values),
+      );
       pendingDecision = revisedDecision;
       understandingAdjustmentController.clear();
       understandingAdjusting = false;
@@ -1337,6 +1585,7 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           startupError: widget.startupError,
           initialProjectId: selectedProjectId,
           initialModelId: selectedModelId,
+          conversationSession: conversationSession,
         ),
       ),
     );
@@ -1350,8 +1599,8 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
           runtime: runtime,
           api: widget.api,
           startupError: widget.startupError,
-          initialProjectId: selectedProjectId,
-          initialModelId: selectedModelId,
+          initialProjectId: conversationSession.selectedProjectId,
+          initialModelId: conversationSession.selectedModelId,
           initialSection: initialSection,
         ),
       ),
@@ -1394,19 +1643,12 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return;
     }
     _mutate(() {
-      transcript.clear();
+      conversationSession.resetForNewConversation();
       pendingDecision = null;
       understandingHistory = null;
       prepared = null;
-      currentRun = null;
       awaitingPermission = false;
       activeRequest = '';
-      liveSignals.clear();
-      liveAssistantProtocolText = '';
-      liveAssistantText = '';
-      liveProgressText = '';
-      liveToolName = '';
-      liveToolOutput = '';
       suggestions = const <ChatAutocompleteSuggestion>[];
       understandingAdjusting = false;
       planAdjusting = false;

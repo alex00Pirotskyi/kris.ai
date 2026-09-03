@@ -22,8 +22,10 @@ void main() {
       () {
     final source = File('lib/product/planning_runtime.dart').readAsStringSync();
     final promptStart = source.indexOf('String _userPrompt(');
-    final promptEnd =
-        source.indexOf('AgentAction _agentActionFromText', promptStart);
+    final promptEnd = source.indexOf(
+      'AgentProtocolV3ExecutionStep _agentExecutionStepFromText',
+      promptStart,
+    );
 
     expect(
         source, contains('static const int _minimumRecoverySafetyLimit = 24;'));

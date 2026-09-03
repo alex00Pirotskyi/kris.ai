@@ -73,7 +73,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
 
   Widget _statusStrip() {
     final startup = widget.startupError;
-    if (startup == null && error == null && !busy && !runExecuting) {
+    final waitingForInput = conversationSession.awaitingUserInput;
+    if (startup == null &&
+        error == null &&
+        !busy &&
+        !runExecuting &&
+        !waitingForInput) {
       return const SizedBox.shrink();
     }
     final colors = Theme.of(context).colorScheme;
@@ -84,7 +89,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: Row(
           children: <Widget>[
-            if (busy || runExecuting)
+            if ((busy || runExecuting) && !waitingForInput)
               const SizedBox.square(
                 dimension: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -93,7 +98,15 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               Icon(failing ? Icons.error_outline : Icons.info_outline,
                   size: 18),
             const SizedBox(width: 9),
-            Expanded(child: Text(startup ?? error ?? status)),
+            Expanded(
+              child: Text(
+                startup ??
+                    error ??
+                    (waitingForInput
+                        ? conversationSession.deferredUserPrompt ?? status
+                        : status),
+              ),
+            ),
             if (error != null)
               IconButton(
                 tooltip: 'Dismiss',
@@ -245,7 +258,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     composerFocus.requestFocus();
   }
 
-  Widget _messageBubble(_ChatLine line) {
+  Widget _messageBubble(KristinConversationMessage line) {
     final colors = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment:
@@ -368,6 +381,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final decision = pendingDecision!;
     final draft = history.current;
     final specification = taskSpecification;
+    final blockingClarification =
+        routingDecision?.requiresClarification == true &&
+            specification?.blockingQuestions.isNotEmpty == true;
     // The product's wording rule: "I understood" is only truthful when a
     // model actually read the request through the kernel's structured
     // understanding contract and deterministic code validated the result.
@@ -411,10 +427,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             ],
           ),
-          // Constraints are shown as constraints. Losing "don't touch the
-          // database" between the user saying it and the planner reading
-          // it is exactly what the specification exists to prevent, so it
-          // is visible before anything is planned.
           if (specification != null &&
               specification.hardConstraints.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
@@ -467,6 +479,13 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],
+          if (blockingClarification) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              'Reply to the question in Chat before continuing. Your answer updates this same task; it does not create a new request or grant authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           if (decision.ambiguous) ...<Widget>[
             const SizedBox(height: 10),
             Text(
@@ -504,7 +523,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               children: <Widget>[
                 FilledButton(
                   key: const Key('chat-understanding-continue'),
-                  onPressed: busy ? null : _continueUnderstanding,
+                  onPressed: busy || blockingClarification
+                      ? null
+                      : _continueUnderstanding,
                   child: const Text('Continue'),
                 ),
                 OutlinedButton(
@@ -567,10 +588,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             const SizedBox(height: 12),
           ],
-          // The plan card renders the SAME work items the Runner receives,
-          // grouped by the canonical phase that now survives compilation
-          // (WorkItem.phase / WorkItem.parentId). There is no second,
-          // display-only plan structure to drift from what executes.
           ..._planItemRows(command.plan.items),
           if (planAdjusting) ...<Widget>[
             const SizedBox(height: 8),
@@ -684,6 +701,19 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 : (done / total).clamp(0, 1).toDouble(),
           ),
           const SizedBox(height: 12),
+          if (conversationSession.awaitingUserInput) ...<Widget>[
+            Text(
+              conversationSession.deferredUserPrompt ??
+                  'Kristin needs your input before continuing.',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Reply in the composer. Your answer supplies intent context only and does not grant new permissions or authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+          ],
           if (showModelAnswer)
             SelectableText(liveAssistantText)
           else ...<Widget>[
@@ -760,8 +790,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   icon: const Icon(Icons.pause),
                   label: const Text('Pause'),
                 ),
-              if (run.state == RunState.paused ||
-                  run.state == RunState.interrupted)
+              if ((run.state == RunState.paused ||
+                      run.state == RunState.interrupted) &&
+                  !conversationSession.awaitingUserInput)
                 FilledButton.icon(
                   onPressed: busy ? null : () => _controlRun('resume'),
                   icon: const Icon(Icons.play_arrow),
