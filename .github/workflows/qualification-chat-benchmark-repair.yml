@@ -40,15 +40,7 @@ jobs:
 
           control = Path('lib/product/chat_control_plane.dart')
           text = control.read_text(encoding='utf-8')
-          old = """bool isInformationalChatRequest(String input) =>
-              _isInformationalLanguage(input);
-
-          bool isSemanticActionRequest(String input) => _isActionLanguage(input);
-          """
-          new = """bool isInformationalChatRequest(String input) =>
-              _isInformationalLanguage(input);
-
-          bool isCapabilityHelpRequest(String input) {
+          helper = """bool isCapabilityHelpRequest(String input) {
             final normalized = _normalized(
               input,
             ).replaceFirst(RegExp(r'\\s*[?!.,]+$'), '').trim();
@@ -62,81 +54,73 @@ jobs:
               r'(?:show|list)(?:\\s+me)?\\s+(?:your|ur)\\s+capabilities)$',
             ).hasMatch(normalized);
           }
-
-          bool isSemanticActionRequest(String input) => _isActionLanguage(input);
           """
-          if old not in text:
-              raise SystemExit('chat_control_plane.dart insertion anchor not found')
-          text = text.replace(old, new, 1)
-
-          old = """bool _isInformationalLanguage(String input) {
-            final normalized = _normalized(input);
-            if (normalized.isEmpty) return false;
-            if (_isActionLanguage(normalized)) return false;
-          """
-          new = """bool _isInformationalLanguage(String input) {
-            final normalized = _normalized(input);
-            if (normalized.isEmpty) return false;
-            if (isCapabilityHelpRequest(normalized)) return true;
-            if (_isActionLanguage(normalized)) return false;
-          """
-          if old not in text:
-              raise SystemExit('chat_control_plane.dart informational anchor not found')
-          control.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+          if 'bool isCapabilityHelpRequest(String input)' not in text:
+              marker = 'bool isSemanticActionRequest(String input) => _isActionLanguage(input);\n'
+              if text.count(marker) != 1:
+                  raise SystemExit('semantic action marker missing or ambiguous')
+              text = text.replace(marker, helper + '\n' + marker, 1)
+          info_marker = 'bool _isInformationalLanguage(String input) {\n'
+          hook = '  if (isCapabilityHelpRequest(input)) return true;\n'
+          if hook not in text:
+              if text.count(info_marker) != 1:
+                  raise SystemExit('informational classifier marker missing or ambiguous')
+              text = text.replace(info_marker, info_marker + hook, 1)
+          control.write_text(text, encoding='utf-8', newline='\n')
 
           actions = Path('lib/product/chat_control_plane_studio_actions.dart')
           text = actions.read_text(encoding='utf-8')
-          old = """    final text = decision.parsed.originalText.toLowerCase();
-              if (RegExp(r'\\bwhat can you do\\b').hasMatch(text) ||
+          helper_condition = '    if (isCapabilityHelpRequest(decision.parsed.originalText)) {\n'
+          if helper_condition not in text:
+              old = """    if (RegExp(r'\\bwhat can you do\\b').hasMatch(text) ||
                   text.trim() == 'help') {
-                return _capabilityHelpText();
-              }
           """
-          new = """    final text = decision.parsed.originalText.toLowerCase();
-              if (isCapabilityHelpRequest(decision.parsed.originalText)) {
-                return _capabilityHelpText();
-              }
-          """
-          if old not in text:
-              raise SystemExit('chat_control_plane_studio_actions.dart matcher anchor not found')
-          actions.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+              if text.count(old) != 1:
+                  raise SystemExit('local capability-help condition missing or ambiguous')
+              text = text.replace(old, helper_condition, 1)
+          actions.write_text(text, encoding='utf-8', newline='\n')
 
           tests = Path('test/product/chat_control_plane_test.dart')
           text = tests.read_text(encoding='utf-8')
-          old = """  group('interaction policy', () {
-              test('plain arithmetic question stays informational', () {
-          """
-          new = """  group('interaction policy', () {
-              test('capability-help shorthand stays informational and deterministic', () {
-                for (final request in <String>[
-                  'what can u do ?',
-                  'what can you do?',
-                  'what are u able to do?',
-                  'what are your capabilities?',
-                  'list ur capabilities',
-                ]) {
-                  expect(isCapabilityHelpRequest(request), isTrue, reason: request);
-                  final decision = compiler.compile(
-                    request,
-                    inferredMode: CommandMode.build,
-                  );
-                  expect(
-                    decision.kind,
-                    ChatInteractionKind.informational,
-                    reason: request,
-                  );
-                  expect(decision.mode, CommandMode.ask, reason: request);
-                  expect(decision.capability, isNull, reason: request);
-                  expect(decision.needsUnderstanding, isFalse, reason: request);
-                  expect(decision.needsPlan, isFalse, reason: request);
-                }
-              });
+          test_name = 'capability-help shorthand stays informational and deterministic'
+          if test_name not in text:
+              marker = "  group('interaction policy', () {\n"
+              if text.count(marker) != 1:
+                  raise SystemExit('interaction policy group marker missing or ambiguous')
+              addition = """    test('capability-help shorthand stays informational and deterministic', () {
+              for (final request in <String>[
+                'what can u do ?',
+                'what can you do?',
+                'what are u able to do?',
+                'what are your capabilities?',
+                'list ur capabilities',
+              ]) {
+                expect(isCapabilityHelpRequest(request), isTrue, reason: request);
+                final decision = compiler.compile(
+                  request,
+                  inferredMode: CommandMode.build,
+                );
+                expect(
+                  decision.kind,
+                  ChatInteractionKind.informational,
+                  reason: request,
+                );
+                expect(decision.mode, CommandMode.ask, reason: request);
+                expect(decision.capability, isNull, reason: request);
+                expect(decision.needsUnderstanding, isFalse, reason: request);
+                expect(decision.needsPlan, isFalse, reason: request);
+              }
+            });
 
-              test('plain arithmetic question stays informational', () {
           """
-          if old not in text:
-              raise SystemExit('chat_control_plane_test.dart insertion anchor not found')
-          tests.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
+              text = text.replace(marker, marker + addition, 1)
+          tests.write_text(text, encoding='utf-8', newline='\n')
+
+          # Fail closed if any intended semantic hook is absent.
+          assert 'bool isCapabilityHelpRequest(String input)' in control.read_text(encoding='utf-8')
+          assert hook in control.read_text(encoding='utf-8')
+          assert helper_condition in actions.read_text(encoding='utf-8')
+          assert test_name in tests.read_text(encoding='utf-8')
           PY
           dart format \
             lib/product/chat_control_plane.dart \
@@ -166,6 +150,7 @@ jobs:
           python tool/p1a_refresh_source_manifest.py .
           cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first.sha256" SOURCE_MANIFEST.sha256
           git add SOURCE_MANIFEST.sha256
+          test ! -e .github/workflows/qualification-chat-benchmark-repair.yml
           python tool/generated_state_guard.py audit --project . --strict
           python tool/benchmark_runner.py check --project .
           python tool/dart_format_scope.py --check
