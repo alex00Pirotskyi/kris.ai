@@ -112,42 +112,45 @@ class UniversalPlanCompiler {
     _rejectCoordinatorLeakage(tasks, consumedCoordinatorCapabilities);
 
     final allowedIds = tasks.map((task) => task.id).toSet();
-    final workItems = tasks.map((task) {
-      final requiresMutation = _taskRequiresMutation(task);
-      final allowedTools = tools.allowedToolNames(<String>{
-        ...task.allowedTools,
-        if (requiresMutation) ...const <String>{
-          'inspect_file',
-          'write_file',
-          'replace_text',
-          'apply_patch',
-        },
-      });
-      if (requiresMutation && !allowedTools.any(_mutationTools.contains)) {
-        throw ProductException(
-          'task_mutation_tools_missing',
-          '${task.id} promises a project artifact but has no governed '
-              'mutation tool.',
-        );
-      }
-      // Hierarchy is preserved, but only where it still refers to
-      // something in this compilation: a parent excluded by task
-      // selection would leave a dangling reference, so it is dropped
-      // rather than carried as a broken pointer.
-      final parentId = task.parentId;
-      return WorkItem(
-        id: task.id,
-        title: task.title,
-        description: _describe(task),
-        dependencies: task.dependencies.where(allowedIds.contains).toSet(),
-        allowedTools: allowedTools,
-        acceptanceCriteria: task.acceptanceCriteria,
-        maxAttempts: task.maxAttempts.clamp(1, 3).toInt(),
-        phase: task.phase,
-        parentId:
-            parentId != null && allowedIds.contains(parentId) ? parentId : null,
-      );
-    }).toList(growable: false);
+    final workItems = tasks
+        .map((task) {
+          final requiresMutation = _taskRequiresMutation(task);
+          final allowedTools = tools.allowedToolNames(<String>{
+            ...task.allowedTools,
+            if (requiresMutation) ...const <String>{
+              'inspect_file',
+              'write_file',
+              'replace_text',
+              'apply_patch',
+            },
+          });
+          if (requiresMutation && !allowedTools.any(_mutationTools.contains)) {
+            throw ProductException(
+              'task_mutation_tools_missing',
+              '${task.id} promises a project artifact but has no governed '
+                  'mutation tool.',
+            );
+          }
+          // Hierarchy is preserved, but only where it still refers to
+          // something in this compilation: a parent excluded by task
+          // selection would leave a dangling reference, so it is dropped
+          // rather than carried as a broken pointer.
+          final parentId = task.parentId;
+          return WorkItem(
+            id: task.id,
+            title: task.title,
+            description: _describe(task),
+            dependencies: task.dependencies.where(allowedIds.contains).toSet(),
+            allowedTools: allowedTools,
+            acceptanceCriteria: task.acceptanceCriteria,
+            maxAttempts: task.maxAttempts.clamp(1, 3).toInt(),
+            phase: task.phase,
+            parentId: parentId != null && allowedIds.contains(parentId)
+                ? parentId
+                : null,
+          );
+        })
+        .toList(growable: false);
 
     final specification = plan.specification;
     final criteriaStatements = <String>{
@@ -179,8 +182,9 @@ class UniversalPlanCompiler {
       );
     }
 
-    final requestedTools =
-        workItems.expand((item) => item.allowedTools).toSet();
+    final requestedTools = workItems
+        .expand((item) => item.allowedTools)
+        .toSet();
     final contract = TaskContract(
       id: newId('contract'),
       revision: contractRevision,
@@ -209,16 +213,16 @@ class UniversalPlanCompiler {
       researchQuestions: researchQuestions.isNotEmpty
           ? researchQuestions
           : (requestedTools.any(
-              (name) => const <String>{
-                'research_search',
-                'research_fetch',
-              }.contains(name),
-            )
-              ? <String>[
-                  'Which primary sources materially affect this approved '
-                      'task plan?',
-                ]
-              : const <String>[]),
+                  (name) => const <String>{
+                    'research_search',
+                    'research_fetch',
+                  }.contains(name),
+                )
+                ? <String>[
+                    'Which primary sources materially affect this approved '
+                        'task plan?',
+                  ]
+                : const <String>[]),
       requiredPermissions: tools.permissionsForTools(requestedTools),
       createdAt: DateTime.now().toUtc(),
     );
@@ -234,7 +238,7 @@ class UniversalPlanCompiler {
       rationale: plan.rationale.trim().isEmpty
           ? 'Compiled deterministically from ${tasks.length} canonical tasks.'
           : '${plan.rationale.trim()} Compiled deterministically from '
-              '${tasks.length} canonical tasks.',
+                '${tasks.length} canonical tasks.',
       items: workItems,
       createdAt: DateTime.now().toUtc(),
     );
@@ -268,16 +272,14 @@ class UniversalPlanCompiler {
     List<UniversalTask> tasks,
     Set<String> consumed,
   ) {
-    final coordinatorIds = <String>{
-      ...kCoordinatorCapabilityIds,
-      ...consumed,
-    };
+    final coordinatorIds = <String>{...kCoordinatorCapabilityIds, ...consumed};
     if (coordinatorIds.isEmpty) return;
     for (final task in tasks) {
-      final required = task.requiredCapabilities
-          .where(coordinatorIds.contains)
-          .toList(growable: false)
-        ..sort();
+      final required =
+          task.requiredCapabilities
+              .where(coordinatorIds.contains)
+              .toList(growable: false)
+            ..sort();
       if (required.isNotEmpty) {
         throw ProductException(
           'plan_executor_capability_unresolved',
@@ -324,7 +326,8 @@ class UniversalPlanCompiler {
   /// into this prose as their only home -- they are structured fields on
   /// the WorkItem now -- but the phase stays in the text too because the
   /// executing model reads the description, not the metadata.
-  String _describe(UniversalTask task) => '''
+  String _describe(UniversalTask task) =>
+      '''
 Phase: ${task.phase}
 Objective: ${task.objective}
 Instructions: ${task.instructions}
@@ -332,7 +335,7 @@ Verification: ${task.verificationSteps.join(' | ')}
 Expected artifacts: ${task.expectedArtifacts.join(' | ')}
 Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.risk.name}; confidence: ${(task.estimateConfidence * 100).round()}%.
 '''
-      .trim();
+          .trim();
 
   bool _taskRequiresMutation(UniversalTask task) {
     if (task.manual || !task.enabled) return false;
@@ -349,8 +352,8 @@ Complexity: ${task.complexity}/10; effort: ${task.effortPoints}; risk: ${task.ri
   }
 
   static bool _explicitlyPlanningOnly(String text) => RegExp(
-        r'\b(?:plan only|planning only|instructions only|proposal only|do not implement|without implementation|no code changes|read[- ]only analysis)\b',
-      ).hasMatch(text.toLowerCase());
+    r'\b(?:plan only|planning only|instructions only|proposal only|do not implement|without implementation|no code changes|read[- ]only analysis)\b',
+  ).hasMatch(text.toLowerCase());
 
   static bool _textRequiresMutation(String text) {
     final lower = text.toLowerCase();

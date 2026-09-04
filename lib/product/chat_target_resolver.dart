@@ -1,38 +1,79 @@
-// Architectural Improvement #5: extensible target resolution.
-//
-// The final product may eventually support many more @ target types
-// (a desktop/downloads filesystem location, a running terminal, a
-// browser window, ...). Adding one should mean writing one new
-// ChatTargetProvider and registering it in the resolver's provider list
-// -- never touching a growing central switch that already knows about
-// every other target type. This module intentionally implements only
-// the target types the product already has real data for (project,
-// model, provider, workspace/capability navigation); it does not invent
-// new target types ahead of the capabilities that would use them.
+// Architectural Improvement #5: extensible, collision-safe target resolution.
 import 'chat_control_plane.dart';
 import 'domain.dart';
 
-/// Produces the [ChatTarget]s for one target family (projects, models,
-/// providers, ...). A future target type is a new implementation of this
-/// interface, not a change to [ChatTargetResolver] or to any capability
-/// switch.
 abstract class ChatTargetProvider {
   List<ChatTarget> resolve();
 }
 
-/// Aggregates every registered [ChatTargetProvider] into the flat target
-/// list the intent compiler and autocomplete engine already consume.
+/// Aggregates every registered target provider while protecting exact mention
+/// resolution from provider-order collisions.
+///
+/// If two distinct targets advertise the same exact token (id, display name or
+/// alias), that token is blocked on both candidates. The intent compiler then
+/// sees the mention as unresolved instead of silently choosing whichever
+/// provider happened to run first. Fuzzy autocomplete remains available, so the
+/// user can still see and select a unique candidate token.
 class ChatTargetResolver {
   const ChatTargetResolver(this.providers);
 
   final List<ChatTargetProvider> providers;
 
   List<ChatTarget> resolve() {
-    final targets = <ChatTarget>[];
+    final raw = <ChatTarget>[];
     for (final provider in providers) {
-      targets.addAll(provider.resolve());
+      raw.addAll(provider.resolve());
     }
-    return List<ChatTarget>.unmodifiable(targets);
+
+    final ownersByToken = <String, Set<String>>{};
+    for (final target in raw) {
+      final identity = '${target.type.name}:${target.id}';
+      for (final token in _exactTokens(target)) {
+        ownersByToken.putIfAbsent(token, () => <String>{}).add(identity);
+      }
+    }
+    final collisions = ownersByToken.entries
+        .where((entry) => entry.value.length > 1)
+        .map((entry) => entry.key)
+        .toSet();
+    if (collisions.isEmpty) {
+      return List<ChatTarget>.unmodifiable(raw);
+    }
+
+    return List<ChatTarget>.unmodifiable(
+      raw.map((target) {
+        final blocked = _exactTokens(target).where(collisions.contains).toSet();
+        if (blocked.isEmpty) return target;
+        return _CollisionSafeChatTarget.from(target, blocked);
+      }),
+    );
+  }
+
+  static Set<String> _exactTokens(ChatTarget target) => <String>{
+    chatTargetSlug(target.id),
+    chatTargetSlug(target.displayName),
+    ...target.aliases.map(chatTargetSlug),
+  }..remove('');
+}
+
+class _CollisionSafeChatTarget extends ChatTarget {
+  _CollisionSafeChatTarget.from(ChatTarget target, this.blockedTokens)
+    : super(
+        id: target.id,
+        type: target.type,
+        displayName: target.displayName,
+        aliases: target.aliases,
+        description: target.description,
+        status: target.status,
+        available: target.available,
+      );
+
+  final Set<String> blockedTokens;
+
+  @override
+  bool matches(String value) {
+    if (blockedTokens.contains(chatTargetSlug(value))) return false;
+    return super.matches(value);
   }
 }
 
@@ -54,8 +95,9 @@ class ProjectTargetProvider implements ChatTargetProvider {
           displayName: project.name,
           aliases: <String>[chatTargetSlug(project.name), project.id],
           description: 'Project',
-          status:
-              project.id == selectedProjectId ? 'Selected project' : 'Project',
+          status: project.id == selectedProjectId
+              ? 'Selected project'
+              : 'Project',
         ),
       )
       .toList(growable: false);
@@ -91,39 +133,36 @@ class ModelTargetProvider implements ChatTargetProvider {
       .toList(growable: false);
 }
 
-/// The provider families the product currently exposes for connection.
-/// A newly-supported provider is one more entry in [knownProviderIds],
-/// not a new code path.
 class ProviderTargetProvider implements ChatTargetProvider {
   const ProviderTargetProvider({required this.configuredProviderIds});
 
   final Set<String> configuredProviderIds;
 
   static const List<
-      ({
-        String id,
-        String displayName,
-        String description,
-        List<String> aliases
-      })> knownProviders = <({
-    String id,
-    String displayName,
-    String description,
-    List<String> aliases
-  })>[
-    (
-      id: 'ollama',
-      displayName: 'Ollama',
-      description: 'Local model provider',
-      aliases: <String>['ollama'],
-    ),
-    (
-      id: 'openai-compatible',
-      displayName: 'OpenAI-compatible',
-      description: 'OpenAI-compatible model provider',
-      aliases: <String>['openai', 'openai-compatible'],
-    ),
-  ];
+    ({String id, String displayName, String description, List<String> aliases})
+  >
+  knownProviders =
+      <
+        ({
+          String id,
+          String displayName,
+          String description,
+          List<String> aliases,
+        })
+      >[
+        (
+          id: 'ollama',
+          displayName: 'Ollama',
+          description: 'Local model provider',
+          aliases: <String>['ollama'],
+        ),
+        (
+          id: 'openai-compatible',
+          displayName: 'OpenAI-compatible',
+          description: 'OpenAI-compatible model provider',
+          aliases: <String>['openai', 'openai-compatible'],
+        ),
+      ];
 
   @override
   List<ChatTarget> resolve() => knownProviders
@@ -143,44 +182,40 @@ class ProviderTargetProvider implements ChatTargetProvider {
       .toList(growable: false);
 }
 
-/// The fixed set of advanced-workspace/system targets Chat can already
-/// mention or open (Web Studio, public research, Owner Mode, the
-/// Project Manager workspace). Unlike projects/models/providers these
-/// are not data-driven -- they are a short, stable list.
 class WorkspaceTargetProvider implements ChatTargetProvider {
   const WorkspaceTargetProvider();
 
   @override
   List<ChatTarget> resolve() => const <ChatTarget>[
-        ChatTarget(
-          id: 'webstudio',
-          type: ChatTargetType.workspace,
-          displayName: 'Web Studio',
-          aliases: <String>['webstudio'],
-          description: 'Web deep-dive workspace',
-        ),
-        ChatTarget(
-          id: 'web',
-          type: ChatTargetType.workspace,
-          displayName: 'Web',
-          aliases: <String>['web'],
-          description: 'Public-source research',
-        ),
-        ChatTarget(
-          id: 'owner',
-          type: ChatTargetType.capability,
-          displayName: 'Owner Mode',
-          aliases: <String>['owner'],
-          description: 'Governed elevated execution mode',
-        ),
-        ChatTarget(
-          id: 'project-manager',
-          type: ChatTargetType.workspace,
-          displayName: 'Project Manager',
-          aliases: <String>['project-manager'],
-          description: 'Persistent deep project controls',
-        ),
-      ];
+    ChatTarget(
+      id: 'webstudio',
+      type: ChatTargetType.workspace,
+      displayName: 'Web Studio',
+      aliases: <String>['webstudio'],
+      description: 'Web deep-dive workspace',
+    ),
+    ChatTarget(
+      id: 'web',
+      type: ChatTargetType.workspace,
+      displayName: 'Web',
+      aliases: <String>['web'],
+      description: 'Public-source research',
+    ),
+    ChatTarget(
+      id: 'owner',
+      type: ChatTargetType.capability,
+      displayName: 'Owner Mode',
+      aliases: <String>['owner'],
+      description: 'Governed elevated execution mode',
+    ),
+    ChatTarget(
+      id: 'project-manager',
+      type: ChatTargetType.workspace,
+      displayName: 'Project Manager',
+      aliases: <String>['project-manager'],
+      description: 'Persistent deep project controls',
+    ),
+  ];
 }
 
 String chatTargetSlug(String value) => value

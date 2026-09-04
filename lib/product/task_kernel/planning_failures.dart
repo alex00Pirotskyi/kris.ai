@@ -82,12 +82,12 @@ class PlanningFailure implements Exception {
   bool get allowsConservativeFallback => kind.allowsConservativeFallback;
 
   Map<String, dynamic> toEvidence() => <String, dynamic>{
-        'kind': kind.name,
-        'code': code,
-        'message': message,
-        'fallbackAllowed': allowsConservativeFallback,
-        if (details.isNotEmpty) 'details': details,
-      };
+    'kind': kind.name,
+    'code': code,
+    'message': message,
+    'fallbackAllowed': allowsConservativeFallback,
+    if (details.isNotEmpty) 'details': details,
+  };
 
   @override
   String toString() => '${kind.name}/$code: $message';

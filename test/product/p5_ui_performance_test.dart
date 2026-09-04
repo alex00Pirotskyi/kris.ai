@@ -96,8 +96,9 @@ void main() {
       expect(snapshot.failedCount, greaterThanOrEqualTo(5));
     });
 
-    testWidgets('performance dashboard exposes measured state semantically',
-        (tester) async {
+    testWidgets('performance dashboard exposes measured state semantically', (
+      tester,
+    ) async {
       final monitor = P5UiPerformanceMonitor(
         residentMemoryReader: () => 160 * 1024 * 1024,
       );
@@ -119,14 +120,14 @@ void main() {
       final semantics = tester.ensureSemantics();
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: P5UiPerformanceDashboard(monitor: monitor),
-          ),
+          home: Scaffold(body: P5UiPerformanceDashboard(monitor: monitor)),
         ),
       );
 
       expect(
-          find.byKey(const Key('p5-ui-performance-dashboard')), findsOneWidget);
+        find.byKey(const Key('p5-ui-performance-dashboard')),
+        findsOneWidget,
+      );
       expect(find.text('PASS'), findsOneWidget);
       expect(
         find.bySemanticsLabel('UI performance dashboard: PASS'),

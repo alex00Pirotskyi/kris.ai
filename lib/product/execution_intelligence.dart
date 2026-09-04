@@ -116,17 +116,17 @@ class ModelRouteDecision {
   final String decisionHash;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'selected': selected == null
-            ? null
-            : <String, dynamic>{
-                'provider': selected!.provider,
-                'model': selected!.model,
-                'identity': selected!.identity,
-              },
-        'rejected': rejected,
-        'approvalRequired': approvalRequired,
-        'decisionHash': decisionHash,
-      };
+    'selected': selected == null
+        ? null
+        : <String, dynamic>{
+            'provider': selected!.provider,
+            'model': selected!.model,
+            'identity': selected!.identity,
+          },
+    'rejected': rejected,
+    'approvalRequired': approvalRequired,
+    'decisionHash': decisionHash,
+  };
 }
 
 class RoleBasedModelRouter {
@@ -236,17 +236,17 @@ class SemanticProgressSnapshot {
   final String? resultHash;
 
   String get hash => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'artifacts': artifacts,
-          'evidenceIds': evidenceIds.toList()..sort(),
-          'errorCodes': errorCodes.toList()..sort(),
-          'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
-          'externalState': externalState.toList()..sort(),
-          'planHash': planHash,
-          'actionHash': actionHash,
-          'resultHash': resultHash,
-        }),
-      );
+    canonicalJson(<String, dynamic>{
+      'artifacts': artifacts,
+      'evidenceIds': evidenceIds.toList()..sort(),
+      'errorCodes': errorCodes.toList()..sort(),
+      'satisfiedCriteria': satisfiedCriteria.toList()..sort(),
+      'externalState': externalState.toList()..sort(),
+      'planHash': planHash,
+      'actionHash': actionHash,
+      'resultHash': resultHash,
+    }),
+  );
 }
 
 class SemanticProgressDelta {
@@ -320,23 +320,23 @@ class SemanticProgressDelta {
       progressClass == ConvergenceProgressClass.positiveProgress;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'newArtifacts': newArtifacts,
-        'changedArtifactHashes': changedArtifactHashes,
-        'newEvidence': newEvidence,
-        'resolvedErrors': resolvedErrors,
-        'newErrors': newErrors,
-        'retainedErrors': retainedErrors,
-        'criteriaSatisfied': criteriaSatisfied,
-        'criteriaRegressed': criteriaRegressed,
-        'newExternalState': newExternalState,
-        'planRevised': planRevised,
-        'progressClass': progressClass.name,
-        'semanticProgress': semanticProgress,
-        'repeatedAction': repeatedAction,
-        'repeatedResult': repeatedResult,
-        'beforeHash': beforeHash,
-        'afterHash': afterHash,
-      };
+    'newArtifacts': newArtifacts,
+    'changedArtifactHashes': changedArtifactHashes,
+    'newEvidence': newEvidence,
+    'resolvedErrors': resolvedErrors,
+    'newErrors': newErrors,
+    'retainedErrors': retainedErrors,
+    'criteriaSatisfied': criteriaSatisfied,
+    'criteriaRegressed': criteriaRegressed,
+    'newExternalState': newExternalState,
+    'planRevised': planRevised,
+    'progressClass': progressClass.name,
+    'semanticProgress': semanticProgress,
+    'repeatedAction': repeatedAction,
+    'repeatedResult': repeatedResult,
+    'beforeHash': beforeHash,
+    'afterHash': afterHash,
+  };
 }
 
 class _ConvergenceTrackerState {
@@ -375,18 +375,20 @@ class SemanticProgressEngine {
     SemanticProgressSnapshot before,
     SemanticProgressSnapshot after,
   ) {
-    final newArtifacts = after.artifacts.keys
-        .where((path) => !before.artifacts.containsKey(path))
-        .toList()
-      ..sort();
-    final changed = after.artifacts.keys
-        .where(
-          (path) =>
-              before.artifacts.containsKey(path) &&
-              before.artifacts[path] != after.artifacts[path],
-        )
-        .toList()
-      ..sort();
+    final newArtifacts =
+        after.artifacts.keys
+            .where((path) => !before.artifacts.containsKey(path))
+            .toList()
+          ..sort();
+    final changed =
+        after.artifacts.keys
+            .where(
+              (path) =>
+                  before.artifacts.containsKey(path) &&
+                  before.artifacts[path] != after.artifacts[path],
+            )
+            .toList()
+          ..sort();
     List<String> added(Set<String> oldValues, Set<String> newValues) =>
         (newValues.difference(oldValues).toList()..sort());
     final delta = SemanticProgressDelta(
@@ -406,7 +408,8 @@ class SemanticProgressEngine {
         before.satisfiedCriteria,
       ),
       newExternalState: added(before.externalState, after.externalState),
-      planRevised: before.planHash != null &&
+      planRevised:
+          before.planHash != null &&
           after.planHash != null &&
           before.planHash != after.planHash,
       repeatedAction:
@@ -444,9 +447,7 @@ class SemanticProgressEngine {
     } else {
       final failureSignature = after.errorCodes.isEmpty
           ? ''
-          : Sha256.text(
-              canonicalJson(after.errorCodes.toList()..sort()),
-            );
+          : Sha256.text(canonicalJson(after.errorCodes.toList()..sort()));
       if (failureSignature.isNotEmpty) {
         if (state.lastFailureSignature == failureSignature) {
           state.sameFailureCount++;
@@ -478,13 +479,13 @@ class SemanticProgressEngine {
   }
 
   String _materialStateHash(SemanticProgressSnapshot snapshot) => Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'artifacts': snapshot.artifacts,
-          'errorCodes': snapshot.errorCodes.toList()..sort(),
-          'satisfiedCriteria': snapshot.satisfiedCriteria.toList()..sort(),
-          'externalState': snapshot.externalState.toList()..sort(),
-        }),
-      );
+    canonicalJson(<String, dynamic>{
+      'artifacts': snapshot.artifacts,
+      'errorCodes': snapshot.errorCodes.toList()..sort(),
+      'satisfiedCriteria': snapshot.satisfiedCriteria.toList()..sort(),
+      'externalState': snapshot.externalState.toList()..sort(),
+    }),
+  );
 
   bool hasOscillation(Iterable<String> recentStates) {
     final states = recentStates.toList(growable: false);
@@ -548,14 +549,16 @@ class ConvergenceController {
     int? sameActionSameStateCount,
     bool? oscillating,
   }) {
-    final classification = progressClass ??
+    final classification =
+        progressClass ??
         progressTracker?.lastProgressClass ??
         (semanticProgress
             ? ConvergenceProgressClass.positiveProgress
             : ConvergenceProgressClass.neutral);
     final repeatedFailureCount =
         sameFailureCount ?? progressTracker?.lastSameFailureCount ?? 0;
-    final repeatedActionCount = sameActionSameStateCount ??
+    final repeatedActionCount =
+        sameActionSameStateCount ??
         progressTracker?.lastSameActionSameStateCount ??
         0;
     final oscillationDetected =
@@ -658,15 +661,15 @@ class VerificationEvidence {
       (sha256.trim().isNotEmpty || validator.trim().isNotEmpty);
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'kind': kind,
-        'passed': passed,
-        'stale': stale,
-        'independent': independent,
-        'sha256': sha256,
-        'validator': validator,
-        'criterionIds': criterionIds.toList()..sort(),
-      };
+    'id': id,
+    'kind': kind,
+    'passed': passed,
+    'stale': stale,
+    'independent': independent,
+    'sha256': sha256,
+    'validator': validator,
+    'criterionIds': criterionIds.toList()..sort(),
+  };
 }
 
 class IndependentVerificationReport {
@@ -699,8 +702,9 @@ class IndependentVerifier {
     final criteria = <Map<String, dynamic>>[];
     for (var index = 0; index < item.acceptanceCriteria.length; index++) {
       final id = '${item.id}:criterion:${index + 1}';
-      final matches =
-          usable.where((entry) => entry.criterionIds.contains(id)).toList();
+      final matches = usable
+          .where((entry) => entry.criterionIds.contains(id))
+          .toList();
       criteria.add(<String, dynamic>{
         'criterionId': id,
         'status': matches.isEmpty ? 'unsupported' : 'passed',
@@ -832,26 +836,26 @@ class PhaseBudget {
   }
 
   static PhaseBudget localExecution() => const PhaseBudget(
-        phase: 'execution',
-        maxModelRequests: 8,
-        maxToolCalls: 16,
-        maxRepairs: 24,
-        maxOutputTokens: 1280,
-        maxContextCharacters: 16000,
-        deadlineSeconds: 600,
-      );
+    phase: 'execution',
+    maxModelRequests: 8,
+    maxToolCalls: 16,
+    maxRepairs: 24,
+    maxOutputTokens: 1280,
+    maxContextCharacters: 16000,
+    deadlineSeconds: 600,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'phase': phase,
-        'maxModelRequests': maxModelRequests,
-        'maxToolCalls': maxToolCalls,
-        'maxRepairs': maxRepairs,
-        'maxOutputTokens': maxOutputTokens,
-        'maxContextCharacters': maxContextCharacters,
-        'deadlineSeconds': deadlineSeconds,
-        'repairBudgetSemantic': 'outer_recovery_fuse',
-        'consecutiveNoProgressLimit': 3,
-      };
+    'phase': phase,
+    'maxModelRequests': maxModelRequests,
+    'maxToolCalls': maxToolCalls,
+    'maxRepairs': maxRepairs,
+    'maxOutputTokens': maxOutputTokens,
+    'maxContextCharacters': maxContextCharacters,
+    'deadlineSeconds': deadlineSeconds,
+    'repairBudgetSemantic': 'outer_recovery_fuse',
+    'consecutiveNoProgressLimit': 3,
+  };
 }
 
 class ContextCompactor {
@@ -900,44 +904,42 @@ class ExecutionIntelligenceService {
     required int turn,
     required SemanticProgressDelta delta,
     required ConvergenceDecision decision,
-  }) =>
-      workflow.appendSemanticProgress(
-        runId: runId,
-        workItemId: workItemId,
-        attempt: attempt,
-        turn: turn,
-        beforeSha256: delta.beforeHash,
-        afterSha256: delta.afterHash,
-        delta: <String, dynamic>{
-          ...delta.toJson(),
-          'trackedProgressClass': progress.lastProgressClass.name,
-          'sameFailureCount': progress.lastSameFailureCount,
-          'sameActionSameStateCount': progress.lastSameActionSameStateCount,
-          'oscillating': progress.lastOscillating,
-          'stopReason': decision.stopReason,
-        },
-        semanticProgress: delta.semanticProgress,
-        strategyAction: decision.action.name,
-      );
+  }) => workflow.appendSemanticProgress(
+    runId: runId,
+    workItemId: workItemId,
+    attempt: attempt,
+    turn: turn,
+    beforeSha256: delta.beforeHash,
+    afterSha256: delta.afterHash,
+    delta: <String, dynamic>{
+      ...delta.toJson(),
+      'trackedProgressClass': progress.lastProgressClass.name,
+      'sameFailureCount': progress.lastSameFailureCount,
+      'sameActionSameStateCount': progress.lastSameActionSameStateCount,
+      'oscillating': progress.lastOscillating,
+      'stopReason': decision.stopReason,
+    },
+    semanticProgress: delta.semanticProgress,
+    strategyAction: decision.action.name,
+  );
 
   Future<void> recordVerification({
     required String runId,
     required String workItemId,
     required int attempt,
     required IndependentVerificationReport report,
-  }) =>
-      workflow.appendVerificationReport(
-        runId: runId,
-        workItemId: workItemId,
-        attempt: attempt,
-        evidenceSha256: report.evidenceHash,
-        report: <String, dynamic>{
-          'passed': report.passed,
-          'criteria': report.criteria,
-          'unsupportedClaims': report.unsupportedClaims,
-          'evidenceHash': report.evidenceHash,
-          'reportHash': report.reportHash,
-        },
-        passed: report.passed,
-      );
+  }) => workflow.appendVerificationReport(
+    runId: runId,
+    workItemId: workItemId,
+    attempt: attempt,
+    evidenceSha256: report.evidenceHash,
+    report: <String, dynamic>{
+      'passed': report.passed,
+      'criteria': report.criteria,
+      'unsupportedClaims': report.unsupportedClaims,
+      'evidenceHash': report.evidenceHash,
+      'reportHash': report.reportHash,
+    },
+    passed: report.passed,
+  );
 }

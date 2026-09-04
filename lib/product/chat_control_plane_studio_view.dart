@@ -73,7 +73,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
 
   Widget _statusStrip() {
     final startup = widget.startupError;
-    if (startup == null && error == null && !busy && !runExecuting) {
+    final waitingForInput = conversationSession.awaitingUserInput;
+    if (startup == null &&
+        error == null &&
+        !busy &&
+        !runExecuting &&
+        !waitingForInput) {
       return const SizedBox.shrink();
     }
     final colors = Theme.of(context).colorScheme;
@@ -84,16 +89,26 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: Row(
           children: <Widget>[
-            if (busy || runExecuting)
+            if ((busy || runExecuting) && !waitingForInput)
               const SizedBox.square(
                 dimension: 16,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             else
-              Icon(failing ? Icons.error_outline : Icons.info_outline,
-                  size: 18),
+              Icon(
+                failing ? Icons.error_outline : Icons.info_outline,
+                size: 18,
+              ),
             const SizedBox(width: 9),
-            Expanded(child: Text(startup ?? error ?? status)),
+            Expanded(
+              child: Text(
+                startup ??
+                    error ??
+                    (waitingForInput
+                        ? conversationSession.deferredUserPrompt ?? status
+                        : status),
+              ),
+            ),
             if (error != null)
               IconButton(
                 tooltip: 'Dismiss',
@@ -191,17 +206,17 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             'What can I help you with?',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 9),
           Text(
             'Ask normally, type / for actions, or use @ to reference a project, model, provider, or workspace.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 22),
           Wrap(
@@ -245,11 +260,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     composerFocus.requestFocus();
   }
 
-  Widget _messageBubble(_ChatLine line) {
+  Widget _messageBubble(KristinConversationMessage line) {
     final colors = Theme.of(context).colorScheme;
     return Row(
-      mainAxisAlignment:
-          line.assistant ? MainAxisAlignment.start : MainAxisAlignment.end,
+      mainAxisAlignment: line.assistant
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         if (line.assistant) ...<Widget>[
@@ -333,10 +349,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             children: <Widget>[
               CircleAvatar(
                 radius: 12,
-                child: Text(
-                  '$index',
-                  style: const TextStyle(fontSize: 10),
-                ),
+                child: Text('$index', style: const TextStyle(fontSize: 10)),
               ),
               const SizedBox(width: 9),
               Expanded(
@@ -368,6 +381,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
     final decision = pendingDecision!;
     final draft = history.current;
     final specification = taskSpecification;
+    final blockingClarification =
+        routingDecision?.requiresClarification == true &&
+        specification?.blockingQuestions.isNotEmpty == true;
     // The product's wording rule: "I understood" is only truthful when a
     // model actually read the request through the kernel's structured
     // understanding contract and deterministic code validated the result.
@@ -392,8 +408,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               ),
               Chip(
                 avatar: const Icon(Icons.account_tree_outlined, size: 16),
-                label:
-                    Text(decision.needsPlan ? 'Plan follows' : 'Direct action'),
+                label: Text(
+                  decision.needsPlan ? 'Plan follows' : 'Direct action',
+                ),
               ),
               if (decision.riskClass != ChatRiskClass.none)
                 Chip(
@@ -411,10 +428,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             ],
           ),
-          // Constraints are shown as constraints. Losing "don't touch the
-          // database" between the user saying it and the planner reading
-          // it is exactly what the specification exists to prevent, so it
-          // is visible before anything is planned.
           if (specification != null &&
               specification.hardConstraints.isNotEmpty) ...<Widget>[
             const SizedBox(height: 10),
@@ -457,15 +470,19 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
           if (specification != null &&
               specification.unresolvedQuestions.isNotEmpty) ...<Widget>[
             const SizedBox(height: 8),
-            Text(
-              'Still open:',
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
+            Text('Still open:', style: Theme.of(context).textTheme.labelMedium),
             for (final question in specification.unresolvedQuestions)
               Text(
                 '• ${question.question}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+          ],
+          if (blockingClarification) ...<Widget>[
+            const SizedBox(height: 10),
+            Text(
+              'Reply to the question in Chat before continuing. Your answer updates this same task; it does not create a new request or grant authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
           if (decision.ambiguous) ...<Widget>[
             const SizedBox(height: 10),
@@ -504,7 +521,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               children: <Widget>[
                 FilledButton(
                   key: const Key('chat-understanding-continue'),
-                  onPressed: busy ? null : _continueUnderstanding,
+                  onPressed: busy || blockingClarification
+                      ? null
+                      : _continueUnderstanding,
                   child: const Text('Continue'),
                 ),
                 OutlinedButton(
@@ -537,15 +556,14 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             Text(
               planningFailure == null
                   ? 'The generated task plan did not validate, so this is '
-                      'the conservative safety-net plan rather than a '
-                      'detailed breakdown of this specific request.'
+                        'the conservative safety-net plan rather than a '
+                        'detailed breakdown of this specific request.'
                   : 'This is the conservative safety-net plan, not a '
-                      'breakdown of this specific request: '
-                      '${planningFailure!.message}',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(fontStyle: FontStyle.italic),
+                        'breakdown of this specific request: '
+                        '${planningFailure!.message}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
             ),
             const SizedBox(height: 8),
           ],
@@ -567,10 +585,6 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 ),
             const SizedBox(height: 12),
           ],
-          // The plan card renders the SAME work items the Runner receives,
-          // grouped by the canonical phase that now survives compilation
-          // (WorkItem.phase / WorkItem.parentId). There is no second,
-          // display-only plan structure to drift from what executes.
           ..._planItemRows(command.plan.items),
           if (planAdjusting) ...<Widget>[
             const SizedBox(height: 8),
@@ -605,8 +619,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   label: const Text('Start'),
                 ),
                 OutlinedButton(
-                  onPressed:
-                      busy ? null : () => _mutate(() => planAdjusting = true),
+                  onPressed: busy
+                      ? null
+                      : () => _mutate(() => planAdjusting = true),
                   child: const Text('Adjust plan'),
                 ),
               ],
@@ -665,10 +680,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
   }
 
   Widget _runCard(RunRecord run) {
-    final done =
-        run.items.where((item) => item.state == WorkItemState.succeeded).length;
+    final done = run.items
+        .where((item) => item.state == WorkItemState.succeeded)
+        .length;
     final total = run.items.isEmpty ? 1 : run.items.length;
-    final showModelAnswer = run.command.contract.mode == CommandMode.ask &&
+    final showModelAnswer =
+        run.command.contract.mode == CommandMode.ask &&
         liveAssistantText.trim().isNotEmpty;
     return _assistantCard(
       icon: run.state == RunState.succeeded
@@ -684,6 +701,19 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                 : (done / total).clamp(0, 1).toDouble(),
           ),
           const SizedBox(height: 12),
+          if (conversationSession.awaitingUserInput) ...<Widget>[
+            Text(
+              conversationSession.deferredUserPrompt ??
+                  'Kristin needs your input before continuing.',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Reply in the composer. Your answer supplies intent context only and does not grant new permissions or authority.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+          ],
           if (showModelAnswer)
             SelectableText(liveAssistantText)
           else ...<Widget>[
@@ -714,8 +744,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
             onExpansionChanged: (value) => detailsExpanded = value,
             tilePadding: EdgeInsets.zero,
             title: const Text('Details'),
-            subtitle:
-                const Text('Model, tools, evidence, and technical output'),
+            subtitle: const Text(
+              'Model, tools, evidence, and technical output',
+            ),
             children: <Widget>[
               Align(
                 alignment: Alignment.centerLeft,
@@ -738,7 +769,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
               ],
               if (evidence.isNotEmpty) ...<Widget>[
                 const SizedBox(height: 8),
-                ...evidence.take(10).map(
+                ...evidence
+                    .take(10)
+                    .map(
                       (item) => ListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
@@ -760,8 +793,9 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   icon: const Icon(Icons.pause),
                   label: const Text('Pause'),
                 ),
-              if (run.state == RunState.paused ||
-                  run.state == RunState.interrupted)
+              if ((run.state == RunState.paused ||
+                      run.state == RunState.interrupted) &&
+                  !conversationSession.awaitingUserInput)
                 FilledButton.icon(
                   onPressed: busy ? null : () => _controlRun('resume'),
                   icon: const Icon(Icons.play_arrow),
@@ -871,8 +905,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   child,
@@ -892,18 +926,15 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         child: CircularProgressIndicator(strokeWidth: 2),
       );
     }
-    return Icon(
-      switch (state) {
-        WorkItemState.succeeded => Icons.check_circle_outline,
-        WorkItemState.failed => Icons.error_outline,
-        WorkItemState.blocked => Icons.block_outlined,
-        WorkItemState.awaitingApproval => Icons.lock_clock_outlined,
-        WorkItemState.cancelled => Icons.cancel_outlined,
-        WorkItemState.queued => Icons.radio_button_unchecked,
-        WorkItemState.running => Icons.autorenew,
-      },
-      size: 18,
-    );
+    return Icon(switch (state) {
+      WorkItemState.succeeded => Icons.check_circle_outline,
+      WorkItemState.failed => Icons.error_outline,
+      WorkItemState.blocked => Icons.block_outlined,
+      WorkItemState.awaitingApproval => Icons.lock_clock_outlined,
+      WorkItemState.cancelled => Icons.cancel_outlined,
+      WorkItemState.queued => Icons.radio_button_unchecked,
+      WorkItemState.running => Icons.autorenew,
+    }, size: 18);
   }
 
   Widget _technicalBox(String value) {
@@ -960,8 +991,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                             ): const _SubmitIntent(),
                             if (hasSuggestions)
                               const SingleActivator(
-                                      LogicalKeyboardKey.arrowDown):
-                                  const _NextSuggestionIntent(),
+                                LogicalKeyboardKey.arrowDown,
+                              ): const _NextSuggestionIntent(),
                             if (hasSuggestions)
                               const SingleActivator(LogicalKeyboardKey.arrowUp):
                                   const _PreviousSuggestionIntent(),
@@ -982,44 +1013,49 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               ),
                               _NextSuggestionIntent:
                                   CallbackAction<_NextSuggestionIntent>(
-                                onInvoke: (_) {
-                                  _mutate(() {
-                                    suggestionIndex = (suggestionIndex + 1) %
-                                        suggestions.length;
-                                  });
-                                  return null;
-                                },
-                              ),
+                                    onInvoke: (_) {
+                                      _mutate(() {
+                                        suggestionIndex =
+                                            (suggestionIndex + 1) %
+                                            suggestions.length;
+                                      });
+                                      return null;
+                                    },
+                                  ),
                               _PreviousSuggestionIntent:
                                   CallbackAction<_PreviousSuggestionIntent>(
-                                onInvoke: (_) {
-                                  _mutate(() {
-                                    suggestionIndex = (suggestionIndex -
-                                            1 +
-                                            suggestions.length) %
-                                        suggestions.length;
-                                  });
-                                  return null;
-                                },
-                              ),
+                                    onInvoke: (_) {
+                                      _mutate(() {
+                                        suggestionIndex =
+                                            (suggestionIndex -
+                                                1 +
+                                                suggestions.length) %
+                                            suggestions.length;
+                                      });
+                                      return null;
+                                    },
+                                  ),
                               _AcceptSuggestionIntent:
                                   CallbackAction<_AcceptSuggestionIntent>(
-                                onInvoke: (_) {
-                                  _selectSuggestion(
-                                      suggestions[suggestionIndex]);
-                                  return null;
-                                },
-                              ),
+                                    onInvoke: (_) {
+                                      _selectSuggestion(
+                                        suggestions[suggestionIndex],
+                                      );
+                                      return null;
+                                    },
+                                  ),
                               _DismissSuggestionsIntent:
                                   CallbackAction<_DismissSuggestionsIntent>(
-                                onInvoke: (_) {
-                                  _mutate(() {
-                                    suggestions =
-                                        const <ChatAutocompleteSuggestion>[];
-                                  });
-                                  return null;
-                                },
-                              ),
+                                    onInvoke: (_) {
+                                      _mutate(() {
+                                        suggestions =
+                                            const <
+                                              ChatAutocompleteSuggestion
+                                            >[];
+                                      });
+                                      return null;
+                                    },
+                                  ),
                             },
                             child: TextField(
                               controller: composerController,
@@ -1035,8 +1071,12 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
                                 focusedBorder: InputBorder.none,
-                                contentPadding:
-                                    const EdgeInsets.fromLTRB(17, 15, 17, 8),
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                  17,
+                                  15,
+                                  17,
+                                  8,
+                                ),
                               ),
                               onChanged: (_) => _updateSuggestions(),
                             ),
@@ -1065,7 +1105,8 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
                               const Spacer(),
                               IconButton.filled(
                                 tooltip: 'Send',
-                                onPressed: busy ||
+                                onPressed:
+                                    busy ||
                                         composerController.text.trim().isEmpty
                                     ? null
                                     : _submit,
@@ -1103,11 +1144,7 @@ extension _ChatControlPlaneView on _ChatControlPlaneStudioState {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colors.outlineVariant),
         boxShadow: const <BoxShadow>[
-          BoxShadow(
-            blurRadius: 12,
-            spreadRadius: 1,
-            color: Color(0x18000000),
-          ),
+          BoxShadow(blurRadius: 12, spreadRadius: 1, color: Color(0x18000000)),
         ],
       ),
       child: ListView.builder(

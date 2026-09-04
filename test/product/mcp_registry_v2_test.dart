@@ -24,8 +24,9 @@ void main() {
       executable = File('${root.path}${Platform.pathSeparator}server.bin');
       await executable.writeAsString('trusted executable bytes', flush: true);
       store = await DurableWorkflowStore.open(
-        databaseFile:
-            File('${root.path}${Platform.pathSeparator}workflow.sqlite3'),
+        databaseFile: File(
+          '${root.path}${Platform.pathSeparator}workflow.sqlite3',
+        ),
         migrationBackupDirectory: Directory(
           '${root.path}${Platform.pathSeparator}migration-backups',
         ),
@@ -90,108 +91,112 @@ void main() {
           'networkDestinations': networkDestinations,
           'secretIds': secretIds,
           'retentionDays': 7,
-          'executionMode':
-              mode == McpExecutionModeV2.isolated ? 'isolated' : 'owner_host',
+          'executionMode': mode == McpExecutionModeV2.isolated
+              ? 'isolated'
+              : 'owner_host',
         },
       };
       final signature = Ed25519Reference.sign(
         seed,
         utf8.encode(canonicalJsonV2(body)),
       );
-      return <String, Object?>{
-        ...body,
-        'signature': bytesToHexV2(signature),
-      };
+      return <String, Object?>{...body, 'signature': bytesToHexV2(signature)};
     }
 
     McpExecutionGrantV2 grant({bool ownerHost = false}) => McpExecutionGrantV2(
-          projectId: 'project-1',
-          serverId: 'server.test',
-          allowedTools: const <String>{'safe.read'},
-          allowedResources: const <String>{'docs'},
-          allowedPrompts: const <String>{'summarize'},
-          allowedRoots: const <String>{'workspace'},
-          allowOwnerHostExecution: ownerHost,
-        );
+      projectId: 'project-1',
+      serverId: 'server.test',
+      allowedTools: const <String>{'safe.read'},
+      allowedResources: const <String>{'docs'},
+      allowedPrompts: const <String>{'summarize'},
+      allowedRoots: const <String>{'workspace'},
+      allowOwnerHostExecution: ownerHost,
+    );
 
-    test('signed descriptor persists exact identity and starts installed',
-        () async {
-      final installed = await registry.install(
-        projectId: 'project-1',
-        signedManifest: signedManifest(McpExecutionModeV2.isolated),
-      );
-      expect(installed.state, McpLifecycleStateV2.installed);
-      expect(installed.descriptor.publisher, 'example.publisher');
-      expect(installed.descriptor.tools, contains('safe.read'));
-      expect(installed.manifestSha256, hasLength(64));
-    });
-
-    test('tampered signed descriptor is rejected before registration',
-        () async {
-      final manifest = signedManifest(McpExecutionModeV2.isolated);
-      final payload = Map<String, Object?>.from(manifest['payload']! as Map);
-      payload['version'] = '9.9.9';
-      manifest['payload'] = payload;
-      await expectLater(
-        registry.install(projectId: 'project-1', signedManifest: manifest),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'mcp_descriptor_signature_invalid',
-          ),
-        ),
-      );
-    });
-
-    test('duplicate install is rejected and signed update requires review',
-        () async {
-      await registry.install(
-        projectId: 'project-1',
-        signedManifest: signedManifest(McpExecutionModeV2.isolated),
-      );
-      await expectLater(
-        registry.install(
+    test(
+      'signed descriptor persists exact identity and starts installed',
+      () async {
+        final installed = await registry.install(
           projectId: 'project-1',
           signedManifest: signedManifest(McpExecutionModeV2.isolated),
-        ),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'mcp_server_already_registered',
+        );
+        expect(installed.state, McpLifecycleStateV2.installed);
+        expect(installed.descriptor.publisher, 'example.publisher');
+        expect(installed.descriptor.tools, contains('safe.read'));
+        expect(installed.manifestSha256, hasLength(64));
+      },
+    );
+
+    test(
+      'tampered signed descriptor is rejected before registration',
+      () async {
+        final manifest = signedManifest(McpExecutionModeV2.isolated);
+        final payload = Map<String, Object?>.from(manifest['payload']! as Map);
+        payload['version'] = '9.9.9';
+        manifest['payload'] = payload;
+        await expectLater(
+          registry.install(projectId: 'project-1', signedManifest: manifest),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'mcp_descriptor_signature_invalid',
+            ),
           ),
-        ),
-      );
-      await registry.enable('server.test');
-      final updated = await registry.update(
-        id: 'server.test',
-        signedManifest: signedManifest(
-          McpExecutionModeV2.isolated,
-          version: '1.3.0',
-          tools: const <String>['safe.read'],
-        ),
-      );
-      expect(updated.descriptor.version, '1.3.0');
-      expect(updated.state, McpLifecycleStateV2.disabled);
-      expect(updated.descriptor.tools, <String>{'safe.read'});
-      await expectLater(
-        registry.update(
+        );
+      },
+    );
+
+    test(
+      'duplicate install is rejected and signed update requires review',
+      () async {
+        await registry.install(
+          projectId: 'project-1',
+          signedManifest: signedManifest(McpExecutionModeV2.isolated),
+        );
+        await expectLater(
+          registry.install(
+            projectId: 'project-1',
+            signedManifest: signedManifest(McpExecutionModeV2.isolated),
+          ),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'mcp_server_already_registered',
+            ),
+          ),
+        );
+        await registry.enable('server.test');
+        final updated = await registry.update(
           id: 'server.test',
           signedManifest: signedManifest(
             McpExecutionModeV2.isolated,
-            version: '1.2.9',
+            version: '1.3.0',
+            tools: const <String>['safe.read'],
           ),
-        ),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'mcp_update_version_not_newer',
+        );
+        expect(updated.descriptor.version, '1.3.0');
+        expect(updated.state, McpLifecycleStateV2.disabled);
+        expect(updated.descriptor.tools, <String>{'safe.read'});
+        await expectLater(
+          registry.update(
+            id: 'server.test',
+            signedManifest: signedManifest(
+              McpExecutionModeV2.isolated,
+              version: '1.2.9',
+            ),
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'mcp_update_version_not_newer',
+            ),
+          ),
+        );
+      },
+    );
 
     test('isolated descriptor never falls back to host execution', () async {
       backend.supportsIsolationValue = false;
@@ -267,35 +272,41 @@ void main() {
       expect(backend.started, isEmpty);
     });
 
-    test('backend receives exact grant and malformed receipt fails closed',
-        () async {
-      await registry.install(
-        projectId: 'project-1',
-        signedManifest: signedManifest(McpExecutionModeV2.isolated),
-      );
-      await registry.enable('server.test');
-      final exactGrant = grant();
-      final receipt =
-          await registry.start(id: 'server.test', grant: exactGrant);
-      expect(receipt.running, isTrue);
-      expect(backend.grants.single.allowedResources, <String>{'docs'});
-      await registry.stop('server.test');
+    test(
+      'backend receives exact grant and malformed receipt fails closed',
+      () async {
+        await registry.install(
+          projectId: 'project-1',
+          signedManifest: signedManifest(McpExecutionModeV2.isolated),
+        );
+        await registry.enable('server.test');
+        final exactGrant = grant();
+        final receipt = await registry.start(
+          id: 'server.test',
+          grant: exactGrant,
+        );
+        expect(receipt.running, isTrue);
+        expect(backend.grants.single.allowedResources, <String>{'docs'});
+        await registry.stop('server.test');
 
-      backend.receiptServerId = 'another.server';
-      await expectLater(
-        registry.start(id: 'server.test', grant: exactGrant),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'mcp_backend_receipt_invalid',
+        backend.receiptServerId = 'another.server';
+        await expectLater(
+          registry.start(id: 'server.test', grant: exactGrant),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'mcp_backend_receipt_invalid',
+            ),
           ),
-        ),
-      );
-      expect((await registry.get('server.test'))?.state,
-          McpLifecycleStateV2.enabled);
-      expect(backend.stopped, isNotEmpty);
-    });
+        );
+        expect(
+          (await registry.get('server.test'))?.state,
+          McpLifecycleStateV2.enabled,
+        );
+        expect(backend.stopped, isNotEmpty);
+      },
+    );
 
     test('running server cannot be enabled without stopping backend', () async {
       await registry.install(
@@ -314,8 +325,10 @@ void main() {
           ),
         ),
       );
-      expect((await registry.get('server.test'))?.state,
-          McpLifecycleStateV2.running);
+      expect(
+        (await registry.get('server.test'))?.state,
+        McpLifecycleStateV2.running,
+      );
       await registry.stop('server.test');
     });
 
@@ -362,8 +375,10 @@ void main() {
           ),
         ),
       );
-      expect((await registry.get('server.test'))?.state,
-          McpLifecycleStateV2.revoked);
+      expect(
+        (await registry.get('server.test'))?.state,
+        McpLifecycleStateV2.revoked,
+      );
     });
   });
 }

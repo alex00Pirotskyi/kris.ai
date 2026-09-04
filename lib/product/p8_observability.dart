@@ -5,15 +5,7 @@ import 'dart:io';
 import 'crypto_utils.dart';
 import 'domain.dart';
 
-enum P8TelemetryCategory {
-  model,
-  policy,
-  tool,
-  terminal,
-  browser,
-  web,
-  update,
-}
+enum P8TelemetryCategory { model, policy, tool, terminal, browser, web, update }
 
 extension P8TelemetryCategoryWire on P8TelemetryCategory {
   String get wireName => name;
@@ -25,8 +17,8 @@ class P8TelemetryPolicy {
     this.hashSensitiveIdentifiers = true,
     this.retentionDays = 7,
     this.maxBufferedEvents = 20000,
-  })  : assert(retentionDays >= 0),
-        assert(maxBufferedEvents > 0);
+  }) : assert(retentionDays >= 0),
+       assert(maxBufferedEvents > 0);
 
   final bool optedIn;
   final bool hashSensitiveIdentifiers;
@@ -34,12 +26,12 @@ class P8TelemetryPolicy {
   final int maxBufferedEvents;
 
   Map<String, Object> toJson() => <String, Object>{
-        'optedIn': optedIn,
-        'hashSensitiveIdentifiers': hashSensitiveIdentifiers,
-        'retentionDays': retentionDays,
-        'maxBufferedEvents': maxBufferedEvents,
-        'contentCollection': false,
-      };
+    'optedIn': optedIn,
+    'hashSensitiveIdentifiers': hashSensitiveIdentifiers,
+    'retentionDays': retentionDays,
+    'maxBufferedEvents': maxBufferedEvents,
+    'contentCollection': false,
+  };
 }
 
 class P8TraceEvent {
@@ -68,36 +60,36 @@ class P8TraceEvent {
   final Map<String, String> hashedAttributes;
 
   Map<String, Object> toJson() => <String, Object>{
-        'traceId': traceId,
-        'spanId': spanId,
-        'runId': runId,
-        'category': category.wireName,
-        'operation': operation,
-        'recordedAt': recordedAt.toUtc().toIso8601String(),
-        'durationMicros': durationMicros,
-        'status': status,
-        'safeAttributes': safeAttributes,
-        'hashedAttributes': hashedAttributes,
-      };
+    'traceId': traceId,
+    'spanId': spanId,
+    'runId': runId,
+    'category': category.wireName,
+    'operation': operation,
+    'recordedAt': recordedAt.toUtc().toIso8601String(),
+    'durationMicros': durationMicros,
+    'status': status,
+    'safeAttributes': safeAttributes,
+    'hashedAttributes': hashedAttributes,
+  };
 
   Map<String, Object> toSafeLogJson() => <String, Object>{
-        'traceId': traceId,
-        'spanId': spanId,
-        'runId': runId,
-        'category': category.wireName,
-        'operation': operation,
-        'recordedAt': recordedAt.toUtc().toIso8601String(),
-        'status': status,
-        'safeAttributes': safeAttributes,
-      };
+    'traceId': traceId,
+    'spanId': spanId,
+    'runId': runId,
+    'category': category.wireName,
+    'operation': operation,
+    'recordedAt': recordedAt.toUtc().toIso8601String(),
+    'status': status,
+    'safeAttributes': safeAttributes,
+  };
 }
 
 class P8TelemetryBuffer {
   P8TelemetryBuffer({
     required P8TelemetryPolicy policy,
     DateTime Function()? clock,
-  })  : _policy = policy,
-        _clock = clock ?? DateTime.now;
+  }) : _policy = policy,
+       _clock = clock ?? DateTime.now;
 
   static const Set<String> _allowedSafeKeys = <String>{
     'modelProvider',
@@ -153,13 +145,15 @@ class P8TelemetryBuffer {
         durationMicros < 0) {
       throw StateError('telemetry_correlation_id_required');
     }
-    final unknownKeys = safeAttributes.keys
-        .where((key) => !_allowedSafeKeys.contains(key))
-        .toList(growable: false)
-      ..sort();
+    final unknownKeys =
+        safeAttributes.keys
+            .where((key) => !_allowedSafeKeys.contains(key))
+            .toList(growable: false)
+          ..sort();
     if (unknownKeys.isNotEmpty) {
       throw StateError(
-          'telemetry_attribute_not_allowlisted:${unknownKeys.join(',')}');
+        'telemetry_attribute_not_allowlisted:${unknownKeys.join(',')}',
+      );
     }
     final hashed = <String, String>{};
     if (_policy.hashSensitiveIdentifiers) {
@@ -198,19 +192,18 @@ class P8TelemetryBuffer {
       return;
     }
     final cutoff = _clock().toUtc().subtract(
-          Duration(days: _policy.retentionDays),
-        );
+      Duration(days: _policy.retentionDays),
+    );
     _events.removeWhere((event) => event.recordedAt.isBefore(cutoff));
   }
 
   Map<String, Object> preview() => <String, Object>{
-        'schemaVersion': '1.0.0',
-        ..._policy.toJson(),
-        'eventCount': _events.length,
-        'droppedEventCount': _droppedEventCount,
-        'events':
-            _events.map((event) => event.toJson()).toList(growable: false),
-      };
+    'schemaVersion': '1.0.0',
+    ..._policy.toJson(),
+    'eventCount': _events.length,
+    'droppedEventCount': _droppedEventCount,
+    'events': _events.map((event) => event.toJson()).toList(growable: false),
+  };
 
   Map<String, Object> openTelemetryEnvelope() {
     final metrics = <Map<String, Object>>[];
@@ -240,8 +233,9 @@ class P8TelemetryBuffer {
       },
       'spans': _events.map((event) => event.toJson()).toList(growable: false),
       'metrics': metrics,
-      'logs':
-          _events.map((event) => event.toSafeLogJson()).toList(growable: false),
+      'logs': _events
+          .map((event) => event.toSafeLogJson())
+          .toList(growable: false),
     };
   }
 
@@ -293,7 +287,8 @@ class P8ProductTelemetryBridge {
         : event.correlationId.trim();
     final runHash = Sha256.text('run:$correlation');
     final lower = event.type.toLowerCase();
-    final failed = lower.contains('fail') ||
+    final failed =
+        lower.contains('fail') ||
         lower.contains('error') ||
         lower.contains('denied') ||
         lower.contains('rejected');

@@ -29,16 +29,16 @@ void main() {
       'git_status',
       'git_diff',
     },
-  }) =>
-      WorkItem(
-        id: 'task_001',
-        title: 'Scaffold the Flutter web application',
-        description: 'Create the application source inside the active '
-            'project root.',
-        dependencies: const <String>{},
-        allowedTools: allowedTools,
-        acceptanceCriteria: const <String>['The app source exists.'],
-      );
+  }) => WorkItem(
+    id: 'task_001',
+    title: 'Scaffold the Flutter web application',
+    description:
+        'Create the application source inside the active '
+        'project root.',
+    dependencies: const <String>{},
+    allowedTools: allowedTools,
+    acceptanceCriteria: const <String>['The app source exists.'],
+  );
 
   AgentAction parse(String text, {WorkItem? item}) =>
       const AgentProtocolV3Adapter().parseLegacyCompatibleAction(
@@ -205,7 +205,8 @@ void main() {
         expect(
           rendered.contains(dummy),
           isFalse,
-          reason: 'executor descriptors must not suggest "$dummy" for an '
+          reason:
+              'executor descriptors must not suggest "$dummy" for an '
               'unrelated task: $rendered',
         );
       }
@@ -251,14 +252,13 @@ void main() {
       String errorCode = 'model_tool_not_allowed',
       Duration elapsed = Duration.zero,
       bool fallbackAvailable = true,
-    }) =>
-        policy.onInvalidDecision(
-          errorCode: errorCode,
-          receivedAction: receivedAction,
-          requestedTool: requestedTool,
-          elapsed: elapsed,
-          fallbackAvailable: fallbackAvailable,
-        );
+    }) => policy.onInvalidDecision(
+      errorCode: errorCode,
+      receivedAction: receivedAction,
+      requestedTool: requestedTool,
+      elapsed: elapsed,
+      fallbackAvailable: fallbackAvailable,
+    );
 
     test('the same invalid action in a new shape is recognized', () {
       // These three are byte-different and semantically identical --
@@ -282,8 +282,7 @@ void main() {
       expect(different, isNot(a));
     });
 
-    test(
-        'a repeat escalates immediately instead of paying for another '
+    test('a repeat escalates immediately instead of paying for another '
         'model call', () {
       final policy = ProtocolRecoveryPolicy();
       final first = invalid(

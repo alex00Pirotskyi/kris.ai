@@ -25,16 +25,15 @@ SemanticProgressSnapshot _errors(
   Map<String, String> artifacts = const <String, String>{},
   Set<String> criteria = const <String>{},
   Set<String> external = const <String>{},
-}) =>
-    SemanticProgressSnapshot(
-      errorCodes: errors.toSet(),
-      actionHash: actionHash,
-      resultHash: resultHash,
-      evidenceIds: evidence,
-      artifacts: artifacts,
-      satisfiedCriteria: criteria,
-      externalState: external,
-    );
+}) => SemanticProgressSnapshot(
+  errorCodes: errors.toSet(),
+  actionHash: actionHash,
+  resultHash: resultHash,
+  evidenceIds: evidence,
+  artifacts: artifacts,
+  satisfiedCriteria: criteria,
+  externalState: external,
+);
 
 void main() {
   group('Runner progress-aware convergence', () {
@@ -43,9 +42,7 @@ void main() {
         SemanticProgressSnapshot(
           errorCodes: <String>{'E1', 'E2', 'E3', 'E4', 'E5'},
         ),
-        SemanticProgressSnapshot(
-          errorCodes: <String>{'E1', 'E2', 'E3', 'E4'},
-        ),
+        SemanticProgressSnapshot(errorCodes: <String>{'E1', 'E2', 'E3', 'E4'}),
         SemanticProgressSnapshot(errorCodes: <String>{'E1', 'E2', 'E3'}),
         SemanticProgressSnapshot(errorCodes: <String>{'E1', 'E2'}),
         SemanticProgressSnapshot(errorCodes: <String>{'E1'}),
@@ -217,10 +214,7 @@ void main() {
       final engine = SemanticProgressEngine();
       expect(engine.hasOscillation(<String>['A', 'B', 'A', 'B']), isTrue);
       expect(engine.hasOscillation(<String>['A', 'A', 'A', 'A']), isFalse);
-      expect(
-        engine.hasOscillation(<String>['A', 'B', 'C', 'D', 'E']),
-        isFalse,
-      );
+      expect(engine.hasOscillation(<String>['A', 'B', 'C', 'D', 'E']), isFalse);
       const controller = ConvergenceController();
       final decision = controller.decide(
         stalledTurns: 2,

@@ -23,9 +23,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
             message:
                 'The prototype keeps every task inside an explicit local project context.',
             actionLabel: 'Choose sample project',
-            onAction: () => controller.apply(
-              P5PrototypeAction.createSampleProject,
-            ),
+            onAction: () =>
+                controller.apply(P5PrototypeAction.createSampleProject),
           )
         else ...<Widget>[
           Card(
@@ -66,8 +65,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       ),
                       onChanged: controller.canChangePlanOnly
                           ? (_) => controller.apply(
-                                P5PrototypeAction.choosePlanOnly,
-                              )
+                              P5PrototypeAction.choosePlanOnly,
+                            )
                           : null,
                     ),
                   ),
@@ -82,8 +81,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           key: const Key('review-plan-button'),
                           onPressed: controller.canReviewPlan
                               ? () => controller.apply(
-                                    P5PrototypeAction.reviewPlan,
-                                  )
+                                  P5PrototypeAction.reviewPlan,
+                                )
                               : null,
                           icon: const Icon(Icons.fact_check_outlined),
                           label: const Text('Review concise plan'),
@@ -103,8 +102,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           state.composerLaunchTiming ==
                                   P5ComposerLaunchTiming.runNow
                               ? (state.planOnly
-                                  ? 'Review plan only'
-                                  : 'Run now')
+                                    ? 'Review plan only'
+                                    : 'Run now')
                               : 'Request schedule',
                         ),
                       ),
@@ -244,8 +243,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           maxLines: 4,
                           onChanged: (value) =>
                               controller.updateComposerAttachments(
-                            const LineSplitter().convert(value),
-                          ),
+                                const LineSplitter().convert(value),
+                              ),
                           decoration: InputDecoration(
                             labelText: 'Attachment references',
                             helperText:
@@ -263,8 +262,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           maxLines: 4,
                           onChanged: (value) =>
                               controller.updateAcceptanceCriteria(
-                            const LineSplitter().convert(value),
-                          ),
+                                const LineSplitter().convert(value),
+                              ),
                           decoration: InputDecoration(
                             labelText: 'Acceptance criteria',
                             helperText:
@@ -339,8 +338,10 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Concise plan',
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Concise plan',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 2),
               const Text(
                 'Review intent, authority boundaries, and verification before launch.',
@@ -503,9 +504,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       FilledButton.icon(
                         key: const Key('review-plan-button'),
                         onPressed: controller.canReviewPlan
-                            ? () => controller.apply(
-                                  P5PrototypeAction.reviewPlan,
-                                )
+                            ? () =>
+                                  controller.apply(P5PrototypeAction.reviewPlan)
                             : null,
                         icon: const Icon(Icons.fact_check_outlined),
                         label: const Text('Review new plan'),
@@ -537,10 +537,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
   Widget _savedRunTimeline(BuildContext context, String runId) {
     final filter = _timelineFilter;
     final visibleCount = P5PrototypeFixtures.timelineVisibleCount(filter);
-    final filters = <P5TimelineCategory?>[
-      null,
-      ...P5TimelineCategory.values,
-    ];
+    final filters = <P5TimelineCategory?>[null, ...P5TimelineCategory.values];
     return Container(
       key: const Key('p5-run-timeline'),
       height: 390,

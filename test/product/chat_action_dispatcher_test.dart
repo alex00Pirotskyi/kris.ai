@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kristin_local_agent/product/capability_doctor.dart';
 import 'package:kristin_local_agent/product/chat_action_dispatcher.dart';
 import 'package:kristin_local_agent/product/domain.dart';
+import 'package:kristin_local_agent/product/storage_security.dart';
 
 final DateTime _fixedTime = DateTime.utc(2026, 1, 1);
 
@@ -89,7 +90,8 @@ class _FakeGateway implements ChatRuntimeGateway {
   }) async {
     calls.add('provisionProjectForRequest:$request');
     final now = DateTime.utc(2026);
-    final project = provisioned ??
+    final project =
+        provisioned ??
         ProjectRecord(
           id: 'new-project',
           name: suggestedName ?? 'New project',
@@ -135,24 +137,77 @@ class _FakeGateway implements ChatRuntimeGateway {
   }
 
   ProjectDiagnosticReport _report() => ProjectDiagnosticReport(
-        projectId: 'p1',
-        projectType: 'Flutter',
-        testCommand: 'flutter test',
-        buildCommand: 'flutter build',
-        runCommand: 'flutter run',
-        checks: const <DiagnosticCheck>[
-          DiagnosticCheck(
-            id: 'ok',
-            title: 'ok',
-            status: DiagnosticStatus.passed,
-            message: 'ok',
-          ),
-        ],
-        generatedAt: _fixedTime,
-      );
+    projectId: 'p1',
+    projectType: 'Flutter',
+    testCommand: 'flutter test',
+    buildCommand: 'flutter build',
+    runCommand: 'flutter run',
+    checks: const <DiagnosticCheck>[
+      DiagnosticCheck(
+        id: 'ok',
+        title: 'ok',
+        status: DiagnosticStatus.passed,
+        message: 'ok',
+      ),
+    ],
+    generatedAt: _fixedTime,
+  );
 }
 
 void main() {
+  group('ChatActionDispatcher authority boundary', () {
+    test(
+      'direct project action resolves authority before touching runtime',
+      () async {
+        final gateway = _FakeGateway();
+        final dispatcher = ChatActionDispatcher(gateway);
+
+        expect(
+          () => dispatcher.inspect('p1', capabilityId: 'not.a.capability'),
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'capability_unknown',
+            ),
+          ),
+        );
+
+        expect(gateway.calls, isEmpty);
+      },
+    );
+
+    test(
+      'button/slash/natural-language source cannot change run authority',
+      () {
+        final dispatcher = ChatActionDispatcher(_FakeGateway());
+        final fromSlash = dispatcher.authorize(
+          capabilityId: 'project.run',
+          targetIds: const <String>{'p1'},
+          reason: 'slash',
+        );
+        final fromNaturalLanguage = dispatcher.authorize(
+          capabilityId: 'project.run',
+          targetIds: const <String>{'p1'},
+          reason: 'natural_language',
+        );
+        final fromButton = dispatcher.authorize(
+          capabilityId: 'project.run',
+          targetIds: const <String>{'p1'},
+          reason: 'button',
+        );
+
+        expect(fromSlash.requiredScopes, fromNaturalLanguage.requiredScopes);
+        expect(fromSlash.requiredScopes, fromButton.requiredScopes);
+        expect(fromSlash.requiredScopes, contains(PermissionScope.projectRead));
+        expect(
+          fromSlash.requiredScopes,
+          contains(PermissionScope.executeManaged),
+        );
+      },
+    );
+  });
+
   group('ChatActionDispatcher.search', () {
     test('research.search never requires a project', () async {
       final gateway = _FakeGateway();
@@ -206,84 +261,78 @@ void main() {
   });
 
   group('ChatActionDispatcher.resolveAgentProject', () {
-    test(
-      'agent.create_project always provisions a new project, never the '
-      'selected one',
-      () async {
-        final gateway = _FakeGateway()
-          ..provisioned = ProjectRecord(
-            id: 'brand-new',
-            name: 'Brand new',
-            rootPath: '/tmp/brand-new',
-            createdAt: DateTime.utc(2026),
-            updatedAt: DateTime.utc(2026),
-          );
-        final dispatcher = ChatActionDispatcher(gateway);
-        final selected = ProjectRecord(
-          id: 'existing',
-          name: 'Existing',
-          rootPath: '/tmp/existing',
+    test('agent.create_project always provisions a new project, never the '
+        'selected one', () async {
+      final gateway = _FakeGateway()
+        ..provisioned = ProjectRecord(
+          id: 'brand-new',
+          name: 'Brand new',
+          rootPath: '/tmp/brand-new',
           createdAt: DateTime.utc(2026),
           updatedAt: DateTime.utc(2026),
         );
+      final dispatcher = ChatActionDispatcher(gateway);
+      final selected = ProjectRecord(
+        id: 'existing',
+        name: 'Existing',
+        rootPath: '/tmp/existing',
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      );
 
+      final resolved = await dispatcher.resolveAgentProject(
+        capabilityId: 'agent.create_project',
+        selectedProject: selected,
+        originalRequest: 'build me a clock app',
+      );
+
+      expect(resolved?.id, 'brand-new');
+      expect(
+        gateway.calls,
+        contains('provisionProjectForRequest:build me a clock app'),
+      );
+    });
+
+    test('agent.modify_project and agent.fix_project never provision -- '
+        'they use whatever project is already selected', () async {
+      final gateway = _FakeGateway();
+      final dispatcher = ChatActionDispatcher(gateway);
+      final selected = ProjectRecord(
+        id: 'existing',
+        name: 'Existing',
+        rootPath: '/tmp/existing',
+        createdAt: DateTime.utc(2026),
+        updatedAt: DateTime.utc(2026),
+      );
+
+      for (final capabilityId in <String>[
+        'agent.modify_project',
+        'agent.fix_project',
+      ]) {
         final resolved = await dispatcher.resolveAgentProject(
-          capabilityId: 'agent.create_project',
+          capabilityId: capabilityId,
           selectedProject: selected,
-          originalRequest: 'build me a clock app',
-        );
-
-        expect(resolved?.id, 'brand-new');
-        expect(gateway.calls,
-            contains('provisionProjectForRequest:build me a clock app'));
-      },
-    );
-
-    test(
-      'agent.modify_project and agent.fix_project never provision -- '
-      'they use whatever project is already selected',
-      () async {
-        final gateway = _FakeGateway();
-        final dispatcher = ChatActionDispatcher(gateway);
-        final selected = ProjectRecord(
-          id: 'existing',
-          name: 'Existing',
-          rootPath: '/tmp/existing',
-          createdAt: DateTime.utc(2026),
-          updatedAt: DateTime.utc(2026),
-        );
-
-        for (final capabilityId in <String>[
-          'agent.modify_project',
-          'agent.fix_project',
-        ]) {
-          final resolved = await dispatcher.resolveAgentProject(
-            capabilityId: capabilityId,
-            selectedProject: selected,
-            originalRequest: 'add dark mode',
-          );
-          expect(resolved?.id, 'existing', reason: capabilityId);
-        }
-        expect(
-          gateway.calls
-              .where((call) => call.startsWith('provisionProjectForRequest')),
-          isEmpty,
-        );
-      },
-    );
-
-    test(
-      'agent.modify_project with no selected project resolves to null '
-      'rather than guessing one',
-      () async {
-        final dispatcher = ChatActionDispatcher(_FakeGateway());
-        final resolved = await dispatcher.resolveAgentProject(
-          capabilityId: 'agent.modify_project',
-          selectedProject: null,
           originalRequest: 'add dark mode',
         );
-        expect(resolved, isNull);
-      },
-    );
+        expect(resolved?.id, 'existing', reason: capabilityId);
+      }
+      expect(
+        gateway.calls.where(
+          (call) => call.startsWith('provisionProjectForRequest'),
+        ),
+        isEmpty,
+      );
+    });
+
+    test('agent.modify_project with no selected project resolves to null '
+        'rather than guessing one', () async {
+      final dispatcher = ChatActionDispatcher(_FakeGateway());
+      final resolved = await dispatcher.resolveAgentProject(
+        capabilityId: 'agent.modify_project',
+        selectedProject: null,
+        originalRequest: 'add dark mode',
+      );
+      expect(resolved, isNull);
+    });
   });
 }

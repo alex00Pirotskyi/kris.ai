@@ -40,34 +40,33 @@ class McpTrustRecord {
       revokedAt == null && expiresAt.isAfter(DateTime.now().toUtc());
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'projectId': projectId,
-        'label': label,
-        'executablePath': executablePath,
-        'executableHash': executableHash,
-        'arguments': arguments,
-        'allowedTools': allowedTools.toList()..sort(),
-        'protocolVersion': protocolVersion,
-        'createdAt': createdAt.toUtc().toIso8601String(),
-        'expiresAt': expiresAt.toUtc().toIso8601String(),
-        'revokedAt': revokedAt?.toUtc().toIso8601String(),
-      };
+    'id': id,
+    'projectId': projectId,
+    'label': label,
+    'executablePath': executablePath,
+    'executableHash': executableHash,
+    'arguments': arguments,
+    'allowedTools': allowedTools.toList()..sort(),
+    'protocolVersion': protocolVersion,
+    'createdAt': createdAt.toUtc().toIso8601String(),
+    'expiresAt': expiresAt.toUtc().toIso8601String(),
+    'revokedAt': revokedAt?.toUtc().toIso8601String(),
+  };
 
   factory McpTrustRecord.fromJson(Map<String, dynamic> json) => McpTrustRecord(
-        id: json['id']?.toString() ?? newId('mcp'),
-        projectId: json['projectId']?.toString() ?? '',
-        label: json['label']?.toString() ?? 'MCP server',
-        executablePath: json['executablePath']?.toString() ?? '',
-        executableHash: json['executableHash']?.toString() ?? '',
-        arguments: stringList(json['arguments']),
-        allowedTools: stringList(json['allowedTools']).toSet(),
-        protocolVersion:
-            json['protocolVersion']?.toString() ?? mcpLegacyProtocolVersion,
-        createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
-        expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
-        revokedAt:
-            json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
-      );
+    id: json['id']?.toString() ?? newId('mcp'),
+    projectId: json['projectId']?.toString() ?? '',
+    label: json['label']?.toString() ?? 'MCP server',
+    executablePath: json['executablePath']?.toString() ?? '',
+    executableHash: json['executableHash']?.toString() ?? '',
+    arguments: stringList(json['arguments']),
+    allowedTools: stringList(json['allowedTools']).toSet(),
+    protocolVersion:
+        json['protocolVersion']?.toString() ?? mcpLegacyProtocolVersion,
+    createdAt: parseUtc(json['createdAt'], fallback: DateTime.now()),
+    expiresAt: parseUtc(json['expiresAt'], fallback: DateTime.now()),
+    revokedAt: json['revokedAt'] == null ? null : parseUtc(json['revokedAt']),
+  );
 }
 
 class McpTrustService {
@@ -76,12 +75,12 @@ class McpTrustService {
     required this.audit,
     required this.redactor,
   }) : repository = SqliteEntityRepository<McpTrustRecord>(
-          store: workflow,
-          collection: 'mcp_trust',
-          fromJson: McpTrustRecord.fromJson,
-          toJson: (value) => value.toJson(),
-          idOf: (value) => value.id,
-        );
+         store: workflow,
+         collection: 'mcp_trust',
+         fromJson: McpTrustRecord.fromJson,
+         toJson: (value) => value.toJson(),
+         idOf: (value) => value.id,
+       );
 
   final EntityRepository<McpTrustRecord> repository;
   final AuditChain audit;
@@ -213,13 +212,10 @@ class McpTrustService {
       );
     }
     final session = await _session(trust, workingDirectory, timeout);
-    final response = await session.request(
-        'tools/call',
-        <String, dynamic>{
-          'name': tool,
-          'arguments': arguments,
-        },
-        timeout: timeout);
+    final response = await session.request('tools/call', <String, dynamic>{
+      'name': tool,
+      'arguments': arguments,
+    }, timeout: timeout);
     await audit.append('mcp.tool_called', trust.id, <String, dynamic>{
       'projectId': projectId,
       'trustId': trust.id,
@@ -262,16 +258,17 @@ class McpTrustService {
       late final Set<String> capabilities;
       if (protocol.usesInitialize) {
         final initialized = await session.request(
-            'initialize',
-            <String, dynamic>{
-              'protocolVersion': protocol.version,
-              'capabilities': <String, dynamic>{},
-              'clientInfo': <String, String>{
-                'name': 'Kristin Local Agent',
-                'version': kristinVersion,
-              },
+          'initialize',
+          <String, dynamic>{
+            'protocolVersion': protocol.version,
+            'capabilities': <String, dynamic>{},
+            'clientInfo': <String, String>{
+              'name': 'Kristin Local Agent',
+              'version': kristinVersion,
             },
-            timeout: timeout);
+          },
+          timeout: timeout,
+        );
         capabilities = protocol.validateLegacyInitialize(
           initialized,
           requiredCapabilities: const <String>{'tools'},
@@ -319,13 +316,9 @@ class McpTrustService {
     String? cursor;
 
     for (var pageIndex = 0; pageIndex < maxPages; pageIndex++) {
-      final result = await session.request(
-        'tools/list',
-        <String, dynamic>{
-          if (cursor != null) 'cursor': cursor,
-        },
-        timeout: timeout,
-      );
+      final result = await session.request('tools/list', <String, dynamic>{
+        if (cursor != null) 'cursor': cursor,
+      }, timeout: timeout);
       final page = protocol.parseToolCatalogPage(result);
       for (final name in page.toolNames) {
         if (!available.add(name)) {

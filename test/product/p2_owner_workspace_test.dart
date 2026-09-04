@@ -325,8 +325,7 @@ class _PtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> detach(
@@ -361,8 +360,7 @@ class _PtyBackend implements P2PtyBackend {
     P2PtyOpenRequest request,
     P2EffectBinding binding,
     String grantDigest,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -382,8 +380,7 @@ class _PtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<void> terminate(

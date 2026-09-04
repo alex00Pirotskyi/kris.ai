@@ -238,13 +238,7 @@ class P2InteractivePtyService {
     int cursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) =>
-      attach(
-        sessionId,
-        cursor,
-        binding: binding,
-        grantDigest: grantDigest,
-      );
+  }) => attach(sessionId, cursor, binding: binding, grantDigest: grantDigest);
 
   Future<void> interrupt(
     String sessionId, {

@@ -28,11 +28,11 @@ extension AgentContextSourceWire on AgentContextSource {
 
 extension AgentContextTrustWire on AgentContextTrust {
   String get wireName => switch (this) {
-        AgentContextTrust.systemPolicy => 'system_policy',
-        AgentContextTrust.coordinatorGuidance => 'coordinator_guidance',
-        AgentContextTrust.userIntent => 'user_intent',
-        AgentContextTrust.untrustedData => 'untrusted_data',
-      };
+    AgentContextTrust.systemPolicy => 'system_policy',
+    AgentContextTrust.coordinatorGuidance => 'coordinator_guidance',
+    AgentContextTrust.userIntent => 'user_intent',
+    AgentContextTrust.untrustedData => 'untrusted_data',
+  };
 }
 
 class AgentContextEnvelope {
@@ -41,9 +41,9 @@ class AgentContextEnvelope {
     required this.trust,
     required String content,
     Map<String, Object?> metadata = const <String, Object?>{},
-  })  : content = content,
-        contentSha256 = Sha256.text(content),
-        metadata = Map<String, Object?>.unmodifiable(metadata) {
+  }) : content = content,
+       contentSha256 = Sha256.text(content),
+       metadata = Map<String, Object?>.unmodifiable(metadata) {
     if (!_trustAllowedForSource(source, trust)) {
       throw StateError('agent_context_trust_source_mismatch');
     }
@@ -59,12 +59,12 @@ class AgentContextEnvelope {
   bool get isUntrusted => trust == AgentContextTrust.untrustedData;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'source': source.wireName,
-        'trust': trust.wireName,
-        'contentSha256': contentSha256,
-        'content': content,
-        if (metadata.isNotEmpty) 'metadata': metadata,
-      };
+    'source': source.wireName,
+    'trust': trust.wireName,
+    'contentSha256': contentSha256,
+    'content': content,
+    if (metadata.isNotEmpty) 'metadata': metadata,
+  };
 
   String render() => const JsonEncoder.withIndent('  ').convert(toJson());
 
@@ -83,8 +83,7 @@ class AgentContextEnvelope {
       AgentContextSource.terminal ||
       AgentContextSource.mcp ||
       AgentContextSource.a2a ||
-      AgentContextSource.tool =>
-        trust == AgentContextTrust.untrustedData,
+      AgentContextSource.tool => trust == AgentContextTrust.untrustedData,
     };
   }
 }
@@ -102,8 +101,8 @@ class AgentInjectionAssessment {
 class AgentPromptInjectionGuard {
   const AgentPromptInjectionGuard();
 
-  static final List<MapEntry<String, RegExp>> _signals =
-      <MapEntry<String, RegExp>>[
+  static final List<MapEntry<String, RegExp>>
+  _signals = <MapEntry<String, RegExp>>[
     MapEntry(
       'authority_impersonation',
       RegExp(

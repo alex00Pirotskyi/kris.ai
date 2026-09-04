@@ -55,7 +55,9 @@ void main() {
       final event = buffer.events.single;
       expect(event.traceId, 'trace-1');
       expect(
-          event.hashedAttributes['projectPath'], isNot(r'C:\secret\workspace'));
+        event.hashedAttributes['projectPath'],
+        isNot(r'C:\secret\workspace'),
+      );
       expect(event.hashedAttributes['projectPath'], hasLength(64));
       final envelope = buffer.openTelemetryEnvelope();
       expect(envelope['spans'], isA<List<Object?>>());
@@ -85,95 +87,94 @@ void main() {
       );
     });
 
-    test('central event bridge maps subsystem events without copying content',
-        () async {
-      final controller = StreamController<EventEnvelope>.broadcast();
-      addTearDown(controller.close);
-      final buffer = P8TelemetryBuffer(
-        policy: const P8TelemetryPolicy(optedIn: true),
-        clock: () => DateTime.utc(2026, 8, 23, 12),
-      );
-      final bridge = P8ProductTelemetryBridge(
-        buffer: buffer,
-        events: controller.stream,
-      )..start();
-      addTearDown(bridge.close);
+    test(
+      'central event bridge maps subsystem events without copying content',
+      () async {
+        final controller = StreamController<EventEnvelope>.broadcast();
+        addTearDown(controller.close);
+        final buffer = P8TelemetryBuffer(
+          policy: const P8TelemetryPolicy(optedIn: true),
+          clock: () => DateTime.utc(2026, 8, 23, 12),
+        );
+        final bridge = P8ProductTelemetryBridge(
+          buffer: buffer,
+          events: controller.stream,
+        )..start();
+        addTearDown(bridge.close);
 
-      final types = <String>[
-        'model.generated',
-        'permission.denied',
-        'tool.completed',
-        'browser.action.completed',
-        'research.fetch.completed',
-        'release.update.checked',
-      ];
-      for (var index = 0; index < types.length; index++) {
+        final types = <String>[
+          'model.generated',
+          'permission.denied',
+          'tool.completed',
+          'browser.action.completed',
+          'research.fetch.completed',
+          'release.update.checked',
+        ];
+        for (var index = 0; index < types.length; index++) {
+          controller.add(
+            EventEnvelope(
+              sequence: index + 1,
+              id: 'event-$index',
+              type: types[index],
+              correlationId: 'run-sensitive-id',
+              timestamp: DateTime.utc(2026, 8, 23, 12),
+              data: <String, dynamic>{
+                'prompt': 'must never enter telemetry',
+                'path': r'C:\private\project',
+                'durationMilliseconds': 5 + index,
+                'attempt': index + 1,
+                if (index == 0)
+                  'model': const <String, dynamic>{
+                    'providerId': 'ollama',
+                    'name': 'qwen',
+                  },
+              },
+            ),
+          );
+        }
         controller.add(
           EventEnvelope(
-            sequence: index + 1,
-            id: 'event-$index',
-            type: types[index],
-            correlationId: 'run-sensitive-id',
+            sequence: 99,
+            id: 'project-event',
+            type: 'project.added',
+            correlationId: 'project-private-id',
             timestamp: DateTime.utc(2026, 8, 23, 12),
-            data: <String, dynamic>{
-              'prompt': 'must never enter telemetry',
-              'path': r'C:\private\project',
-              'durationMilliseconds': 5 + index,
-              'attempt': index + 1,
-              if (index == 0)
-                'model': const <String, dynamic>{
-                  'providerId': 'ollama',
-                  'name': 'qwen',
-                },
-            },
+            data: const <String, dynamic>{'name': 'private project'},
           ),
         );
-      }
-      controller.add(
-        EventEnvelope(
-          sequence: 99,
-          id: 'project-event',
-          type: 'project.added',
-          correlationId: 'project-private-id',
-          timestamp: DateTime.utc(2026, 8, 23, 12),
-          data: const <String, dynamic>{'name': 'private project'},
-        ),
-      );
-      await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(Duration.zero);
 
-      expect(buffer.events, hasLength(types.length));
-      expect(
-        buffer.events.map((event) => event.category).toSet(),
-        containsAll(<P8TelemetryCategory>{
-          P8TelemetryCategory.model,
-          P8TelemetryCategory.policy,
-          P8TelemetryCategory.tool,
-          P8TelemetryCategory.browser,
-          P8TelemetryCategory.web,
-          P8TelemetryCategory.update,
-        }),
-      );
-      expect(buffer.events.first.durationMicros, 5000);
-      expect(buffer.events.first.safeAttributes['modelProvider'], 'ollama');
-      expect(buffer.events.first.safeAttributes['modelName'], 'qwen');
-      expect(buffer.events.first.safeAttributes['attempt'], 1);
-      final encoded = buffer.preview().toString();
-      expect(encoded, isNot(contains('must never enter telemetry')));
-      expect(encoded, isNot(contains(r'C:\private\project')));
-      expect(encoded, isNot(contains('run-sensitive-id')));
-      expect(buffer.events.first.runId, hasLength(64));
-      final otel = buffer.openTelemetryEnvelope();
-      expect((otel['metrics']! as List<Object?>), isNotEmpty);
-      expect((otel['logs']! as List<Object?>), hasLength(types.length));
-      expect(otel.toString(), isNot(contains('must never enter telemetry')));
-    });
+        expect(buffer.events, hasLength(types.length));
+        expect(
+          buffer.events.map((event) => event.category).toSet(),
+          containsAll(<P8TelemetryCategory>{
+            P8TelemetryCategory.model,
+            P8TelemetryCategory.policy,
+            P8TelemetryCategory.tool,
+            P8TelemetryCategory.browser,
+            P8TelemetryCategory.web,
+            P8TelemetryCategory.update,
+          }),
+        );
+        expect(buffer.events.first.durationMicros, 5000);
+        expect(buffer.events.first.safeAttributes['modelProvider'], 'ollama');
+        expect(buffer.events.first.safeAttributes['modelName'], 'qwen');
+        expect(buffer.events.first.safeAttributes['attempt'], 1);
+        final encoded = buffer.preview().toString();
+        expect(encoded, isNot(contains('must never enter telemetry')));
+        expect(encoded, isNot(contains(r'C:\private\project')));
+        expect(encoded, isNot(contains('run-sensitive-id')));
+        expect(buffer.events.first.runId, hasLength(64));
+        final otel = buffer.openTelemetryEnvelope();
+        expect((otel['metrics']! as List<Object?>), isNotEmpty);
+        expect((otel['logs']! as List<Object?>), hasLength(types.length));
+        expect(otel.toString(), isNot(contains('must never enter telemetry')));
+      },
+    );
 
     test('opting out clears buffered telemetry and resets dropped counts', () {
       final buffer = P8TelemetryBuffer(
-        policy: const P8TelemetryPolicy(
-          optedIn: true,
-          maxBufferedEvents: 1,
-        ),
+        policy: const P8TelemetryPolicy(optedIn: true, maxBufferedEvents: 1),
       );
       for (var index = 0; index < 2; index++) {
         buffer.record(
@@ -194,13 +195,11 @@ void main() {
     });
 
     test('settings persist telemetry opt-in and bounded retention', () {
-      final settings = ProductSettings.fromJson(
-        const <String, dynamic>{
-          'telemetryOptIn': true,
-          'telemetryRetentionDays': 30,
-          'telemetryMaxBufferedEvents': 5000,
-        },
-      );
+      final settings = ProductSettings.fromJson(const <String, dynamic>{
+        'telemetryOptIn': true,
+        'telemetryRetentionDays': 30,
+        'telemetryMaxBufferedEvents': 5000,
+      });
       expect(settings.telemetryOptIn, isTrue);
       expect(settings.telemetryRetentionDays, 30);
       expect(settings.telemetryMaxBufferedEvents, 5000);
@@ -224,8 +223,9 @@ void main() {
         status: 'ok',
         safeAttributes: const <String, Object>{'success': true},
       );
-      final directory =
-          await Directory.systemTemp.createTemp('kristin-telemetry-');
+      final directory = await Directory.systemTemp.createTemp(
+        'kristin-telemetry-',
+      );
       addTearDown(() => directory.delete(recursive: true));
       final file = File('${directory.path}/telemetry.json');
       await buffer.export(file);

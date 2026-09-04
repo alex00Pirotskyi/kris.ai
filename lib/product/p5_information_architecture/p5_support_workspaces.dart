@@ -242,8 +242,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                   onPressed: _webBusy
                       ? null
                       : _webBrowser == null
-                          ? _startWebBrowser
-                          : _stopWebBrowser,
+                      ? _startWebBrowser
+                      : _stopWebBrowser,
                   icon: Icon(
                     _webBrowser == null ? Icons.play_arrow : Icons.stop,
                   ),
@@ -286,32 +286,32 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
   Widget _webPanelContent(BuildContext context) {
     return switch (_webPanel) {
       'Files' => _webDependencyPanel(
-          context,
-          'Files / project tree',
-          'P3-012 owns the transactional project tree/editor authority. This P5 slice does not fork it.',
-          Icons.account_tree_outlined,
-        ),
+        context,
+        'Files / project tree',
+        'P3-012 owns the transactional project tree/editor authority. This P5 slice does not fork it.',
+        Icons.account_tree_outlined,
+      ),
       'Editor' => _webDependencyPanel(
-          context,
-          'Code editor',
-          'P3-012 owns editor diagnostics, formatting, search, diff, and source-control hooks.',
-          Icons.code_outlined,
-        ),
+        context,
+        'Code editor',
+        'P3-012 owns editor diagnostics, formatting, search, diff, and source-control hooks.',
+        Icons.code_outlined,
+      ),
       'Preview' => _webPreviewPanel(context),
       'Browser' => _webBrowserPanel(context),
       'Inspector' => _webInspectorPanel(context),
       'Console' => _webJsonPanel(
-          context,
-          'Console',
-          _observationMap('console'),
-          'Observe a page to capture bounded console telemetry.',
-        ),
+        context,
+        'Console',
+        _observationMap('console'),
+        'Observe a page to capture bounded console telemetry.',
+      ),
       'Network' => _webJsonPanel(
-          context,
-          'Network',
-          _observationMap('network'),
-          'Observe a page to capture sanitized network telemetry.',
-        ),
+        context,
+        'Network',
+        _observationMap('network'),
+        'Observe a page to capture sanitized network telemetry.',
+      ),
       'Terminal' => _webTerminalPanel(context),
       'Activity' => _webActivityPanel(context),
       'Tests & Evidence' => _webEvidencePanel(context),
@@ -349,8 +349,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Sessions',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Sessions',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -370,15 +372,15 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onChanged: process == null || _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                                () =>
-                                    _webSessionKind = value ?? _webSessionKind,
-                              ),
+                              () => _webSessionKind = value ?? _webSessionKind,
+                            ),
                     ),
                     SizedBox(
                       width: 180,
                       child: TextField(
                         controller: _webProfileController,
-                        enabled: _webSessionKind ==
+                        enabled:
+                            _webSessionKind ==
                                 P3BrowserSessionKind.persistent &&
                             process != null &&
                             !_webBusy,
@@ -393,7 +395,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onSelected: process == null || _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                              () => _webDownloadsEnabled = value),
+                              () => _webDownloadsEnabled = value,
+                            ),
                     ),
                     FilterChip(
                       label: const Text('Uploads'),
@@ -401,18 +404,21 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onSelected: process == null || _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                              () => _webUploadsEnabled = value),
+                              () => _webUploadsEnabled = value,
+                            ),
                     ),
                     FilledButton.icon(
                       key: const Key('web-open-session'),
-                      onPressed:
-                          process == null || _webBusy ? null : _openWebSession,
+                      onPressed: process == null || _webBusy
+                          ? null
+                          : _openWebSession,
                       icon: const Icon(Icons.add),
                       label: const Text('New session'),
                     ),
                     OutlinedButton.icon(
-                      onPressed:
-                          process == null || _webBusy ? null : _refreshWebState,
+                      onPressed: process == null || _webBusy
+                          ? null
+                          : _refreshWebState,
                       icon: const Icon(Icons.refresh),
                       label: const Text('Refresh'),
                     ),
@@ -466,7 +472,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     ),
                     FilledButton.tonalIcon(
                       key: const Key('web-open-page'),
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webBusy
                           ? null
@@ -485,8 +492,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     onTap: () => _selectWebPage(page.pageId),
                     trailing: IconButton(
                       tooltip: 'Close page',
-                      onPressed:
-                          _webBusy ? null : () => _closeWebPage(page.pageId),
+                      onPressed: _webBusy
+                          ? null
+                          : () => _closeWebPage(page.pageId),
                       icon: const Icon(Icons.close),
                     ),
                   ),
@@ -508,7 +516,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     const SizedBox(width: 8),
                     FilledButton.icon(
                       key: const Key('web-navigate-local'),
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webSelectedPageId == null ||
                               _webBusy
@@ -519,7 +528,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                     ),
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webSelectedPageId == null ||
                               _webBusy
@@ -560,35 +570,37 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                   children: <Widget>[
                     DropdownButton<String>(
                       value: _webLocatorStrategy,
-                      items: const <String>[
-                        'role',
-                        'label',
-                        'placeholder',
-                        'text',
-                        'testId',
-                        'css',
-                      ]
-                          .map(
-                            (value) => DropdownMenuItem(
-                              value: value,
-                              child: Text(value),
-                            ),
-                          )
-                          .toList(growable: false),
+                      items:
+                          const <String>[
+                                'role',
+                                'label',
+                                'placeholder',
+                                'text',
+                                'testId',
+                                'css',
+                              ]
+                              .map(
+                                (value) => DropdownMenuItem(
+                                  value: value,
+                                  child: Text(value),
+                                ),
+                              )
+                              .toList(growable: false),
                       onChanged: _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                                () => _webLocatorStrategy =
-                                    value ?? _webLocatorStrategy,
-                              ),
+                              () => _webLocatorStrategy =
+                                  value ?? _webLocatorStrategy,
+                            ),
                     ),
                     if (_webLocatorStrategy == 'role')
                       SizedBox(
                         width: 130,
                         child: TextField(
                           controller: _webRoleController,
-                          decoration:
-                              const InputDecoration(labelText: 'ARIA role'),
+                          decoration: const InputDecoration(
+                            labelText: 'ARIA role',
+                          ),
                         ),
                       ),
                     SizedBox(
@@ -615,15 +627,16 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onChanged: _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                                () => _webAction = value ?? _webAction,
-                              ),
+                              () => _webAction = value ?? _webAction,
+                            ),
                     ),
                     SizedBox(
                       width: 220,
                       child: TextField(
                         controller: _webActionValueController,
-                        decoration:
-                            const InputDecoration(labelText: 'Action value'),
+                        decoration: const InputDecoration(
+                          labelText: 'Action value',
+                        ),
                       ),
                     ),
                     if (_webAction == P3BrowserActionKind.drag)
@@ -632,12 +645,14 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                         child: TextField(
                           controller: _webTargetController,
                           decoration: const InputDecoration(
-                              labelText: 'Target locator'),
+                            labelText: 'Target locator',
+                          ),
                         ),
                       ),
                     FilledButton.icon(
                       key: const Key('web-perform-action'),
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webSelectedPageId == null ||
                               _webBusy
@@ -669,7 +684,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                   children: <Widget>[
                     OutlinedButton.icon(
                       key: const Key('web-download'),
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webSelectedPageId == null ||
                               _webBusy
@@ -691,21 +707,24 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       width: 170,
                       child: TextField(
                         controller: _webUploadNameController,
-                        decoration:
-                            const InputDecoration(labelText: 'Upload filename'),
+                        decoration: const InputDecoration(
+                          labelText: 'Upload filename',
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 210,
                       child: TextField(
                         controller: _webUploadMimeController,
-                        decoration:
-                            const InputDecoration(labelText: 'MIME type'),
+                        decoration: const InputDecoration(
+                          labelText: 'MIME type',
+                        ),
                       ),
                     ),
                     OutlinedButton.icon(
                       key: const Key('web-upload'),
-                      onPressed: process == null ||
+                      onPressed:
+                          process == null ||
                               _webSelectedSessionId == null ||
                               _webSelectedPageId == null ||
                               _webBusy
@@ -733,8 +752,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Live browser preview',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Live browser preview',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             if (encoded is String && encoded.isNotEmpty)
               ConstrainedBox(
@@ -777,15 +798,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
           _observationText('accessibility'),
         ),
         _webTextCard(context, 'Visible text', _observationText('visibleText')),
-        _webJsonPanel(
-          context,
-          'Forms',
-          <String, Object?>{
-            'forms': _webObservation!.observation['forms'],
-            'formsTruncated': _webObservation!.observation['formsTruncated'],
-          },
-          'No forms captured.',
-        ),
+        _webJsonPanel(context, 'Forms', <String, Object?>{
+          'forms': _webObservation!.observation['forms'],
+          'formsTruncated': _webObservation!.observation['formsTruncated'],
+        }, 'No forms captured.'),
         const _BoundaryNotice(
           message:
               'The snapshot is live P3 evidence. DOM-to-source mapping remains P3-014 and is not claimed here.',
@@ -805,8 +821,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
           handle == null
               ? 'Owner Mode runtime is not bound in this standalone view.'
               : handle.available
-                  ? '${active!.terminalModel.tabs.length} real Owner Mode terminal tab(s).'
-                  : handle.recoveryMessage,
+              ? '${active!.terminalModel.tabs.length} real Owner Mode terminal tab(s).'
+              : handle.recoveryMessage,
         ),
         trailing: widget.onOpenOwnerMode == null
             ? null
@@ -825,8 +841,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Browser activity',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Browser activity',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             if (_webActivity.isEmpty)
               const Text('No Web Studio runtime actions yet.')
             else
@@ -858,8 +876,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Download quarantine receipts',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Download quarantine receipts',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (_webDownloads.isEmpty)
                   const Text('No controlled downloads.')
                 else
@@ -890,8 +910,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Upload receipts',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Upload receipts',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (_webUploads.isEmpty)
                   const Text('No controlled uploads.')
                 else
@@ -971,10 +993,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
   String _observationText(String key) =>
       _observationMap(key)?['text']?.toString() ?? '';
 
-  Future<void> _runWeb(
-    String label,
-    Future<void> Function() action,
-  ) async {
+  Future<void> _runWeb(String label, Future<void> Function() action) async {
     if (_webBusy) return;
     mutatePresentation(() {
       _webBusy = true;
@@ -1067,23 +1086,23 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
   }
 
   Future<void> _openWebSession() => _runWeb('browser session opened', () async {
-        final session = await _webBrowser!.openSession(
-          kind: _webSessionKind,
-          profileId: _webSessionKind == P3BrowserSessionKind.persistent
-              ? _webProfileController.text.trim()
-              : null,
-          downloadsEnabled: _webDownloadsEnabled,
-          uploadsEnabled: _webUploadsEnabled,
-        );
-        final page = await _webBrowser!.openPage(session.sessionId);
-        if (!mounted) return;
-        mutatePresentation(() {
-          _webSelectedSessionId = session.sessionId;
-          _webSelectedPageId = page.pageId;
-          _webObservation = null;
-        });
-        await _refreshWebStateImpl();
-      });
+    final session = await _webBrowser!.openSession(
+      kind: _webSessionKind,
+      profileId: _webSessionKind == P3BrowserSessionKind.persistent
+          ? _webProfileController.text.trim()
+          : null,
+      downloadsEnabled: _webDownloadsEnabled,
+      uploadsEnabled: _webUploadsEnabled,
+    );
+    final page = await _webBrowser!.openPage(session.sessionId);
+    if (!mounted) return;
+    mutatePresentation(() {
+      _webSelectedSessionId = session.sessionId;
+      _webSelectedPageId = page.pageId;
+      _webObservation = null;
+    });
+    await _refreshWebStateImpl();
+  });
 
   Future<void> _selectWebSession(String sessionId) async {
     mutatePresentation(() {
@@ -1106,14 +1125,14 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
       });
 
   Future<void> _openWebPage() => _runWeb('browser page opened', () async {
-        final page = await _webBrowser!.openPage(_webSelectedSessionId!);
-        if (!mounted) return;
-        mutatePresentation(() {
-          _webSelectedPageId = page.pageId;
-          _webObservation = null;
-        });
-        await _refreshWebStateImpl();
-      });
+    final page = await _webBrowser!.openPage(_webSelectedSessionId!);
+    if (!mounted) return;
+    mutatePresentation(() {
+      _webSelectedPageId = page.pageId;
+      _webObservation = null;
+    });
+    await _refreshWebStateImpl();
+  });
 
   Future<void> _selectWebPage(String pageId) async {
     mutatePresentation(() {
@@ -1166,10 +1185,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         : _webLocatorController.text.trim();
     return switch (_webLocatorStrategy) {
       'role' => P3BrowserLocator.role(
-          _webRoleController.text.trim(),
-          value,
-          exact: true,
-        ),
+        _webRoleController.text.trim(),
+        value,
+        exact: true,
+      ),
       'label' => P3BrowserLocator.label(value, exact: true),
       'placeholder' => P3BrowserLocator.placeholder(value, exact: true),
       'text' => P3BrowserLocator.text(value, exact: true),
@@ -1183,43 +1202,43 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
     final raw = _webActionValueController.text;
     return switch (_webAction) {
       P3BrowserActionKind.fill => P3BrowserActionRequest(
-          action: P3BrowserActionKind.fill,
-          locators: <P3BrowserLocator>[locator],
-          value: raw,
-        ),
+        action: P3BrowserActionKind.fill,
+        locators: <P3BrowserLocator>[locator],
+        value: raw,
+      ),
       P3BrowserActionKind.type => P3BrowserActionRequest(
-          action: P3BrowserActionKind.type,
-          locators: <P3BrowserLocator>[locator],
-          value: raw,
-        ),
+        action: P3BrowserActionKind.type,
+        locators: <P3BrowserLocator>[locator],
+        value: raw,
+      ),
       P3BrowserActionKind.select => P3BrowserActionRequest(
-          action: _webAction,
-          locators: <P3BrowserLocator>[locator],
-          options: raw
-              .split(',')
-              .map((value) => value.trim())
-              .where((value) => value.isNotEmpty)
-              .toList(growable: false),
-        ),
+        action: _webAction,
+        locators: <P3BrowserLocator>[locator],
+        options: raw
+            .split(',')
+            .map((value) => value.trim())
+            .where((value) => value.isNotEmpty)
+            .toList(growable: false),
+      ),
       P3BrowserActionKind.press => P3BrowserActionRequest(
-          action: _webAction,
-          locators: <P3BrowserLocator>[locator],
-          key: raw.trim(),
-        ),
+        action: _webAction,
+        locators: <P3BrowserLocator>[locator],
+        key: raw.trim(),
+      ),
       P3BrowserActionKind.drag => P3BrowserActionRequest(
-          action: _webAction,
-          locators: <P3BrowserLocator>[locator],
-          targetLocators: <P3BrowserLocator>[_webLocator(target: true)],
-        ),
+        action: _webAction,
+        locators: <P3BrowserLocator>[locator],
+        targetLocators: <P3BrowserLocator>[_webLocator(target: true)],
+      ),
       P3BrowserActionKind.scroll => P3BrowserActionRequest(
-          action: _webAction,
-          locators: <P3BrowserLocator>[locator],
-          deltaY: int.tryParse(raw.trim()) ?? 600,
-        ),
+        action: _webAction,
+        locators: <P3BrowserLocator>[locator],
+        deltaY: int.tryParse(raw.trim()) ?? 600,
+      ),
       _ => P3BrowserActionRequest(
-          action: _webAction,
-          locators: <P3BrowserLocator>[locator],
-        ),
+        action: _webAction,
+        locators: <P3BrowserLocator>[locator],
+      ),
     };
   }
 
@@ -1247,9 +1266,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         await _webBrowser!.downloadPage(
           _webSelectedSessionId!,
           _webSelectedPageId!,
-          P3BrowserDownloadRequest(
-            locators: <P3BrowserLocator>[_webLocator()],
-          ),
+          P3BrowserDownloadRequest(locators: <P3BrowserLocator>[_webLocator()]),
         );
         await _refreshWebStateImpl();
       });

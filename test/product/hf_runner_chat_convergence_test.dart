@@ -122,72 +122,76 @@ void main() {
     expect(keys, isNot(contains('browser')));
   });
 
-  test('preflight blocks a required missing executable before execution',
-      () async {
-    final root =
-        await Directory.systemTemp.createTemp('kristin-preflight-test-');
-    addTearDown(() => root.delete(recursive: true));
-    final project = ProjectRecord(
-      id: 'project',
-      name: 'test',
-      rootPath: root.path,
-      createdAt: DateTime.now().toUtc(),
-      updatedAt: DateTime.now().toUtc(),
-    );
-    final command = _command(
-      request: 'Build a Flutter web app',
-      mode: CommandMode.build,
-    );
-    final run = RunRecord(
-      id: 'run',
-      command: command,
-      state: RunState.prepared,
-      items: command.plan.items
-          .map((item) => WorkItemProgress(
+  test(
+    'preflight blocks a required missing executable before execution',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'kristin-preflight-test-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final project = ProjectRecord(
+        id: 'project',
+        name: 'test',
+        rootPath: root.path,
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      final command = _command(
+        request: 'Build a Flutter web app',
+        mode: CommandMode.build,
+      );
+      final run = RunRecord(
+        id: 'run',
+        command: command,
+        state: RunState.prepared,
+        items: command.plan.items
+            .map(
+              (item) => WorkItemProgress(
                 item: item,
                 state: WorkItemState.queued,
                 attempts: 0,
-              ))
-          .toList(),
-      budget: const AutonomyBudget(),
-      createdAt: DateTime.now().toUtc(),
-      updatedAt: DateTime.now().toUtc(),
-    );
-    final service = RunPreflightService(
-      resolver: const _MissingExecutableResolver(),
-      modelProbe: (model, requirement) async => RunCapabilityProbeResult(
-        key: requirement.key,
-        label: requirement.label,
-        ok: true,
-        required: requirement.required,
-        message: 'ready',
-        durationMilliseconds: 1,
-      ),
-      browserProbe: (requirement) async => RunCapabilityProbeResult(
-        key: requirement.key,
-        label: requirement.label,
-        ok: true,
-        required: requirement.required,
-        message: 'ready',
-        durationMilliseconds: 1,
-      ),
-      researchSearchProbe: (run, requirement) async => RunCapabilityProbeResult(
-        key: requirement.key,
-        label: requirement.label,
-        ok: true,
-        required: requirement.required,
-        message: 'ready',
-        durationMilliseconds: 1,
-      ),
-      settingsProvider: () => const ProductSettings(
-        localOnly: false,
-        allowPackageNetwork: true,
-      ),
-    );
-    final receipt = await service.check(run: run, project: project);
-    expect(receipt.verdict, RunPreflightVerdict.blocked);
-    expect(receipt.blockingFailures, isNotEmpty);
-  });
+              ),
+            )
+            .toList(),
+        budget: const AutonomyBudget(),
+        createdAt: DateTime.now().toUtc(),
+        updatedAt: DateTime.now().toUtc(),
+      );
+      final service = RunPreflightService(
+        resolver: const _MissingExecutableResolver(),
+        modelProbe: (model, requirement) async => RunCapabilityProbeResult(
+          key: requirement.key,
+          label: requirement.label,
+          ok: true,
+          required: requirement.required,
+          message: 'ready',
+          durationMilliseconds: 1,
+        ),
+        browserProbe: (requirement) async => RunCapabilityProbeResult(
+          key: requirement.key,
+          label: requirement.label,
+          ok: true,
+          required: requirement.required,
+          message: 'ready',
+          durationMilliseconds: 1,
+        ),
+        researchSearchProbe: (run, requirement) async =>
+            RunCapabilityProbeResult(
+              key: requirement.key,
+              label: requirement.label,
+              ok: true,
+              required: requirement.required,
+              message: 'ready',
+              durationMilliseconds: 1,
+            ),
+        settingsProvider: () =>
+            const ProductSettings(localOnly: false, allowPackageNetwork: true),
+      );
+      final receipt = await service.check(run: run, project: project);
+      expect(receipt.verdict, RunPreflightVerdict.blocked);
+      expect(receipt.blockingFailures, isNotEmpty);
+    },
+  );
 
   test('research plans require a real search-provider capability', () {
     const resolver = RunCapabilityResolver();
@@ -206,8 +210,9 @@ void main() {
   });
 
   test('local-only mode blocks required web search before execution', () async {
-    final root =
-        await Directory.systemTemp.createTemp('kristin-search-preflight-');
+    final root = await Directory.systemTemp.createTemp(
+      'kristin-search-preflight-',
+    );
     addTearDown(() => root.delete(recursive: true));
     final project = ProjectRecord(
       id: 'project',
@@ -230,11 +235,13 @@ void main() {
       command: command,
       state: RunState.prepared,
       items: command.plan.items
-          .map((item) => WorkItemProgress(
-                item: item,
-                state: WorkItemState.queued,
-                attempts: 0,
-              ))
+          .map(
+            (item) => WorkItemProgress(
+              item: item,
+              state: WorkItemState.queued,
+              attempts: 0,
+            ),
+          )
           .toList(),
       budget: const AutonomyBudget(),
       createdAt: DateTime.now().toUtc(),
@@ -299,8 +306,9 @@ void main() {
 
   test('awaiting approval chat card is actionable and recovery-safe', () {
     final chatSource = File('lib/product/chat_studio.dart').readAsStringSync();
-    final presentationSource =
-        File('lib/product/ui_components.dart').readAsStringSync();
+    final presentationSource = File(
+      'lib/product/ui_components.dart',
+    ).readAsStringSync();
 
     expect(
       presentationSource,
@@ -310,10 +318,7 @@ void main() {
       chatSource,
       contains("key: const Key('chat-run-approval-guidance')"),
     );
-    expect(
-      chatSource,
-      contains("key: const Key('chat-run-approve-continue')"),
-    );
+    expect(chatSource, contains("key: const Key('chat-run-approve-continue')"));
     expect(chatSource, contains("label: const Text('Review & continue')"));
     expect(chatSource, contains("'Starts after approval'"));
     expect(
@@ -323,7 +328,8 @@ void main() {
     expect(
       chatSource,
       contains(
-          'approvedScopes.addAll(run.command.contract.requiredPermissions);'),
+        'approvedScopes.addAll(run.command.contract.requiredPermissions);',
+      ),
     );
     expect(
       RegExp(r"liveAssistantProtocolText = '';").allMatches(chatSource).length,
@@ -400,7 +406,8 @@ PreparedCommand _command({
     ],
     constraints: const <String>[],
     researchQuestions: const <String>[],
-    requiredPermissions: requiredPermissions ??
+    requiredPermissions:
+        requiredPermissions ??
         (mode == CommandMode.build
             ? const <PermissionScope>{
                 PermissionScope.projectRead,
@@ -414,7 +421,8 @@ PreparedCommand _command({
     title: 'Work',
     description: 'Complete the requested work.',
     dependencies: const <String>{},
-    allowedTools: allowedTools ??
+    allowedTools:
+        allowedTools ??
         (mode == CommandMode.ask
             ? const <String>{}
             : const <String>{'read_file', 'write_file', 'git_status'}),

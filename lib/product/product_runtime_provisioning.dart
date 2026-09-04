@@ -30,8 +30,8 @@ extension ProductRuntimeProvisioning on ProductRuntime {
   }
 
   Stream<ApplicationRuntimeProvisioningProgress>
-      get runtimeProvisioningProgress =>
-          _runtimeProvisioningState.provisioner.progress;
+  get runtimeProvisioningProgress =>
+      _runtimeProvisioningState.provisioner.progress;
 
   P2ProductRuntimeOwnerModeHandle get provisionedOwnerMode =>
       _runtimeProvisioningState.ownerMode;
@@ -46,9 +46,9 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final state = _runtimeProvisioningState;
     if (state.ownerMode.available && !repair) {
       if (!identical(state.ownerMode, p2OwnerMode)) {
-        return adoptProvisionedOwnerMode(state.ownerMode).then(
-          (_) => state.ownerMode,
-        );
+        return adoptProvisionedOwnerMode(
+          state.ownerMode,
+        ).then((_) => state.ownerMode);
       }
       return Future<P2ProductRuntimeOwnerModeHandle>.value(state.ownerMode);
     }
@@ -73,12 +73,13 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final inFlight = state.browserInFlight;
     if (inFlight != null) return inFlight;
     late final Future<P3BrowserRuntimeResourceSet> operation;
-    operation =
-        _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(() {
-      if (identical(state.browserInFlight, operation)) {
-        state.browserInFlight = null;
-      }
-    });
+    operation = _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(
+      () {
+        if (identical(state.browserInFlight, operation)) {
+          state.browserInFlight = null;
+        }
+      },
+    );
     state.browserInFlight = operation;
     return operation;
   }
@@ -182,18 +183,19 @@ Future<P3BrowserPageObservation> _renderWithProvisionedBrowser(
   String? sessionId;
   String? pageId;
   try {
-    process = await P3BrowserRuntimeService(
-      applicationDataRoot: runtime.directories.root,
-    ).startSessions(
-      stateDirectory: stateDirectory,
-      quotas: const P3BrowserSessionQuotas(
-        maxSessions: 1,
-        maxPagesPerSession: 1,
-        maxPersistentProfiles: 1,
-      ),
-      startupTimeout: const Duration(seconds: 30),
-      requestTimeout: const Duration(seconds: 45),
-    );
+    process =
+        await P3BrowserRuntimeService(
+          applicationDataRoot: runtime.directories.root,
+        ).startSessions(
+          stateDirectory: stateDirectory,
+          quotas: const P3BrowserSessionQuotas(
+            maxSessions: 1,
+            maxPagesPerSession: 1,
+            maxPersistentProfiles: 1,
+          ),
+          startupTimeout: const Duration(seconds: 30),
+          requestTimeout: const Duration(seconds: 45),
+        );
     final session = await process.openSession(
       kind: P3BrowserSessionKind.ephemeral,
       blockServiceWorkers: true,

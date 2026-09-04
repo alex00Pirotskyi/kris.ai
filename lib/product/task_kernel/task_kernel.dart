@@ -1,39 +1,17 @@
 // The Universal Task Kernel.
 //
-//                          USER
-//                            |
-//                     ONE KRISTIN CHAT
-//                            |
-//                      UNDERSTANDING          <- task_understanding.dart
-//                            |
-//                    TASK SPECIFICATION       <- task_specification.dart
-//                            |
-//                     COMPLEXITY ROUTER       <- complexity_router.dart
-//                            |
-//          direct  <---------+---------> compact / graph
-//                            |
-//                  UNIVERSAL TASK KERNEL      <- this file
-//                            |
-//                      PLAN COMPILER          <- plan_compiler.dart
-//                            |
-//                        AUTHORITY
-//                            |
-//     Runner / Research / Owner / Diagnostics / (Browser later)
+// USER -> ONE KRISTIN CHAT -> UNDERSTANDING -> TASK SPECIFICATION ->
+// COMPLEXITY ROUTER -> UNIVERSAL TASK KERNEL -> PLAN COMPILER -> AUTHORITY ->
+// Runner / Research / Owner / Diagnostics / Browser.
 //
-// Ownership matters here. This kernel is not part of Prompt Studio, and
-// nothing in it requires a Prompt Studio artifact to exist. Prompt Studio
-// becomes an advanced editor/visualizer/debugger for the same plans this
-// kernel produces: it consumes the kernel, it does not own it.
-//
-// What this file is careful NOT to do:
-//
-//   * It never grants authority. A plan states the capabilities it
-//     REQUIRES; the authority layer decides whether the effect happens.
-//   * It never converts an arbitrary error into a conservative plan. See
-//     planning_failures.dart -- only a known recoverable planning failure
-//     may degrade, and the result says so.
+// Self-awareness enters as planning knowledge. It may only narrow capabilities;
+// it never expands the compiled Runner tool allow-list and never grants
+// authority.
+import '../capability_invocation.dart';
 import '../chat_control_plane.dart';
 import '../domain.dart';
+import '../self_awareness/capability_self_model.dart';
+import '../storage_security.dart';
 import 'complexity_router.dart';
 import 'plan_compiler.dart';
 import 'plan_reconciliation.dart';
@@ -43,17 +21,48 @@ import 'task_specification.dart';
 import 'task_understanding.dart';
 import 'universal_task_plan.dart';
 
-/// How a plan came to be, for honest UI wording.
-enum KernelPlanOrigin {
-  /// A family planner produced a real, request-specific decomposition.
-  planned,
+enum KernelPlanOrigin { planned, conservativeFallback }
 
-  /// A known recoverable planning failure degraded to the deterministic
-  /// conservative planner. The UI must say so.
-  conservativeFallback,
+typedef KernelLiveSelfModelResolver =
+    Future<SelfModelPlanningContext> Function({
+      required ProjectRecord? project,
+      required ModelIdentity? model,
+      required Set<String> relevantCapabilityIds,
+    });
+
+/// Product composition may register a live self-model resolver for a kernel.
+/// The kernel only intersects its caller-provided capability set with this
+/// result, so a resolver can remove stale/unhealthy capabilities but can never
+/// add capabilities the caller/catalog did not already allow.
+final class KernelSelfModelRegistry {
+  KernelSelfModelRegistry._();
+
+  static final Expando<KernelLiveSelfModelResolver> _resolvers =
+      Expando<KernelLiveSelfModelResolver>('kristin-kernel-self-model');
+
+  static void register(
+    UniversalTaskKernel kernel,
+    KernelLiveSelfModelResolver resolver,
+  ) {
+    _resolvers[kernel] = resolver;
+  }
+
+  static Future<SelfModelPlanningContext?> resolve(
+    UniversalTaskKernel kernel, {
+    ProjectRecord? project,
+    ModelIdentity? model,
+    Set<String> relevantCapabilityIds = const <String>{},
+  }) async {
+    final resolver = _resolvers[kernel];
+    if (resolver == null) return null;
+    return resolver(
+      project: project,
+      model: model,
+      relevantCapabilityIds: relevantCapabilityIds,
+    );
+  }
 }
 
-/// A successful kernel planning result.
 class KernelPlanResult {
   const KernelPlanResult({
     required this.plan,
@@ -61,20 +70,18 @@ class KernelPlanResult {
     required this.routing,
     this.failure,
   });
-
   final UniversalTaskPlan plan;
   final KernelPlanOrigin origin;
   final RoutingDecision routing;
-
-  /// The recoverable failure that caused the fallback, when
-  /// [origin] is [KernelPlanOrigin.conservativeFallback]. Retained so the
-  /// UI can be specific rather than vague about what went wrong.
   final PlanningFailure? failure;
-
   bool get isConservative => origin == KernelPlanOrigin.conservativeFallback;
 }
 
-/// Everything the kernel needs to know about the current conversation.
+/// Everything the kernel knows about the current conversation.
+///
+/// [selfModel] is a bounded live projection of capability existence,
+/// availability, blocking reasons and current authority. It is knowledge only.
+/// [availableToolNames] remains the exact execution-tool boundary.
 class KernelRequestContext {
   const KernelRequestContext({
     required this.decision,
@@ -83,6 +90,8 @@ class KernelRequestContext {
     this.knownTargets = const <ChatTarget>[],
     this.availableCapabilities = kKristinCapabilities,
     this.availableToolNames = const <String>{},
+    this.consumedCoordinatorCapabilities = const <String>{},
+    this.selfModel,
     this.localOnly = false,
     this.maxLeafTasks = 25,
   });
@@ -93,30 +102,50 @@ class KernelRequestContext {
   final List<ChatTarget> knownTargets;
   final List<KristinCapability> availableCapabilities;
   final Set<String> availableToolNames;
+  final Set<String> consumedCoordinatorCapabilities;
+  final SelfModelPlanningContext? selfModel;
   final bool localOnly;
   final int maxLeafTasks;
 
-  UnderstandingContext get understandingContext => UnderstandingContext(
-        availableCapabilities: availableCapabilities,
-        knownTargets: knownTargets,
-        hasSelectedProject: project != null,
-      );
+  Set<String> get liveAvailableCapabilityIds {
+    final catalog = availableCapabilities.map((item) => item.id).toSet();
+    final live = selfModel?.availableCapabilityIds;
+    return live == null ? catalog : catalog.intersection(live);
+  }
 
-  PlanningContext get planningContext => PlanningContext(
+  KernelRequestContext withSelfModel(SelfModelPlanningContext live) =>
+      KernelRequestContext(
+        decision: decision,
         project: project,
         model: model,
-        availableCapabilityIds:
-            availableCapabilities.map((item) => item.id).toSet(),
+        knownTargets: knownTargets,
+        availableCapabilities: availableCapabilities,
         availableToolNames: availableToolNames,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+        selfModel: live,
         localOnly: localOnly,
         maxLeafTasks: maxLeafTasks,
       );
+
+  UnderstandingContext get understandingContext => UnderstandingContext(
+    availableCapabilities: availableCapabilities
+        .where((item) => liveAvailableCapabilityIds.contains(item.id))
+        .toList(growable: false),
+    knownTargets: knownTargets,
+    hasSelectedProject: project != null,
+  );
+
+  PlanningContext get planningContext => PlanningContext(
+    project: project,
+    model: model,
+    availableCapabilityIds: liveAvailableCapabilityIds,
+    availableToolNames: availableToolNames,
+    consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+    localOnly: localOnly,
+    maxLeafTasks: maxLeafTasks,
+  );
 }
 
-/// The universal task kernel: understand, route, plan, compile, reconcile.
-///
-/// Every Kristin task family goes through this object. Different
-/// executors, one semantic architecture.
 class UniversalTaskKernel {
   UniversalTaskKernel({
     required this.understanding,
@@ -125,6 +154,7 @@ class UniversalTaskKernel {
     this.router = const ComplexityRouter(),
     this.conservative = const ConservativeSoftwarePlanner(),
     this.reconciler = const PlanReconciler(),
+    this.authorityResolver = const CapabilityAuthorityResolver(),
   }) : _planners = List<TaskFamilyPlanner>.unmodifiable(planners);
 
   final UnderstandingService understanding;
@@ -132,50 +162,48 @@ class UniversalTaskKernel {
   final ComplexityRouter router;
   final ConservativeSoftwarePlanner conservative;
   final PlanReconciler reconciler;
+  final CapabilityAuthorityResolver authorityResolver;
   final List<TaskFamilyPlanner> _planners;
 
   List<TaskFamilyPlanner> get planners => _planners;
-
-  /// The families this kernel can actually plan for right now.
   Set<TaskFamily> get supportedFamilies =>
       _planners.map((planner) => planner.family).toSet();
 
-  /// STEP 1 -- understand.
-  ///
-  /// Deterministic where the request is already unambiguous, model-backed
-  /// where it is natural language, validated either way.
   Future<UnderstandingOutcome> understand(
     KernelRequestContext context, {
     String? specificationId,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) =>
-      understanding.understand(
-        decision: context.decision,
-        context: context.understandingContext,
-        modelIdentity: context.model,
-        specificationId: specificationId,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
+  }) async {
+    var effective = context;
+    if (context.selfModel == null) {
+      final relevant = <String>{
+        if (context.decision.capability != null)
+          context.decision.capability!.id,
+      };
+      final live = await KernelSelfModelRegistry.resolve(
+        this,
+        project: context.project,
+        model: context.model,
+        relevantCapabilityIds: relevant,
       );
+      if (live != null) effective = context.withSelfModel(live);
+    }
+    return understanding.understand(
+      decision: effective.decision,
+      context: effective.understandingContext,
+      modelIdentity: effective.model,
+      specificationId: specificationId,
+      cancellation: cancellation,
+      isCancelled: isCancelled,
+    );
+  }
 
-  /// STEP 2 -- route.
   RoutingDecision route({
     required TaskSpecification specification,
     required ChatInteractionDecision decision,
-  }) =>
-      router.route(specification: specification, decision: decision);
+  }) => router.route(specification: specification, decision: decision);
 
-  /// STEP 3 -- plan.
-  ///
-  /// Returns a plan, or throws a typed [PlanningFailure]. It degrades to
-  /// the conservative planner for exactly one class of problem -- a known
-  /// recoverable planning failure -- and the result records that it did.
-  ///
-  /// Cancellation, provider unavailability, denied authority, persistence
-  /// failures and unexpected defects all propagate as themselves. A user
-  /// who pressed Cancel is not handed a plan; a user whose database is
-  /// broken is not told a safety-net plan is ready.
   Future<KernelPlanResult> plan({
     required TaskSpecification specification,
     required RoutingDecision routing,
@@ -187,24 +215,46 @@ class UniversalTaskKernel {
       throw const PlanningFailure(
         kind: PlanningFailureKind.unexpected,
         code: 'planning_not_required',
-        message: 'This request routes to direct execution and must not be '
-            'planned.',
+        message:
+            'This request routes to direct execution and must not be planned.',
       );
     }
+
+    final live = await KernelSelfModelRegistry.resolve(
+      this,
+      project: context.project,
+      model: context.model,
+      relevantCapabilityIds: specification.capabilityHints.toSet(),
+    );
+    final effectiveContext = live == null
+        ? context
+        : PlanningContext(
+            project: context.project,
+            model: context.model,
+            availableCapabilityIds: context.availableCapabilityIds.intersection(
+              live.availableCapabilityIds,
+            ),
+            availableToolNames: context.availableToolNames,
+            consumedCoordinatorCapabilities:
+                context.consumedCoordinatorCapabilities,
+            localOnly: context.localOnly,
+            maxLeafTasks: context.maxLeafTasks,
+          );
+
     final planner = _plannerFor(routing.family, specification, routing.route);
     if (planner == null) {
       throw PlanningFailure(
         kind: PlanningFailureKind.unexpected,
         code: 'task_family_unsupported',
-        message: 'No planner is registered for the ${routing.family.name} '
-            'task family.',
+        message:
+            'No planner is registered for the ${routing.family.name} task family.',
       );
     }
     try {
       final plan = await planner.plan(
         specification: specification,
         route: routing.route,
-        context: context,
+        context: effectiveContext,
         cancellation: cancellation,
         isCancelled: isCancelled,
       );
@@ -213,8 +263,8 @@ class UniversalTaskKernel {
         throw PlanningFailure(
           kind: PlanningFailureKind.recoverablePlanning,
           code: 'task_plan_invalid',
-          message: 'The generated task plan did not validate: '
-              '${errors.join(' ')}',
+          message:
+              'The generated task plan did not validate: ${errors.join(' ')}',
           details: <String, dynamic>{'errors': errors},
         );
       }
@@ -225,21 +275,12 @@ class UniversalTaskKernel {
       );
     } catch (error, stackTrace) {
       final failure = classifyPlanningFailure(error, stackTrace: stackTrace);
-      if (!failure.allowsConservativeFallback) {
-        // The single most important line in this file: everything that is
-        // not a known recoverable planning failure stays a failure.
-        throw failure;
-      }
-      // Only the software family has a meaningful conservative envelope.
-      // Degrading a research or Owner request into inspect/implement/
-      // verify would be nonsense, so those surface the failure instead.
-      if (routing.family != TaskFamily.software) {
-        throw failure;
-      }
+      if (!failure.allowsConservativeFallback) throw failure;
+      if (routing.family != TaskFamily.software) throw failure;
       final fallback = await conservative.plan(
         specification: specification,
         route: routing.route,
-        context: context,
+        context: effectiveContext,
         cancellation: cancellation,
         isCancelled: isCancelled,
       );
@@ -252,10 +293,20 @@ class UniversalTaskKernel {
     }
   }
 
-  /// STEP 4 -- compile.
-  ///
-  /// The single compiler. What the user is shown and what the Runner
-  /// receives are both projections of [plan].
+  Future<KernelPlanResult> planWithRequestContext({
+    required TaskSpecification specification,
+    required RoutingDecision routing,
+    required KernelRequestContext requestContext,
+    Future<void>? cancellation,
+    bool Function()? isCancelled,
+  }) => plan(
+    specification: specification,
+    routing: routing,
+    context: requestContext.planningContext,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+  );
+
   CompiledTaskPlan compile({
     required UniversalTaskPlan plan,
     required ProjectRecord project,
@@ -265,34 +316,75 @@ class UniversalTaskKernel {
     List<String> additionalConstraints = const <String>[],
     List<String> additionalCriteria = const <String>[],
     Set<String> consumedCoordinatorCapabilities = const <String>{},
-  }) =>
-      compiler.compile(
-        plan: plan,
-        project: project,
-        mode: mode,
-        request: request.trim().isEmpty
-            ? plan.specification.originalRequest
-            : request,
-        selectedTaskIds: selectedTaskIds,
-        additionalConstraints: additionalConstraints,
-        additionalCriteria: additionalCriteria,
-        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
-      );
+  }) {
+    final compiled = compiler.compile(
+      plan: plan,
+      project: project,
+      mode: mode,
+      request: request.trim().isEmpty
+          ? plan.specification.originalRequest
+          : request,
+      selectedTaskIds: selectedTaskIds,
+      additionalConstraints: additionalConstraints,
+      additionalCriteria: additionalCriteria,
+      consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+    );
+    _validateCompiledCapabilityAuthority(compiled);
+    return compiled;
+  }
 
-  /// STEP 5 -- reconcile.
-  ///
-  /// Replanning preserves completed, still-valid work instead of starting
-  /// over. See plan_reconciliation.dart.
+  void _validateCompiledCapabilityAuthority(CompiledTaskPlan compiled) {
+    final authorityScopes = <PermissionScope>{};
+    final capabilityIds = <String>{};
+    for (final task in compiled.canonical.tasks) {
+      if (!task.enabled || !compiled.selectedTaskIds.contains(task.id)) {
+        continue;
+      }
+      final required = task.requiredCapabilities.toList()..sort();
+      for (final capabilityId in required) {
+        final decision = authorityResolver.resolve(
+          CapabilityInvocation(
+            capabilityId: capabilityId,
+            modelProposed: true,
+            targetIds: <String>{compiled.contract.projectId},
+            reason: 'compiled_task:${task.id}',
+          ),
+        );
+        capabilityIds.add(capabilityId);
+        authorityScopes.addAll(decision.requiredScopes);
+      }
+    }
+    final missing =
+        authorityScopes
+            .difference(compiled.contract.requiredPermissions)
+            .toList(growable: false)
+          ..sort((a, b) => a.name.compareTo(b.name));
+    if (missing.isNotEmpty) {
+      throw ProductException(
+        'capability_authority_not_compiled',
+        'The executable plan requires capability authority that is absent from its permission contract: ${missing.map((scope) => scope.name).join(', ')}.',
+        details: <String, dynamic>{
+          'capabilityIds': capabilityIds.toList()..sort(),
+          'missingScopes': missing.map((scope) => scope.name).toList(),
+          'contractScopes':
+              compiled.contract.requiredPermissions
+                  .map((scope) => scope.name)
+                  .toList()
+                ..sort(),
+        },
+      );
+    }
+  }
+
   PlanReconciliationResult reconcile({
     required UniversalTaskPlan previous,
     required UniversalTaskPlan revised,
     required List<CompletedTaskRecord> completed,
-  }) =>
-      reconciler.reconcile(
-        previous: previous,
-        revised: revised,
-        completed: completed,
-      );
+  }) => reconciler.reconcile(
+    previous: previous,
+    revised: revised,
+    completed: completed,
+  );
 
   TaskFamilyPlanner? _plannerFor(
     TaskFamily family,
@@ -308,13 +400,6 @@ class UniversalTaskKernel {
   }
 }
 
-/// A plan that has been planned, compiled, and persisted as a governed
-/// [PreparedCommand], together with the canonical plan it came from.
-///
-/// Carrying both is what makes the invariant checkable at the product
-/// boundary: [canonical] is what the UI renders, [command] is what the
-/// Runner receives, and [isFaithfulProjection] asserts they are the same
-/// graph rather than two structures that merely look alike.
 class KernelPreparedPlan {
   const KernelPreparedPlan({
     required this.command,
@@ -323,20 +408,12 @@ class KernelPreparedPlan {
     required this.routing,
     this.failure,
   });
-
   final PreparedCommand command;
   final UniversalTaskPlan canonical;
   final KernelPlanOrigin origin;
   final RoutingDecision routing;
-
-  /// The recoverable planning failure that forced a conservative plan,
-  /// when there was one.
   final PlanningFailure? failure;
-
   bool get isConservative => origin == KernelPlanOrigin.conservativeFallback;
-
-  /// True when every executed work item corresponds to a canonical task
-  /// of the same id -- i.e. the user was shown what actually runs.
   bool get isFaithfulProjection {
     final canonicalIds = canonical.tasks.map((task) => task.id).toSet();
     return command.plan.items.every((item) => canonicalIds.contains(item.id));

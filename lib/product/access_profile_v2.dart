@@ -115,8 +115,9 @@ class AccessProfileV2 {
   factory AccessProfileV2.fromJson(Map<String, dynamic> json) {
     final profile = AccessProfileV2._(
       schemaVersion: json['schemaVersion']?.toString() ?? '',
-      profileRevision:
-          json['profileRevision'] is int ? json['profileRevision'] as int : 0,
+      profileRevision: json['profileRevision'] is int
+          ? json['profileRevision'] as int
+          : 0,
       profileId: _parseProfileId(json['profileId']),
       displayName: json['displayName']?.toString() ?? '',
       authorityClass: json['authorityClass']?.toString() ?? '',
@@ -177,7 +178,8 @@ class AccessProfileV2 {
     }
     switch (profileId) {
       case AccessProfileId.chat:
-        final hasEffect = filesystem['read'] == true ||
+        final hasEffect =
+            filesystem['read'] == true ||
             filesystem['write'] == true ||
             filesystem['delete'] == true ||
             process['finiteCommands'] == true ||
@@ -290,20 +292,20 @@ class AccessProfileV2 {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'schemaVersion': schemaVersion,
-        'profileRevision': profileRevision,
-        'profileId': _profileIdToWire(profileId),
-        'displayName': displayName,
-        'authorityClass': authorityClass,
-        'sandboxed': sandboxed,
-        'interactive': interactive,
-        'unattendedAllowed': unattendedAllowed,
-        'approvalPolicy': _approvalPolicyToWire(approvalPolicy),
-        'filesystem': _deepCopy(filesystem),
-        'process': _deepCopy(process),
-        'network': _deepCopy(network),
-        'browser': _deepCopy(browser),
-        'credentials': _deepCopy(credentials),
-        'dataBoundary': _deepCopy(dataBoundary),
-      };
+    'schemaVersion': schemaVersion,
+    'profileRevision': profileRevision,
+    'profileId': _profileIdToWire(profileId),
+    'displayName': displayName,
+    'authorityClass': authorityClass,
+    'sandboxed': sandboxed,
+    'interactive': interactive,
+    'unattendedAllowed': unattendedAllowed,
+    'approvalPolicy': _approvalPolicyToWire(approvalPolicy),
+    'filesystem': _deepCopy(filesystem),
+    'process': _deepCopy(process),
+    'network': _deepCopy(network),
+    'browser': _deepCopy(browser),
+    'credentials': _deepCopy(credentials),
+    'dataBoundary': _deepCopy(dataBoundary),
+  };
 }

@@ -64,12 +64,12 @@ class ProtocolRecoveryDecision {
   final Duration elapsed;
 
   Map<String, dynamic> toEvidence() => <String, dynamic>{
-        'recoveryAction': action.name,
-        'invalidDecisionSignature': signature,
-        'repeatedInvalidDecision': repeated,
-        'protocolRepairAttempts': attempts,
-        'protocolRecoveryElapsedMs': elapsed.inMilliseconds,
-      };
+    'recoveryAction': action.name,
+    'invalidDecisionSignature': signature,
+    'repeatedInvalidDecision': repeated,
+    'protocolRepairAttempts': attempts,
+    'protocolRecoveryElapsedMs': elapsed.inMilliseconds,
+  };
 }
 
 /// Bounded, progress-aware protocol recovery for one work item.
@@ -165,15 +165,14 @@ class ProtocolRecoveryPolicy {
     ProtocolRecoveryDecision decide(
       ProtocolRecoveryAction action,
       String reason,
-    ) =>
-        ProtocolRecoveryDecision(
-          action: action,
-          reason: reason,
-          signature: signature,
-          repeated: repeated,
-          attempts: _attempts,
-          elapsed: recoveryElapsed,
-        );
+    ) => ProtocolRecoveryDecision(
+      action: action,
+      reason: reason,
+      signature: signature,
+      repeated: repeated,
+      attempts: _attempts,
+      elapsed: recoveryElapsed,
+    );
 
     if (repeated) {
       // Asking again cannot help: the model already saw the correction

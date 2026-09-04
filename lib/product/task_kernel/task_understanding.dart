@@ -183,7 +183,8 @@ class UnderstandingContext {
     if (availableCapabilities.isEmpty) return 'none';
     return availableCapabilities
         .map(
-          (capability) => '- ${capability.id}: ${capability.description} '
+          (capability) =>
+              '- ${capability.id}: ${capability.description} '
               '(accepts: ${capability.acceptedTargetTypes.isEmpty ? 'no targets' : capability.acceptedTargetTypes.map((type) => type.name).join('/')})',
         )
         .join('\n');
@@ -192,8 +193,11 @@ class UnderstandingContext {
   String describeTargets() {
     if (knownTargets.isEmpty) return 'none';
     return knownTargets
-        .map((target) => '- ${target.type.name}: ${target.id} '
-            '(${target.displayName})')
+        .map(
+          (target) =>
+              '- ${target.type.name}: ${target.id} '
+              '(${target.displayName})',
+        )
         .join('\n');
   }
 }
@@ -212,7 +216,7 @@ class ModelBackedUnderstanding {
   /// The model call. Injected rather than taken as a ModelRegistry so
   /// this stays a plain, deterministically-testable unit.
   final Future<ModelGenerationResult> Function(ModelGenerationRequest request)
-      generate;
+  generate;
 
   final UnderstandingValidator validator;
 
@@ -264,7 +268,8 @@ Rules:
         'There is nothing to understand in an empty request.',
       );
     }
-    final user = '''
+    final user =
+        '''
 USER REQUEST
 $normalized
 
@@ -401,8 +406,10 @@ class UnderstandingValidator {
     // Capabilities: a model-proposed capability is a hint, and it only
     // survives if the governed registry actually has it.
     final capabilityHints = <String>[];
-    for (final id
-        in cleanList(proposal['capabilityHints'], 'capabilityHints')) {
+    for (final id in cleanList(
+      proposal['capabilityHints'],
+      'capabilityHints',
+    )) {
       final capability = context.capabilityById(id);
       if (capability == null) {
         rejections.add('capabilityHints: unknown capability "$id" ignored.');
@@ -473,8 +480,10 @@ class UnderstandingValidator {
       for (final item in cleanList(proposal['assumptions'], 'assumptions'))
         SpecificationClaim.assumed(item, source: 'understanding'),
     ];
-    for (final item
-        in cleanList(proposal['hardConstraints'], 'hardConstraints')) {
+    for (final item in cleanList(
+      proposal['hardConstraints'],
+      'hardConstraints',
+    )) {
       if (_isTraceableToRequest(item, request)) {
         hardConstraints.add(
           SpecificationClaim.stated(item, source: 'understanding'),
@@ -501,8 +510,10 @@ class UnderstandingValidator {
         ),
     ];
     final successCriteria = <SpecificationClaim>[
-      for (final item
-          in cleanList(proposal['successCriteria'], 'successCriteria'))
+      for (final item in cleanList(
+        proposal['successCriteria'],
+        'successCriteria',
+      ))
         SpecificationClaim.inferred(item, source: 'understanding'),
     ];
     final questions = <UnresolvedQuestion>[
@@ -530,8 +541,10 @@ class UnderstandingValidator {
       assumptions: assumptions,
       unresolvedQuestions: questions,
       requestedMethod: cleanText(proposal['requestedMethod']),
-      prohibitedEffects:
-          cleanList(proposal['prohibitedEffects'], 'prohibitedEffects'),
+      prohibitedEffects: cleanList(
+        proposal['prohibitedEffects'],
+        'prohibitedEffects',
+      ),
       capabilityHints: usableCapabilities,
       source: TaskSpecificationSource.modelUnderstanding,
       confidence: confidence,
@@ -684,8 +697,9 @@ class UnderstandingService {
     UnderstandingOutcome outcome,
     ChatInteractionDecision decision,
   ) {
-    final existing =
-        outcome.specification.targetRefs.map((item) => item.value).toSet();
+    final existing = outcome.specification.targetRefs
+        .map((item) => item.value)
+        .toSet();
     final merged = <TaskTargetRef>[
       ...outcome.specification.targetRefs,
       for (final target in decision.targets)

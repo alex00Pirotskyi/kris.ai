@@ -185,7 +185,8 @@ void main() {
               'stdoutBytes': result.stdout.length,
               'stderrBytes': result.stderr.length,
             };
-            receipt = composition.commandService.lastReceipt?.toJson() ??
+            receipt =
+                composition.commandService.lastReceipt?.toJson() ??
                 <String, Object?>{'status': 'missing'};
             status = 'passed';
             break;
@@ -199,20 +200,20 @@ void main() {
               final marker = Completer<void>();
               final subscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                observed.addAll(bytes);
-                if (!marker.isCompleted &&
-                    utf8
-                        .decode(observed, allowMalformed: true)
-                        .contains('KRISTIN_PTY_UNICODE_λ')) {
-                  marker.complete();
-                }
-              });
+                    observed.addAll(bytes);
+                    if (!marker.isCompleted &&
+                        utf8
+                            .decode(observed, allowMalformed: true)
+                            .contains('KRISTIN_PTY_UNICODE_λ')) {
+                      marker.complete();
+                    }
+                  });
               final command = Platform.isWindows
                   ? 'echo KRISTIN_PTY_UNICODE_λ\r\n'
                   : "printf 'KRISTIN_PTY_UNICODE_λ\\n'\n";
@@ -293,7 +294,8 @@ void main() {
                 'backlogReplayExact': true,
                 'noDuplicationOrLoss': true,
               };
-              receipt = composition.ptyBackend
+              receipt =
+                  composition.ptyBackend
                       .receiptFor(pty.session.sessionId)
                       ?.toJson() ??
                   <String, Object?>{'status': 'missing'};
@@ -303,24 +305,24 @@ void main() {
               final descendantBytes = <int>[];
               final descendantSubscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                descendantBytes.addAll(bytes);
-                if (!descendantReady.isCompleted &&
-                    utf8
-                        .decode(descendantBytes, allowMalformed: true)
-                        .contains('KRISTIN_DESCENDANT_READY')) {
-                  descendantReady.complete();
-                }
-              });
+                    descendantBytes.addAll(bytes);
+                    if (!descendantReady.isCompleted &&
+                        utf8
+                            .decode(descendantBytes, allowMalformed: true)
+                            .contains('KRISTIN_DESCENDANT_READY')) {
+                      descendantReady.complete();
+                    }
+                  });
               final descendantCommand = Platform.isWindows
                   ? 'start "" /b powershell.exe -NoLogo -NoProfile '
-                      '-NonInteractive -Command "Start-Sleep -Seconds 30" '
-                      '& echo KRISTIN_DESCENDANT_READY\r\n'
+                        '-NonInteractive -Command "Start-Sleep -Seconds 30" '
+                        '& echo KRISTIN_DESCENDANT_READY\r\n'
                   : "sleep 30 & printf 'KRISTIN_DESCENDANT_READY\\n'\n";
               await composition.ptyBackend.input(
                 pty.session.sessionId,
@@ -368,10 +370,10 @@ void main() {
                 'identityVerified': true,
                 'descendantProcessCreated':
                     (termination['activeProcessesBeforeKill'] as int? ?? 0) >=
-                            2 &&
-                        (termination['descendantProcessIdentities'] as List? ??
-                                const <Object?>[])
-                            .isNotEmpty,
+                        2 &&
+                    (termination['descendantProcessIdentities'] as List? ??
+                            const <Object?>[])
+                        .isNotEmpty,
                 'activeProcesses': termination['activeProcesses'],
                 'zeroSurvivingDescendants': termination['activeProcesses'] == 0,
               };
@@ -382,24 +384,24 @@ void main() {
               final descendantOutput = <int>[];
               final descendantSubscription = composition.ptyBackend
                   .output(
-                pty.session.sessionId,
-                0,
-                binding: pty.binding,
-                grantDigest: pty.grantDigest,
-              )
+                    pty.session.sessionId,
+                    0,
+                    binding: pty.binding,
+                    grantDigest: pty.grantDigest,
+                  )
                   .listen((bytes) {
-                descendantOutput.addAll(bytes);
-                if (!descendantReady.isCompleted &&
-                    utf8
-                        .decode(descendantOutput, allowMalformed: true)
-                        .contains('KRISTIN_WATCHDOG_DESCENDANT_READY')) {
-                  descendantReady.complete();
-                }
-              });
+                    descendantOutput.addAll(bytes);
+                    if (!descendantReady.isCompleted &&
+                        utf8
+                            .decode(descendantOutput, allowMalformed: true)
+                            .contains('KRISTIN_WATCHDOG_DESCENDANT_READY')) {
+                      descendantReady.complete();
+                    }
+                  });
               final descendantCommand = Platform.isWindows
                   ? 'start "" /b powershell.exe -NoLogo -NoProfile '
-                      '-NonInteractive -Command "Start-Sleep -Seconds 30" '
-                      '& echo KRISTIN_WATCHDOG_DESCENDANT_READY\r\n'
+                        '-NonInteractive -Command "Start-Sleep -Seconds 30" '
+                        '& echo KRISTIN_WATCHDOG_DESCENDANT_READY\r\n'
                   : "sleep 30 & printf 'KRISTIN_WATCHDOG_DESCENDANT_READY\n'\n";
               await composition.ptyBackend.input(
                 pty.session.sessionId,
@@ -409,12 +411,13 @@ void main() {
               );
               await descendantReady.future.timeout(const Duration(seconds: 20));
               await descendantSubscription.cancel();
-              final killed =
-                  composition.watchdogTransport.events(watchdogId).firstWhere(
-                        (event) =>
-                            event['type'] == 'watchdog.receipt' &&
-                            event['receipt'] is Map,
-                      );
+              final killed = composition.watchdogTransport
+                  .events(watchdogId)
+                  .firstWhere(
+                    (event) =>
+                        event['type'] == 'watchdog.receipt' &&
+                        event['receipt'] is Map,
+                  );
               await owner.freezeHeartbeatForAdversarialTest(watchdogId);
               // This blocks the shipped desktop isolate. The independently
               // supervised watchdog remains armed and must kill the exact tree.
@@ -551,21 +554,21 @@ void main() {
             expect(running.output['state'], 'running');
             expect(stopped.output['state'], 'stopped');
             expect(finalState.output['state'], 'stopped');
-            final application =
-                await composition.hostOperations.applicationOpenExecutable(
-              _requiredEnvironment('KRISTIN_NODE_EXECUTABLE'),
-              const <String>['-e', 'setInterval(() => {}, 1000)'],
-              binding('application.open'),
-              cwd: temporary.path,
-            );
+            final application = await composition.hostOperations
+                .applicationOpenExecutable(
+                  _requiredEnvironment('KRISTIN_NODE_EXECUTABLE'),
+                  const <String>['-e', 'setInterval(() => {}, 1000)'],
+                  binding('application.open'),
+                  cwd: temporary.path,
+                );
             final applicationIdentity =
                 '${application.output['identity'] ?? ''}';
             expect(applicationIdentity, isNotEmpty);
-            final applicationClosed =
-                await composition.hostOperations.applicationClose(
-              applicationIdentity,
-              binding('application.close'),
-            );
+            final applicationClosed = await composition.hostOperations
+                .applicationClose(
+                  applicationIdentity,
+                  binding('application.close'),
+                );
             expect(
               applicationClosed.status.name,
               anyOf('succeeded', 'rolledBack'),
@@ -590,7 +593,7 @@ void main() {
               'applicationOpenObserved': applicationIdentity.isNotEmpty,
               'applicationCloseObserved':
                   applicationClosed.status.name == 'succeeded' ||
-                      applicationClosed.status.name == 'rolledBack',
+                  applicationClosed.status.name == 'rolledBack',
               'elevationExercised': false,
             };
             receipt = applicationClosed.receipt.toJson();
@@ -630,7 +633,8 @@ void main() {
               'activeWindowObserved': true,
               'ordinaryLogContentAbsent': true,
             };
-            receipt = composition.hostOperations
+            receipt =
+                composition.hostOperations
                     .receiptFor('screen.activeWindowMetadata')
                     ?.toJson() ??
                 <String, Object?>{'status': 'missing'};
@@ -691,7 +695,8 @@ void main() {
               'interruptObserved': true,
               'terminateTreeObserved': true,
             };
-            receipt = owner.composition.ptyBackend
+            receipt =
+                owner.composition.ptyBackend
                     .receiptFor(pty.session.sessionId)
                     ?.toJson() ??
                 <String, Object?>{'status': 'missing'};
@@ -739,14 +744,14 @@ void main() {
               'firstDispatchSucceeded': true,
               'durableConsumptionRecorded':
                   (authorityObservation['durableConsumptionUseNumber']
-                              as int? ??
-                          0) >
-                      0,
+                          as int? ??
+                      0) >
+                  0,
               'durableStateVersionRecorded':
                   (authorityObservation['durableConsumptionStateVersion']
-                              as int? ??
-                          0) >
-                      0,
+                          as int? ??
+                      0) >
+                  0,
               'productRuntimeRestarted': true,
               'replayRejectedAfterRestart': true,
               'reconciliationObserved': true,
@@ -771,7 +776,8 @@ void main() {
               );
         runtimeComposition = <String, Object?>{
           ...owner.runtimeProvenance,
-          'watchdogAutomaticallyArmed': taskId == 'P2-011' ||
+          'watchdogAutomaticallyArmed':
+              taskId == 'P2-011' ||
               owner.supervisionSnapshot()['automaticallyArmed'] == true,
         };
       } catch (error) {
@@ -794,7 +800,8 @@ void main() {
         final nativeManifestSha = _requiredEnvironment(
           'KRISTIN_P2_NATIVE_RUNTIME_MANIFEST_SHA256',
         );
-        final completionEligible = status == 'passed' &&
+        final completionEligible =
+            status == 'passed' &&
             authorityObservation['completionEligible'] == true &&
             runtimeComposition['fixtureAuthorityEligible'] == false;
         final evidenceReceipt = <String, Object?>{
@@ -863,16 +870,16 @@ Future<_PtyObservation> _openProductPty(
   final shell = Platform.isWindows
       ? (Platform.environment['ComSpec'] ?? r'C:\Windows\System32\cmd.exe')
       : '/bin/sh';
-  final session =
-      await P2InteractivePtyService(owner.composition.ptyBackend).open(
-    P2PtyOpenRequest(
-      shell: shell,
-      cwd: temporary.path,
-      transcriptBudgetBytes: 256 * 1024,
-    ),
-    binding,
-    grantDigest,
-  );
+  final session = await P2InteractivePtyService(owner.composition.ptyBackend)
+      .open(
+        P2PtyOpenRequest(
+          shell: shell,
+          cwd: temporary.path,
+          transcriptBudgetBytes: 256 * 1024,
+        ),
+        binding,
+        grantDigest,
+      );
   return _PtyObservation(session, binding, grantDigest);
 }
 

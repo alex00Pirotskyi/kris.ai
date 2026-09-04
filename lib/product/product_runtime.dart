@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'browser/browser_runtime.dart';
+import 'agent_deferred_interaction.dart';
 import 'capability_doctor.dart';
 import 'crypto_utils.dart';
 import 'deployment_support.dart';
@@ -23,7 +24,11 @@ import 'project_control_service.dart';
 import 'project_launch_profile_detection.dart';
 import 'prompt_planning.dart';
 import 'chat_control_plane.dart';
+import 'task_kernel/command_planning_context.dart';
 import 'task_kernel/complexity_router.dart';
+import 'task_kernel/plan_reconciliation.dart';
+import 'task_kernel/task_specification_patch_classifier.dart';
+import 'task_kernel/universal_task_plan.dart';
 import 'task_kernel/runtime_gateway.dart';
 import 'task_kernel/task_families.dart';
 import 'task_kernel/task_kernel.dart';
@@ -37,6 +42,7 @@ import 'research/research_browser_adapter.dart';
 import 'run_live_signals.dart';
 import 'run_preflight.dart';
 import 'run_steering.dart';
+import 'run_steering_record.dart';
 import 'storage_security.dart';
 import 'workspace_tools.dart';
 import 'p2_product_runtime_bootstrap.dart';
@@ -53,10 +59,10 @@ final class P3ProductRuntimeBrowserHandle {
     required Directory? stateDirectory,
     required String statusCode,
     required Map<String, Object?> provenance,
-  })  : _service = service,
-        _stateDirectory = stateDirectory,
-        _statusCode = statusCode,
-        _provenance = Map<String, Object?>.unmodifiable(provenance);
+  }) : _service = service,
+       _stateDirectory = stateDirectory,
+       _statusCode = statusCode,
+       _provenance = Map<String, Object?>.unmodifiable(provenance);
 
   factory P3ProductRuntimeBrowserHandle.blocked(String statusCode) =>
       P3ProductRuntimeBrowserHandle._(
@@ -386,7 +392,7 @@ class ProductRuntime {
   }
 
   Future<P3ProductRuntimeBrowserHandle>
-      refreshProvisionedBrowserRuntime() async {
+  refreshProvisionedBrowserRuntime() async {
     final refreshed = await P3ProductRuntimeBrowserHandle.open(
       applicationDataRoot: directories.root,
       stateDirectory: Directory(
@@ -552,8 +558,8 @@ class ProductRuntime {
           final provider = models.providerFor(model);
           if (model.providerId == 'ollama') {
             final discovered = await provider.discover().timeout(
-                  const Duration(seconds: 12),
-                );
+              const Duration(seconds: 12),
+            );
             final exact = discovered.where((candidate) {
               if (candidate.name != model.name) return false;
               if (model.digest.isEmpty || candidate.digest.isEmpty) return true;
@@ -659,10 +665,9 @@ class ProductRuntime {
             return 100;
           }
 
-          final candidates = references
-              .where((item) => score(item) < 100)
-              .toList()
-            ..sort((left, right) => score(left).compareTo(score(right)));
+          final candidates =
+              references.where((item) => score(item) < 100).toList()
+                ..sort((left, right) => score(left).compareTo(score(right)));
           if (candidates.isEmpty) {
             stopwatch.stop();
             return RunCapabilityProbeResult(
@@ -712,7 +717,10 @@ class ProductRuntime {
         }
       },
     );
-    final runSteering = RunSteeringService(liveSignals: liveRunSignals);
+    final runSteering = RunSteeringService(
+      liveSignals: liveRunSignals,
+      repository: repositories.runSteeringRecords,
+    );
     final promptPlanning = PromptPlanningService(
       models: models,
       repositories: repositories,
@@ -798,6 +806,9 @@ class ProductRuntime {
       runs: coordinator,
       settings: settings,
     );
+    coordinator.attachSteeringReplanHandler(
+      runtime._materializePendingSteeringContinuation,
+    );
     telemetryBridge.start();
     runtime._p1AuthorityServiceRuntime =
         await P1AuthorityServiceConnectorRegistryV1.openInstalledOrTest();
@@ -822,6 +833,7 @@ class ProductRuntime {
       );
     }
     await coordinator.reconcileInterruptedRuns();
+    await runtime.reconcileSteeringContinuations();
     await coordinator.reconcileMemoryEpisodes();
     await runtime.reconcileProjectRuntimeSessions();
     await audit.append('application.started', 'application', <String, dynamic>{
@@ -1122,7 +1134,8 @@ class ProductRuntime {
     } else {
       try {
         final knownModels = discoveredModels ?? await discoverModels();
-        final report = depth == CapabilityDoctorDepth.quick &&
+        final report =
+            depth == CapabilityDoctorDepth.quick &&
                 projectReport?.projectId == projectId
             ? projectReport!
             : await inspectProject(
@@ -1212,8 +1225,63 @@ class ProductRuntime {
     return addProject(name: location.name, rootPath: location.rootPath);
   }
 
-  Future<RunSteeringInstruction> steerRun(String runId, String text) =>
-      runs.queueSteering(runId, text);
+  Future<RunRecord?> steeringContinuationForSourceRun(
+    String sourceRunId,
+  ) async {
+    final records =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == sourceRunId &&
+                  (record.continuationRunId?.trim().isNotEmpty ?? false),
+            )
+            .toList(growable: false)
+          ..sort((left, right) => right.createdAt.compareTo(left.createdAt));
+    final continuationId = records.firstOrNull?.continuationRunId;
+    if (continuationId == null || continuationId.trim().isEmpty) return null;
+    final continuation = await repositories.runs.get(continuationId);
+    if (continuation == null || continuation.sourceRunId != sourceRunId) {
+      return null;
+    }
+    return continuation;
+  }
+
+  Future<RunSteeringInstruction> steerRun(String runId, String text) async {
+    final source = await repositories.runs.get(runId);
+    if (source == null) {
+      throw ProductException('run_missing', 'Run not found.');
+    }
+    final context = await repositories.commandPlanningContexts.get(
+      source.command.id,
+    );
+    if (context == null) {
+      throw ProductException(
+        'steering_context_missing',
+        'This run has no durable canonical planning context and cannot be semantically replanned in place.',
+        details: <String, dynamic>{'runId': runId},
+      );
+    }
+    final classifier = ModelTaskSpecificationPatchClassifier(
+      model: source.command.model,
+      generate: models.providerFor(source.command.model).generate,
+    );
+    final patch = await classifier.classify(
+      specification: context.specification,
+      userMessage: text,
+    );
+    final queued = await runs.queueSteering(runId, text, patch);
+    if (!queued.patch.requiresReplan) return queued;
+
+    final current = await repositories.runs.get(runId) ?? source;
+    if (current.state == RunState.awaitingApproval) {
+      final retired = await runs.interruptAwaitingApprovalForSteeringReplan(
+        runId,
+      );
+      await _materializePendingSteeringContinuation(retired);
+    }
+    final record = await repositories.runSteeringRecords.get(queued.id);
+    return record == null ? queued : RunSteeringInstruction.fromRecord(record);
+  }
 
   Future<List<EventEnvelope>> eventsForRun(
     String runId, {
@@ -1352,8 +1420,7 @@ class ProductRuntime {
 
   Future<String?> pickProjectFolder({
     String prompt = 'Choose a project folder',
-  }) =>
-      diagnostics.pickFolder(prompt: prompt);
+  }) => diagnostics.pickFolder(prompt: prompt);
 
   Future<void> removeProject(String id) async {
     final project = await repositories.projects.get(id);
@@ -1567,6 +1634,19 @@ class ProductRuntime {
   Future<void> resume(String runId) => runs.resume(runId);
   Future<void> cancel(String runId) => runs.cancel(runId);
 
+  Future<AgentDeferredInteraction?> latestDeferredInteraction(String runId) =>
+      AgentDeferredInteractionStore(repositories.workflow).latestForRun(runId);
+
+  Future<AgentDeferredInteraction?> pendingDeferredInteraction(String runId) =>
+      AgentDeferredInteractionStore(repositories.workflow).pendingForRun(runId);
+
+  Future<AgentDeferredInteraction> recordDeferredUserResponse({
+    required String runId,
+    required String response,
+  }) => AgentDeferredInteractionStore(
+    repositories.workflow,
+  ).recordUserResponse(runId: runId, response: response);
+
   Future<List<RunRecord>> listRuns({String? projectId, int limit = 100}) async {
     var runs = await repositories.runs.all();
     if (projectId != null) {
@@ -1596,13 +1676,12 @@ class ProductRuntime {
     required String title,
     required String content,
     Set<String> tags = const <String>{},
-  }) =>
-      knowledge.addNote(
-        projectId: projectId,
-        title: title,
-        content: content,
-        tags: tags,
-      );
+  }) => knowledge.addNote(
+    projectId: projectId,
+    title: title,
+    content: content,
+    tags: tags,
+  );
 
   Future<void> deleteKnowledge(String id) => knowledge.deleteEntry(id);
 
@@ -1634,10 +1713,10 @@ class ProductRuntime {
     });
     await events
         .publish('memory.pin_changed', episode.projectId, <String, dynamic>{
-      'episodeId': episode.id,
-      'projectId': episode.projectId,
-      'pinned': episode.pinned,
-    });
+          'episodeId': episode.id,
+          'projectId': episode.projectId,
+          'pinned': episode.pinned,
+        });
     return episode;
   }
 
@@ -1653,14 +1732,13 @@ class ProductRuntime {
     int limit = 12,
     bool includeEpisodes = true,
     bool includeUnsuccessfulEpisodes = false,
-  }) =>
-      knowledge.retrieve(
-        projectId,
-        query,
-        limit: limit,
-        includeEpisodes: includeEpisodes,
-        includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
-      );
+  }) => knowledge.retrieve(
+    projectId,
+    query,
+    limit: limit,
+    includeEpisodes: includeEpisodes,
+    includeUnsuccessfulEpisodes: includeUnsuccessfulEpisodes,
+  );
 
   Future<KnowledgeStats> knowledgeStats(String projectId) =>
       knowledge.stats(projectId);
@@ -1724,12 +1802,13 @@ class ProductRuntime {
       description: description.trim(),
       systemPrompt: systemPrompt.trim(),
       userPrompt: userPrompt.trim(),
-      variables: variables
-          .map((value) => value.trim())
-          .where((value) => value.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort(),
+      variables:
+          variables
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort(),
       tags: tags
           .map((value) => value.trim().toLowerCase())
           .where((value) => value.isNotEmpty)
@@ -1760,15 +1839,14 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateClarification(
-        goal: goal,
-        model: model,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateClarification(
+    goal: goal,
+    model: model,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   /// The universal task kernel.
   ///
@@ -1822,8 +1900,9 @@ class ProductRuntime {
       context: PlanningContext(
         project: project,
         model: model,
-        availableCapabilityIds:
-            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableCapabilityIds: kKristinCapabilities
+            .map((item) => item.id)
+            .toSet(),
         availableToolNames: tools.names,
         consumedCoordinatorCapabilities: consumed,
         localOnly: _settings.localOnly,
@@ -1851,7 +1930,8 @@ class ProductRuntime {
       ),
       contract: compiled.contract,
       plan: compiled.plan,
-      model: model ??
+      model:
+          model ??
           ModelIdentity(
             providerId: 'none',
             name: 'unselected',
@@ -1886,6 +1966,24 @@ class ProductRuntime {
         'taskFamily': result.plan.family.name,
       });
     }
+    final contextNow = DateTime.now().toUtc();
+    final existingContext = await repositories.commandPlanningContexts.get(
+      command.id,
+    );
+    await repositories.commandPlanningContexts.put(
+      CommandPlanningContextRecord(
+        commandId: command.id,
+        projectId: project.id,
+        specification: specification,
+        family: routing.family,
+        route: routing.route,
+        routingRationale: routing.rationale,
+        canonicalPlan: result.plan,
+        consumedCoordinatorCapabilities: consumed,
+        createdAt: existingContext?.createdAt ?? contextNow,
+        updatedAt: contextNow,
+      ),
+    );
     return KernelPreparedPlan(
       command: command,
       canonical: result.plan,
@@ -1893,6 +1991,263 @@ class ProductRuntime {
       routing: routing,
       failure: result.failure,
     );
+  }
+
+  Future<void> reconcileSteeringContinuations() async {
+    final runsNeedingContinuation = (await repositories.runs.all()).where(
+      (run) =>
+          run.state == RunState.interrupted &&
+          (run.failure ?? '').startsWith('steering_replan_requested:'),
+    );
+    for (final run in runsNeedingContinuation) {
+      final pending = (await repositories.runSteeringRecords.all()).where(
+        (record) =>
+            record.runId == run.id &&
+            const <RunSteeringRecordState>{
+              RunSteeringRecordState.pending,
+              RunSteeringRecordState.replanning,
+            }.contains(record.state) &&
+            record.patch.requiresReplan,
+      );
+      if (pending.isEmpty) continue;
+      try {
+        await _materializePendingSteeringContinuation(run);
+      } catch (error) {
+        await audit.append(
+          'steering.replan_recovery_failed',
+          run.id,
+          <String, dynamic>{
+            'runId': run.id,
+            'error': redactor.redact('$error'),
+            'authorityInherited': false,
+          },
+        );
+      }
+    }
+  }
+
+  Future<void> _materializePendingSteeringContinuation(RunRecord source) async {
+    final durable =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == source.id &&
+                  const <RunSteeringRecordState>{
+                    RunSteeringRecordState.pending,
+                    RunSteeringRecordState.replanning,
+                  }.contains(record.state) &&
+                  record.patch.requiresReplan,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+    if (durable.isEmpty) return;
+    final already = durable
+        .map((record) => record.continuationRunId)
+        .whereType<String>()
+        .where((value) => value.isNotEmpty)
+        .firstOrNull;
+    if (already != null) return;
+
+    final context = await repositories.commandPlanningContexts.get(
+      source.command.id,
+    );
+    if (context == null) {
+      throw ProductException(
+        'steering_replan_context_missing',
+        'The source command has no durable canonical planning context.',
+        details: <String, dynamic>{'runId': source.id},
+      );
+    }
+    final project = await repositories.projects.get(context.projectId);
+    if (project == null) {
+      throw ProductException(
+        'project_missing',
+        'The project was removed before the steering continuation could be planned.',
+        details: <String, dynamic>{'runId': source.id},
+      );
+    }
+
+    var revisedSpecification = context.specification;
+    final semanticHistory =
+        (await repositories.runSteeringRecords.all())
+            .where(
+              (record) =>
+                  record.runId == source.id &&
+                  record.state != RunSteeringRecordState.cleared,
+            )
+            .toList(growable: false)
+          ..sort((left, right) => left.createdAt.compareTo(right.createdAt));
+    for (final record in semanticHistory) {
+      revisedSpecification = record.patch.applyForReplan(revisedSpecification);
+    }
+    final revisedRouting = RoutingDecision(
+      route: context.route == PlanningRoute.compact
+          ? PlanningRoute.graph
+          : context.route,
+      family: context.family,
+      rationale:
+          'Scope changed during execution; replan from the prior canonical family and promote compact work to a reviewed graph.',
+    );
+    final result = await taskKernel.plan(
+      specification: revisedSpecification,
+      routing: revisedRouting,
+      context: PlanningContext(
+        project: project,
+        model: source.command.model,
+        availableCapabilityIds: kKristinCapabilities
+            .map((item) => item.id)
+            .toSet(),
+        availableToolNames: tools.names,
+        consumedCoordinatorCapabilities:
+            context.consumedCoordinatorCapabilities,
+        localOnly: _settings.localOnly,
+      ),
+    );
+
+    final priorById = <String, UniversalTask>{
+      for (final task in context.canonicalPlan.tasks) task.id: task,
+    };
+    final sourceEvidence = await evidenceForRun(source.id);
+    final completed = <CompletedTaskRecord>[];
+    for (final progress in source.items.where(
+      (value) => value.state == WorkItemState.succeeded,
+    )) {
+      final task = priorById[progress.item.id];
+      if (task == null) continue;
+      final evidenceIds = sourceEvidence
+          .where((value) => value.workItemId == progress.item.id)
+          .map((value) => value.id)
+          .toList(growable: false);
+      completed.add(
+        CompletedTaskRecord.of(
+          task,
+          evidence: <String, dynamic>{
+            'sourceRunId': source.id,
+            'workItemId': progress.item.id,
+            'attempts': progress.attempts,
+            'evidenceIds': evidenceIds,
+          },
+        ),
+      );
+    }
+    final reconciliation = taskKernel.reconcile(
+      previous: context.canonicalPlan,
+      revised: result.plan,
+      completed: completed,
+    );
+    // A scope reduction can legitimately leave no implementation work. The
+    // compiler rejects an empty executable graph, and skipping the run would
+    // also skip the Runner's deterministic final verification. Preserve the
+    // reconciled disabled tasks and add one hidden read-only verification
+    // bridge so the normal governed verification/commit path still runs.
+    final executablePlan = reconciliation.plan.enabledTasks.isEmpty
+        ? reconciliation.plan.copyWith(
+            tasks: <UniversalTask>[
+              ...reconciliation.plan.tasks,
+              UniversalTask(
+                id: newId('task_verify'),
+                title: 'Verify reconciled project state',
+                objective:
+                    'Confirm that the reconciled scope is already satisfied before final project verification.',
+                instructions:
+                    'Do not mutate the project. Inspect the current project state only if needed, then report that deterministic reconciliation left no implementation work. Final governed project verification runs after this item.',
+                phase: 'Verification',
+                acceptanceCriteria: const <String>[
+                  'No enabled implementation task remains after reconciliation.',
+                ],
+                verificationSteps: const <String>[
+                  'Run the command-mode deterministic project verification gates.',
+                ],
+                allowedTools: const <String>{'inspect_file'},
+                complexity: 1,
+                effortPoints: 1,
+                estimateConfidence: 1,
+                maxAttempts: 1,
+                hidden: true,
+                provenance: EvidenceProvenance.inferred,
+              ),
+            ],
+          )
+        : reconciliation.plan;
+    final compiled = taskKernel.compile(
+      plan: executablePlan,
+      project: project,
+      mode: source.command.contract.mode,
+      consumedCoordinatorCapabilities: context.consumedCoordinatorCapabilities,
+    );
+    final now = DateTime.now().toUtc();
+    final command = PreparedCommand(
+      id: newId('command'),
+      requestKey: Sha256.text(
+        canonicalJson(<String, dynamic>{
+          'sourceRunId': source.id,
+          'sourceCommandId': source.command.id,
+          'steeringIds': durable.map((value) => value.id).toList(),
+          'specification': revisedSpecification.contentKey,
+          'planHash': executablePlan.contentHash,
+          'mode': source.command.contract.mode.name,
+          'model': source.command.model.toJson(),
+        }),
+      ),
+      contract: compiled.contract,
+      plan: compiled.plan,
+      model: source.command.model,
+      createdAt: now,
+    );
+    await repositories.commands.put(command);
+    await repositories.commandPlanningContexts.put(
+      CommandPlanningContextRecord(
+        commandId: command.id,
+        projectId: project.id,
+        specification: revisedSpecification,
+        family: revisedRouting.family,
+        route: revisedRouting.route,
+        routingRationale: revisedRouting.rationale,
+        canonicalPlan: executablePlan,
+        consumedCoordinatorCapabilities:
+            context.consumedCoordinatorCapabilities,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    final continuation = await runs.createContinuationRun(
+      command,
+      sourceRunId: source.id,
+    );
+    final instructions = durable
+        .map(RunSteeringInstruction.fromRecord)
+        .toList(growable: false);
+    await runSteering.markContinuationReady(
+      source.id,
+      instructions,
+      continuationRunId: continuation.id,
+      reconciliation: reconciliation.reconciliations
+          .map((value) => value.toJson())
+          .toList(),
+    );
+    final details = <String, dynamic>{
+      'sourceRunId': source.id,
+      'continuationRunId': continuation.id,
+      'sourceCommandId': source.command.id,
+      'continuationCommandId': command.id,
+      'reconciliation': reconciliation.reconciliations
+          .map((value) => value.toJson())
+          .toList(),
+      'sourceRequiredPermissions':
+          source.command.contract.requiredPermissions
+              .map((value) => value.name)
+              .toList()
+            ..sort(),
+      'requiredPermissions':
+          command.contract.requiredPermissions
+              .map((value) => value.name)
+              .toList()
+            ..sort(),
+      'authorityInherited': false,
+      'continuationState': continuation.state.name,
+    };
+    await audit.append('steering.replanned', source.id, details);
+    await events.publish('steering.replanned', source.id, details);
   }
 
   Future<PromptStudioDraft> generatePromptDraft({
@@ -1907,23 +2262,22 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generatePrompt(
-        goal: goal,
-        model: model,
-        action: action,
-        current: current,
-        feedback: feedback,
-        clarification: clarification,
-        clarificationAnswers: clarificationAnswers,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generatePrompt(
+    goal: goal,
+    model: model,
+    action: action,
+    current: current,
+    feedback: feedback,
+    clarification: clarification,
+    clarificationAnswers: clarificationAnswers,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<({PromptTemplateRecord prompt, PromptVersionRecord version})>
-      saveGeneratedPrompt({
+  saveGeneratedPrompt({
     String? id,
     required String goal,
     required PromptStudioDraft draft,
@@ -1965,37 +2319,34 @@ class ProductRuntime {
     bool Function()? isCancelled,
     void Function(ModelGenerationProgress progress)? onProgress,
     void Function(String delta)? onTextDelta,
-  }) =>
-      promptPlanning.generateTaskPlan(
-        promptVersion: promptVersion,
-        projectId: projectId,
-        model: model,
-        depth: depth,
-        maxLeafTasks: maxLeafTasks,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-        onProgress: onProgress,
-        onTextDelta: onTextDelta,
-      );
+  }) => promptPlanning.generateTaskPlan(
+    promptVersion: promptVersion,
+    projectId: projectId,
+    model: model,
+    depth: depth,
+    maxLeafTasks: maxLeafTasks,
+    cancellation: cancellation,
+    isCancelled: isCancelled,
+    onProgress: onProgress,
+    onTextDelta: onTextDelta,
+  );
 
   Future<List<TaskPlanRecord>> listTaskPlans({
     String? promptId,
     String? projectId,
-  }) =>
-      promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
+  }) => promptPlanning.listTaskPlans(promptId: promptId, projectId: projectId);
 
   Future<TaskPlanRecord> updateTaskPlan(
     TaskPlanRecord plan, {
     required List<PlanTaskRecord> tasks,
     String? title,
     String? rationale,
-  }) =>
-      promptPlanning.updateTaskPlan(
-        plan,
-        tasks: tasks,
-        title: title,
-        rationale: rationale,
-      );
+  }) => promptPlanning.updateTaskPlan(
+    plan,
+    tasks: tasks,
+    title: title,
+    rationale: rationale,
+  );
 
   Future<PreparedCommand> prepareTaskPlan({
     required TaskPlanRecord plan,
@@ -2204,9 +2555,9 @@ class ProductRuntime {
     final response = await router.search(
       SearchProviderRequest(query: query, count: count.clamp(1, 20).toInt()),
     );
-    return response.results.map((result) => result.toMap()).toList(
-          growable: false,
-        );
+    return response.results
+        .map((result) => result.toMap())
+        .toList(growable: false);
   }
 
   Future<ProjectProcessStatus> startProject(String projectId) async {
@@ -2263,18 +2614,18 @@ class ProductRuntime {
     // entry, this record survives an application restart and is what
     // restart reconciliation (see reconcileProjectRuntimeSessions) consults.
     final launchKind = detectProjectLaunchKind(profile.type);
-    final launchProfile =
-        await repositories.workflow.upsertProjectLaunchProfile(
-      projectId: project.id,
-      kind: launchKind,
-      label: command.label,
-      executable: command.executable,
-      arguments: command.arguments,
-      workingDirectory: project.rootPath,
-      openBehavior: openBehaviorForLaunchKind(launchKind),
-      source: ProjectLaunchProfileSource.detected,
-      preferred: true,
-    );
+    final launchProfile = await repositories.workflow
+        .upsertProjectLaunchProfile(
+          projectId: project.id,
+          kind: launchKind,
+          label: command.label,
+          executable: command.executable,
+          arguments: command.arguments,
+          workingDirectory: project.rootPath,
+          openBehavior: openBehaviorForLaunchKind(launchKind),
+          source: ProjectLaunchProfileSource.detected,
+          preferred: true,
+        );
     final processIdentity = await _processIdentity.capture(result.pid);
     await repositories.workflow.insertManagedProjectProcess(
       id: processId,
@@ -2355,8 +2706,8 @@ class ProductRuntime {
         state: ProjectRuntimeState.interrupted,
         failureCode:
             verification == ProcessIdentityVerification.unverifiablePlatform
-                ? 'process_identity_unverifiable'
-                : 'process_identity_mismatch_or_gone',
+            ? 'process_identity_unverifiable'
+            : 'process_identity_mismatch_or_gone',
         completedAt: DateTime.now().toUtc(),
       );
     }
@@ -2440,7 +2791,8 @@ class ProductRuntime {
     var alive = true;
     for (var attempt = 0; attempt < 10 && alive; attempt++) {
       await Future<void>.delayed(const Duration(milliseconds: 500));
-      alive = await _processIdentity.verify(pid, session.processIdentity) ==
+      alive =
+          await _processIdentity.verify(pid, session.processIdentity) ==
           ProcessIdentityVerification.alive;
     }
     if (alive) {
@@ -2578,12 +2930,11 @@ class ProductRuntime {
     required String label,
     required String environmentKey,
     String description = '',
-  }) =>
-      secrets.registerReference(
-        label: label,
-        environmentKey: environmentKey,
-        description: description,
-      );
+  }) => secrets.registerReference(
+    label: label,
+    environmentKey: environmentKey,
+    description: description,
+  );
 
   Future<List<SecretReference>> listSecretReferences() =>
       repositories.secretReferences.all();
@@ -2596,16 +2947,15 @@ class ProductRuntime {
     required Set<String> allowedTools,
     String protocolVersion = '2024-11-05',
     Duration validity = const Duration(days: 30),
-  }) =>
-      mcp.trust(
-        projectId: projectId,
-        label: label,
-        executablePath: executablePath,
-        arguments: arguments,
-        allowedTools: allowedTools,
-        protocolVersion: protocolVersion,
-        validity: validity,
-      );
+  }) => mcp.trust(
+    projectId: projectId,
+    label: label,
+    executablePath: executablePath,
+    arguments: arguments,
+    allowedTools: allowedTools,
+    protocolVersion: protocolVersion,
+    validity: validity,
+  );
 
   Future<List<McpTrustRecord>> listMcpTrust() => mcp.repository.all();
   Future<void> revokeMcpTrust(String id) => mcp.revoke(id);
@@ -2615,13 +2965,12 @@ class ProductRuntime {
     required Set<String> scopes,
     String? projectId,
     Duration validity = const Duration(days: 30),
-  }) =>
-      tokens.issue(
-        label: label,
-        scopes: scopes,
-        projectId: projectId,
-        validity: validity,
-      );
+  }) => tokens.issue(
+    label: label,
+    scopes: scopes,
+    projectId: projectId,
+    validity: validity,
+  );
 
   Future<List<ApiTokenRecord>> listApiTokens() => repositories.tokens.all();
   Future<void> revokeApiToken(String id) => tokens.revoke(id);

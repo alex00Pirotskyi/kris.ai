@@ -114,17 +114,17 @@ enum P5TimelineCategory {
 
 extension P5TimelineCategoryLabel on P5TimelineCategory {
   String get label => switch (this) {
-        P5TimelineCategory.model => 'Model',
-        P5TimelineCategory.policy => 'Policy',
-        P5TimelineCategory.file => 'File',
-        P5TimelineCategory.terminal => 'Terminal',
-        P5TimelineCategory.browser => 'Browser',
-        P5TimelineCategory.web => 'Web',
-        P5TimelineCategory.evidence => 'Evidence',
-        P5TimelineCategory.verification => 'Verification',
-        P5TimelineCategory.retry => 'Retry',
-        P5TimelineCategory.rollback => 'Rollback',
-      };
+    P5TimelineCategory.model => 'Model',
+    P5TimelineCategory.policy => 'Policy',
+    P5TimelineCategory.file => 'File',
+    P5TimelineCategory.terminal => 'Terminal',
+    P5TimelineCategory.browser => 'Browser',
+    P5TimelineCategory.web => 'Web',
+    P5TimelineCategory.evidence => 'Evidence',
+    P5TimelineCategory.verification => 'Verification',
+    P5TimelineCategory.retry => 'Retry',
+    P5TimelineCategory.rollback => 'Rollback',
+  };
 }
 
 @immutable
@@ -160,16 +160,16 @@ enum P5EvidenceKind {
 
 extension P5EvidenceKindLabel on P5EvidenceKind {
   String get label => switch (this) {
-        P5EvidenceKind.textMetadata => 'Text metadata',
-        P5EvidenceKind.binaryMetadata => 'Binary metadata',
-        P5EvidenceKind.image => 'Image',
-        P5EvidenceKind.markdown => 'Markdown',
-        P5EvidenceKind.json => 'JSON',
-        P5EvidenceKind.table => 'Table',
-        P5EvidenceKind.diff => 'Diff',
-        P5EvidenceKind.citation => 'Citation',
-        P5EvidenceKind.receipt => 'Receipt',
-      };
+    P5EvidenceKind.textMetadata => 'Text metadata',
+    P5EvidenceKind.binaryMetadata => 'Binary metadata',
+    P5EvidenceKind.image => 'Image',
+    P5EvidenceKind.markdown => 'Markdown',
+    P5EvidenceKind.json => 'JSON',
+    P5EvidenceKind.table => 'Table',
+    P5EvidenceKind.diff => 'Diff',
+    P5EvidenceKind.citation => 'Citation',
+    P5EvidenceKind.receipt => 'Receipt',
+  };
 }
 
 @immutable
@@ -197,73 +197,72 @@ class P5EvidenceFixture {
 
 extension P5ComposerProfileLabel on P5ComposerProfile {
   String get label => switch (this) {
-        P5ComposerProfile.project => 'Project',
-        P5ComposerProfile.owner => 'Owner',
-        P5ComposerProfile.ownerUnattended => 'Owner unattended',
-        P5ComposerProfile.isolatedUntrusted => 'Isolated untrusted',
-      };
+    P5ComposerProfile.project => 'Project',
+    P5ComposerProfile.owner => 'Owner',
+    P5ComposerProfile.ownerUnattended => 'Owner unattended',
+    P5ComposerProfile.isolatedUntrusted => 'Isolated untrusted',
+  };
 
   AccessProfileId get accessProfileId => switch (this) {
-        P5ComposerProfile.project => AccessProfileId.project,
-        P5ComposerProfile.owner => AccessProfileId.owner,
-        P5ComposerProfile.ownerUnattended => AccessProfileId.ownerUnattended,
-        P5ComposerProfile.isolatedUntrusted =>
-          AccessProfileId.isolatedUntrusted,
-      };
+    P5ComposerProfile.project => AccessProfileId.project,
+    P5ComposerProfile.owner => AccessProfileId.owner,
+    P5ComposerProfile.ownerUnattended => AccessProfileId.ownerUnattended,
+    P5ComposerProfile.isolatedUntrusted => AccessProfileId.isolatedUntrusted,
+  };
 
   ApprovalPolicy get approvalPolicy => switch (this) {
-        P5ComposerProfile.project => ApprovalPolicy.highRiskOnly,
-        P5ComposerProfile.owner => ApprovalPolicy.highRiskOnly,
-        P5ComposerProfile.ownerUnattended => ApprovalPolicy.never,
-        P5ComposerProfile.isolatedUntrusted => ApprovalPolicy.always,
-      };
+    P5ComposerProfile.project => ApprovalPolicy.highRiskOnly,
+    P5ComposerProfile.owner => ApprovalPolicy.highRiskOnly,
+    P5ComposerProfile.ownerUnattended => ApprovalPolicy.never,
+    P5ComposerProfile.isolatedUntrusted => ApprovalPolicy.always,
+  };
 
   String get approvalPolicyLabel => switch (approvalPolicy) {
-        ApprovalPolicy.always => 'ALWAYS',
-        ApprovalPolicy.highRiskOnly => 'HIGH_RISK_ONLY',
-        ApprovalPolicy.never => 'NEVER',
-      };
+    ApprovalPolicy.always => 'ALWAYS',
+    ApprovalPolicy.highRiskOnly => 'HIGH_RISK_ONLY',
+    ApprovalPolicy.never => 'NEVER',
+  };
 
   String get approvalPolicyExplanation => switch (approvalPolicy) {
-        ApprovalPolicy.always =>
-          'Approval prompts are required by this profile before governed effects proceed.',
-        ApprovalPolicy.highRiskOnly =>
-          'High-risk effects require approval. Lower-risk effects still require deterministic policy authorization.',
-        ApprovalPolicy.never =>
-          'No approval prompts are required by this profile. This does not grant capabilities, widen the profile ceiling, or bypass deterministic policy and overlay denials.',
-      };
+    ApprovalPolicy.always =>
+      'Approval prompts are required by this profile before governed effects proceed.',
+    ApprovalPolicy.highRiskOnly =>
+      'High-risk effects require approval. Lower-risk effects still require deterministic policy authorization.',
+    ApprovalPolicy.never =>
+      'No approval prompts are required by this profile. This does not grant capabilities, widen the profile ceiling, or bypass deterministic policy and overlay denials.',
+  };
 }
 
 extension P5ComposerModelLabel on P5ComposerModel {
   String get label => switch (this) {
-        P5ComposerModel.automatic => 'Automatic',
-        P5ComposerModel.localFast => 'Local fast',
-        P5ComposerModel.localDeep => 'Local deep',
-      };
+    P5ComposerModel.automatic => 'Automatic',
+    P5ComposerModel.localFast => 'Local fast',
+    P5ComposerModel.localDeep => 'Local deep',
+  };
 }
 
 extension P5ComposerAccessLabel on P5ComposerAccess {
   String get label => switch (this) {
-        P5ComposerAccess.profileDefault => 'Profile default',
-        P5ComposerAccess.readOnly => 'Read only',
-        P5ComposerAccess.requestAdditional => 'Request additional',
-      };
+    P5ComposerAccess.profileDefault => 'Profile default',
+    P5ComposerAccess.readOnly => 'Read only',
+    P5ComposerAccess.requestAdditional => 'Request additional',
+  };
 }
 
 extension P5ComposerLaunchTimingLabel on P5ComposerLaunchTiming {
   String get label => switch (this) {
-        P5ComposerLaunchTiming.runNow => 'Run now',
-        P5ComposerLaunchTiming.laterToday => 'Later today',
-        P5ComposerLaunchTiming.tomorrowMorning => 'Tomorrow morning',
-      };
+    P5ComposerLaunchTiming.runNow => 'Run now',
+    P5ComposerLaunchTiming.laterToday => 'Later today',
+    P5ComposerLaunchTiming.tomorrowMorning => 'Tomorrow morning',
+  };
 }
 
 extension P5ComposerBudgetLabel on P5ComposerBudget {
   String get label => switch (this) {
-        P5ComposerBudget.focused => 'Focused',
-        P5ComposerBudget.balanced => 'Balanced',
-        P5ComposerBudget.thorough => 'Thorough',
-      };
+    P5ComposerBudget.focused => 'Focused',
+    P5ComposerBudget.balanced => 'Balanced',
+    P5ComposerBudget.thorough => 'Thorough',
+  };
 }
 
 enum P5PrototypeAction {
@@ -285,35 +284,34 @@ enum P5PrototypeAction {
 
 extension P5ExperienceLevelLabel on P5ExperienceLevel {
   String get label => switch (this) {
-        P5ExperienceLevel.simple => 'Simple',
-        P5ExperienceLevel.advanced => 'Advanced',
-        P5ExperienceLevel.developer => 'Developer',
-      };
+    P5ExperienceLevel.simple => 'Simple',
+    P5ExperienceLevel.advanced => 'Advanced',
+    P5ExperienceLevel.developer => 'Developer',
+  };
 }
 
 extension P5WorkspaceIdLabel on P5WorkspaceId {
   String get label => switch (this) {
-        P5WorkspaceId.homeChat => 'Home / Chat',
-        P5WorkspaceId.projects => 'Projects',
-        P5WorkspaceId.runsActivity => 'Runs / Activity',
-        P5WorkspaceId.verificationCenter => 'Verification Center',
-        P5WorkspaceId.evidence => 'Evidence',
-        P5WorkspaceId.ownerMode => 'Owner Mode',
-        P5WorkspaceId.modelsProviders => 'Models and Providers',
-        P5WorkspaceId.capabilitiesIntegrations =>
-          'Capabilities and Integrations',
-        P5WorkspaceId.settingsDiagnostics => 'Settings and Diagnostics',
-        P5WorkspaceId.webStudio => 'Web Studio',
-        P5WorkspaceId.searchResearch => 'Search and Research',
-        P5WorkspaceId.nativeAutomation => 'Native Automation',
-        P5WorkspaceId.devices => 'Devices',
-      };
+    P5WorkspaceId.homeChat => 'Home / Chat',
+    P5WorkspaceId.projects => 'Projects',
+    P5WorkspaceId.runsActivity => 'Runs / Activity',
+    P5WorkspaceId.verificationCenter => 'Verification Center',
+    P5WorkspaceId.evidence => 'Evidence',
+    P5WorkspaceId.ownerMode => 'Owner Mode',
+    P5WorkspaceId.modelsProviders => 'Models and Providers',
+    P5WorkspaceId.capabilitiesIntegrations => 'Capabilities and Integrations',
+    P5WorkspaceId.settingsDiagnostics => 'Settings and Diagnostics',
+    P5WorkspaceId.webStudio => 'Web Studio',
+    P5WorkspaceId.searchResearch => 'Search and Research',
+    P5WorkspaceId.nativeAutomation => 'Native Automation',
+    P5WorkspaceId.devices => 'Devices',
+  };
 
   bool get isFutureCapability => const <P5WorkspaceId>{
-        P5WorkspaceId.searchResearch,
-        P5WorkspaceId.nativeAutomation,
-        P5WorkspaceId.devices,
-      }.contains(this);
+    P5WorkspaceId.searchResearch,
+    P5WorkspaceId.nativeAutomation,
+    P5WorkspaceId.devices,
+  }.contains(this);
 }
 
 extension P5WorkspaceStateLabel on P5WorkspaceState {
@@ -322,72 +320,72 @@ extension P5WorkspaceStateLabel on P5WorkspaceState {
 
 extension P5CapabilityStateLabel on P5CapabilityPresentationState {
   String get label => switch (this) {
-        P5CapabilityPresentationState.notImplemented => 'NOT_IMPLEMENTED',
-        P5CapabilityPresentationState.sourceFoundation => 'SOURCE_FOUNDATION',
-        P5CapabilityPresentationState.blockedByDependency =>
-          'BLOCKED_BY_DEPENDENCY',
-        P5CapabilityPresentationState.unsupported => 'UNSUPPORTED',
-        P5CapabilityPresentationState.unavailable => 'UNAVAILABLE',
-        P5CapabilityPresentationState.experimental => 'EXPERIMENTAL',
-        P5CapabilityPresentationState.behaviorSupported => 'BEHAVIOR_SUPPORTED',
-        P5CapabilityPresentationState.platformSupported => 'PLATFORM_SUPPORTED',
-        P5CapabilityPresentationState.releaseSupported => 'RELEASE_SUPPORTED',
-      };
+    P5CapabilityPresentationState.notImplemented => 'NOT_IMPLEMENTED',
+    P5CapabilityPresentationState.sourceFoundation => 'SOURCE_FOUNDATION',
+    P5CapabilityPresentationState.blockedByDependency =>
+      'BLOCKED_BY_DEPENDENCY',
+    P5CapabilityPresentationState.unsupported => 'UNSUPPORTED',
+    P5CapabilityPresentationState.unavailable => 'UNAVAILABLE',
+    P5CapabilityPresentationState.experimental => 'EXPERIMENTAL',
+    P5CapabilityPresentationState.behaviorSupported => 'BEHAVIOR_SUPPORTED',
+    P5CapabilityPresentationState.platformSupported => 'PLATFORM_SUPPORTED',
+    P5CapabilityPresentationState.releaseSupported => 'RELEASE_SUPPORTED',
+  };
 }
 
 extension P5RunStateLabel on P5RunPresentationState {
   String get label => switch (this) {
-        P5RunPresentationState.planReady => 'Plan ready',
-        P5RunPresentationState.planOnly => 'Plan only',
-        P5RunPresentationState.ready => 'Ready to start',
-        P5RunPresentationState.running => 'Running',
-        P5RunPresentationState.paused => 'Paused',
-        P5RunPresentationState.stopping => 'Stopping safely',
-        P5RunPresentationState.completed => 'Completed',
-        P5RunPresentationState.interrupted => 'Interrupted',
-        P5RunPresentationState.blocked => 'Blocked',
-        P5RunPresentationState.error => 'Error',
-      };
+    P5RunPresentationState.planReady => 'Plan ready',
+    P5RunPresentationState.planOnly => 'Plan only',
+    P5RunPresentationState.ready => 'Ready to start',
+    P5RunPresentationState.running => 'Running',
+    P5RunPresentationState.paused => 'Paused',
+    P5RunPresentationState.stopping => 'Stopping safely',
+    P5RunPresentationState.completed => 'Completed',
+    P5RunPresentationState.interrupted => 'Interrupted',
+    P5RunPresentationState.blocked => 'Blocked',
+    P5RunPresentationState.error => 'Error',
+  };
 }
 
 extension P5VerificationStateLabel on P5VerificationResultState {
   String get label => switch (this) {
-        P5VerificationResultState.pass => 'PASS',
-        P5VerificationResultState.fail => 'FAIL',
-        P5VerificationResultState.error => 'ERROR',
-        P5VerificationResultState.skipped => 'SKIPPED',
-        P5VerificationResultState.blocked => 'BLOCKED',
-        P5VerificationResultState.unknown => 'UNKNOWN',
-        P5VerificationResultState.flaky => 'FLAKY',
-        P5VerificationResultState.notImplemented => 'NOT_IMPLEMENTED',
-      };
+    P5VerificationResultState.pass => 'PASS',
+    P5VerificationResultState.fail => 'FAIL',
+    P5VerificationResultState.error => 'ERROR',
+    P5VerificationResultState.skipped => 'SKIPPED',
+    P5VerificationResultState.blocked => 'BLOCKED',
+    P5VerificationResultState.unknown => 'UNKNOWN',
+    P5VerificationResultState.flaky => 'FLAKY',
+    P5VerificationResultState.notImplemented => 'NOT_IMPLEMENTED',
+  };
 }
 
 extension P5CertificationStateLabel on P5CertificationPresentationState {
   String get label => switch (this) {
-        P5CertificationPresentationState.notEvaluated => 'NOT_EVALUATED',
-        P5CertificationPresentationState.partial => 'PARTIAL',
-        P5CertificationPresentationState.pass => 'PASS',
-        P5CertificationPresentationState.fail => 'FAIL',
-        P5CertificationPresentationState.stale => 'STALE',
-        P5CertificationPresentationState.revoked => 'REVOKED',
-      };
+    P5CertificationPresentationState.notEvaluated => 'NOT_EVALUATED',
+    P5CertificationPresentationState.partial => 'PARTIAL',
+    P5CertificationPresentationState.pass => 'PASS',
+    P5CertificationPresentationState.fail => 'FAIL',
+    P5CertificationPresentationState.stale => 'STALE',
+    P5CertificationPresentationState.revoked => 'REVOKED',
+  };
 }
 
 extension P5OwnerModeStateLabel on P5OwnerModePresentationState {
   String get label => switch (this) {
-        P5OwnerModePresentationState.unavailable => 'Unavailable',
-        P5OwnerModePresentationState.disabled => 'Disabled',
-        P5OwnerModePresentationState.availableNotEnabled =>
-          'Available, not enabled',
-        P5OwnerModePresentationState.enabled => 'Enabled',
-        P5OwnerModePresentationState.running => 'Running',
-        P5OwnerModePresentationState.paused => 'Paused',
-        P5OwnerModePresentationState.stopping => 'Stopping',
-        P5OwnerModePresentationState.blockedByEnvironment =>
-          'Blocked by environment',
-        P5OwnerModePresentationState.error => 'Error',
-      };
+    P5OwnerModePresentationState.unavailable => 'Unavailable',
+    P5OwnerModePresentationState.disabled => 'Disabled',
+    P5OwnerModePresentationState.availableNotEnabled =>
+      'Available, not enabled',
+    P5OwnerModePresentationState.enabled => 'Enabled',
+    P5OwnerModePresentationState.running => 'Running',
+    P5OwnerModePresentationState.paused => 'Paused',
+    P5OwnerModePresentationState.stopping => 'Stopping',
+    P5OwnerModePresentationState.blockedByEnvironment =>
+      'Blocked by environment',
+    P5OwnerModePresentationState.error => 'Error',
+  };
 }
 
 @immutable
@@ -524,12 +522,12 @@ class P5SideEffectLedger {
 
   @override
   int get hashCode => Object.hash(
-        filesystemMutations,
-        networkRequests,
-        runtimeCommands,
-        ownerModeActions,
-        deviceRequests,
-      );
+    filesystemMutations,
+    networkRequests,
+    runtimeCommands,
+    ownerModeActions,
+    deviceRequests,
+  );
 }
 
 @immutable
@@ -652,10 +650,7 @@ class P5PresentationState {
 const Object _notProvided = Object();
 
 class P5InvalidTransition implements Exception {
-  const P5InvalidTransition({
-    required this.from,
-    required this.to,
-  });
+  const P5InvalidTransition({required this.from, required this.to});
 
   final P5WorkspaceState from;
   final P5WorkspaceState to;
@@ -670,71 +665,65 @@ class P5WorkspaceTransitionGraph {
 
   static const Map<P5WorkspaceState, Set<P5WorkspaceState>> allowed =
       <P5WorkspaceState, Set<P5WorkspaceState>>{
-    P5WorkspaceState.empty: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.ready,
-      P5WorkspaceState.blocked,
-      P5WorkspaceState.error,
-      P5WorkspaceState.unavailable,
-    },
-    P5WorkspaceState.loading: <P5WorkspaceState>{
-      P5WorkspaceState.empty,
-      P5WorkspaceState.ready,
-      P5WorkspaceState.blocked,
-      P5WorkspaceState.error,
-      P5WorkspaceState.unavailable,
-    },
-    P5WorkspaceState.ready: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.running,
-      P5WorkspaceState.blocked,
-      P5WorkspaceState.error,
-      P5WorkspaceState.completed,
-      P5WorkspaceState.unavailable,
-    },
-    P5WorkspaceState.running: <P5WorkspaceState>{
-      P5WorkspaceState.paused,
-      P5WorkspaceState.blocked,
-      P5WorkspaceState.error,
-      P5WorkspaceState.completed,
-    },
-    P5WorkspaceState.paused: <P5WorkspaceState>{
-      P5WorkspaceState.running,
-      P5WorkspaceState.blocked,
-      P5WorkspaceState.error,
-      P5WorkspaceState.completed,
-    },
-    P5WorkspaceState.blocked: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.ready,
-      P5WorkspaceState.error,
-      P5WorkspaceState.unavailable,
-    },
-    P5WorkspaceState.error: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.ready,
-      P5WorkspaceState.blocked,
-    },
-    P5WorkspaceState.completed: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.ready,
-    },
-    P5WorkspaceState.unavailable: <P5WorkspaceState>{
-      P5WorkspaceState.loading,
-      P5WorkspaceState.ready,
-    },
-  };
+        P5WorkspaceState.empty: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.ready,
+          P5WorkspaceState.blocked,
+          P5WorkspaceState.error,
+          P5WorkspaceState.unavailable,
+        },
+        P5WorkspaceState.loading: <P5WorkspaceState>{
+          P5WorkspaceState.empty,
+          P5WorkspaceState.ready,
+          P5WorkspaceState.blocked,
+          P5WorkspaceState.error,
+          P5WorkspaceState.unavailable,
+        },
+        P5WorkspaceState.ready: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.running,
+          P5WorkspaceState.blocked,
+          P5WorkspaceState.error,
+          P5WorkspaceState.completed,
+          P5WorkspaceState.unavailable,
+        },
+        P5WorkspaceState.running: <P5WorkspaceState>{
+          P5WorkspaceState.paused,
+          P5WorkspaceState.blocked,
+          P5WorkspaceState.error,
+          P5WorkspaceState.completed,
+        },
+        P5WorkspaceState.paused: <P5WorkspaceState>{
+          P5WorkspaceState.running,
+          P5WorkspaceState.blocked,
+          P5WorkspaceState.error,
+          P5WorkspaceState.completed,
+        },
+        P5WorkspaceState.blocked: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.ready,
+          P5WorkspaceState.error,
+          P5WorkspaceState.unavailable,
+        },
+        P5WorkspaceState.error: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.ready,
+          P5WorkspaceState.blocked,
+        },
+        P5WorkspaceState.completed: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.ready,
+        },
+        P5WorkspaceState.unavailable: <P5WorkspaceState>{
+          P5WorkspaceState.loading,
+          P5WorkspaceState.ready,
+        },
+      };
 
-  static bool canTransition(
-    P5WorkspaceState from,
-    P5WorkspaceState to,
-  ) =>
+  static bool canTransition(P5WorkspaceState from, P5WorkspaceState to) =>
       from == to || (allowed[from]?.contains(to) ?? false);
 
-  static void validate(
-    P5WorkspaceState from,
-    P5WorkspaceState to,
-  ) {
+  static void validate(P5WorkspaceState from, P5WorkspaceState to) {
     if (!canTransition(from, to)) {
       throw P5InvalidTransition(from: from, to: to);
     }

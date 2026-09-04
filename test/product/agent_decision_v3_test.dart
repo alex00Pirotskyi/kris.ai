@@ -31,10 +31,7 @@ void main() {
           kind: AgentDecisionV3Kind.userTakeover,
           question: 'Complete the passkey ceremony, then return control.',
         ),
-        AgentDecisionV3(
-          kind: AgentDecisionV3Kind.wait,
-          waitHandle: 'task:123',
-        ),
+        AgentDecisionV3(kind: AgentDecisionV3Kind.wait, waitHandle: 'task:123'),
         AgentDecisionV3(
           kind: AgentDecisionV3Kind.delegate,
           delegateTo: 'validator.agent',
@@ -115,7 +112,7 @@ void main() {
         const <String, Object?>{'protocolVersion': '2.0.0', 'action': 'wait'},
         const <String, Object?>{
           'protocolVersion': '3.0.0',
-          'action': 'unknown'
+          'action': 'unknown',
         },
         const <String, Object?>{
           'protocolVersion': '3.0.0',

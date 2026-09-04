@@ -10,27 +10,24 @@ void main() {
     // The scenario from the product brief: "Make this app faster but
     // don't change the database and keep the UI simple."
     TaskSpecification fasterApp() => TaskSpecification(
-          id: 'spec_faster',
-          originalRequest: 'Make this app faster but do not change the '
-              'database and keep the UI simple.',
-          objective: 'Improve application performance',
-          hardConstraints: <SpecificationClaim>[
-            const SpecificationClaim.stated(
-              'The database must not be modified.',
-            ),
-          ],
-          preferences: <SpecificationClaim>[
-            const SpecificationClaim.stated('Keep UI changes minimal.'),
-          ],
-          successCriteria: <SpecificationClaim>[
-            const SpecificationClaim.inferred(
-              'A measurable performance improvement is observable.',
-            ),
-            const SpecificationClaim.inferred(
-              'Existing behavior remains valid.',
-            ),
-          ],
-        );
+      id: 'spec_faster',
+      originalRequest:
+          'Make this app faster but do not change the '
+          'database and keep the UI simple.',
+      objective: 'Improve application performance',
+      hardConstraints: <SpecificationClaim>[
+        const SpecificationClaim.stated('The database must not be modified.'),
+      ],
+      preferences: <SpecificationClaim>[
+        const SpecificationClaim.stated('Keep UI changes minimal.'),
+      ],
+      successCriteria: <SpecificationClaim>[
+        const SpecificationClaim.inferred(
+          'A measurable performance improvement is observable.',
+        ),
+        const SpecificationClaim.inferred('Existing behavior remains valid.'),
+      ],
+    );
 
     test('a hard constraint is not interchangeable with a preference', () {
       final specification = fasterApp();
@@ -55,8 +52,9 @@ void main() {
       // The constraint must be labelled as a constraint in the prompt --
       // not merely present somewhere in the request text, which is how a
       // planner loses it.
-      final constraintIndex =
-          rendered.indexOf('HARD CONSTRAINTS (never violate these)');
+      final constraintIndex = rendered.indexOf(
+        'HARD CONSTRAINTS (never violate these)',
+      );
       final preferenceIndex = rendered.indexOf('PREFERENCES');
       expect(constraintIndex, lessThan(preferenceIndex));
     });
@@ -77,10 +75,7 @@ void main() {
     });
 
     test('provenance separates what is known from what is guessed', () {
-      expect(
-        const SpecificationClaim.stated('x').isEstablished,
-        isTrue,
-      );
+      expect(const SpecificationClaim.stated('x').isEstablished, isTrue);
       expect(
         const SpecificationClaim(
           statement: 'x',
@@ -137,8 +132,10 @@ void main() {
       );
       final restored = TaskSpecification.fromJson(original.toJson());
       expect(restored.objective, original.objective);
-      expect(restored.hardConstraints.single.provenance,
-          EvidenceProvenance.userStated);
+      expect(
+        restored.hardConstraints.single.provenance,
+        EvidenceProvenance.userStated,
+      );
       expect(restored.preferences.single.statement, 'Keep UI changes minimal.');
       expect(restored.targetRefs.single.resolved, isTrue);
       expect(restored.blockingQuestions, hasLength(1));
@@ -148,16 +145,18 @@ void main() {
       expect(restored.contentKey, original.contentKey);
     });
 
-    test('a deterministic specification never claims semantic understanding',
-        () {
-      final specification = TaskSpecification(
-        id: 'spec_det',
-        originalRequest: '/run @test8B',
-        objective: 'Run test8B',
-        source: TaskSpecificationSource.deterministic,
-      );
-      expect(specification.hasSemanticUnderstanding, isFalse);
-      expect(specification.validate(), isEmpty);
-    });
+    test(
+      'a deterministic specification never claims semantic understanding',
+      () {
+        final specification = TaskSpecification(
+          id: 'spec_det',
+          originalRequest: '/run @test8B',
+          objective: 'Run test8B',
+          source: TaskSpecificationSource.deterministic,
+        );
+        expect(specification.hasSemanticUnderstanding, isFalse);
+        expect(specification.validate(), isEmpty);
+      },
+    );
   });
 }

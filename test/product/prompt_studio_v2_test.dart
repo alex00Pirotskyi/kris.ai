@@ -7,10 +7,11 @@ import 'package:kristin_local_agent/product/prompt_studio_v2.dart';
 import 'package:kristin_local_agent/product/workspace_tools.dart';
 
 Map<String, dynamic> fixture(String name) => Map<String, dynamic>.from(
-      jsonDecode(
+  jsonDecode(
         File('test/product/fixtures/prompt_studio_v2/$name').readAsStringSync(),
-      ) as Map,
-    );
+      )
+      as Map,
+);
 
 Map<String, dynamic> deepCopy(Map<String, dynamic> value) =>
     Map<String, dynamic>.from(jsonDecode(jsonEncode(value)) as Map);

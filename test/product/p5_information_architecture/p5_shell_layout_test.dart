@@ -87,8 +87,9 @@ void main() {
     expect(await store.file.readAsString(), endsWith('\n'));
   });
 
-  testWidgets('P5-004 wide shell resizes and persists across navigation',
-      (tester) async {
+  testWidgets('P5-004 wide shell resizes and persists across navigation', (
+    tester,
+  ) async {
     final persistence = _MemoryShellLayoutPersistence(null);
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
@@ -141,8 +142,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('P5-004 persisted layout restores through persistence contract',
-      (tester) async {
+  testWidgets('P5-004 persisted layout restores through persistence contract', (
+    tester,
+  ) async {
     final expected = P5ShellLayoutState.defaults.copyWith(
       leftRailWidth: 340,
       inspectorWidth: 390,
@@ -173,8 +175,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('P5-004 activity drawer toggles without losing workspace state',
-      (tester) async {
+  testWidgets('P5-004 activity drawer toggles without losing workspace state', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced)
       ..selectWorkspace(P5WorkspaceId.verificationCenter);
@@ -193,8 +196,9 @@ void main() {
     expect(controller.state.workspace, P5WorkspaceId.verificationCenter);
   });
 
-  testWidgets('P5-004 compact shell preserves center and drawer access',
-      (tester) async {
+  testWidgets('P5-004 compact shell preserves center and drawer access', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await pumpShell(tester, controller, size: const Size(860, 640));

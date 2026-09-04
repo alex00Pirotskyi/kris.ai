@@ -16,13 +16,13 @@ enum ModelRoleV2 {
 
 extension ModelRoleV2Wire on ModelRoleV2 {
   String get wireName => switch (this) {
-        ModelRoleV2.planner => 'planner',
-        ModelRoleV2.executor => 'executor',
-        ModelRoleV2.verifier => 'verifier',
-        ModelRoleV2.browserObserver => 'browser_observer',
-        ModelRoleV2.extractor => 'extractor',
-        ModelRoleV2.reviewer => 'reviewer',
-      };
+    ModelRoleV2.planner => 'planner',
+    ModelRoleV2.executor => 'executor',
+    ModelRoleV2.verifier => 'verifier',
+    ModelRoleV2.browserObserver => 'browser_observer',
+    ModelRoleV2.extractor => 'extractor',
+    ModelRoleV2.reviewer => 'reviewer',
+  };
 }
 
 enum ModelRoleOperationV2 {
@@ -65,8 +65,9 @@ class ModelRoleRouteV2 {
     required this.role,
     required this.taskClassId,
     required List<String> preferredExactModelIds,
-  }) : preferredExactModelIds =
-            List<String>.unmodifiable(preferredExactModelIds) {
+  }) : preferredExactModelIds = List<String>.unmodifiable(
+         preferredExactModelIds,
+       ) {
     if (taskClassId.trim().isEmpty ||
         !RegExp(r'^[a-z0-9][a-z0-9._-]*$').hasMatch(taskClassId)) {
       throw const ModelRegistryValidationException(
@@ -88,10 +89,10 @@ class ModelRoleRouteV2 {
   final List<String> preferredExactModelIds;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'role': role.wireName,
-        'taskClassId': taskClassId,
-        'preferredExactModelIds': preferredExactModelIds,
-      };
+    'role': role.wireName,
+    'taskClassId': taskClassId,
+    'preferredExactModelIds': preferredExactModelIds,
+  };
 }
 
 class ModelRoutingPolicyV2 {
@@ -100,10 +101,10 @@ class ModelRoutingPolicyV2 {
     required this.revision,
     required List<ModelRoleRouteV2> routes,
   }) : routes = Map<ModelRoleV2, ModelRoleRouteV2>.unmodifiable(
-          <ModelRoleV2, ModelRoleRouteV2>{
-            for (final route in routes) route.role: route,
-          },
-        ) {
+         <ModelRoleV2, ModelRoleRouteV2>{
+           for (final route in routes) route.role: route,
+         },
+       ) {
     if (policyId.trim().isEmpty || revision <= 0) {
       throw const ModelRegistryValidationException(
         'model routing policy identity is invalid',
@@ -132,13 +133,13 @@ class ModelRoutingPolicyV2 {
   ModelRoleRouteV2 routeFor(ModelRoleV2 role) => routes[role]!;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'policyId': policyId,
-        'revision': revision,
-        'routes': ModelRoleV2.values
-            .map((role) => routes[role]!.toJson())
-            .toList(growable: false),
-      };
+    'schemaVersion': '2.0.0',
+    'policyId': policyId,
+    'revision': revision,
+    'routes': ModelRoleV2.values
+        .map((role) => routes[role]!.toJson())
+        .toList(growable: false),
+  };
 
   String get sha256 => Sha256.text(canonicalJson(toJson()));
 }
@@ -165,23 +166,23 @@ class ModelRoutingDecisionV2 {
   final String reason;
 
   Map<String, Object?> _body() => <String, Object?>{
-        'schemaVersion': '2.0.0',
-        'role': role.wireName,
-        'taskClassId': taskClassId,
-        'model': model.toJson(),
-        'policyId': policyId,
-        'policyRevision': policyRevision,
-        'policySha256': policySha256,
-        'decidedAt': decidedAt.toUtc().toIso8601String(),
-        'reason': reason,
-      };
+    'schemaVersion': '2.0.0',
+    'role': role.wireName,
+    'taskClassId': taskClassId,
+    'model': model.toJson(),
+    'policyId': policyId,
+    'policyRevision': policyRevision,
+    'policySha256': policySha256,
+    'decidedAt': decidedAt.toUtc().toIso8601String(),
+    'reason': reason,
+  };
 
   String get decisionSha256 => Sha256.text(canonicalJson(_body()));
 
   Map<String, Object?> toJson() => <String, Object?>{
-        ..._body(),
-        'decisionSha256': decisionSha256,
-      };
+    ..._body(),
+    'decisionSha256': decisionSha256,
+  };
 }
 
 abstract interface class ModelRoutingDecisionStoreV2 {

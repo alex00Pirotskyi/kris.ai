@@ -142,7 +142,8 @@ class SoftwareTaskFamilyPlanner implements TaskFamilyPlanner {
       throw const PlanningFailure(
         kind: PlanningFailureKind.providerUnavailable,
         code: 'model_not_selected',
-        message: 'A model must be connected before Kristin can plan a '
+        message:
+            'A model must be connected before Kristin can plan a '
             'substantial software task.',
       );
     }

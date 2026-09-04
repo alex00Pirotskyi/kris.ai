@@ -40,10 +40,10 @@ const Set<String> _allowedGitProbeEnvironmentKeys = <String>{
 };
 
 Map<String, String> _restrictedEnvironment() => <String, String>{
-      for (final entry in Platform.environment.entries)
-        if (_allowedGitProbeEnvironmentKeys.contains(entry.key))
-          entry.key: entry.value,
-    };
+  for (final entry in Platform.environment.entries)
+    if (_allowedGitProbeEnvironmentKeys.contains(entry.key))
+      entry.key: entry.value,
+};
 
 /// Runs a single bounded, read-only `git` probe against [rootPath] — never
 /// spawned from a hot UI path (a project card, a per-frame status refresh);

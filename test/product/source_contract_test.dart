@@ -141,9 +141,11 @@ void main() {
         'lib/product/browser/web_preview.dart',
         'lib/product/browser/web_studio.dart',
         'lib/product/capability_doctor.dart',
+        'lib/product/capability_invocation.dart',
         'lib/product/chat_studio.dart',
         'lib/product/chat_action_dispatcher.dart',
         'lib/product/chat_control_plane.dart',
+        'lib/product/chat_control_plane_streaming.dart',
         'lib/product/chat_control_plane_studio.dart',
         'lib/product/chat_control_plane_studio_actions.dart',
         'lib/product/chat_control_plane_studio_view.dart',
@@ -208,6 +210,7 @@ void main() {
         'lib/product/run_live_signals.dart',
         'lib/product/run_preflight.dart',
         'lib/product/run_steering.dart',
+        'lib/product/run_steering_record.dart',
         'lib/product/access_profile_v2.dart',
         'lib/product/capability_grant_v2.dart',
         'lib/product/deterministic_policy_engine.dart',
@@ -264,6 +267,7 @@ void main() {
         'lib/product/agent_context_v2.dart',
         'lib/product/agent_decision_v3.dart',
         'lib/product/agent_protocol_v3.dart',
+        'lib/product/agent_deferred_interaction.dart',
         'lib/product/mcp_registry_v2.dart',
         'lib/product/p8_effect_journal_adapter.dart',
         'lib/product/p8_external_effects.dart',
@@ -271,20 +275,30 @@ void main() {
         'lib/product/performance_cache.dart',
         'lib/product/performance_spans.dart',
         'lib/product/mcp_protocol.dart',
+        'lib/product/kristin_conversation_session.dart',
+        'lib/product/utility_time.dart',
         // Progress-aware protocol recovery: bounded corrections plus
         // repeated-invalid-action detection, so a stuck local model
         // cannot burn a long sequence of slow calls with no effect.
         'lib/product/protocol_recovery_policy.dart',
         // The universal task kernel: one semantic task architecture that
         // every product capability plans through.
+        'lib/product/task_kernel/command_planning_context.dart',
         'lib/product/task_kernel/task_specification.dart',
         'lib/product/task_kernel/task_understanding.dart',
         'lib/product/task_kernel/complexity_router.dart',
+        'lib/product/task_kernel/kernel_task_graph_executor.dart',
+        'lib/product/task_kernel/plan_compile_repair.dart',
         'lib/product/task_kernel/universal_task_plan.dart',
         'lib/product/task_kernel/plan_compiler.dart',
         'lib/product/task_kernel/plan_reconciliation.dart',
         'lib/product/task_kernel/planning_failures.dart',
+        'lib/product/task_kernel/semantic_slash_understanding.dart',
+        'lib/product/task_kernel/semantic_steering.dart',
         'lib/product/task_kernel/task_families.dart',
+        'lib/product/task_kernel/task_family_executor.dart',
+        'lib/product/task_kernel/task_specification_patch.dart',
+        'lib/product/task_kernel/task_specification_patch_classifier.dart',
         'lib/product/task_kernel/software_family.dart',
         'lib/product/task_kernel/task_kernel.dart',
         'lib/product/task_kernel/runtime_gateway.dart',
@@ -833,12 +847,14 @@ void main() {
       for (final file in activeDartFiles()) {
         final content = file.readAsStringSync();
         final offsets = unconvertedClampOffsets(content).toList();
-        final details =
-            offsets.map((offset) => sourceLineAt(content, offset)).join(' | ');
+        final details = offsets
+            .map((offset) => sourceLineAt(content, offset))
+            .join(' | ');
         expect(
           offsets,
           isEmpty,
-          reason: '${file.path}: clamp calls without explicit conversion: '
+          reason:
+              '${file.path}: clamp calls without explicit conversion: '
               '$details',
         );
       }
@@ -961,10 +977,7 @@ void main() {
       // Studio's compile path and Chat's kernel path both run.
       expect(planning, contains('UniversalPlanCompiler(tools: tools).compile'));
       expect(planning, contains('selectedTaskIds: selectedTaskIds'));
-      expect(
-        compiler,
-        contains('_withDependencies(selectedTaskIds, byId)'),
-      );
+      expect(compiler, contains('_withDependencies(selectedTaskIds, byId)'));
       expect(compiler, contains('class UniversalPlanCompiler'));
       expect(coordinator, contains("'tool.repair_requested'"));
       expect(coordinator, contains('_isRecoverableToolInputError'));
@@ -996,8 +1009,7 @@ void main() {
       expect(behavioral, contains('accepts a valid 100-task plan'));
     });
 
-    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired',
-        () {
+    test('v1.0.2 budget-aware retries and shareable diagnostics stay wired', () {
       final domain = source('lib/product/domain.dart');
       final coordinator = source('lib/product/planning_runtime.dart');
       final runtime = source('lib/product/product_runtime.dart');
@@ -1434,8 +1446,7 @@ void main() {
       );
     });
 
-    test('v1.1.2 cold-model recovery and capability alignment stay bounded',
-        () {
+    test('v1.1.2 cold-model recovery and capability alignment stay bounded', () {
       final models = source('lib/product/models_research.dart');
       final settings = source('lib/product/storage_security.dart');
       final runtime = source('lib/product/planning_runtime.dart');

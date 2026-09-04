@@ -117,17 +117,18 @@ void main() {
   }
 
   TaskSpecification createSpecification() => TaskSpecification(
-        id: 'spec_create',
-        originalRequest: '/create flutter web application to convert mp3 '
-            'files to URLs, simple UI, upload/download, progress bar',
-        objective: 'Build a Flutter web MP3-to-URL converter',
-        // Chat routed this to agent.create_project. The hint is
-        // orchestration metadata -- it records what Chat did, not what
-        // the executor should do.
-        capabilityHints: const <String>['agent.create_project'],
-        source: TaskSpecificationSource.modelUnderstanding,
-        confidence: 0.9,
-      );
+    id: 'spec_create',
+    originalRequest:
+        '/create flutter web application to convert mp3 '
+        'files to URLs, simple UI, upload/download, progress bar',
+    objective: 'Build a Flutter web MP3-to-URL converter',
+    // Chat routed this to agent.create_project. The hint is
+    // orchestration metadata -- it records what Chat did, not what
+    // the executor should do.
+    capabilityHints: const <String>['agent.create_project'],
+    source: TaskSpecificationSource.modelUnderstanding,
+    confidence: 0.9,
+  );
 
   const routing = RoutingDecision(
     route: PlanningRoute.graph,
@@ -136,15 +137,12 @@ void main() {
   );
 
   PlanningContext contextFor() => PlanningContext(
-        project: project,
-        model: model,
-        availableCapabilityIds:
-            kKristinCapabilities.map((item) => item.id).toSet(),
-        availableToolNames: ToolRegistry.standard().names,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
-      );
+    project: project,
+    model: model,
+    availableCapabilityIds: kKristinCapabilities.map((item) => item.id).toSet(),
+    availableToolNames: ToolRegistry.standard().names,
+    consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
+  );
 
   test('the coordinator capability set is derived from routes, not a list', () {
     expect(
@@ -161,40 +159,42 @@ void main() {
     expect(kCoordinatorCapabilityIds, isNot(contains('system.diagnose')));
   });
 
-  test('the planning model is never briefed on coordinator capabilities',
-      () async {
-    final captured = <ModelGenerationRequest>[];
-    final kernel = kernelWith(
-      _validPlanGenerator(model),
-      capture: captured.add,
-    );
-    await kernel.plan(
-      specification: createSpecification(),
-      routing: routing,
-      context: contextFor(),
-    );
-    final planningPrompt = captured
-        .firstWhere(
-          (request) => request.systemPrompt.contains('task-planning model'),
-        )
-        .userPrompt;
-    // The briefing exists and names real execution capabilities...
-    expect(planningPrompt, contains('AVAILABLE KRISTIN CAPABILITIES'));
-    expect(planningPrompt, contains('research.search'));
-    // ...but never the orchestration ones, which is what taught the
-    // planner to emit "Use the agent.create_project capability".
-    for (final coordinator in kCoordinatorCapabilityIds) {
-      expect(
-        planningPrompt.contains('- $coordinator:'),
-        isFalse,
-        reason: '$coordinator must not be offered to the planner',
+  test(
+    'the planning model is never briefed on coordinator capabilities',
+    () async {
+      final captured = <ModelGenerationRequest>[];
+      final kernel = kernelWith(
+        _validPlanGenerator(model),
+        capture: captured.add,
       );
-    }
-    expect(
-      planningPrompt,
-      contains('never write an instruction telling the executor to create'),
-    );
-  });
+      await kernel.plan(
+        specification: createSpecification(),
+        routing: routing,
+        context: contextFor(),
+      );
+      final planningPrompt = captured
+          .firstWhere(
+            (request) => request.systemPrompt.contains('task-planning model'),
+          )
+          .userPrompt;
+      // The briefing exists and names real execution capabilities...
+      expect(planningPrompt, contains('AVAILABLE KRISTIN CAPABILITIES'));
+      expect(planningPrompt, contains('research.search'));
+      // ...but never the orchestration ones, which is what taught the
+      // planner to emit "Use the agent.create_project capability".
+      for (final coordinator in kCoordinatorCapabilityIds) {
+        expect(
+          planningPrompt.contains('- $coordinator:'),
+          isFalse,
+          reason: '$coordinator must not be offered to the planner',
+        );
+      }
+      expect(
+        planningPrompt,
+        contains('never write an instruction telling the executor to create'),
+      );
+    },
+  );
 
   test('no generated task carries a coordinator capability', () async {
     final kernel = kernelWith(_validPlanGenerator(model));
@@ -217,48 +217,49 @@ void main() {
     );
   });
 
-  test('the compiled work items are concrete, tool-shaped, and single-project',
-      () async {
-    final kernel = kernelWith(_validPlanGenerator(model));
-    final result = await kernel.plan(
-      specification: createSpecification(),
-      routing: routing,
-      context: contextFor(),
-    );
-    final compiled = kernel.compile(
-      plan: result.plan,
-      project: project,
-      mode: CommandMode.build,
-      consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
-    );
-    expect(compiled.plan.validate(), isEmpty);
-    expect(compiled.plan.items, isNotEmpty);
-    for (final item in compiled.plan.items) {
-      // No phantom tool.
-      expect(item.allowedTools, isNot(contains('create_project')));
-      expect(
-        item.allowedTools.intersection(kCoordinatorCapabilityIds),
-        isEmpty,
+  test(
+    'the compiled work items are concrete, tool-shaped, and single-project',
+    () async {
+      final kernel = kernelWith(_validPlanGenerator(model));
+      final result = await kernel.plan(
+        specification: createSpecification(),
+        routing: routing,
+        context: contextFor(),
       );
-      // No instruction naming an orchestration capability.
-      for (final coordinator in kCoordinatorCapabilityIds) {
+      final compiled = kernel.compile(
+        plan: result.plan,
+        project: project,
+        mode: CommandMode.build,
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
+      );
+      expect(compiled.plan.validate(), isEmpty);
+      expect(compiled.plan.items, isNotEmpty);
+      for (final item in compiled.plan.items) {
+        // No phantom tool.
+        expect(item.allowedTools, isNot(contains('create_project')));
         expect(
-          item.description.contains(coordinator),
-          isFalse,
-          reason: '${item.id} instructs the executor to use $coordinator',
+          item.allowedTools.intersection(kCoordinatorCapabilityIds),
+          isEmpty,
+        );
+        // No instruction naming an orchestration capability.
+        for (final coordinator in kCoordinatorCapabilityIds) {
+          expect(
+            item.description.contains(coordinator),
+            isFalse,
+            reason: '${item.id} instructs the executor to use $coordinator',
+          );
+        }
+        // Only governed Runner tools survive.
+        expect(item.allowedTools, isNotEmpty);
+        expect(
+          ToolRegistry.standard().names.containsAll(item.allowedTools),
+          isTrue,
         );
       }
-      // Only governed Runner tools survive.
-      expect(item.allowedTools, isNotEmpty);
-      expect(
-        ToolRegistry.standard().names.containsAll(item.allowedTools),
-        isTrue,
-      );
-    }
-  });
+    },
+  );
 
-  test(
-      'a leaked coordinator instruction fails compile with a precise '
+  test('a leaked coordinator instruction fails compile with a precise '
       'diagnostic instead of reaching the model', () async {
     // The defect this guard exists for: a planner that still writes
     // "Use the agent.create_project capability" into a task.
@@ -273,9 +274,7 @@ void main() {
         plan: result.plan,
         project: project,
         mode: CommandMode.build,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
       ),
       throwsA(
         isA<ProductException>()
@@ -289,11 +288,7 @@ void main() {
               'capabilityId',
               contains('agent.create_project'),
             )
-            .having(
-              (error) => error.details['taskId'],
-              'taskId',
-              isNotEmpty,
-            ),
+            .having((error) => error.details['taskId'], 'taskId', isNotEmpty),
       ),
     );
   });
@@ -327,9 +322,7 @@ void main() {
         project: project,
         mode: CommandMode.build,
         request: specification.originalRequest,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
       ),
       throwsA(
         isA<ProductException>().having(
@@ -357,50 +350,49 @@ ModelGenerationResult _resultFor(
 }
 
 Map<String, dynamic> _draftJson() => <String, dynamic>{
-      'title': 'MP3 to URL converter',
-      'purpose': 'Convert an uploaded MP3 into a downloadable result.',
-      'systemPrompt': 'Act as a careful Flutter web engineer.',
-      'userPrompt': 'Build a simple MP3-to-URL converter.',
-      'variables': <String>[],
-      'assumptions': <String>[],
-      'clarifyingQuestions': <String>[],
-      'acceptanceCriteria': <String>['An uploaded mp3 produces a download.'],
-      'outputExpectations': <String>['Application source'],
-      'guardrails': <String>[],
-      'stopConditions': <String>[],
-      'evaluationCases': <String>['Upload produces a link.'],
-      'mode': 'build',
-    };
+  'title': 'MP3 to URL converter',
+  'purpose': 'Convert an uploaded MP3 into a downloadable result.',
+  'systemPrompt': 'Act as a careful Flutter web engineer.',
+  'userPrompt': 'Build a simple MP3-to-URL converter.',
+  'variables': <String>[],
+  'assumptions': <String>[],
+  'clarifyingQuestions': <String>[],
+  'acceptanceCriteria': <String>['An uploaded mp3 produces a download.'],
+  'outputExpectations': <String>['Application source'],
+  'guardrails': <String>[],
+  'stopConditions': <String>[],
+  'evaluationCases': <String>['Upload produces a link.'],
+  'mode': 'build',
+};
 
 Map<String, dynamic> _task({
   required String id,
   required String title,
   required String instructions,
   List<String> dependencies = const <String>[],
-}) =>
-    <String, dynamic>{
-      'id': id,
-      'phase': 'Implementation',
-      'parentId': null,
-      'title': title,
-      'objective': title,
-      'instructions': instructions,
-      'dependencies': dependencies,
-      'acceptanceCriteria': <String>['$title is complete.'],
-      'verificationSteps': <String>['Run the detected analyzer and tests.'],
-      'expectedArtifacts': <String>['lib/main.dart'],
-      'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
-      'complexity': 3,
-      'effortPoints': 3,
-      'uncertainty': 'low',
-      'risk': 'low',
-      'estimateConfidence': 0.8,
-      'expectedModelTurns': 3,
-      'expectedToolCalls': 4,
-      'maxAttempts': 2,
-      'enabled': true,
-      'manual': false,
-    };
+}) => <String, dynamic>{
+  'id': id,
+  'phase': 'Implementation',
+  'parentId': null,
+  'title': title,
+  'objective': title,
+  'instructions': instructions,
+  'dependencies': dependencies,
+  'acceptanceCriteria': <String>['$title is complete.'],
+  'verificationSteps': <String>['Run the detected analyzer and tests.'],
+  'expectedArtifacts': <String>['lib/main.dart'],
+  'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
+  'complexity': 3,
+  'effortPoints': 3,
+  'uncertainty': 'low',
+  'risk': 'low',
+  'estimateConfidence': 0.8,
+  'expectedModelTurns': 3,
+  'expectedToolCalls': 4,
+  'maxAttempts': 2,
+  'enabled': true,
+  'manual': false,
+};
 
 /// A well-behaved planner: concrete, tool-shaped instructions.
 ModelGenerationDelegate _validPlanGenerator(ModelIdentity model) =>
@@ -415,13 +407,15 @@ ModelGenerationDelegate _validPlanGenerator(ModelIdentity model) =>
           _task(
             id: 'task_001',
             title: 'Write the upload screen',
-            instructions: 'Write lib/upload_screen.dart with the upload '
+            instructions:
+                'Write lib/upload_screen.dart with the upload '
                 'control and a progress indicator.',
           ),
           _task(
             id: 'task_002',
             title: 'Write the conversion service',
-            instructions: 'Write lib/conversion_service.dart implementing '
+            instructions:
+                'Write lib/conversion_service.dart implementing '
                 'the mp3 conversion boundary.',
             dependencies: <String>['task_001'],
           ),
@@ -443,7 +437,8 @@ ModelGenerationDelegate _leakyPlanGenerator(ModelIdentity model) =>
           _task(
             id: 'task_001',
             title: 'Initialize a new Flutter web application project',
-            instructions: 'Use the "agent.create_project" capability to '
+            instructions:
+                'Use the "agent.create_project" capability to '
                 'create a new Flutter web application project.',
           ),
         ],

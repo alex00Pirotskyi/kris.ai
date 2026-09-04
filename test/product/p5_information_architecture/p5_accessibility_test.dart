@@ -13,9 +13,7 @@ Future<void> _pump(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(
-    P5InformationArchitectureApp(controller: controller),
-  );
+  await tester.pumpWidget(P5InformationArchitectureApp(controller: controller));
   await tester.pumpAndSettle();
 }
 
@@ -105,8 +103,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('keyboard shortcuts respect progressive disclosure',
-      (tester) async {
+  testWidgets('keyboard shortcuts respect progressive disclosure', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController();
     addTearDown(controller.dispose);
     await _pump(tester, controller);
@@ -137,8 +136,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('primary navigation and state semantics are announced',
-      (tester) async {
+  testWidgets('primary navigation and state semantics are announced', (
+    tester,
+  ) async {
     final controller = P5InformationArchitectureController()
       ..changeExperienceLevel(P5ExperienceLevel.advanced);
     addTearDown(controller.dispose);
@@ -150,9 +150,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.bySemanticsLabel(
-        'Owner Mode status: Blocked by environment.',
-      ),
+      find.bySemanticsLabel('Owner Mode status: Blocked by environment.'),
       findsOneWidget,
     );
 

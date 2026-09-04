@@ -28,8 +28,9 @@ class ProjectAdmissionService {
     required ProjectAdmissionReason reason,
   }) async {
     final root = Directory(rootPath.trim()).absolute;
-    final canonical =
-        await root.exists() ? (await root.resolveSymbolicLinks()) : root.path;
+    final canonical = await root.exists()
+        ? (await root.resolveSymbolicLinks())
+        : root.path;
     final normalized = Platform.isWindows ? canonical.toLowerCase() : canonical;
     final all = await projects.all();
     final existing = all.where((project) {

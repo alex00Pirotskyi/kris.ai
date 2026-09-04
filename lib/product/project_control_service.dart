@@ -16,7 +16,8 @@ ProjectQualityState _qualityStateFor(
   if (result == null) {
     return ProjectQualityState.notRun;
   }
-  final hasComparableShas = currentHeadSha != null &&
+  final hasComparableShas =
+      currentHeadSha != null &&
       currentHeadSha.isNotEmpty &&
       result.sourceGitSha.isNotEmpty;
   if (hasComparableShas && currentHeadSha != result.sourceGitSha) {
@@ -122,19 +123,17 @@ class ProjectControlService {
       project.rootPath,
       forceRefresh: refreshGit,
     );
-    final launchProfiles =
-        await runtime.repositories.workflow.listProjectLaunchProfiles(
-      projectId,
-    );
-    final activeSessions =
-        await runtime.repositories.workflow.listManagedProjectProcesses(
-      projectId: projectId,
-      states: const <ProjectRuntimeState>{
-        ProjectRuntimeState.starting,
-        ProjectRuntimeState.running,
-        ProjectRuntimeState.stopping,
-      },
-    );
+    final launchProfiles = await runtime.repositories.workflow
+        .listProjectLaunchProfiles(projectId);
+    final activeSessions = await runtime.repositories.workflow
+        .listManagedProjectProcesses(
+          projectId: projectId,
+          states: const <ProjectRuntimeState>{
+            ProjectRuntimeState.starting,
+            ProjectRuntimeState.running,
+            ProjectRuntimeState.stopping,
+          },
+        );
     final recentRuns = await runtime.listRuns(projectId: projectId, limit: 5);
     final knowledgeCount = (await runtime.repositories.knowledge.all())
         .where((entry) => entry.projectId == projectId)
@@ -158,14 +157,14 @@ class ProjectControlService {
   /// project lookup per distinct running project; never a per-project
   /// process probe.
   Future<List<ProjectControlRunningEntry>> runningProjects() async {
-    final sessions =
-        await runtime.repositories.workflow.listManagedProjectProcesses(
-      states: const <ProjectRuntimeState>{
-        ProjectRuntimeState.starting,
-        ProjectRuntimeState.running,
-        ProjectRuntimeState.stopping,
-      },
-    );
+    final sessions = await runtime.repositories.workflow
+        .listManagedProjectProcesses(
+          states: const <ProjectRuntimeState>{
+            ProjectRuntimeState.starting,
+            ProjectRuntimeState.running,
+            ProjectRuntimeState.stopping,
+          },
+        );
     final entries = <ProjectControlRunningEntry>[];
     for (final session in sessions) {
       final project = await runtime.repositories.projects.get(

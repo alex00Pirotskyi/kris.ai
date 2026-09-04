@@ -50,8 +50,8 @@ Future<bool> _probeHttpHealthy(int port) async {
           .get('127.0.0.1', port, '/')
           .timeout(const Duration(seconds: 3));
       final response = await request.close().timeout(
-            const Duration(seconds: 3),
-          );
+        const Duration(seconds: 3),
+      );
       final body = await response.transform(utf8.decoder).join();
       return response.statusCode == 200 &&
           body.contains('kristin-project-control-center-qualification');
@@ -131,9 +131,7 @@ void main() {
       'it',
       () async {
         // --- "Kristin session 1": build/admit, Run, health-check --------
-        var runtime = await ProductRuntime.initialize(
-          dataRoot: dataRoot.path,
-        );
+        var runtime = await ProductRuntime.initialize(dataRoot: dataRoot.path);
         final project = await runtime.addProject(
           name: 'Qualification web fixture',
           rootPath: projectDirectory.path,
@@ -150,7 +148,8 @@ void main() {
         expect(
           healthyAfterStart,
           isTrue,
-          reason: 'the started process must actually be serving on its '
+          reason:
+              'the started process must actually be serving on its '
               'known port -- this is the "health endpoint/URL captured" '
               'acceptance criterion for a web project',
         );
@@ -177,7 +176,8 @@ void main() {
         expect(
           stillHealthyAfterClose,
           isTrue,
-          reason: 'closing Kristin must not kill a persist-until-stopped '
+          reason:
+              'closing Kristin must not kill a persist-until-stopped '
               'Project Manager run',
         );
 
@@ -189,7 +189,8 @@ void main() {
         expect(
           recoveredSession!.state,
           ProjectRuntimeState.running,
-          reason: 'restart reconciliation must recognize the exact same '
+          reason:
+              'restart reconciliation must recognize the exact same '
               'process is still running, never silently trust a bare pid, '
               'and never falsely mark a genuinely-alive session interrupted',
         );
@@ -217,7 +218,8 @@ void main() {
         expect(
           terminatedAtOsLevel,
           isTrue,
-          reason: 'Stop must genuinely terminate the process tree -- '
+          reason:
+              'Stop must genuinely terminate the process tree -- '
               'verified independently via both the HTTP port and OS '
               'process identity, not just via Kristin\'s own bookkeeping',
         );
@@ -232,7 +234,7 @@ void main() {
       skip: Platform.isLinux || Platform.isWindows
           ? null
           : 'no process identity reader for this platform in Wave A '
-              '(restart reconciliation fails closed on macOS by design)',
+                '(restart reconciliation fails closed on macOS by design)',
     );
   });
 }

@@ -28,47 +28,53 @@ void main() {
     expect(result, 42);
   });
 
-  test('invalid measurement metadata cannot change a successful action',
-      () async {
-    final result = await PerformanceSpan.measure<int>(
-      'invalid operation label',
-      () => 7,
-    );
+  test(
+    'invalid measurement metadata cannot change a successful action',
+    () async {
+      final result = await PerformanceSpan.measure<int>(
+        'invalid operation label',
+        () => 7,
+      );
 
-    expect(result, 7);
-  });
+      expect(result, 7);
+    },
+  );
 
-  test('the original action error is preserved when the sink also fails',
-      () async {
-    final actionError = StateError('action_failed');
+  test(
+    'the original action error is preserved when the sink also fails',
+    () async {
+      final actionError = StateError('action_failed');
 
-    await expectLater(
-      PerformanceSpan.measure<void>(
-        'source.search',
-        () => throw actionError,
-        sink: _ThrowingSink(),
-      ),
-      throwsA(same(actionError)),
-    );
-  });
+      await expectLater(
+        PerformanceSpan.measure<void>(
+          'source.search',
+          () => throw actionError,
+          sink: _ThrowingSink(),
+        ),
+        throwsA(same(actionError)),
+      );
+    },
+  );
 
-  test('failed actions emit a failure outcome without replacing the error',
-      () async {
-    final sink = _CapturingSink();
-    final actionError = StateError('action_failed');
+  test(
+    'failed actions emit a failure outcome without replacing the error',
+    () async {
+      final sink = _CapturingSink();
+      final actionError = StateError('action_failed');
 
-    await expectLater(
-      PerformanceSpan.measure<void>(
-        'source.search',
-        () => throw actionError,
-        sink: sink,
-      ),
-      throwsA(same(actionError)),
-    );
+      await expectLater(
+        PerformanceSpan.measure<void>(
+          'source.search',
+          () => throw actionError,
+          sink: sink,
+        ),
+        throwsA(same(actionError)),
+      );
 
-    expect(sink.records, hasLength(1));
-    expect(sink.records.single.outcome, PerformanceOutcome.failure);
-  });
+      expect(sink.records, hasLength(1));
+      expect(sink.records.single.outcome, PerformanceOutcome.failure);
+    },
+  );
 
   test('records bounded structured metrics without content fields', () {
     final sink = _CapturingSink();
