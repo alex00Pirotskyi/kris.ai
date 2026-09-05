@@ -360,9 +360,16 @@ def unconverted_clamp_offsets(content: str) -> list[int]:
         search_from = max(cursor, start + len(marker))
 
 
-def run(command: list[str], *, timeout: int = 900) -> tuple[int, str]:
+def run(
+    command: list[str],
+    *,
+    timeout: int = 900,
+    env_overrides: dict[str, str] | None = None,
+) -> tuple[int, str]:
     env = dict(os.environ)
     env.setdefault("CI", "true")
+    for key, value in (env_overrides or {}).items():
+        env.setdefault(key, value)
     proc = subprocess.run(command, cwd=ROOT, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True, errors="replace", timeout=timeout)
     output = proc.stdout.replace(str(ROOT), '<ROOT>')
@@ -3036,9 +3043,16 @@ def check_file_adapters_v18() -> None:
     started = time.monotonic()
     failures: list[str] = []
     result_path = ROOT / "release" / "FILE_ADAPTER_RESULTS.json"
+    # FILE_ADAPTER_RESULTS.json is tracked and covered by SOURCE_MANIFEST, so
+    # a wall-clock durationMs makes every gate run dirty the tree and
+    # invalidate the manifest by a machine-speed-dependent amount. The adapter
+    # test already zeroes its timings under SOURCE_DATE_EPOCH; activate that
+    # path so the recorded artifact is a function of source alone. The epoch
+    # matches the default benchmark_runner.py pins for the same purpose.
     code, output = run(
         [sys.executable, str(ROOT / "tool" / "file_adapter_test.py"), "--json-output", str(result_path)],
         timeout=180,
+        env_overrides={"SOURCE_DATE_EPOCH": "1784851200"},
     )
     if code != 0:
         failures.append(f"file-adapter gate exited {code}: {output[-1800:]}")
