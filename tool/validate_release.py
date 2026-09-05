@@ -283,6 +283,32 @@ def source_contains(content: str, token: str) -> bool:
     return normalized_source(token) in normalized_source(content)
 
 
+def dart_member_body(content: str, signature: str) -> str | None:
+    """Return the brace-balanced body of the member introduced by `signature`.
+
+    Scoping a contract check to one member is stronger than searching the whole
+    file for a token: an unrelated expression elsewhere can no longer satisfy
+    the check, and the assertion survives any `dart format` line wrapping,
+    which may split a chained call the file-wide token spelling depends on.
+    """
+    start = content.find(signature)
+    if start < 0:
+        return None
+    open_brace = content.find("{", start + len(signature))
+    if open_brace < 0:
+        return None
+    depth = 0
+    for index in range(open_brace, len(content)):
+        char = content[index]
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return content[open_brace : index + 1]
+    return None
+
+
 def unconverted_clamp_offsets(content: str) -> list[int]:
     """Return clamp-call offsets that lack an explicit result conversion.
 
@@ -955,7 +981,10 @@ def check_flutter_dart_compatibility() -> None:
         )
     if "List<EventEnvelope> _eventsForRun" not in ui:
         failures.append("ui.dart must expose run events as a List<EventEnvelope>")
-    if not source_contains(ui, "}).toList(growable: false);"):
+    events_for_run_body = dart_member_body(ui, "List<EventEnvelope> _eventsForRun")
+    if events_for_run_body is None:
+        failures.append("ui.dart does not define a readable _eventsForRun body")
+    elif not source_contains(events_for_run_body, ".toList(growable: false)"):
         failures.append("ui.dart must materialize filtered run events before reverse traversal")
     for name, content in (("ui.dart", ui), ("chat_studio.dart", chat), ("ui_advanced.dart", ui_advanced)):
         if content.count("DropdownButtonFormField") > content.count("initialValue:"):
