@@ -5,7 +5,7 @@
 - Cases: **12**
 - Measured coverage: **50.0%**
 - Scored readiness: **41.7%**
-- Result fingerprint: `08c0ec9caf0d04ebc8a93d9713548498a6e60d9b56869d60415c0c465aa28eaf`
+- Result fingerprint: `aa9f4f267633a17ec35391e09032df35883c444f0d4ad312adccc0d7005922eb`
 
 > This is a reproducible starting measurement, not a production-readiness claim. Unsupported, unavailable, failed, and model-not-run cases remain visible and do not count as passing.
 
