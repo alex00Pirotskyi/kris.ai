@@ -14,8 +14,15 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return;
     }
     if (id == 'system.help') {
+      // Prefer observed capability truth over the static command list. The
+      // static text cannot report a blocked Browser runtime, an unavailable
+      // Owner recovery runtime, or an unmet authority requirement, so it is
+      // only the fallback for requests the self-model cannot answer.
+      final selfAware = await _trySelfAwarenessAnswer(decision);
       _mutate(() {
-        conversationSession.addAssistantMessage(_capabilityHelpText());
+        conversationSession.addAssistantMessage(
+          selfAware ?? _capabilityHelpText(),
+        );
         status = 'Kristin is ready';
       });
       return;
@@ -53,6 +60,18 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
   }
 
   Future<void> _answerInformational(ChatInteractionDecision decision) async {
+    // Mirror _answerInformationalStreaming: self-awareness questions are
+    // resolved from observed application state before any other answer path,
+    // so both informational entry points report the same capability truth.
+    final selfAware = await _trySelfAwarenessAnswer(decision);
+    if (selfAware != null) {
+      _mutate(() {
+        conversationSession.addAssistantMessage(selfAware);
+        status = 'Kristin is ready';
+      });
+      return;
+    }
+
     final local = await _tryLocalAnswer(decision);
     if (local != null) {
       _mutate(() {

@@ -120,10 +120,16 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       r'\bself[- ]?awareness\b|\bself[- ]?integrity\b|'
       r'\b(?:check|verify|probe) yourself\b|\bare you healthy\b',
     ).hasMatch(text);
+    // Shorthand spellings ("what can u do?", "list ur capabilities") must
+    // reach the live self-model too. Left unmatched they fall through to a
+    // hardcoded help string or to free-form model generation, which is how
+    // Kristin ends up describing capabilities it does not currently have.
     final asksCapabilities = RegExp(
-      r'\bwhat can you do\b|\bwhat are you able to do\b|'
-      r'\b(?:your|available|current) capabilities\b|'
-      r'\bwhat can you do right now\b',
+      r'\bwhat can (?:you|u) do\b|\bwhat are (?:you|u) able to do\b|'
+      r'\b(?:your|ur|available|current) capabilities\b|'
+      r'\bwhat capabilities do (?:you|u) have\b|'
+      r'\b(?:show|list)(?: me)? (?:your|ur) capabilities\b|'
+      r'\bwhat can (?:you|u) help me with\b',
     ).hasMatch(text);
     final asksRequirements = RegExp(
       r"\bwhy can(?:'|’)t you\b|\bwhy cannot you\b|"
