@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import '../crypto_utils.dart';
@@ -983,7 +984,85 @@ final class FailureSupervisor {
   final Map<String, List<RecoveryAttempt>> _attemptsBySignature =
       <String, List<RecoveryAttempt>>{};
 
-  Future<RecoveryVerification?> handle(FailureEvent failure) async {
+  /// Failure ids currently being supervised. Guards against the same failure
+  /// being supervised twice concurrently.
+  final Set<String> _supervisedFailureIds = <String>{};
+
+  /// Tail of the serialization chain per recurrence signature, so overlapping
+  /// supervisions of the same signature see each other's recorded attempts.
+  final Map<String, Future<void>> _signatureGates = <String, Future<void>>{};
+
+  /// Recovery supervision entry point.
+  ///
+  /// Supervision is single-flight per failure identity and serialized per
+  /// recurrence signature. Both guards are required because
+  /// ProductRuntimeAutonomicRecovery dispatches with `unawaited(...)` from a
+  /// runtime event listener, so two `run.failed` events can put two
+  /// `handle()` calls in flight on this one supervisor at the same time.
+  ///
+  /// Without them the attempt budget does not bind. Between reading
+  /// `_attemptsBySignature` and appending the attempt, `_run` awaits the
+  /// experience store, the self-model snapshot, strategy-selected event
+  /// emission and the whole authority preflight. Two overlapping calls both
+  /// observe the same prior-attempt list, both pass the budget check, both
+  /// actuate, and -- on success -- both resume the original task.
+  ///
+  /// The reservation is a synchronous `Set.add` before the first `await`.
+  /// A Dart isolate is single-threaded, so a check-and-insert with no
+  /// intervening suspension point is atomic; no lock is needed and none is
+  /// used. This is deliberately scoped to one supervisor: the attempt ledger
+  /// is per-instance in-memory state, and cross-process double execution of a
+  /// governed run is already refused by the durable workflow-kernel lease in
+  /// RunService.execute (`run_claimed`). A distributed lease here would imply
+  /// a durability this ledger does not have.
+  Future<RecoveryVerification?> handle(FailureEvent failure) {
+    if (!_supervisedFailureIds.add(failure.id)) {
+      return Future<RecoveryVerification?>.value(
+        const RecoveryVerification(
+          passed: false,
+          check: 'recovery_already_in_progress',
+          observed:
+              'This failure is already being supervised; a second supervision '
+              'was refused so recovery cannot run or resume twice.',
+        ),
+      );
+    }
+    final gateKey = failure.rootFailureId ?? failure.recurrenceSignature;
+    return _serializeBySignature(
+      gateKey,
+      () => _run(failure),
+    ).whenComplete(() => _supervisedFailureIds.remove(failure.id));
+  }
+
+  /// Chains work sharing a recurrence signature so a later supervision always
+  /// observes the attempts an earlier one recorded. Mirrors the serialization
+  /// idiom already used by KristinSelfModelService.
+  Future<T> _serializeBySignature<T>(
+    String key,
+    Future<T> Function() action,
+  ) {
+    final completer = Completer<T>();
+    final previous = _signatureGates[key] ?? Future<void>.value();
+    final next = previous.then((_) async {
+      try {
+        completer.complete(await action());
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    });
+    _signatureGates[key] = next;
+    // Keep the gate map bounded: drop the entry once this link is the tail.
+    unawaited(
+      next.whenComplete(() {
+        if (identical(_signatureGates[key], next)) {
+          _signatureGates.remove(key);
+        }
+      }),
+    );
+    return completer.future;
+  }
+
+  Future<RecoveryVerification?> _run(FailureEvent failure) async {
     final failureNode = causalGraph?.recordFailure(
       '${failure.subsystem}.${failure.operation}',
       attributes: failure.toJson(),
