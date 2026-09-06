@@ -1028,6 +1028,26 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         'Recovery requires permissions but has no original governed run from which to prove them.',
       );
     }
+    // The L3 repair command takes its project from the FailureEvent
+    // (failure.projectId, or a projectId inside stateBefore/stateAfter), which
+    // is producer-supplied. Without this check a failure naming a different
+    // project would debit the parent's grants in one project and mint
+    // authority in another. Authority may only move within the project that
+    // granted it.
+    final sourceProjectId = source.command.contract.projectId;
+    final targetProjectId = target.command.contract.projectId;
+    if (sourceProjectId != targetProjectId) {
+      throw ProductException(
+        'recovery_authority_project_mismatch',
+        'Recovery may not move authority between projects.',
+        details: <String, dynamic>{
+          'sourceRunId': source.id,
+          'targetRunId': target.id,
+          'sourceProjectId': sourceProjectId,
+          'targetProjectId': targetProjectId,
+        },
+      );
+    }
     final grants = await runtime.repositories.grants.all();
     final activeScopes = <PermissionScope>{};
     final active = <PermissionGrant>[];
