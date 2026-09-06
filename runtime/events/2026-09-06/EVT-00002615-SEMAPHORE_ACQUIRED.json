@@ -1,0 +1,16 @@
+{
+  "eventId": "EVT-00002615-SEMAPHORE_ACQUIRED",
+  "eventType": "SEMAPHORE_ACQUIRED",
+  "mission": "MISSION-010",
+  "payload": {
+    "executionRole": "DEFECT_HUNTER",
+    "kind": "WRITE",
+    "semaphoreId": "SEM-QWEN-P11-001-512795A4",
+    "workerIdentity": "ELASTIC-QWEN-FBE0B774"
+  },
+  "recordedAt": "2026-09-06T08:23:00Z",
+  "runtimeGeneration": 2615,
+  "schemaVersion": 1,
+  "workExecutionId": "WRK-20260906T082121Z-b91f91e1",
+  "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-5A7067CA"
+}
