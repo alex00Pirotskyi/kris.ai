@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import '../capability_invocation.dart';
 import '../crypto_utils.dart';
@@ -720,7 +721,11 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
 
     final run = await runtime.createRun(prepared.id);
     _rememberInternalRun(run.id);
-    await _carryForwardAuthority(
+    // The L3 repair run carries a NEW commandId (newId('recovery_command')),
+    // so the parent's grants -- keyed by (projectId, commandId) -- cannot cover
+    // it implicitly. Authority must be delegated explicitly, bounded by and
+    // debited from what remains to the parent.
+    await _delegateBoundedAuthority(
       source: source,
       target: run,
       required: prepared.contract.requiredPermissions,
@@ -780,7 +785,10 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     switch (source.state) {
       case RunState.failed:
         final retry = await runtime.retryRun(source.id);
-        await _carryForwardAuthority(
+        // retryRun reuses the parent's PreparedCommand, so the continuation
+        // shares its commandId and is already covered by the parent's grants.
+        // Verify that coverage; mint nothing.
+        await _assertContinuationAuthorityWithinParent(
           source: source,
           target: retry,
           required: retry.command.contract.requiredPermissions,
@@ -846,12 +854,172 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     return models.where((item) => item.exactId == exactId).firstOrNull;
   }
 
-  Future<void> _carryForwardAuthority({
+  /// Asserts that a recovery continuation stays inside the authority that
+  /// still remains to the run it continues. It deliberately mints nothing.
+  ///
+  /// INVARIANT: child_authority <= remaining_parent_authority, across scope,
+  /// expiry, use budget and revocation.
+  ///
+  /// This holds structurally rather than by arithmetic. Permission enforcement
+  /// is keyed by (projectId, commandId, scope) -- see PermissionService.require
+  /// and its only caller, the governed tool gate in workspace_tools.dart; no
+  /// permission check anywhere keys off runId. RunService.retryRun builds the
+  /// continuation with `_createFreshRun(source.command, ...)`, passing the same
+  /// PreparedCommand, so the continuation carries the *same* commandId as its
+  /// parent. The parent's surviving grants therefore already authorize the
+  /// continuation, and the continuation spends the parent's remaining uses
+  /// against the parent's expiry.
+  ///
+  /// Calling ProductRuntime.approve() here would not "carry forward" anything;
+  /// it would add a second grant to the same (projectId, commandId) pool with a
+  /// fresh `max(100, maxToolCalls * 3)` use budget and a fresh two-hour window.
+  /// Because PermissionService.require consumes whichever grant allows a scope,
+  /// the pool's effective budget is the sum of its grants, so minting turned a
+  /// parent with 3 remaining uses into 103, a parent expiring in 8 minutes into
+  /// one usable for 2 hours, and gave every sibling continuation its own full
+  /// budget. A finite human approval became renewable machine authority. That
+  /// call is gone.
+  ///
+  /// Fail-closed cases are preserved by the filter below: an expired, revoked
+  /// or exhausted parent grant contributes no scopes, so `required` is not
+  /// covered and this throws rather than resurrecting dead authority. Recovery
+  /// then escalates and asks a human instead of silently renewing.
+  Future<void> _assertContinuationAuthorityWithinParent({
     required RunRecord? source,
     required RunRecord target,
     required Set<PermissionScope> required,
   }) async {
     if (required.isEmpty) return;
+    final envelope = await _parentAuthorityEnvelope(
+      source: source,
+      target: target,
+      required: required,
+    );
+    // No grant is minted. The continuation shares the parent's (projectId,
+    // commandId) grants and spends their remaining budget against their
+    // existing expiry. The evidence records what that inherited envelope was
+    // at the moment of the decision, so an auditor can confirm the child never
+    // received more than the parent still had.
+    await runtime.events.publish(
+      'recovery.authority_inherited_within_parent',
+      target.id,
+      <String, dynamic>{
+        'sourceRunId': source?.id,
+        'targetRunId': target.id,
+        'sourceGrantIds': envelope.grantIds,
+        'scopes': required.map((scope) => scope.name).toList()..sort(),
+        'minted': false,
+        'inheritedRemainingUses': envelope.remainingUses,
+        'inheritedExpiresAt': envelope.latestExpiry.toUtc().toIso8601String(),
+      },
+    );
+  }
+
+  /// Delegates bounded authority to a governed recovery run that carries a
+  /// *new* commandId, so the parent's grants cannot cover it implicitly.
+  ///
+  /// INVARIANT: child_authority <= remaining_parent_authority. Enforced by
+  /// arithmetic here because sharing is not available:
+  ///   * scope    -- never exceeds the parent's currently active scopes;
+  ///   * expiry   -- never later than the parent's latest surviving expiry;
+  ///   * uses     -- never more than the parent's total remaining uses, and the
+  ///                 parent is debited by exactly what the child receives, so
+  ///                 authority is conserved rather than created;
+  ///   * lifetime -- an expired, revoked or exhausted parent contributes no
+  ///                 scopes and this fails closed instead of resurrecting it.
+  ///
+  /// Debiting is what makes sibling delegation safe. Two recovery children of
+  /// one parent draw from the same finite pool: the first reduces what the
+  /// second can be given, and the sum can never exceed the original approval.
+  /// Without the debit, each sibling would receive the parent's full remaining
+  /// budget and N children would multiply a single human approval N times.
+  Future<void> _delegateBoundedAuthority({
+    required RunRecord? source,
+    required RunRecord target,
+    required Set<PermissionScope> required,
+  }) async {
+    if (required.isEmpty) return;
+    final envelope = await _parentAuthorityEnvelope(
+      source: source,
+      target: target,
+      required: required,
+    );
+    final now = DateTime.now().toUtc();
+    final requested = max(100, target.budget.maxToolCalls * 3);
+    final uses = min(requested, envelope.remainingUses);
+    final window = envelope.latestExpiry.difference(now);
+    if (uses <= 0 || window.inSeconds <= 0) {
+      throw ProductException(
+        'recovery_authority_exhausted',
+        'The original approval has no remaining budget to delegate to recovery.',
+        details: <String, dynamic>{
+          'sourceRunId': source?.id,
+          'targetRunId': target.id,
+          'remainingUses': envelope.remainingUses,
+        },
+      );
+    }
+    await _debitParentGrants(envelope: envelope, uses: uses);
+    await runtime.permissions.grant(
+      projectId: target.command.contract.projectId,
+      commandId: target.command.id,
+      scopes: required,
+      validity: window,
+      uses: uses,
+    );
+    await runtime.events.publish(
+      'recovery.authority_delegated_within_parent',
+      target.id,
+      <String, dynamic>{
+        'sourceRunId': source?.id,
+        'targetRunId': target.id,
+        'sourceGrantIds': envelope.grantIds,
+        'scopes': required.map((scope) => scope.name).toList()..sort(),
+        'minted': true,
+        'requestedUses': requested,
+        'delegatedUses': uses,
+        'parentRemainingUsesBefore': envelope.remainingUses,
+        'parentRemainingUsesAfter': envelope.remainingUses - uses,
+        'expiresAt': envelope.latestExpiry.toUtc().toIso8601String(),
+      },
+    );
+  }
+
+  /// Reduces the parent's surviving grants by exactly [uses], oldest-expiry
+  /// first, so delegation moves authority instead of duplicating it.
+  Future<void> _debitParentGrants({
+    required _ParentAuthorityEnvelope envelope,
+    required int uses,
+  }) async {
+    var outstanding = uses;
+    final ordered = envelope.grants.toList()
+      ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
+    for (final grant in ordered) {
+      if (outstanding <= 0) break;
+      final debit = min(outstanding, grant.remainingUses);
+      if (debit <= 0) continue;
+      await runtime.repositories.grants.put(
+        PermissionGrant(
+          id: grant.id,
+          projectId: grant.projectId,
+          commandId: grant.commandId,
+          scopes: grant.scopes,
+          createdAt: grant.createdAt,
+          expiresAt: grant.expiresAt,
+          remainingUses: grant.remainingUses - debit,
+        ),
+      );
+      outstanding -= debit;
+    }
+  }
+
+  /// Collects the parent's currently usable authority and fails closed when it
+  /// does not cover [required].
+  Future<_ParentAuthorityEnvelope> _parentAuthorityEnvelope({
+    required RunRecord? source,
+    required RunRecord target,
+    required Set<PermissionScope> required,
+  }) async {
     if (source == null) {
       throw ProductException(
         'recovery_authority_source_missing',
@@ -860,7 +1028,9 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     }
     final grants = await runtime.repositories.grants.all();
     final activeScopes = <PermissionScope>{};
-    final grantIds = <String>[];
+    final active = <PermissionGrant>[];
+    var remainingUses = 0;
+    DateTime? latestExpiry;
     for (final grant in grants) {
       if (grant.commandId != source.command.id ||
           grant.projectId != source.command.contract.projectId ||
@@ -869,9 +1039,13 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         continue;
       }
       activeScopes.addAll(grant.scopes);
-      grantIds.add(grant.id);
+      active.add(grant);
+      remainingUses += grant.remainingUses;
+      if (latestExpiry == null || grant.expiresAt.isAfter(latestExpiry)) {
+        latestExpiry = grant.expiresAt;
+      }
     }
-    if (!activeScopes.containsAll(required)) {
+    if (!activeScopes.containsAll(required) || latestExpiry == null) {
       final extra = required.difference(activeScopes);
       throw ProductException(
         'recovery_authority_expansion_rejected',
@@ -883,16 +1057,12 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
         },
       );
     }
-    await runtime.approve(runId: target.id, scopes: required);
-    await runtime.events.publish(
-      'recovery.authority_carried_forward',
-      target.id,
-      <String, dynamic>{
-        'sourceRunId': source.id,
-        'targetRunId': target.id,
-        'sourceGrantIds': grantIds,
-        'scopes': required.map((scope) => scope.name).toList()..sort(),
-      },
+    return _ParentAuthorityEnvelope(
+      grants: active,
+      grantIds: active.map((grant) => grant.id).toList(growable: false),
+      scopes: activeScopes,
+      remainingUses: remainingUses,
+      latestExpiry: latestExpiry,
     );
   }
 
@@ -902,6 +1072,24 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       internalRunIds.remove(internalRunIds.first);
     }
   }
+}
+
+/// The authority that still remains to a parent run at one instant: the ceiling
+/// any recovery child may be given, and never more.
+final class _ParentAuthorityEnvelope {
+  const _ParentAuthorityEnvelope({
+    required this.grants,
+    required this.grantIds,
+    required this.scopes,
+    required this.remainingUses,
+    required this.latestExpiry,
+  });
+
+  final List<PermissionGrant> grants;
+  final List<String> grantIds;
+  final Set<PermissionScope> scopes;
+  final int remainingUses;
+  final DateTime latestExpiry;
 }
 
 final class ProductRuntimeRecoveryHostRegistry {
