@@ -352,9 +352,8 @@ void main() {
       // happened at the moment it was consulted. It must always be zero.
       final router = _Router();
       var continuedWhenVerified = -1;
-      late final _Router captured;
       final verifier = _Verifier(() async {
-        continuedWhenVerified = captured.continued;
+        continuedWhenVerified = router.continued;
         return const RecoveryVerification(
           passed: true,
           check: 'original_failure_absent',
@@ -362,7 +361,6 @@ void main() {
           materialProgress: true,
         );
       });
-      captured = router;
 
       final supervisor = _supervisor(
         journal: _Journal(),
