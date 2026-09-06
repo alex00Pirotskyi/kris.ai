@@ -6,10 +6,12 @@ import '../crypto_utils.dart';
 import '../domain.dart';
 import '../product_runtime.dart';
 import '../product_runtime_self_awareness.dart';
+import '../self_awareness/capability_self_model.dart';
 import '../storage_security.dart';
 import '../task_kernel/complexity_router.dart';
 import '../task_kernel/task_families.dart';
 import '../task_kernel/task_specification.dart';
+import '../task_kernel/universal_task_plan.dart';
 import 'failure_recovery.dart';
 import 'recovery_host.dart';
 
