@@ -937,20 +937,31 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
     );
     final now = DateTime.now().toUtc();
     final requested = max(100, target.budget.maxToolCalls * 3);
-    final uses = min(requested, envelope.remainingUses);
-    final window = envelope.latestExpiry.difference(now);
-    if (uses <= 0 || window.inSeconds <= 0) {
+    final bound = boundRecoveryDelegation(
+      grants: envelope.grants,
+      required: required,
+      requestedUses: requested,
+      now: now,
+      projectId: source!.command.contract.projectId,
+      commandId: source.command.id,
+    );
+    if (!bound.isGranted) {
       throw ProductException(
-        'recovery_authority_exhausted',
-        'The original approval has no remaining budget to delegate to recovery.',
+        bound.rejection!,
+        _delegationRejectionMessage(bound.rejection!),
         details: <String, dynamic>{
-          'sourceRunId': source?.id,
+          'sourceRunId': source.id,
           'targetRunId': target.id,
+          'requiredScopes': required.map((scope) => scope.name).toList()
+            ..sort(),
           'remainingUses': envelope.remainingUses,
         },
       );
     }
-    await _debitParentGrants(envelope: envelope, uses: uses);
+    final uses = bound.uses;
+    final expiresAt = bound.expiresAt!;
+    final window = expiresAt.difference(now);
+    await _debitDelegatedGrants(grants: bound.sourceGrants, uses: uses);
     await runtime.permissions.grant(
       projectId: target.command.contract.projectId,
       commandId: target.command.id,
@@ -962,28 +973,30 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       'recovery.authority_delegated_within_parent',
       target.id,
       <String, dynamic>{
-        'sourceRunId': source?.id,
+        'sourceRunId': source.id,
         'targetRunId': target.id,
-        'sourceGrantIds': envelope.grantIds,
+        'sourceGrantIds':
+            bound.sourceGrants.map((grant) => grant.id).toList(growable: false),
         'scopes': required.map((scope) => scope.name).toList()..sort(),
         'minted': true,
         'requestedUses': requested,
         'delegatedUses': uses,
         'parentRemainingUsesBefore': envelope.remainingUses,
         'parentRemainingUsesAfter': envelope.remainingUses - uses,
-        'expiresAt': envelope.latestExpiry.toUtc().toIso8601String(),
+        'expiresAt': expiresAt.toUtc().toIso8601String(),
       },
     );
   }
 
-  /// Reduces the parent's surviving grants by exactly [uses], oldest-expiry
-  /// first, so delegation moves authority instead of duplicating it.
-  Future<void> _debitParentGrants({
-    required _ParentAuthorityEnvelope envelope,
+  /// Reduces the grants a delegation draws from by exactly [uses],
+  /// oldest-expiry first, so delegation moves authority instead of
+  /// duplicating it.
+  Future<void> _debitDelegatedGrants({
+    required List<PermissionGrant> grants,
     required int uses,
   }) async {
     var outstanding = uses;
-    final ordered = envelope.grants.toList()
+    final ordered = grants.toList()
       ..sort((a, b) => a.expiresAt.compareTo(b.expiresAt));
     for (final grant in ordered) {
       if (outstanding <= 0) break;
@@ -1003,6 +1016,18 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       outstanding -= debit;
     }
   }
+
+  String _delegationRejectionMessage(String code) => switch (code) {
+        'recovery_authority_not_single_sourced' =>
+          'Recovery needs a combination of scopes that no single surviving '
+              'approval covers. Pooling separate approvals would grant each '
+              'scope the other approval\'s budget and lifetime, so this is '
+              'refused and escalated instead.',
+        'recovery_authority_exhausted' =>
+          'The original approval has no remaining budget to delegate to recovery.',
+        _ =>
+          'Recovery plan requires authority that was not granted to the original task.',
+      };
 
   /// Collects the parent's currently usable authority and fails closed when it
   /// does not cover [required].
@@ -1083,6 +1108,103 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
       internalRunIds.remove(internalRunIds.first);
     }
   }
+}
+
+/// The bound a single bounded delegation may be issued under, or the reason no
+/// authority may be delegated at all.
+final class RecoveryDelegationBound {
+  const RecoveryDelegationBound.granted({
+    required this.sourceGrants,
+    required this.uses,
+    required this.expiresAt,
+  }) : rejection = null;
+
+  const RecoveryDelegationBound.rejected(this.rejection)
+      : sourceGrants = const <PermissionGrant>[],
+        uses = 0,
+        expiresAt = null;
+
+  /// The parent grants the delegated budget is drawn from and debited against.
+  final List<PermissionGrant> sourceGrants;
+  final int uses;
+  final DateTime? expiresAt;
+  final String? rejection;
+
+  bool get isGranted => rejection == null;
+}
+
+/// Decides how much authority a recovery child may be delegated, given the
+/// parent grants that are still active at [now].
+///
+/// Extracted as a pure function so the authority algebra can be proven against
+/// adversarial grant sets directly, rather than through a model of it.
+RecoveryDelegationBound boundRecoveryDelegation({
+  required Iterable<PermissionGrant> grants,
+  required Set<PermissionScope> required,
+  required int requestedUses,
+  required DateTime now,
+  required String projectId,
+  required String commandId,
+}) {
+  // Defence in depth against producer-supplied failure data. The L3 repair
+  // command takes its project from the FailureEvent, so a failure naming
+  // another project must never reach authority belonging to it. The envelope
+  // already filters on (projectId, commandId); re-applying it at the point the
+  // bound is computed means a regression there cannot silently widen scope.
+  final active = grants
+      .where((grant) =>
+          grant.projectId == projectId &&
+          grant.commandId == commandId &&
+          grant.expiresAt.isAfter(now) &&
+          grant.remainingUses > 0)
+      .toList(growable: false);
+
+  // A scope the parent never held at all is an expansion attempt, and is
+  // reported as such so the operator sees the difference between "you never
+  // had this" and "you had it, but not all at once".
+  final union = <PermissionScope>{};
+  for (final grant in active) {
+    union.addAll(grant.scopes);
+  }
+  if (!union.containsAll(required)) {
+    return const RecoveryDelegationBound.rejected(
+      'recovery_authority_expansion_rejected',
+    );
+  }
+
+  // The delegation draws from ONE grant that individually covers the whole
+  // required set. Pooling separate grants would give each scope the other
+  // grant's budget and lifetime, which is authority no parent ever held.
+  // Refusing an otherwise-performable delegation is the safe direction:
+  // recovery escalates to a human instead of widening its own envelope.
+  final covering = active
+      .where((grant) => grant.scopes.containsAll(required))
+      .toList(growable: false)
+    ..sort((a, b) {
+      final byUses = b.remainingUses.compareTo(a.remainingUses);
+      if (byUses != 0) return byUses;
+      final byExpiry = b.expiresAt.compareTo(a.expiresAt);
+      if (byExpiry != 0) return byExpiry;
+      return a.id.compareTo(b.id);
+    });
+  if (covering.isEmpty) {
+    return const RecoveryDelegationBound.rejected(
+      'recovery_authority_not_single_sourced',
+    );
+  }
+
+  final source = covering.first;
+  final uses = min(requestedUses, source.remainingUses);
+  if (uses <= 0) {
+    return const RecoveryDelegationBound.rejected(
+      'recovery_authority_exhausted',
+    );
+  }
+  return RecoveryDelegationBound.granted(
+    sourceGrants: <PermissionGrant>[source],
+    uses: uses,
+    expiresAt: source.expiresAt,
+  );
 }
 
 /// The authority that still remains to a parent run at one instant: the ceiling
