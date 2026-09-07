@@ -19,7 +19,8 @@ Object? _canonicalValue(Object? value) {
         throw const FormatException('manifest object keys must be strings');
       }
       return key;
-    }).toList()..sort();
+    }).toList()
+      ..sort();
     return <String, Object?>{
       for (final key in keys) key: _canonicalValue(value[key]),
     };
@@ -194,8 +195,8 @@ final class _Sha512 {
           64,
         );
         final choice = ((e & f) ^ ((~e) & g)).toUnsigned(64);
-        final temp1 = (h + sum1 + choice + _k[index] + schedule[index])
-            .toUnsigned(64);
+        final temp1 =
+            (h + sum1 + choice + _k[index] + schedule[index]).toUnsigned(64);
         final sum0 = (_rotr(a, 28) ^ _rotr(a, 34) ^ _rotr(a, 39)).toUnsigned(
           64,
         );
@@ -251,8 +252,7 @@ final class _ExtendedPoint {
 
 final class Ed25519Reference {
   static final BigInt _q = (BigInt.one << 255) - BigInt.from(19);
-  static final BigInt _l =
-      (BigInt.one << 252) +
+  static final BigInt _l = (BigInt.one << 252) +
       BigInt.parse('27742317777372353535851937790883648493');
   static final BigInt _d =
       (-BigInt.from(121665) * _inv(BigInt.from(121666))) % _q;
@@ -398,10 +398,9 @@ final class Ed25519Reference {
     final public = publicKey(seed);
     final r =
         _littleEndianToBigInt(_Sha512.digest(<int>[...prefix, ...message])) %
-        _l;
+            _l;
     final encodedR = _encodePoint(_multiply(_base, r));
-    final challenge =
-        _littleEndianToBigInt(
+    final challenge = _littleEndianToBigInt(
           _Sha512.digest(<int>[...encodedR, ...public, ...message]),
         ) %
         _l;
@@ -428,8 +427,7 @@ final class Ed25519Reference {
       }
       final r = _decodePoint(encodedR);
       final a = _decodePoint(publicKey);
-      final challenge =
-          _littleEndianToBigInt(
+      final challenge = _littleEndianToBigInt(
             _Sha512.digest(<int>[...encodedR, ...publicKey, ...message]),
           ) %
           _l;
@@ -461,13 +459,13 @@ final class SignedManifestV2 {
       Uint8List.fromList(utf8.encode(canonicalJsonV2(body)));
 
   bool verifyWithPublicKeyHex(String publicKeyHex) => Ed25519Reference.verify(
-    hexToBytesV2(publicKeyHex),
-    canonicalPayload(),
-    hexToBytesV2(signatureHex),
-  );
+        hexToBytesV2(publicKeyHex),
+        canonicalPayload(),
+        hexToBytesV2(signatureHex),
+      );
 
   Map<String, Object?> toJson() => <String, Object?>{
-    ...body,
-    'signature': signatureHex,
-  };
+        ...body,
+        'signature': signatureHex,
+      };
 }

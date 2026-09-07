@@ -174,17 +174,17 @@ void main() {
       var attempts = 0;
 
       Future<String> ensure() => runtimeSlot.ensure(
-        targetIdentity: 'fresh',
-        repair: true,
-        matches: (value) => value == 'fresh',
-        materialize: (destination) async {
-          attempts++;
-          if (attempts == 1) {
-            throw StateError('simulated_acquisition_failure');
-          }
-          await materialize(destination, 'fresh');
-        },
-      );
+            targetIdentity: 'fresh',
+            repair: true,
+            matches: (value) => value == 'fresh',
+            materialize: (destination) async {
+              attempts++;
+              if (attempts == 1) {
+                throw StateError('simulated_acquisition_failure');
+              }
+              await materialize(destination, 'fresh');
+            },
+          );
 
       await expectLater(ensure(), throwsA(isA<StateError>()));
       expect(await ensure(), 'fresh');
@@ -201,16 +201,16 @@ void main() {
       var installs = 0;
 
       Future<String> ensure() => runtimeSlot.ensure(
-        targetIdentity: 'fresh',
-        repair: false,
-        matches: (value) => value == 'fresh',
-        materialize: (destination) async {
-          installs++;
-          if (!entered.isCompleted) entered.complete();
-          await release.future;
-          await materialize(destination, 'fresh');
-        },
-      );
+            targetIdentity: 'fresh',
+            repair: false,
+            matches: (value) => value == 'fresh',
+            materialize: (destination) async {
+              installs++;
+              if (!entered.isCompleted) entered.complete();
+              await release.future;
+              await materialize(destination, 'fresh');
+            },
+          );
 
       final first = ensure();
       await entered.future;

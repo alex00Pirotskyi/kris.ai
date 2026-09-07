@@ -51,10 +51,10 @@ class KristinConversationSession {
     this.maxLiveSignals = 600,
     this.maxProtocolCharacters = 18000,
     this.maxToolOutputCharacters = 12000,
-  }) : assert(maxMessages > 0),
-       assert(maxLiveSignals > 0),
-       assert(maxProtocolCharacters > 0),
-       assert(maxToolOutputCharacters > 0);
+  })  : assert(maxMessages > 0),
+        assert(maxLiveSignals > 0),
+        assert(maxProtocolCharacters > 0),
+        assert(maxToolOutputCharacters > 0);
 
   final int maxMessages;
   final int maxLiveSignals;
@@ -265,20 +265,22 @@ class KristinConversationSession {
   KristinConversationMessage addAssistantMessage(
     String text, {
     DateTime? createdAt,
-  }) => _addMessage(
-    KristinConversationSpeaker.assistant,
-    text,
-    createdAt: createdAt,
-  );
+  }) =>
+      _addMessage(
+        KristinConversationSpeaker.assistant,
+        text,
+        createdAt: createdAt,
+      );
 
   KristinConversationMessage addSystemMessage(
     String text, {
     DateTime? createdAt,
-  }) => _addMessage(
-    KristinConversationSpeaker.system,
-    text,
-    createdAt: createdAt,
-  );
+  }) =>
+      _addMessage(
+        KristinConversationSpeaker.system,
+        text,
+        createdAt: createdAt,
+      );
 
   /// Starts a provisional assistant transcript message backed by actual model
   /// deltas. Until a visible delta arrives no placeholder is inserted; the UI

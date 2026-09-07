@@ -251,8 +251,7 @@ void main() {
       outcome: RunState.failed,
       summary: '',
       failure: 'model_action_invalid: The model returned an invalid action.',
-      lessons:
-          'model_action_invalid: The model returned an invalid action.\n'
+      lessons: 'model_action_invalid: The model returned an invalid action.\n'
           'Failed work: Inspect project and establish evidence baseline.',
       tags: const <String>{'episode', 'ask', 'failed', 'hello'},
       completedItems: const <String>[],

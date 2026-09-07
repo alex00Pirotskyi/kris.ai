@@ -27,32 +27,31 @@ void main() {
   final allCapabilities = kKristinCapabilities.map((item) => item.id).toSet();
 
   PlanningContext contextWith({Set<String>? capabilities}) => PlanningContext(
-    project: project,
-    availableCapabilityIds: capabilities ?? allCapabilities,
-    availableToolNames: ToolRegistry.standard().names,
-  );
+        project: project,
+        availableCapabilityIds: capabilities ?? allCapabilities,
+        availableToolNames: ToolRegistry.standard().names,
+      );
 
   group('RESEARCH family', () {
     // SCENARIO E / DELIVERABLE #6: "what is the weather in Nha Trang and
     // the current time in New York?"
     TaskSpecification weatherAndTime() => TaskSpecification(
-      id: 'spec_research',
-      originalRequest:
-          'What is the weather in Nha Trang and the current '
-          'time in New York?',
-      objective: 'Answer both current factual questions',
-      subObjectives: <String>[
-        'current Nha Trang weather',
-        'current New York local time',
-      ],
-      successCriteria: <SpecificationClaim>[
-        const SpecificationClaim.inferred(
-          'Both facts are grounded in current sources.',
-        ),
-      ],
-      source: TaskSpecificationSource.modelUnderstanding,
-      confidence: 0.9,
-    );
+          id: 'spec_research',
+          originalRequest: 'What is the weather in Nha Trang and the current '
+              'time in New York?',
+          objective: 'Answer both current factual questions',
+          subObjectives: <String>[
+            'current Nha Trang weather',
+            'current New York local time',
+          ],
+          successCriteria: <SpecificationClaim>[
+            const SpecificationClaim.inferred(
+              'Both facts are grounded in current sources.',
+            ),
+          ],
+          source: TaskSpecificationSource.modelUnderstanding,
+          confidence: 0.9,
+        );
 
     test('decomposes into retrieval / freshness / synthesis', () async {
       final plan = await const ResearchTaskFamilyPlanner().plan(
@@ -160,26 +159,25 @@ void main() {
     // SCENARIO G / DELIVERABLE #7:
     //   /owner create testFF.txt on Desktop containing "Hello world"
     TaskSpecification desktopFile() => TaskSpecification(
-      id: 'spec_owner',
-      originalRequest:
-          '/owner create file at my desktop testFF.txt and '
-          'write in it "Hello world"',
-      objective: 'Create Desktop/testFF.txt containing "Hello world"',
-      targetRefs: <TaskTargetRef>[
-        const TaskTargetRef(
-          kind: 'workspace',
-          value: 'Desktop/testFF.txt',
-          displayName: 'Desktop/testFF.txt',
-          provenance: EvidenceProvenance.userStated,
-        ),
-      ],
-      hardConstraints: <SpecificationClaim>[
-        const SpecificationClaim.stated('Only this file may be affected.'),
-        const SpecificationClaim.stated(
-          'The content must be exactly "Hello world".',
-        ),
-      ],
-    );
+          id: 'spec_owner',
+          originalRequest: '/owner create file at my desktop testFF.txt and '
+              'write in it "Hello world"',
+          objective: 'Create Desktop/testFF.txt containing "Hello world"',
+          targetRefs: <TaskTargetRef>[
+            const TaskTargetRef(
+              kind: 'workspace',
+              value: 'Desktop/testFF.txt',
+              displayName: 'Desktop/testFF.txt',
+              provenance: EvidenceProvenance.userStated,
+            ),
+          ],
+          hardConstraints: <SpecificationClaim>[
+            const SpecificationClaim.stated('Only this file may be affected.'),
+            const SpecificationClaim.stated(
+              'The content must be exactly "Hello world".',
+            ),
+          ],
+        );
 
     test(
       'produces resolve / effect / verify, not implementation trivia',
@@ -227,7 +225,8 @@ void main() {
       }
     });
 
-    test('OWNER MODE IS NEVER BLANKET PERMISSION: an unavailable capability '
+    test(
+        'OWNER MODE IS NEVER BLANKET PERMISSION: an unavailable capability '
         'is refused at plan time', () async {
       // The architecture proved against a fixture capability that does not
       // exist in the governed registry -- exactly the case where
@@ -256,30 +255,30 @@ void main() {
       );
     });
 
-    test('a fixture Owner capability reaches authority resolution through '
+    test(
+        'a fixture Owner capability reaches authority resolution through '
         'the same kernel architecture', () async {
       // The test adapter: a canonical capability that IS present. The
       // plan then compiles like any other family's -- which is the point.
       // Nothing here performs an external filesystem effect.
       const fixtureCapability = 'owner.fixture_effect';
-      final plan =
-          await const OwnerTaskFamilyPlanner(
-            capabilityId: fixtureCapability,
-          ).plan(
-            specification: desktopFile(),
-            route: PlanningRoute.compact,
-            context: contextWith(
-              capabilities: <String>{...allCapabilities, fixtureCapability},
-            ),
-          );
+      final plan = await const OwnerTaskFamilyPlanner(
+        capabilityId: fixtureCapability,
+      ).plan(
+        specification: desktopFile(),
+        route: PlanningRoute.compact,
+        context: contextWith(
+          capabilities: <String>{...allCapabilities, fixtureCapability},
+        ),
+      );
       expect(plan.validate(), isEmpty);
-      final compiled = UniversalPlanCompiler(tools: ToolRegistry.standard())
-          .compile(
-            plan: plan,
-            project: project,
-            mode: CommandMode.ask,
-            request: plan.specification.originalRequest,
-          );
+      final compiled =
+          UniversalPlanCompiler(tools: ToolRegistry.standard()).compile(
+        plan: plan,
+        project: project,
+        mode: CommandMode.ask,
+        request: plan.specification.originalRequest,
+      );
       expect(compiled.isFaithfulProjection, isTrue);
       // The user's exact constraints are inviolable in the CONTRACT the
       // executor receives, not merely in the request text.
@@ -298,7 +297,8 @@ void main() {
   });
 
   group('every family passes through the same compiler', () {
-    test('research, diagnostics, owner and conservative software all '
+    test(
+        'research, diagnostics, owner and conservative software all '
         'compile', () async {
       final specification = TaskSpecification(
         id: 'spec_shared',
@@ -342,7 +342,8 @@ void main() {
       }
     });
 
-    test('the conservative planner is a safety envelope, not a '
+    test(
+        'the conservative planner is a safety envelope, not a '
         'decomposition', () async {
       final plan = await const ConservativeSoftwarePlanner().plan(
         specification: TaskSpecification(

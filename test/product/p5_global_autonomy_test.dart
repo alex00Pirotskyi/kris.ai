@@ -64,12 +64,13 @@ P5GlobalAutonomyRunSession session(
   String id,
   RunState state, {
   bool network = false,
-}) => P5GlobalAutonomyRunSession(
-  id: id,
-  state: state,
-  modelLabel: 'ollama/test-model@digest',
-  networkRequested: network,
-);
+}) =>
+    P5GlobalAutonomyRunSession(
+      id: id,
+      state: state,
+      modelLabel: 'ollama/test-model@digest',
+      networkRequested: network,
+    );
 
 void main() {
   test(

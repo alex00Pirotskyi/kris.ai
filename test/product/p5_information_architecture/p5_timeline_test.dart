@@ -22,9 +22,10 @@ Future<void> _pump(
 }
 
 Finder _timelineRows() => find.byWidgetPredicate((widget) {
-  final key = widget.key;
-  return key is ValueKey<String> && key.value.startsWith('p5-timeline-row-');
-});
+      final key = widget.key;
+      return key is ValueKey<String> &&
+          key.value.startsWith('p5-timeline-row-');
+    });
 
 void main() {
   test('P5-008 deterministic source covers 10k events and all categories', () {

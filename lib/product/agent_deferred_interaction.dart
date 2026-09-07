@@ -237,16 +237,17 @@ class AgentDeferredInteractionStore {
     required DateTime createdAt,
     required DateTime updatedAt,
     String? userResponse,
-  }) => <String, dynamic>{
-    'schemaVersion': schemaVersion,
-    'interactionId': interactionId,
-    'status': status.name,
-    'decision': decision.toJson(),
-    'createdAt': createdAt.toUtc().toIso8601String(),
-    'updatedAt': updatedAt.toUtc().toIso8601String(),
-    if (userResponse != null) 'userResponse': userResponse,
-    'userResponseGrantsAuthority': false,
-  };
+  }) =>
+      <String, dynamic>{
+        'schemaVersion': schemaVersion,
+        'interactionId': interactionId,
+        'status': status.name,
+        'decision': decision.toJson(),
+        'createdAt': createdAt.toUtc().toIso8601String(),
+        'updatedAt': updatedAt.toUtc().toIso8601String(),
+        if (userResponse != null) 'userResponse': userResponse,
+        'userResponseGrantsAuthority': false,
+      };
 
   AgentDeferredInteraction _decode(WorkflowCheckpoint checkpoint) {
     final state = checkpoint.state;
@@ -316,13 +317,14 @@ class AgentDeferredInteractionStore {
   AgentDeferredInteractionException _corrupt(
     WorkflowCheckpoint checkpoint,
     String field,
-  ) => AgentDeferredInteractionException(
-    'agent_deferred_checkpoint_corrupt',
-    'Deferred interaction checkpoint ${checkpoint.id} is invalid.',
-    details: <String, dynamic>{
-      'runId': checkpoint.runId,
-      'checkpointId': checkpoint.id,
-      'field': field,
-    },
-  );
+  ) =>
+      AgentDeferredInteractionException(
+        'agent_deferred_checkpoint_corrupt',
+        'Deferred interaction checkpoint ${checkpoint.id} is invalid.',
+        details: <String, dynamic>{
+          'runId': checkpoint.runId,
+          'checkpointId': checkpoint.id,
+          'field': field,
+        },
+      );
 }

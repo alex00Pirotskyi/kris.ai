@@ -20,10 +20,10 @@ const String benchmarkAuthoritySignature =
     'ddf694726663b106c024eec83e5aebd796af11d2edfb07ba59445c276e949d06';
 
 ModelProviderDescriptor _provider() => ModelProviderDescriptor(
-  providerId: 'ollama.local',
-  displayName: 'Local Ollama',
-  dataBoundary: ModelDataBoundary.localOnly,
-);
+      providerId: 'ollama.local',
+      displayName: 'Local Ollama',
+      dataBoundary: ModelDataBoundary.localOnly,
+    );
 
 ModelBenchmarkTrustContext _benchmarkTrust() {
   final keys = ProtectedKeyRegistryV2();
@@ -83,48 +83,49 @@ ModelBenchmarkEvidence _benchmark() =>
     }, trustContext: _benchmarkTrust());
 
 ModelDefinition _registeredModel() => ModelDefinition.evaluationOnly(
-  providerId: 'ollama.local',
-  modelId: 'qwen3:14b',
-  displayName: 'Qwen 3 14B',
-  digest: digestA,
-  parameterSize: '14B',
-  quantization: 'Q4_K_M',
-  aliases: const <String>['qwen3-latest'],
-  limits: ModelLimits(
-    evidenceLevel: ModelEvidenceLevel.measured,
-    contextWindowTokens: 32768,
-    maxOutputTokens: 4096,
-    maxConcurrentRequests: 1,
-    maxToolCallsPerTurn: 0,
-    supportsStreaming: true,
-  ),
-  toolProfile: ModelToolProfile(
-    evidenceLevel: ModelEvidenceLevel.measured,
-    supportsToolCalling: false,
-    supportsStructuredOutput: true,
-    supportsParallelToolCalls: false,
-  ),
-  dataBoundary: ModelDataBoundary.localOnly,
-  cost: ModelCostProfile.noDirectCharge(),
-  benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
-  evaluationReasons: const <String>[
-    'host-controlled benchmark authority is not configured',
-  ],
-);
+      providerId: 'ollama.local',
+      modelId: 'qwen3:14b',
+      displayName: 'Qwen 3 14B',
+      digest: digestA,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      aliases: const <String>['qwen3-latest'],
+      limits: ModelLimits(
+        evidenceLevel: ModelEvidenceLevel.measured,
+        contextWindowTokens: 32768,
+        maxOutputTokens: 4096,
+        maxConcurrentRequests: 1,
+        maxToolCallsPerTurn: 0,
+        supportsStreaming: true,
+      ),
+      toolProfile: ModelToolProfile(
+        evidenceLevel: ModelEvidenceLevel.measured,
+        supportsToolCalling: false,
+        supportsStructuredOutput: true,
+        supportsParallelToolCalls: false,
+      ),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
+      evaluationReasons: const <String>[
+        'host-controlled benchmark authority is not configured',
+      ],
+    );
 
 ModelIdentity _identity({
   required String name,
   String digest = digestA,
   String parameterSize = '14B',
   String quantization = 'Q4_K_M',
-}) => ModelIdentity(
-  providerId: 'ollama.local',
-  name: name,
-  digest: digest,
-  parameterSize: parameterSize,
-  quantization: quantization,
-  discoveredAt: DateTime.utc(2026, 8, 6),
-);
+}) =>
+    ModelIdentity(
+      providerId: 'ollama.local',
+      name: name,
+      digest: digest,
+      parameterSize: parameterSize,
+      quantization: quantization,
+      discoveredAt: DateTime.utc(2026, 8, 6),
+    );
 
 void main() {
   group('P6-001 discovered identity guard', () {

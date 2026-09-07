@@ -32,15 +32,15 @@ final class P4RenderedResearchEvidence {
   final bool rendered;
 
   Map<String, Object?> toExtractionSeed() => <String, Object?>{
-    'sourceKind': 'rendered-browser',
-    'rendered': rendered,
-    'url': finalUrl.toString(),
-    'title': title,
-    'dom': dom,
-    'visibleText': visibleText,
-    'observationHash': observationHash,
-    'screenshotSha256': screenshotSha256,
-  };
+        'sourceKind': 'rendered-browser',
+        'rendered': rendered,
+        'url': finalUrl.toString(),
+        'title': title,
+        'dom': dom,
+        'visibleText': visibleText,
+        'observationHash': observationHash,
+        'screenshotSha256': screenshotSha256,
+      };
 }
 
 final class P4RenderedResearchFetcher {
@@ -104,8 +104,8 @@ final class P4RenderedResearchFetcher {
   }
 }
 
-typedef P4RenderedPageLoader =
-    Future<P3BrowserPageObservation> Function(Uri url);
+typedef P4RenderedPageLoader = Future<P3BrowserPageObservation> Function(
+    Uri url);
 
 final class _P4OneShotRenderedBrowserBackend
     implements P4RenderedBrowserBackend {
@@ -188,7 +188,8 @@ final class P4BrowserAwareResearchService extends ResearchService {
       ).fetch(validatedOriginal);
       final validatedFinal = (await validateUri(
         evidence.finalUrl,
-      )).removeFragment();
+      ))
+          .removeFragment();
       final visibleText = evidence.visibleText.trim();
       if (_looksLikeChallenge(visibleText)) {
         if (httpSource != null) return httpSource;
@@ -216,8 +217,8 @@ final class P4BrowserAwareResearchService extends ResearchService {
       final title = evidence.title.trim().isNotEmpty
           ? evidence.title.trim()
           : (httpSource?.title.trim().isNotEmpty ?? false)
-          ? httpSource!.title.trim()
-          : validatedFinal.host;
+              ? httpSource!.title.trim()
+              : validatedFinal.host;
       return ResearchSource(
         id: newId('source'),
         url: validatedFinal,
@@ -369,12 +370,10 @@ P4DatasetVersionDiff p4DiffDatasetVersions(
   P4DatasetVersion before,
   P4DatasetVersion after,
 ) {
-  final beforeRows = before.rows
-      .map((row) => Sha256.text(canonicalJson(row)))
-      .toSet();
-  final afterRows = after.rows
-      .map((row) => Sha256.text(canonicalJson(row)))
-      .toSet();
+  final beforeRows =
+      before.rows.map((row) => Sha256.text(canonicalJson(row))).toSet();
+  final afterRows =
+      after.rows.map((row) => Sha256.text(canonicalJson(row))).toSet();
   final added = afterRows.difference(beforeRows).toList()..sort();
   final removed = beforeRows.difference(afterRows).toList()..sort();
   return P4DatasetVersionDiff(

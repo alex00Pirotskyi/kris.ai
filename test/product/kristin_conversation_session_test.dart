@@ -311,21 +311,22 @@ AgentDeferredInteraction _interaction({
   required String runId,
   required AgentDeferredInteractionStatus status,
   String? userResponse,
-}) => AgentDeferredInteraction(
-  id: 'interaction-a',
-  runId: runId,
-  workItemId: 'work-a',
-  decision: AgentDecisionV3(
-    kind: AgentDecisionV3Kind.userTakeover,
-    question: 'Which target should I use?',
-    reason: 'The target is ambiguous.',
-  ),
-  status: status,
-  createdAt: DateTime.utc(2026, 8, 29),
-  updatedAt: DateTime.utc(2026, 8, 29),
-  checkpointId: 'checkpoint-a',
-  userResponse: userResponse,
-);
+}) =>
+    AgentDeferredInteraction(
+      id: 'interaction-a',
+      runId: runId,
+      workItemId: 'work-a',
+      decision: AgentDecisionV3(
+        kind: AgentDecisionV3Kind.userTakeover,
+        question: 'Which target should I use?',
+        reason: 'The target is ambiguous.',
+      ),
+      status: status,
+      createdAt: DateTime.utc(2026, 8, 29),
+      updatedAt: DateTime.utc(2026, 8, 29),
+      checkpointId: 'checkpoint-a',
+      userResponse: userResponse,
+    );
 
 LiveRunSignal _signal(String runId, int sequence, LiveRunSignalKind kind) =>
     LiveRunSignal(

@@ -8,8 +8,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
   P5InformationArchitectureController({
     P5PresentationState? initialState,
     P5ShellLayoutState? initialShellLayout,
-  }) : _state = initialState ?? P5PrototypeFixtures.initialState(),
-       _shellLayout = initialShellLayout ?? P5ShellLayoutState.defaults;
+  })  : _state = initialState ?? P5PrototypeFixtures.initialState(),
+        _shellLayout = initialShellLayout ?? P5ShellLayoutState.defaults;
 
   P5PresentationState _state;
   P5ShellLayoutState _shellLayout;
@@ -49,27 +49,25 @@ class P5InformationArchitectureController extends ChangeNotifier {
       !_runLifecycleLocked && _state.selectedRunId == null;
 
   bool get _runLifecycleLocked => const <P5RunPresentationState>{
-    P5RunPresentationState.running,
-    P5RunPresentationState.paused,
-    P5RunPresentationState.stopping,
-    P5RunPresentationState.interrupted,
-  }.contains(_state.runState);
+        P5RunPresentationState.running,
+        P5RunPresentationState.paused,
+        P5RunPresentationState.stopping,
+        P5RunPresentationState.interrupted,
+      }.contains(_state.runState);
 
   bool get _runContextLocked => const <P5RunPresentationState>{
-    P5RunPresentationState.running,
-    P5RunPresentationState.paused,
-    P5RunPresentationState.stopping,
-  }.contains(_state.runState);
+        P5RunPresentationState.running,
+        P5RunPresentationState.paused,
+        P5RunPresentationState.stopping,
+      }.contains(_state.runState);
 
   List<P5WorkspaceDefinition> get visibleWorkspaces {
-    return P5PrototypeFixtures.workspaces
-        .where((definition) {
-          if (definition.id.isFutureCapability) {
-            return false;
-          }
-          return _isWorkspaceEligibleAt(definition.id, _state.experienceLevel);
-        })
-        .toList(growable: false);
+    return P5PrototypeFixtures.workspaces.where((definition) {
+      if (definition.id.isFutureCapability) {
+        return false;
+      }
+      return _isWorkspaceEligibleAt(definition.id, _state.experienceLevel);
+    }).toList(growable: false);
   }
 
   void changeExperienceLevel(P5ExperienceLevel level) {
@@ -290,8 +288,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     }
 
     if (fixture.id == _state.selectedProjectId) {
-      final recoverableBlockedState =
-          _state.selectedRunId == null &&
+      final recoverableBlockedState = _state.selectedRunId == null &&
           const <P5RunPresentationState>{
             P5RunPresentationState.blocked,
             P5RunPresentationState.error,
@@ -339,9 +336,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
         planReviewed: false,
         planOnly: false,
         verificationRequested: false,
-        recoveryMessage: projectId == null
-            ? 'Choose a project to continue.'
-            : null,
+        recoveryMessage:
+            projectId == null ? 'Choose a project to continue.' : null,
       );
       notifyListeners();
       return;
@@ -438,11 +434,10 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (_state.workspace == workspace) {
       return;
     }
-    final history =
-        _state.navigationHistory
-            .take(_state.navigationIndex + 1)
-            .toList(growable: true)
-          ..add(workspace);
+    final history = _state.navigationHistory
+        .take(_state.navigationIndex + 1)
+        .toList(growable: true)
+      ..add(workspace);
     _state = _state.copyWith(
       workspace: workspace,
       navigationHistory: List<P5WorkspaceId>.unmodifiable(history),
@@ -503,7 +498,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (_runContextLocked) {
       final changesContext =
           (projectId != null && projectId != _state.selectedProjectId) ||
-          (runId != null && runId != _state.selectedRunId);
+              (runId != null && runId != _state.selectedRunId);
       if (changesContext) {
         _state = _state.copyWith(
           recoveryMessage:
@@ -690,8 +685,8 @@ class P5InformationArchitectureController extends ChangeNotifier {
           runState: nextPlanOnly
               ? P5RunPresentationState.planOnly
               : (_state.planReviewed
-                    ? P5RunPresentationState.ready
-                    : P5RunPresentationState.planReady),
+                  ? P5RunPresentationState.ready
+                  : P5RunPresentationState.planReady),
           recoveryMessage: 'Plan-only changes presentation, not authority.',
         );
         notifyListeners();

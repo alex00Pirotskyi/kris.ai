@@ -37,19 +37,19 @@ final class CacheDatabaseDiagnostics {
   final String? startupFailureType;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': schemaVersion,
-    'databasePath': databasePath,
-    'persistent': persistent,
-    'startupMode': startupMode.name,
-    'startupDurationMicroseconds': startupDuration.inMicroseconds,
-    'onDiskBytes': onDiskBytes,
-    'lastRebuildAt': lastRebuildAt?.toUtc().toIso8601String(),
-    'performanceSpanRows': performanceSpanRows,
-    'generationRows': generationRows,
-    'droppedPerformanceWrites': droppedPerformanceWrites,
-    'degraded': degraded,
-    'startupFailureType': startupFailureType,
-  };
+        'schemaVersion': schemaVersion,
+        'databasePath': databasePath,
+        'persistent': persistent,
+        'startupMode': startupMode.name,
+        'startupDurationMicroseconds': startupDuration.inMicroseconds,
+        'onDiskBytes': onDiskBytes,
+        'lastRebuildAt': lastRebuildAt?.toUtc().toIso8601String(),
+        'performanceSpanRows': performanceSpanRows,
+        'generationRows': generationRows,
+        'droppedPerformanceWrites': droppedPerformanceWrites,
+        'degraded': degraded,
+        'startupFailureType': startupFailureType,
+      };
 }
 
 final class RebuildableCacheDatabase implements PerformanceSpanSink {
@@ -701,8 +701,7 @@ WHERE id <= COALESCE(
   }
 
   static Future<void> _quarantinePersistentFiles(File databaseFile) async {
-    final suffix =
-        '.invalid.'
+    final suffix = '.invalid.'
         '${DateTime.now().toUtc().microsecondsSinceEpoch.toString()}';
     for (final sidecar in const <String>['', '-wal', '-shm']) {
       final candidate = File('${databaseFile.path}$sidecar');

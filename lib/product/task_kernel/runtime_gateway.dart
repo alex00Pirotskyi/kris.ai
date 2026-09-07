@@ -67,15 +67,16 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     int maxLeafTasks = 25,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) => planning.generateTaskPlan(
-    promptVersion: promptVersion,
-    projectId: projectId,
-    model: model,
-    maxLeafTasks: maxLeafTasks,
-    capabilityBriefing: capabilityBriefing,
-    cancellation: cancellation,
-    isCancelled: isCancelled,
-  );
+  }) =>
+      planning.generateTaskPlan(
+        promptVersion: promptVersion,
+        projectId: projectId,
+        model: model,
+        maxLeafTasks: maxLeafTasks,
+        capabilityBriefing: capabilityBriefing,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+      );
 
   /// Deterministic code puts the specification's established content back
   /// onto the model's draft.
@@ -153,8 +154,7 @@ UniversalTaskKernel buildUniversalTaskKernel({
   return UniversalTaskKernel(
     understanding: SemanticSlashUnderstandingService(
       model: ModelBackedUnderstanding(
-        generate:
-            understandingGenerator ??
+        generate: understandingGenerator ??
             (request) => models.providerFor(request.identity).generate(request),
       ),
     ),

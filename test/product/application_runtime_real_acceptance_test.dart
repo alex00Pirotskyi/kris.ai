@@ -8,8 +8,7 @@ const String _passMarker = 'APPLICATION_RUNTIME_REAL_ACCEPTANCE:PASS';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final enabled =
-      Platform.isWindows &&
+  final enabled = Platform.isWindows &&
       (Platform.environment['GITHUB_WORKFLOW'] == 'product-gates' ||
           Platform.environment['KRISTIN_IN_APP_RUNTIME_ACCEPTANCE'] == '1');
 
@@ -76,8 +75,7 @@ void main() {
         expect(
           exitCode,
           0,
-          reason:
-              'plain Dart runtime acceptance failed\n'
+          reason: 'plain Dart runtime acceptance failed\n'
               'stdout:\n$childStdout\n'
               'stderr:\n$childStderr',
         );

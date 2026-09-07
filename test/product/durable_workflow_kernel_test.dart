@@ -319,8 +319,14 @@ void main() {
       final timestamp = DateTime.utc(2026, 7, 22).toIso8601String();
       await legacyProjects.writeAsString(
         '${const JsonEncoder.withIndent('  ').convert(<Map<String, dynamic>>[
-          <String, dynamic>{'id': 'legacy-project', 'name': 'Legacy project', 'rootPath': root.path, 'createdAt': timestamp, 'updatedAt': timestamp},
-        ])}\n',
+              <String, dynamic>{
+                'id': 'legacy-project',
+                'name': 'Legacy project',
+                'rootPath': root.path,
+                'createdAt': timestamp,
+                'updatedAt': timestamp
+              },
+            ])}\n',
         flush: true,
       );
       await legacySettings.writeAsString(
@@ -374,8 +380,8 @@ void main() {
       );
       await validProjects.writeAsString(
         '${jsonEncode(<Map<String, dynamic>>[
-          <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
-        ])}\n',
+              <String, dynamic>{'id': 'partial', 'name': 'Must not survive'},
+            ])}\n',
         flush: true,
       );
       await corruptSettings.writeAsString('{not-json', flush: true);
@@ -491,7 +497,8 @@ void main() {
           (await store!.latestCheckpoint(
             'run-transaction',
             kind: 'workspace_rolled_back',
-          ))?.kind,
+          ))
+              ?.kind,
           'workspace_rolled_back',
         );
       },
@@ -553,7 +560,8 @@ void main() {
       },
     );
 
-    test('a foreign schema_migrations row for version 7 with a different '
+    test(
+        'a foreign schema_migrations row for version 7 with a different '
         'digest is rejected, never silently accepted', () async {
       store = await DurableWorkflowStore.open(
         databaseFile: databaseFile,
@@ -688,7 +696,8 @@ void main() {
       },
     );
 
-    test('launch profiles upsert by (project, identity) and preferred is '
+    test(
+        'launch profiles upsert by (project, identity) and preferred is '
         'exclusive per project', () async {
       store = await DurableWorkflowStore.open(
         databaseFile: databaseFile,

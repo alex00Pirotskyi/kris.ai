@@ -67,11 +67,11 @@ class TaskReconciliation {
   final String reason;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'taskId': taskId,
-    'title': title,
-    'outcome': outcome.name,
-    'reason': reason,
-  };
+        'taskId': taskId,
+        'title': title,
+        'outcome': outcome.name,
+        'reason': reason,
+      };
 }
 
 /// A completed task and the evidence that it completed.
@@ -87,11 +87,12 @@ class CompletedTaskRecord {
   factory CompletedTaskRecord.of(
     UniversalTask task, {
     Map<String, dynamic> evidence = const <String, dynamic>{},
-  }) => CompletedTaskRecord(
-    taskId: task.id,
-    semanticKey: task.semanticKey,
-    evidence: evidence,
-  );
+  }) =>
+      CompletedTaskRecord(
+        taskId: task.id,
+        semanticKey: task.semanticKey,
+        evidence: evidence,
+      );
 
   final String taskId;
 
@@ -212,8 +213,7 @@ class PlanReconciler {
             taskId: task.id,
             title: task.title,
             outcome: TaskReconciliationOutcome.invalidated,
-            reason:
-                'Completed earlier, but the revised request '
+            reason: 'Completed earlier, but the revised request '
                 'contradicts it ($contradiction); its result can no longer '
                 'be trusted.',
           ),
@@ -249,8 +249,7 @@ class PlanReconciler {
             taskId: task.id,
             title: task.title,
             outcome: TaskReconciliationOutcome.preserved,
-            reason:
-                'Completed earlier, unaffected by the revision, and '
+            reason: 'Completed earlier, unaffected by the revision, and '
                 'preserved even though the revised plan does not repeat it.',
           ),
         );
@@ -265,7 +264,7 @@ class PlanReconciler {
           reason: completion == null
               ? 'No longer required by the revised request.'
               : 'Completed earlier, but the revised request removes and '
-                    'contradicts it.',
+                  'contradicts it.',
         ),
       );
     }
@@ -276,10 +275,8 @@ class PlanReconciler {
     // any more, and leaving it in place would both block the graph and
     // fail validation ("depends on disabled task").
     final surviving = tasks.map((task) => task.id).toSet();
-    final satisfied = tasks
-        .where((task) => !task.enabled)
-        .map((task) => task.id)
-        .toSet();
+    final satisfied =
+        tasks.where((task) => !task.enabled).map((task) => task.id).toSet();
     final merged = tasks
         .map(
           (task) => task.copyWith(
@@ -294,8 +291,7 @@ class PlanReconciler {
               final mapped = idRemap[parentId] ?? parentId;
               return surviving.contains(mapped) ? mapped : null;
             }(),
-            clearParentId:
-                task.parentId != null &&
+            clearParentId: task.parentId != null &&
                 !surviving.contains(idRemap[task.parentId] ?? task.parentId),
           ),
         )
@@ -337,8 +333,8 @@ class PlanReconciler {
     final terms = <String>{};
     for (final statement in added) {
       for (final raw in statement.toLowerCase().split(
-        RegExp(r'[^a-z0-9.+#-]+'),
-      )) {
+            RegExp(r'[^a-z0-9.+#-]+'),
+          )) {
         // Interior punctuation is meaningful ("c++", "c#", ".net"), but
         // trailing sentence punctuation is not: without this trim the term
         // from "Do not use Firebase." is "firebase." and never matches the

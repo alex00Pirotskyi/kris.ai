@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../crypto_utils.dart';
+import '../domain.dart';
 import '../self_awareness/capability_self_model.dart';
 import '../self_awareness/operational_self_awareness.dart';
 
@@ -106,17 +107,16 @@ final class FailureEvent {
     this.parentFailureId,
     this.rootFailureId,
     String? recurrenceSignature,
-  }) : id = id ?? newId('failure'),
-       timestamp = timestamp ?? DateTime.now().toUtc(),
-       recurrenceSignature =
-           recurrenceSignature ??
-           normalizeFailureSignature(
-             category: category,
-             subsystem: subsystem,
-             operation: operation,
-             code: errorCode,
-             message: message,
-           );
+  })  : id = id ?? newId('failure'),
+        timestamp = timestamp ?? DateTime.now().toUtc(),
+        recurrenceSignature = recurrenceSignature ??
+            normalizeFailureSignature(
+              category: category,
+              subsystem: subsystem,
+              operation: operation,
+              code: errorCode,
+              message: message,
+            );
 
   final String id;
   final DateTime timestamp;
@@ -152,94 +152,94 @@ final class FailureEvent {
   bool get retryable => recoverability == Recoverability.retryable;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'id': id,
-    'timestamp': timestamp.toIso8601String(),
-    'severity': severity.name,
-    'category': category.name,
-    'subsystem': subsystem,
-    'operation': operation,
-    'message': message,
-    if (taskId != null) 'taskId': taskId,
-    if (runId != null) 'runId': runId,
-    if (workItemId != null) 'workItemId': workItemId,
-    if (projectId != null) 'projectId': projectId,
-    if (processId != null) 'processId': processId,
-    if (modelExactId != null) 'modelExactId': modelExactId,
-    if (errorCode != null) 'errorCode': errorCode,
-    if (stackTrace != null) 'stackTrace': stackTrace,
-    'stdoutEvidence': stdoutEvidence,
-    'stderrEvidence': stderrEvidence,
-    if (expectedState != null) 'expectedState': expectedState,
-    if (observedState != null) 'observedState': observedState,
-    'stateBefore': stateBefore,
-    'stateAfter': stateAfter,
-    'recentActions': recentActions,
-    'recentChanges': recentChanges,
-    if (capabilityId != null) 'capabilityId': capabilityId,
-    'requiredAuthority': requiredAuthority.toList()..sort(),
-    'recoverability': recoverability.name,
-    'retryable': retryable,
-    'evidenceReferences': evidenceReferences,
-    if (parentFailureId != null) 'parentFailureId': parentFailureId,
-    if (rootFailureId != null) 'rootFailureId': rootFailureId,
-    'recurrenceSignature': recurrenceSignature,
-  };
+        'id': id,
+        'timestamp': timestamp.toIso8601String(),
+        'severity': severity.name,
+        'category': category.name,
+        'subsystem': subsystem,
+        'operation': operation,
+        'message': message,
+        if (taskId != null) 'taskId': taskId,
+        if (runId != null) 'runId': runId,
+        if (workItemId != null) 'workItemId': workItemId,
+        if (projectId != null) 'projectId': projectId,
+        if (processId != null) 'processId': processId,
+        if (modelExactId != null) 'modelExactId': modelExactId,
+        if (errorCode != null) 'errorCode': errorCode,
+        if (stackTrace != null) 'stackTrace': stackTrace,
+        'stdoutEvidence': stdoutEvidence,
+        'stderrEvidence': stderrEvidence,
+        if (expectedState != null) 'expectedState': expectedState,
+        if (observedState != null) 'observedState': observedState,
+        'stateBefore': stateBefore,
+        'stateAfter': stateAfter,
+        'recentActions': recentActions,
+        'recentChanges': recentChanges,
+        if (capabilityId != null) 'capabilityId': capabilityId,
+        'requiredAuthority': requiredAuthority.toList()..sort(),
+        'recoverability': recoverability.name,
+        'retryable': retryable,
+        'evidenceReferences': evidenceReferences,
+        if (parentFailureId != null) 'parentFailureId': parentFailureId,
+        if (rootFailureId != null) 'rootFailureId': rootFailureId,
+        'recurrenceSignature': recurrenceSignature,
+      };
 
   factory FailureEvent.fromJson(Map<String, dynamic> json) => FailureEvent(
-    id: json['id']?.toString(),
-    timestamp: DateTime.tryParse(json['timestamp']?.toString() ?? '')?.toUtc(),
-    severity:
-        FailureSeverity.values
-            .where((item) => item.name == json['severity']?.toString())
-            .firstOrNull ??
-        FailureSeverity.error,
-    category:
-        FailureCategory.values
-            .where((item) => item.name == json['category']?.toString())
-            .firstOrNull ??
-        FailureCategory.unknown,
-    subsystem: json['subsystem']?.toString() ?? 'unknown',
-    operation: json['operation']?.toString() ?? 'unknown',
-    message: json['message']?.toString() ?? '',
-    taskId: json['taskId']?.toString(),
-    runId: json['runId']?.toString(),
-    workItemId: json['workItemId']?.toString(),
-    projectId: json['projectId']?.toString(),
-    processId: json['processId']?.toString(),
-    modelExactId: json['modelExactId']?.toString(),
-    errorCode: json['errorCode']?.toString(),
-    stackTrace: json['stackTrace']?.toString(),
-    stdoutEvidence: (json['stdoutEvidence'] as List? ?? const <Object>[])
-        .map((item) => item.toString())
-        .toList(growable: false),
-    stderrEvidence: (json['stderrEvidence'] as List? ?? const <Object>[])
-        .map((item) => item.toString())
-        .toList(growable: false),
-    expectedState: json['expectedState']?.toString(),
-    observedState: json['observedState']?.toString(),
-    stateBefore: json['stateBefore'] is Map
-        ? Map<String, Object?>.from(json['stateBefore'] as Map)
-        : const <String, Object?>{},
-    stateAfter: json['stateAfter'] is Map
-        ? Map<String, Object?>.from(json['stateAfter'] as Map)
-        : const <String, Object?>{},
-    capabilityId: json['capabilityId']?.toString(),
-    requiredAuthority: (json['requiredAuthority'] as List? ?? const <Object>[])
-        .map((item) => item.toString())
-        .toSet(),
-    recoverability:
-        Recoverability.values
-            .where((item) => item.name == json['recoverability']?.toString())
-            .firstOrNull ??
-        Recoverability.unspecified,
-    evidenceReferences:
-        (json['evidenceReferences'] as List? ?? const <Object>[])
+        id: json['id']?.toString(),
+        timestamp:
+            DateTime.tryParse(json['timestamp']?.toString() ?? '')?.toUtc(),
+        severity: FailureSeverity.values
+                .where((item) => item.name == json['severity']?.toString())
+                .firstOrNull ??
+            FailureSeverity.error,
+        category: FailureCategory.values
+                .where((item) => item.name == json['category']?.toString())
+                .firstOrNull ??
+            FailureCategory.unknown,
+        subsystem: json['subsystem']?.toString() ?? 'unknown',
+        operation: json['operation']?.toString() ?? 'unknown',
+        message: json['message']?.toString() ?? '',
+        taskId: json['taskId']?.toString(),
+        runId: json['runId']?.toString(),
+        workItemId: json['workItemId']?.toString(),
+        projectId: json['projectId']?.toString(),
+        processId: json['processId']?.toString(),
+        modelExactId: json['modelExactId']?.toString(),
+        errorCode: json['errorCode']?.toString(),
+        stackTrace: json['stackTrace']?.toString(),
+        stdoutEvidence: (json['stdoutEvidence'] as List? ?? const <Object>[])
             .map((item) => item.toString())
             .toList(growable: false),
-    parentFailureId: json['parentFailureId']?.toString(),
-    rootFailureId: json['rootFailureId']?.toString(),
-    recurrenceSignature: json['recurrenceSignature']?.toString(),
-  );
+        stderrEvidence: (json['stderrEvidence'] as List? ?? const <Object>[])
+            .map((item) => item.toString())
+            .toList(growable: false),
+        expectedState: json['expectedState']?.toString(),
+        observedState: json['observedState']?.toString(),
+        stateBefore: json['stateBefore'] is Map
+            ? Map<String, Object?>.from(json['stateBefore'] as Map)
+            : const <String, Object?>{},
+        stateAfter: json['stateAfter'] is Map
+            ? Map<String, Object?>.from(json['stateAfter'] as Map)
+            : const <String, Object?>{},
+        capabilityId: json['capabilityId']?.toString(),
+        requiredAuthority:
+            (json['requiredAuthority'] as List? ?? const <Object>[])
+                .map((item) => item.toString())
+                .toSet(),
+        recoverability: Recoverability.values
+                .where(
+                    (item) => item.name == json['recoverability']?.toString())
+                .firstOrNull ??
+            Recoverability.unspecified,
+        evidenceReferences:
+            (json['evidenceReferences'] as List? ?? const <Object>[])
+                .map((item) => item.toString())
+                .toList(growable: false),
+        parentFailureId: json['parentFailureId']?.toString(),
+        rootFailureId: json['rootFailureId']?.toString(),
+        recurrenceSignature: json['recurrenceSignature']?.toString(),
+      );
 }
 
 String normalizeFailureSignature({
@@ -340,14 +340,14 @@ final class FailureClassifier {
   }
 
   RecoveryLevel _level(Recoverability value) => switch (value) {
-    Recoverability.unspecified => RecoveryLevel.terminal,
-    Recoverability.retryable => RecoveryLevel.l0Transient,
-    Recoverability.operational => RecoveryLevel.l1Operational,
-    Recoverability.configurable => RecoveryLevel.l2Configuration,
-    Recoverability.repairable => RecoveryLevel.l3CodeRepair,
-    Recoverability.selfRepairCandidate => RecoveryLevel.l4SelfRepair,
-    Recoverability.terminal => RecoveryLevel.terminal,
-  };
+        Recoverability.unspecified => RecoveryLevel.terminal,
+        Recoverability.retryable => RecoveryLevel.l0Transient,
+        Recoverability.operational => RecoveryLevel.l1Operational,
+        Recoverability.configurable => RecoveryLevel.l2Configuration,
+        Recoverability.repairable => RecoveryLevel.l3CodeRepair,
+        Recoverability.selfRepairCandidate => RecoveryLevel.l4SelfRepair,
+        Recoverability.terminal => RecoveryLevel.terminal,
+      };
 }
 
 final class OperationalCheckpoint {
@@ -364,8 +364,8 @@ final class OperationalCheckpoint {
     this.capabilityState = const <String, Object?>{},
     this.configurationFingerprints = const <String, String>{},
     this.evidenceReferences = const <String>[],
-  }) : id = id ?? newId('checkpoint'),
-       capturedAt = capturedAt ?? DateTime.now().toUtc();
+  })  : id = id ?? newId('checkpoint'),
+        capturedAt = capturedAt ?? DateTime.now().toUtc();
 
   final String id;
   final DateTime capturedAt;
@@ -381,34 +381,34 @@ final class OperationalCheckpoint {
   final List<String> evidenceReferences;
 
   String get semanticFingerprint => Sha256.text(
-    jsonEncode(<String, Object?>{
-      'operation': operation,
-      'runId': runId,
-      'taskId': taskId,
-      'projectId': projectId,
-      'sourceIdentity': sourceIdentity,
-      'processState': processState,
-      'modelProviderState': modelProviderState,
-      'capabilityState': capabilityState,
-      'configurationFingerprints': configurationFingerprints,
-    }),
-  );
+        jsonEncode(<String, Object?>{
+          'operation': operation,
+          'runId': runId,
+          'taskId': taskId,
+          'projectId': projectId,
+          'sourceIdentity': sourceIdentity,
+          'processState': processState,
+          'modelProviderState': modelProviderState,
+          'capabilityState': capabilityState,
+          'configurationFingerprints': configurationFingerprints,
+        }),
+      );
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'id': id,
-    'capturedAt': capturedAt.toIso8601String(),
-    'operation': operation,
-    if (runId != null) 'runId': runId,
-    if (taskId != null) 'taskId': taskId,
-    if (projectId != null) 'projectId': projectId,
-    'sourceIdentity': sourceIdentity,
-    'processState': processState,
-    'modelProviderState': modelProviderState,
-    'capabilityState': capabilityState,
-    'configurationFingerprints': configurationFingerprints,
-    'evidenceReferences': evidenceReferences,
-    'semanticFingerprint': semanticFingerprint,
-  };
+        'id': id,
+        'capturedAt': capturedAt.toIso8601String(),
+        'operation': operation,
+        if (runId != null) 'runId': runId,
+        if (taskId != null) 'taskId': taskId,
+        if (projectId != null) 'projectId': projectId,
+        'sourceIdentity': sourceIdentity,
+        'processState': processState,
+        'modelProviderState': modelProviderState,
+        'capabilityState': capabilityState,
+        'configurationFingerprints': configurationFingerprints,
+        'evidenceReferences': evidenceReferences,
+        'semanticFingerprint': semanticFingerprint,
+      };
 }
 
 final class OperationTransition {
@@ -428,12 +428,12 @@ final class OperationTransition {
       changedFiles.isNotEmpty;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'before': before.toJson(),
-    'after': after.toJson(),
-    'changedFiles': changedFiles,
-    'resultEvidence': resultEvidence,
-    'materialProgress': materialProgress,
-  };
+        'before': before.toJson(),
+        'after': after.toJson(),
+        'changedFiles': changedFiles,
+        'resultEvidence': resultEvidence,
+        'materialProgress': materialProgress,
+      };
 }
 
 final class RecoveryDecision {
@@ -470,12 +470,13 @@ final class RecoveryActionResult {
   final bool materialProgress;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'summary': summary,
-    'evidenceReferences': evidenceReferences,
-    if (beforeFingerprint.isNotEmpty) 'beforeFingerprint': beforeFingerprint,
-    if (afterFingerprint.isNotEmpty) 'afterFingerprint': afterFingerprint,
-    'materialProgress': materialProgress,
-  };
+        'summary': summary,
+        'evidenceReferences': evidenceReferences,
+        if (beforeFingerprint.isNotEmpty)
+          'beforeFingerprint': beforeFingerprint,
+        if (afterFingerprint.isNotEmpty) 'afterFingerprint': afterFingerprint,
+        'materialProgress': materialProgress,
+      };
 }
 
 final class RecoveryAttempt {
@@ -488,8 +489,8 @@ final class RecoveryAttempt {
     this.state = RecoveryAttemptState.proposed,
     this.result,
     this.finishedAt,
-  }) : id = id ?? newId('recovery_attempt'),
-       startedAt = startedAt ?? DateTime.now().toUtc();
+  })  : id = id ?? newId('recovery_attempt'),
+        startedAt = startedAt ?? DateTime.now().toUtc();
 
   final String id;
   final String failureId;
@@ -503,17 +504,17 @@ final class RecoveryAttempt {
   bool get producedMaterialProgress => result?.materialProgress == true;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'id': id,
-    'failureId': failureId,
-    'strategyId': decision.strategyId,
-    'level': decision.level.name,
-    'kind': decision.kind.name,
-    'signature': signature,
-    'state': state.name,
-    'startedAt': startedAt.toIso8601String(),
-    if (result != null) 'result': result!.toJson(),
-    if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
-  };
+        'id': id,
+        'failureId': failureId,
+        'strategyId': decision.strategyId,
+        'level': decision.level.name,
+        'kind': decision.kind.name,
+        'signature': signature,
+        'state': state.name,
+        'startedAt': startedAt.toIso8601String(),
+        if (result != null) 'result': result!.toJson(),
+        if (finishedAt != null) 'finishedAt': finishedAt!.toIso8601String(),
+      };
 }
 
 final class RecoveryVerification {
@@ -569,8 +570,8 @@ final class RecoveryExperience {
     this.verificationCheck,
     this.verificationObserved,
     this.evidenceReferences = const <String>[],
-  }) : id = id ?? newId('recovery_experience'),
-       observedAt = observedAt ?? DateTime.now().toUtc();
+  })  : id = id ?? newId('recovery_experience'),
+        observedAt = observedAt ?? DateTime.now().toUtc();
 
   final String id;
   final DateTime observedAt;
@@ -590,21 +591,21 @@ final class RecoveryExperience {
   bool get ineffective => !verified && !producedProgress;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'id': id,
-    'observedAt': observedAt.toIso8601String(),
-    'failureSignature': failureSignature,
-    'strategyId': strategyId,
-    'level': level.name,
-    'environmentFingerprint': environmentFingerprint,
-    'outcome': outcome.name,
-    'producedProgress': producedProgress,
-    if (failureId != null) 'failureId': failureId,
-    if (attemptId != null) 'attemptId': attemptId,
-    if (verificationCheck != null) 'verificationCheck': verificationCheck,
-    if (verificationObserved != null)
-      'verificationObserved': verificationObserved,
-    'evidenceReferences': evidenceReferences,
-  };
+        'id': id,
+        'observedAt': observedAt.toIso8601String(),
+        'failureSignature': failureSignature,
+        'strategyId': strategyId,
+        'level': level.name,
+        'environmentFingerprint': environmentFingerprint,
+        'outcome': outcome.name,
+        'producedProgress': producedProgress,
+        if (failureId != null) 'failureId': failureId,
+        if (attemptId != null) 'attemptId': attemptId,
+        if (verificationCheck != null) 'verificationCheck': verificationCheck,
+        if (verificationObserved != null)
+          'verificationObserved': verificationObserved,
+        'evidenceReferences': evidenceReferences,
+      };
 
   factory RecoveryExperience.fromJson(Map<String, dynamic> json) =>
       RecoveryExperience(
@@ -614,15 +615,13 @@ final class RecoveryExperience {
         )?.toUtc(),
         failureSignature: json['failureSignature']?.toString() ?? '',
         strategyId: json['strategyId']?.toString() ?? '',
-        level:
-            RecoveryLevel.values
+        level: RecoveryLevel.values
                 .where((item) => item.name == json['level']?.toString())
                 .firstOrNull ??
             RecoveryLevel.terminal,
         environmentFingerprint:
             json['environmentFingerprint']?.toString() ?? '',
-        outcome:
-            RecoveryExperienceOutcome.values
+        outcome: RecoveryExperienceOutcome.values
                 .where((item) => item.name == json['outcome']?.toString())
                 .firstOrNull ??
             RecoveryExperienceOutcome.blocked,
@@ -663,13 +662,14 @@ final class InMemoryRecoveryExperienceStore implements RecoveryExperienceStore {
   Future<List<RecoveryExperience>> find({
     required String failureSignature,
     String? environmentFingerprint,
-  }) async => List<RecoveryExperience>.unmodifiable(
-    _items.where((item) {
-      if (item.failureSignature != failureSignature) return false;
-      return environmentFingerprint == null ||
-          item.environmentFingerprint == environmentFingerprint;
-    }),
-  );
+  }) async =>
+      List<RecoveryExperience>.unmodifiable(
+        _items.where((item) {
+          if (item.failureSignature != failureSignature) return false;
+          return environmentFingerprint == null ||
+              item.environmentFingerprint == environmentFingerprint;
+        }),
+      );
 }
 
 String recoveryEnvironmentFingerprint(KristinSelfSnapshot self) {
@@ -689,11 +689,10 @@ String recoveryEnvironmentFingerprint(KristinSelfSnapshot self) {
         'completionEligible': app.ownerMode['completionEligible'],
         'secureIsolationActive': app.ownerMode['secureIsolationActive'],
       },
-      'providers':
-          app.providers
-              .map((item) => '${item['id']}:${item['status']}')
-              .toList()
-            ..sort(),
+      'providers': app.providers
+          .map((item) => '${item['id']}:${item['status']}')
+          .toList()
+        ..sort(),
     }),
   );
 }
@@ -1225,9 +1224,8 @@ final class FailureSupervisor {
       );
       causalGraph?.recordFailure(
         'recovery.${decision.strategyId}.failed',
-        causedBy: failureNode == null
-            ? const <String>[]
-            : <String>[failureNode.id],
+        causedBy:
+            failureNode == null ? const <String>[] : <String>[failureNode.id],
         attributes: <String, Object?>{
           'failureId': failure.id,
           'attemptId': attempt.id,
@@ -1329,15 +1327,14 @@ final class FailureSupervisor {
         outcome: verification.passed
             ? RecoveryExperienceOutcome.verified
             : completed.state == RecoveryAttemptState.rolledBack
-            ? RecoveryExperienceOutcome.rolledBack
-            : RecoveryExperienceOutcome.failedVerification,
+                ? RecoveryExperienceOutcome.rolledBack
+                : RecoveryExperienceOutcome.failedVerification,
         producedProgress: producedProgress,
         failureId: failure.id,
         attemptId: attempt.id,
         verificationCheck: verification.check,
         verificationObserved: verification.observed,
-        evidenceReferences:
-            completed.result?.evidenceReferences ??
+        evidenceReferences: completed.result?.evidenceReferences ??
             verification.evidenceReferences,
       ),
     );
@@ -1357,9 +1354,8 @@ final class FailureSupervisor {
 
     causalGraph?.recordRecovery(
       'recovery.${decision.strategyId}.verified',
-      recovers: failureNode == null
-          ? const <String>[]
-          : <String>[failureNode.id],
+      recovers:
+          failureNode == null ? const <String>[] : <String>[failureNode.id],
       attributes: <String, Object?>{
         'failureId': failure.id,
         'attemptId': attempt.id,
@@ -1471,9 +1467,9 @@ final class FailureSupervisor {
     if (capability.health?.state == CapabilityHealthState.failing) return false;
     final authorityOnlyBlock =
         capability.availability.knownButAuthorityBlocked ||
-        (capability.availability.requiredAuthority.isNotEmpty &&
-            capability.availability.authorityObservation ==
-                AuthorityObservationState.notEvaluated);
+            (capability.availability.requiredAuthority.isNotEmpty &&
+                capability.availability.authorityObservation ==
+                    AuthorityObservationState.notEvaluated);
     return authorityOnlyBlock;
   }
 

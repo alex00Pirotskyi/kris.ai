@@ -30,8 +30,8 @@ extension ProductRuntimeProvisioning on ProductRuntime {
   }
 
   Stream<ApplicationRuntimeProvisioningProgress>
-  get runtimeProvisioningProgress =>
-      _runtimeProvisioningState.provisioner.progress;
+      get runtimeProvisioningProgress =>
+          _runtimeProvisioningState.provisioner.progress;
 
   P2ProductRuntimeOwnerModeHandle get provisionedOwnerMode =>
       _runtimeProvisioningState.ownerMode;
@@ -183,19 +183,18 @@ Future<P3BrowserPageObservation> _renderWithProvisionedBrowser(
   String? sessionId;
   String? pageId;
   try {
-    process =
-        await P3BrowserRuntimeService(
-          applicationDataRoot: runtime.directories.root,
-        ).startSessions(
-          stateDirectory: stateDirectory,
-          quotas: const P3BrowserSessionQuotas(
-            maxSessions: 1,
-            maxPagesPerSession: 1,
-            maxPersistentProfiles: 1,
-          ),
-          startupTimeout: const Duration(seconds: 30),
-          requestTimeout: const Duration(seconds: 45),
-        );
+    process = await P3BrowserRuntimeService(
+      applicationDataRoot: runtime.directories.root,
+    ).startSessions(
+      stateDirectory: stateDirectory,
+      quotas: const P3BrowserSessionQuotas(
+        maxSessions: 1,
+        maxPagesPerSession: 1,
+        maxPersistentProfiles: 1,
+      ),
+      startupTimeout: const Duration(seconds: 30),
+      requestTimeout: const Duration(seconds: 45),
+    );
     final session = await process.openSession(
       kind: P3BrowserSessionKind.ephemeral,
       blockServiceWorkers: true,

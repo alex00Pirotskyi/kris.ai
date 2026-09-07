@@ -30,19 +30,18 @@ void main() {
   });
 
   test('clarification answer resolves only the identified question', () {
-    final revised =
-        const TaskSpecificationPatch(
-          kind: TaskSpecificationPatchKind.clarificationAnswer,
-          question: 'Which region?',
-          value: 'Europe',
-        ).applyTo(
-          base(
-            questions: const <UnresolvedQuestion>[
-              UnresolvedQuestion(question: 'Which region?', blocking: true),
-              UnresolvedQuestion(question: 'Which format?'),
-            ],
-          ),
-        );
+    final revised = const TaskSpecificationPatch(
+      kind: TaskSpecificationPatchKind.clarificationAnswer,
+      question: 'Which region?',
+      value: 'Europe',
+    ).applyTo(
+      base(
+        questions: const <UnresolvedQuestion>[
+          UnresolvedQuestion(question: 'Which region?', blocking: true),
+          UnresolvedQuestion(question: 'Which format?'),
+        ],
+      ),
+    );
 
     expect(revised.unresolvedQuestions.map((item) => item.question), <String>[
       'Which format?',

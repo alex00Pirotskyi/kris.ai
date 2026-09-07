@@ -91,9 +91,8 @@ void main() {
           'networkDestinations': networkDestinations,
           'secretIds': secretIds,
           'retentionDays': 7,
-          'executionMode': mode == McpExecutionModeV2.isolated
-              ? 'isolated'
-              : 'owner_host',
+          'executionMode':
+              mode == McpExecutionModeV2.isolated ? 'isolated' : 'owner_host',
         },
       };
       final signature = Ed25519Reference.sign(
@@ -104,14 +103,14 @@ void main() {
     }
 
     McpExecutionGrantV2 grant({bool ownerHost = false}) => McpExecutionGrantV2(
-      projectId: 'project-1',
-      serverId: 'server.test',
-      allowedTools: const <String>{'safe.read'},
-      allowedResources: const <String>{'docs'},
-      allowedPrompts: const <String>{'summarize'},
-      allowedRoots: const <String>{'workspace'},
-      allowOwnerHostExecution: ownerHost,
-    );
+          projectId: 'project-1',
+          serverId: 'server.test',
+          allowedTools: const <String>{'safe.read'},
+          allowedResources: const <String>{'docs'},
+          allowedPrompts: const <String>{'summarize'},
+          allowedRoots: const <String>{'workspace'},
+          allowOwnerHostExecution: ownerHost,
+        );
 
     test(
       'signed descriptor persists exact identity and starts installed',

@@ -46,7 +46,8 @@ class _MemoryGrants implements EntityRepository<PermissionGrant> {
   Future<void> remove(String id) async => _items.remove(id);
 
   @override
-  Future<void> removeWhere(bool Function(PermissionGrant item) predicate) async {
+  Future<void> removeWhere(
+      bool Function(PermissionGrant item) predicate) async {
     _items.removeWhere((_, value) => predicate(value));
   }
 
@@ -54,7 +55,8 @@ class _MemoryGrants implements EntityRepository<PermissionGrant> {
   Future<void> replaceAll(Iterable<PermissionGrant> values) async {
     _items
       ..clear()
-      ..addEntries(values.map((v) => MapEntry<String, PermissionGrant>(v.id, v)));
+      ..addEntries(
+          values.map((v) => MapEntry<String, PermissionGrant>(v.id, v)));
   }
 }
 
@@ -353,9 +355,8 @@ void main() {
         await delegate('cmd-child-b', 100);
 
         final grants = await repository.all();
-        final parentLeft = grants
-            .firstWhere((g) => g.id == 'grant-parent')
-            .remainingUses;
+        final parentLeft =
+            grants.firstWhere((g) => g.id == 'grant-parent').remainingUses;
         final childA = _effectiveUses(grants,
             projectId: 'proj-1',
             commandId: 'cmd-child-a',

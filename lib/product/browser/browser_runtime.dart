@@ -18,16 +18,16 @@ final class P3BrowserRuntimeProbeResult {
   final Map<String, Object?> bundleProvenance;
 
   Map<String, Object?> get provenance => <String, Object?>{
-    ...bundleProvenance,
-    'probeWorkerPid': ready.pid,
-    'probeBrowserPid': ready.browserPid,
-    'browserEngine': ready.browserEngine,
-    'browserVersion': ready.browserVersion,
-    'browserRevision': ready.browserRevision,
-    'protocol': ready.protocol,
-    'sandboxMode': ready.sandboxMode,
-    'p3_002SessionServiceImplemented': false,
-  };
+        ...bundleProvenance,
+        'probeWorkerPid': ready.pid,
+        'probeBrowserPid': ready.browserPid,
+        'browserEngine': ready.browserEngine,
+        'browserVersion': ready.browserVersion,
+        'browserRevision': ready.browserRevision,
+        'protocol': ready.protocol,
+        'sandboxMode': ready.sandboxMode,
+        'p3_002SessionServiceImplemented': false,
+      };
 }
 
 enum P3BrowserSessionKind {
@@ -102,12 +102,15 @@ final class P3BrowserDownloadPolicy {
   });
 
   factory P3BrowserDownloadPolicy.fromJson(Map<String, Object?> value) {
-    _requireExactBrowserKeys(value, const <String>{
-      'maxPayloadBytes',
-      'maxQuarantineBytes',
-      'maxReceipts',
-      'maxReceiptBytes',
-    }, 'browser_download_limits_invalid');
+    _requireExactBrowserKeys(
+        value,
+        const <String>{
+          'maxPayloadBytes',
+          'maxQuarantineBytes',
+          'maxReceipts',
+          'maxReceiptBytes',
+        },
+        'browser_download_limits_invalid');
     final policy = P3BrowserDownloadPolicy(
       maxPayloadBytes: value['maxPayloadBytes'] is int
           ? value['maxPayloadBytes']! as int
@@ -115,9 +118,8 @@ final class P3BrowserDownloadPolicy {
       maxQuarantineBytes: value['maxQuarantineBytes'] is int
           ? value['maxQuarantineBytes']! as int
           : -1,
-      maxReceipts: value['maxReceipts'] is int
-          ? value['maxReceipts']! as int
-          : -1,
+      maxReceipts:
+          value['maxReceipts'] is int ? value['maxReceipts']! as int : -1,
       maxReceiptBytes: value['maxReceiptBytes'] is int
           ? value['maxReceiptBytes']! as int
           : -1,
@@ -145,11 +147,11 @@ final class P3BrowserDownloadPolicy {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'maxPayloadBytes': maxPayloadBytes,
-    'maxQuarantineBytes': maxQuarantineBytes,
-    'maxReceipts': maxReceipts,
-    'maxReceiptBytes': maxReceiptBytes,
-  };
+        'maxPayloadBytes': maxPayloadBytes,
+        'maxQuarantineBytes': maxQuarantineBytes,
+        'maxReceipts': maxReceipts,
+        'maxReceiptBytes': maxReceiptBytes,
+      };
 
   @override
   bool operator ==(Object other) =>
@@ -161,11 +163,11 @@ final class P3BrowserDownloadPolicy {
 
   @override
   int get hashCode => Object.hash(
-    maxPayloadBytes,
-    maxQuarantineBytes,
-    maxReceipts,
-    maxReceiptBytes,
-  );
+        maxPayloadBytes,
+        maxQuarantineBytes,
+        maxReceipts,
+        maxReceiptBytes,
+      );
 }
 
 const int _p3HardMaxUploadBytes = 32 * 1024 * 1024;
@@ -225,14 +227,17 @@ final class P3BrowserUploadPolicy {
   });
 
   factory P3BrowserUploadPolicy.fromJson(Map<String, Object?> value) {
-    _requireExactBrowserKeys(value, const <String>{
-      'maxPayloadBytes',
-      'maxStagingBytes',
-      'maxStages',
-      'maxReceipts',
-      'maxManifestBytes',
-      'maxReceiptBytes',
-    }, 'browser_upload_limits_invalid');
+    _requireExactBrowserKeys(
+        value,
+        const <String>{
+          'maxPayloadBytes',
+          'maxStagingBytes',
+          'maxStages',
+          'maxReceipts',
+          'maxManifestBytes',
+          'maxReceiptBytes',
+        },
+        'browser_upload_limits_invalid');
     final policy = P3BrowserUploadPolicy(
       maxPayloadBytes: value['maxPayloadBytes'] is int
           ? value['maxPayloadBytes']! as int
@@ -241,9 +246,8 @@ final class P3BrowserUploadPolicy {
           ? value['maxStagingBytes']! as int
           : -1,
       maxStages: value['maxStages'] is int ? value['maxStages']! as int : -1,
-      maxReceipts: value['maxReceipts'] is int
-          ? value['maxReceipts']! as int
-          : -1,
+      maxReceipts:
+          value['maxReceipts'] is int ? value['maxReceipts']! as int : -1,
       maxManifestBytes: value['maxManifestBytes'] is int
           ? value['maxManifestBytes']! as int
           : -1,
@@ -280,13 +284,13 @@ final class P3BrowserUploadPolicy {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'maxPayloadBytes': maxPayloadBytes,
-    'maxStagingBytes': maxStagingBytes,
-    'maxStages': maxStages,
-    'maxReceipts': maxReceipts,
-    'maxManifestBytes': maxManifestBytes,
-    'maxReceiptBytes': maxReceiptBytes,
-  };
+        'maxPayloadBytes': maxPayloadBytes,
+        'maxStagingBytes': maxStagingBytes,
+        'maxStages': maxStages,
+        'maxReceipts': maxReceipts,
+        'maxManifestBytes': maxManifestBytes,
+        'maxReceiptBytes': maxReceiptBytes,
+      };
 
   @override
   bool operator ==(Object other) =>
@@ -300,13 +304,13 @@ final class P3BrowserUploadPolicy {
 
   @override
   int get hashCode => Object.hash(
-    maxPayloadBytes,
-    maxStagingBytes,
-    maxStages,
-    maxReceipts,
-    maxManifestBytes,
-    maxReceiptBytes,
-  );
+        maxPayloadBytes,
+        maxStagingBytes,
+        maxStages,
+        maxReceipts,
+        maxManifestBytes,
+        maxReceiptBytes,
+      );
 }
 
 final class P3BrowserSessionQuotas {
@@ -342,10 +346,10 @@ final class P3BrowserSessionQuotas {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'maxSessions': maxSessions,
-    'maxPagesPerSession': maxPagesPerSession,
-    'maxPersistentProfiles': maxPersistentProfiles,
-  };
+        'maxSessions': maxSessions,
+        'maxPagesPerSession': maxPagesPerSession,
+        'maxPersistentProfiles': maxPersistentProfiles,
+      };
 
   @override
   bool operator ==(Object other) =>
@@ -601,9 +605,8 @@ final class P3BrowserSessionReady {
     final quotas = P3BrowserSessionQuotas(
       maxSessions: maxSessions is int ? maxSessions : -1,
       maxPagesPerSession: maxPagesPerSession is int ? maxPagesPerSession : -1,
-      maxPersistentProfiles: maxPersistentProfiles is int
-          ? maxPersistentProfiles
-          : -1,
+      maxPersistentProfiles:
+          maxPersistentProfiles is int ? maxPersistentProfiles : -1,
     );
     try {
       quotas.validate();
@@ -655,30 +658,30 @@ final class P3BrowserSessionReady {
   final P3BrowserUploadPolicy uploadPolicy;
 
   Map<String, Object?> get provenance => <String, Object?>{
-    'workerPid': runtime.pid,
-    'browserPid': runtime.browserPid,
-    'browserEngine': runtime.browserEngine,
-    'browserVersion': runtime.browserVersion,
-    'browserRevision': runtime.browserRevision,
-    'protocol': runtime.protocol,
-    'sandboxMode': runtime.sandboxMode,
-    'serviceMode': 'sessions',
-    'quotas': quotas.toJson(),
-    'downloadPolicy': downloadPolicy.toJson(),
-    'uploadPolicy': uploadPolicy.toJson(),
-    'applicationOwned': true,
-    'globalRuntimeRequired': false,
-    'browserNetworkInstallRequired': false,
-    'persistentProfileStateLocalOnly': true,
-    'downloadQuarantineApplicationOwned': true,
-    'downloadReceiptValidationIndependent': true,
-    'uploadStagingApplicationOwned': true,
-    'uploadReceiptValidationIndependent': true,
-    'uploadBrowserTransferMode': 'in-memory-buffer',
-    'p3_002SessionServiceImplemented': true,
-    'p3_006aDownloadQuarantineImplemented': true,
-    'p3_006bUploadStagingImplemented': true,
-  };
+        'workerPid': runtime.pid,
+        'browserPid': runtime.browserPid,
+        'browserEngine': runtime.browserEngine,
+        'browserVersion': runtime.browserVersion,
+        'browserRevision': runtime.browserRevision,
+        'protocol': runtime.protocol,
+        'sandboxMode': runtime.sandboxMode,
+        'serviceMode': 'sessions',
+        'quotas': quotas.toJson(),
+        'downloadPolicy': downloadPolicy.toJson(),
+        'uploadPolicy': uploadPolicy.toJson(),
+        'applicationOwned': true,
+        'globalRuntimeRequired': false,
+        'browserNetworkInstallRequired': false,
+        'persistentProfileStateLocalOnly': true,
+        'downloadQuarantineApplicationOwned': true,
+        'downloadReceiptValidationIndependent': true,
+        'uploadStagingApplicationOwned': true,
+        'uploadReceiptValidationIndependent': true,
+        'uploadBrowserTransferMode': 'in-memory-buffer',
+        'p3_002SessionServiceImplemented': true,
+        'p3_006aDownloadQuarantineImplemented': true,
+        'p3_006bUploadStagingImplemented': true,
+      };
 }
 
 final class P3BrowserSessionInfo {
@@ -931,21 +934,18 @@ final class P3BrowserLocalNavigationRequest {
   Map<String, Object?> toJson() {
     final value = url.trim();
     final parsed = Uri.tryParse(value);
-    final localHost =
-        parsed != null &&
+    final localHost = parsed != null &&
         const <String>{
           'localhost',
           '127.0.0.1',
           '::1',
         }.contains(parsed.host.toLowerCase());
-    final aboutBlank =
-        parsed != null &&
+    final aboutBlank = parsed != null &&
         parsed.scheme == 'about' &&
         parsed.path == 'blank' &&
         parsed.query.isEmpty &&
         parsed.fragment.isEmpty;
-    final localHttp =
-        parsed != null &&
+    final localHttp = parsed != null &&
         const <String>{'http', 'https'}.contains(parsed.scheme) &&
         localHost &&
         parsed.userInfo.isEmpty;
@@ -993,12 +993,13 @@ final class P3BrowserLocator {
     String role,
     String name, {
     bool exact = false,
-  }) => P3BrowserLocator._(<String, Object?>{
-    'strategy': 'role',
-    'role': role,
-    'name': name,
-    'exact': exact,
-  });
+  }) =>
+      P3BrowserLocator._(<String, Object?>{
+        'strategy': 'role',
+        'role': role,
+        'name': name,
+        'exact': exact,
+      });
 
   factory P3BrowserLocator.label(String value, {bool exact = false}) =>
       P3BrowserLocator._(<String, Object?>{
@@ -1022,8 +1023,8 @@ final class P3BrowserLocator {
       });
 
   factory P3BrowserLocator.testId(String value) => P3BrowserLocator._(
-    <String, Object?>{'strategy': 'testId', 'value': value},
-  );
+        <String, Object?>{'strategy': 'testId', 'value': value},
+      );
 
   factory P3BrowserLocator.css(String value) =>
       P3BrowserLocator._(<String, Object?>{'strategy': 'css', 'value': value});
@@ -1051,9 +1052,8 @@ final class P3BrowserDownloadRequest {
       throw const P3BrowserRuntimeException('browser_download_timeout_invalid');
     }
     return <String, Object?>{
-      'locators': locators
-          .map((locator) => locator.toJson())
-          .toList(growable: false),
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
       'timeoutMs': timeout.inMilliseconds,
     };
   }
@@ -1079,21 +1079,24 @@ final class P3BrowserDownloadReceipt {
   }) : json = Map<String, Object?>.unmodifiable(json);
 
   factory P3BrowserDownloadReceipt.fromJson(Map<String, Object?> value) {
-    _requireExactBrowserKeys(value, const <String>{
-      'schemaVersion',
-      'receiptType',
-      'downloadId',
-      'sessionId',
-      'sessionKind',
-      'profileId',
-      'pageId',
-      'sourceUrl',
-      'suggestedFilename',
-      'content',
-      'locator',
-      'createdAt',
-      'receiptHash',
-    }, 'browser_download_receipt_invalid');
+    _requireExactBrowserKeys(
+        value,
+        const <String>{
+          'schemaVersion',
+          'receiptType',
+          'downloadId',
+          'sessionId',
+          'sessionKind',
+          'profileId',
+          'pageId',
+          'sourceUrl',
+          'suggestedFilename',
+          'content',
+          'locator',
+          'createdAt',
+          'receiptHash',
+        },
+        'browser_download_receipt_invalid');
     final contentValue = value['content'];
     final locatorValue = value['locator'];
     if (contentValue is! Map || locatorValue is! Map) {
@@ -1101,15 +1104,21 @@ final class P3BrowserDownloadReceipt {
     }
     final content = Map<String, Object?>.from(contentValue);
     final locator = Map<String, Object?>.from(locatorValue);
-    _requireExactBrowserKeys(content, const <String>{
-      'relativePath',
-      'bytes',
-      'sha256',
-    }, 'browser_download_receipt_invalid');
-    _requireExactBrowserKeys(locator, const <String>{
-      'strategy',
-      'index',
-    }, 'browser_download_receipt_invalid');
+    _requireExactBrowserKeys(
+        content,
+        const <String>{
+          'relativePath',
+          'bytes',
+          'sha256',
+        },
+        'browser_download_receipt_invalid');
+    _requireExactBrowserKeys(
+        locator,
+        const <String>{
+          'strategy',
+          'index',
+        },
+        'browser_download_receipt_invalid');
 
     final downloadId = value['downloadId'];
     final sessionId = value['sessionId'];
@@ -1128,20 +1137,18 @@ final class P3BrowserDownloadReceipt {
     final sessionKind = P3BrowserSessionKind.values
         .where((candidate) => candidate.wireName == sessionKindName)
         .firstOrNull;
-    final createdAt = createdAtValue is String
-        ? DateTime.tryParse(createdAtValue)
-        : null;
+    final createdAt =
+        createdAtValue is String ? DateTime.tryParse(createdAtValue) : null;
     final profileValid =
         (sessionKind == P3BrowserSessionKind.ephemeral && profileId == null) ||
-        (sessionKind == P3BrowserSessionKind.persistent &&
-            profileId is String &&
-            _p3ProfileId.hasMatch(profileId));
-    final scopeId = sessionKind == P3BrowserSessionKind.persistent
-        ? profileId
-        : sessionId;
+            (sessionKind == P3BrowserSessionKind.persistent &&
+                profileId is String &&
+                _p3ProfileId.hasMatch(profileId));
+    final scopeId =
+        sessionKind == P3BrowserSessionKind.persistent ? profileId : sessionId;
     final expectedRelativePath = scopeId is String && downloadId is String
         ? 'downloads/quarantine/${sessionKind?.wireName}/$scopeId/'
-              '$downloadId/payload.bin'
+            '$downloadId/payload.bin'
         : '';
 
     if (value['schemaVersion'] != '1.0.0' ||
@@ -1273,29 +1280,35 @@ final class P3BrowserUploadStage {
   }) : json = Map<String, Object?>.unmodifiable(json);
 
   factory P3BrowserUploadStage.fromJson(Map<String, Object?> value) {
-    _requireExactBrowserKeys(value, const <String>{
-      'schemaVersion',
-      'manifestType',
-      'stageId',
-      'sessionId',
-      'sessionKind',
-      'profileId',
-      'file',
-      'createdAt',
-      'manifestHash',
-    }, 'browser_upload_manifest_invalid');
+    _requireExactBrowserKeys(
+        value,
+        const <String>{
+          'schemaVersion',
+          'manifestType',
+          'stageId',
+          'sessionId',
+          'sessionKind',
+          'profileId',
+          'file',
+          'createdAt',
+          'manifestHash',
+        },
+        'browser_upload_manifest_invalid');
     final fileValue = value['file'];
     if (fileValue is! Map) {
       throw const P3BrowserRuntimeException('browser_upload_manifest_invalid');
     }
     final file = Map<String, Object?>.from(fileValue);
-    _requireExactBrowserKeys(file, const <String>{
-      'name',
-      'mimeType',
-      'relativePath',
-      'bytes',
-      'sha256',
-    }, 'browser_upload_manifest_invalid');
+    _requireExactBrowserKeys(
+        file,
+        const <String>{
+          'name',
+          'mimeType',
+          'relativePath',
+          'bytes',
+          'sha256',
+        },
+        'browser_upload_manifest_invalid');
 
     final stageId = value['stageId'];
     final sessionId = value['sessionId'];
@@ -1311,17 +1324,15 @@ final class P3BrowserUploadStage {
     final sessionKind = P3BrowserSessionKind.values
         .where((candidate) => candidate.wireName == sessionKindName)
         .firstOrNull;
-    final createdAt = createdAtValue is String
-        ? DateTime.tryParse(createdAtValue)
-        : null;
+    final createdAt =
+        createdAtValue is String ? DateTime.tryParse(createdAtValue) : null;
     final profileValid =
         (sessionKind == P3BrowserSessionKind.ephemeral && profileId == null) ||
-        (sessionKind == P3BrowserSessionKind.persistent &&
-            profileId is String &&
-            _p3ProfileId.hasMatch(profileId));
-    final expectedRelativePath = stageId is String
-        ? 'uploads/staging/$stageId/payload.bin'
-        : '';
+            (sessionKind == P3BrowserSessionKind.persistent &&
+                profileId is String &&
+                _p3ProfileId.hasMatch(profileId));
+    final expectedRelativePath =
+        stageId is String ? 'uploads/staging/$stageId/payload.bin' : '';
     String? normalizedMimeType;
     if (mimeType is String) {
       try {
@@ -1398,13 +1409,13 @@ final class P3BrowserUploadStage {
   final Map<String, Object?> json;
 
   Map<String, Object?> get requestIdentity => <String, Object?>{
-    'stageId': stageId,
-    'manifestHash': manifestHash,
-    'fileName': fileName,
-    'mimeType': mimeType,
-    'bytes': bytes,
-    'sha256': sha256,
-  };
+        'stageId': stageId,
+        'manifestHash': manifestHash,
+        'fileName': fileName,
+        'mimeType': mimeType,
+        'bytes': bytes,
+        'sha256': sha256,
+      };
 
   Map<String, Object?> toJson() => Map<String, Object?>.from(json);
 }
@@ -1429,9 +1440,8 @@ final class P3BrowserUploadRequest {
       throw const P3BrowserRuntimeException('browser_upload_timeout_invalid');
     }
     return <String, Object?>{
-      'locators': locators
-          .map((locator) => locator.toJson())
-          .toList(growable: false),
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
       'stage': stage.requestIdentity,
       'timeoutMs': timeout.inMilliseconds,
     };
@@ -1459,22 +1469,25 @@ final class P3BrowserUploadReceipt {
   }) : json = Map<String, Object?>.unmodifiable(json);
 
   factory P3BrowserUploadReceipt.fromJson(Map<String, Object?> value) {
-    _requireExactBrowserKeys(value, const <String>{
-      'schemaVersion',
-      'receiptType',
-      'receiptId',
-      'stageId',
-      'manifestHash',
-      'sessionId',
-      'sessionKind',
-      'profileId',
-      'pageId',
-      'file',
-      'locator',
-      'transferMode',
-      'createdAt',
-      'receiptHash',
-    }, 'browser_upload_receipt_invalid');
+    _requireExactBrowserKeys(
+        value,
+        const <String>{
+          'schemaVersion',
+          'receiptType',
+          'receiptId',
+          'stageId',
+          'manifestHash',
+          'sessionId',
+          'sessionKind',
+          'profileId',
+          'pageId',
+          'file',
+          'locator',
+          'transferMode',
+          'createdAt',
+          'receiptHash',
+        },
+        'browser_upload_receipt_invalid');
     final fileValue = value['file'];
     final locatorValue = value['locator'];
     if (fileValue is! Map || locatorValue is! Map) {
@@ -1482,16 +1495,22 @@ final class P3BrowserUploadReceipt {
     }
     final file = Map<String, Object?>.from(fileValue);
     final locator = Map<String, Object?>.from(locatorValue);
-    _requireExactBrowserKeys(file, const <String>{
-      'name',
-      'mimeType',
-      'bytes',
-      'sha256',
-    }, 'browser_upload_receipt_invalid');
-    _requireExactBrowserKeys(locator, const <String>{
-      'strategy',
-      'index',
-    }, 'browser_upload_receipt_invalid');
+    _requireExactBrowserKeys(
+        file,
+        const <String>{
+          'name',
+          'mimeType',
+          'bytes',
+          'sha256',
+        },
+        'browser_upload_receipt_invalid');
+    _requireExactBrowserKeys(
+        locator,
+        const <String>{
+          'strategy',
+          'index',
+        },
+        'browser_upload_receipt_invalid');
 
     final receiptId = value['receiptId'];
     final stageId = value['stageId'];
@@ -1511,14 +1530,13 @@ final class P3BrowserUploadReceipt {
     final sessionKind = P3BrowserSessionKind.values
         .where((candidate) => candidate.wireName == sessionKindName)
         .firstOrNull;
-    final createdAt = createdAtValue is String
-        ? DateTime.tryParse(createdAtValue)
-        : null;
+    final createdAt =
+        createdAtValue is String ? DateTime.tryParse(createdAtValue) : null;
     final profileValid =
         (sessionKind == P3BrowserSessionKind.ephemeral && profileId == null) ||
-        (sessionKind == P3BrowserSessionKind.persistent &&
-            profileId is String &&
-            _p3ProfileId.hasMatch(profileId));
+            (sessionKind == P3BrowserSessionKind.persistent &&
+                profileId is String &&
+                _p3ProfileId.hasMatch(profileId));
     String? normalizedMimeType;
     if (mimeType is String) {
       try {
@@ -1648,8 +1666,7 @@ final class P3BrowserActionRequest {
         timeout > const Duration(seconds: 30)) {
       throw const P3BrowserRuntimeException('browser_action_timeout_invalid');
     }
-    final requiresValue =
-        action == P3BrowserActionKind.fill ||
+    final requiresValue = action == P3BrowserActionKind.fill ||
         action == P3BrowserActionKind.type;
     if (requiresValue != (value != null && value!.isNotEmpty)) {
       throw const P3BrowserRuntimeException('browser_action_value_invalid');
@@ -1674,9 +1691,8 @@ final class P3BrowserActionRequest {
     }
     return <String, Object?>{
       'action': action.wireName,
-      'locators': locators
-          .map((locator) => locator.toJson())
-          .toList(growable: false),
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
       if (targetLocators.isNotEmpty)
         'targetLocators': targetLocators
             .map((locator) => locator.toJson())
@@ -1946,9 +1962,8 @@ final class P3BrowserVisualActionRequest {
     }
     return <String, Object?>{
       'action': action.wireName,
-      'locators': locators
-          .map((locator) => locator.toJson())
-          .toList(growable: false),
+      'locators':
+          locators.map((locator) => locator.toJson()).toList(growable: false),
       if (targetLocators.isNotEmpty)
         'targetLocators': targetLocators
             .map((locator) => locator.toJson())
@@ -2152,8 +2167,8 @@ final class P3BrowserVisualActionResult {
       structuredFailureCode: structuredFailureCode as String?,
       minimumConfidence: (minimumConfidence).toDouble(),
       visualConfidence: (visualConfidence as num?)?.toDouble(),
-      visualDestinationConfidence: (visualDestinationConfidence as num?)
-          ?.toDouble(),
+      visualDestinationConfidence:
+          (visualDestinationConfidence as num?)?.toDouble(),
       beforeObservationHash: beforeObservationHash,
       beforeScreenshotSha256: beforeScreenshotSha256,
       afterObservationHash: afterObservationHash as String?,
@@ -2485,18 +2500,16 @@ final class P3BrowserSessionProcess {
       throw const P3BrowserRuntimeException('browser_session_response_invalid');
     }
     final sessions = _decodeResponse(
-      () => values
-          .map((value) {
-            if (value is! Map) {
-              throw const P3BrowserRuntimeException(
-                'browser_session_response_invalid',
-              );
-            }
-            return P3BrowserSessionInfo.fromJson(
-              Map<String, Object?>.from(value),
-            );
-          })
-          .toList(growable: false),
+      () => values.map((value) {
+        if (value is! Map) {
+          throw const P3BrowserRuntimeException(
+            'browser_session_response_invalid',
+          );
+        }
+        return P3BrowserSessionInfo.fromJson(
+          Map<String, Object?>.from(value),
+        );
+      }).toList(growable: false),
     );
     if (sessions.map((session) => session.sessionId).toSet().length !=
             sessions.length ||
@@ -2537,16 +2550,14 @@ final class P3BrowserSessionProcess {
       throw const P3BrowserRuntimeException('browser_page_response_invalid');
     }
     final pages = _decodeResponse(
-      () => values
-          .map((value) {
-            if (value is! Map) {
-              throw const P3BrowserRuntimeException(
-                'browser_page_response_invalid',
-              );
-            }
-            return P3BrowserPageInfo.fromJson(Map<String, Object?>.from(value));
-          })
-          .toList(growable: false),
+      () => values.map((value) {
+        if (value is! Map) {
+          throw const P3BrowserRuntimeException(
+            'browser_page_response_invalid',
+          );
+        }
+        return P3BrowserPageInfo.fromJson(Map<String, Object?>.from(value));
+      }).toList(growable: false),
     );
     if (pages.any((page) => page.sessionId != sessionId) ||
         pages.map((page) => page.pageId).toSet().length != pages.length) {
@@ -2676,18 +2687,16 @@ final class P3BrowserSessionProcess {
       );
     }
     final receipts = _decodeResponse(
-      () => values
-          .map((value) {
-            if (value is! Map) {
-              throw const P3BrowserRuntimeException(
-                'browser_download_response_invalid',
-              );
-            }
-            return P3BrowserDownloadReceipt.fromJson(
-              Map<String, Object?>.from(value),
-            );
-          })
-          .toList(growable: false),
+      () => values.map((value) {
+        if (value is! Map) {
+          throw const P3BrowserRuntimeException(
+            'browser_download_response_invalid',
+          );
+        }
+        return P3BrowserDownloadReceipt.fromJson(
+          Map<String, Object?>.from(value),
+        );
+      }).toList(growable: false),
     );
     if (receipts.length > ready.downloadPolicy.maxReceipts ||
         receipts.map((receipt) => receipt.downloadId).toSet().length !=
@@ -2704,8 +2713,7 @@ final class P3BrowserSessionProcess {
     for (var index = 1; index < receipts.length; index += 1) {
       final previous = receipts[index - 1];
       final current = receipts[index];
-      final ordered =
-          previous.createdAt.isBefore(current.createdAt) ||
+      final ordered = previous.createdAt.isBefore(current.createdAt) ||
           (previous.createdAt.isAtSameMomentAs(current.createdAt) &&
               previous.downloadId.compareTo(current.downloadId) <= 0);
       if (!ordered) {
@@ -2779,18 +2787,16 @@ final class P3BrowserSessionProcess {
       throw const P3BrowserRuntimeException('browser_upload_response_invalid');
     }
     final receipts = _decodeResponse(
-      () => values
-          .map((value) {
-            if (value is! Map) {
-              throw const P3BrowserRuntimeException(
-                'browser_upload_response_invalid',
-              );
-            }
-            return P3BrowserUploadReceipt.fromJson(
-              Map<String, Object?>.from(value),
-            );
-          })
-          .toList(growable: false),
+      () => values.map((value) {
+        if (value is! Map) {
+          throw const P3BrowserRuntimeException(
+            'browser_upload_response_invalid',
+          );
+        }
+        return P3BrowserUploadReceipt.fromJson(
+          Map<String, Object?>.from(value),
+        );
+      }).toList(growable: false),
     );
     if (receipts.length > ready.uploadPolicy.maxReceipts ||
         receipts.any((receipt) => receipt.sessionId != sessionId) ||
@@ -2803,8 +2809,7 @@ final class P3BrowserSessionProcess {
     for (var index = 1; index < receipts.length; index += 1) {
       final previous = receipts[index - 1];
       final current = receipts[index];
-      final ordered =
-          previous.createdAt.isBefore(current.createdAt) ||
+      final ordered = previous.createdAt.isBefore(current.createdAt) ||
           (previous.createdAt.isAtSameMomentAs(current.createdAt) &&
               previous.receiptId.compareTo(current.receiptId) <= 0);
       if (!ordered) {
@@ -2882,9 +2887,9 @@ final class P3BrowserRuntimeService {
     required Directory applicationDataRoot,
     String? executablePath,
   }) : _resolver = P3ApplicationOwnedBrowserRuntimeResolver(
-         applicationDataRoot: applicationDataRoot,
-         executablePath: executablePath,
-       );
+          applicationDataRoot: applicationDataRoot,
+          executablePath: executablePath,
+        );
 
   P3BrowserRuntimeService.withResolver(this._resolver);
 

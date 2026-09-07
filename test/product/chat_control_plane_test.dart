@@ -260,7 +260,8 @@ void main() {
       expect(decision.capability?.id, 'agent.create_project');
     });
 
-    test('an unscoped "build me a clock app" is agent.create_project, not '
+    test(
+        'an unscoped "build me a clock app" is agent.create_project, not '
         'project.build', () {
       final decision = compiler.compile(
         'Build me a small app showing the live time in Rome.',
@@ -269,7 +270,8 @@ void main() {
       expect(decision.capability?.id, 'agent.create_project');
     });
 
-    test('"build @project" (natural language, project mentioned) is '
+    test(
+        '"build @project" (natural language, project mentioned) is '
         'project.build, not agent.create_project', () {
       final decision = compiler.compile(
         'build @rome-clock',
@@ -279,7 +281,8 @@ void main() {
       expect(decision.capability?.id, 'project.build');
     });
 
-    test('a modification verb with no explicit target is agent.modify_project, '
+    test(
+        'a modification verb with no explicit target is agent.modify_project, '
         'never a fresh project', () {
       final decision = compiler.compile(
         'Add a dark mode toggle to the settings screen.',
@@ -288,7 +291,8 @@ void main() {
       expect(decision.capability?.id, 'agent.modify_project');
     });
 
-    test('"fix this project" style wording is agent.modify_project, not '
+    test(
+        '"fix this project" style wording is agent.modify_project, not '
         'agent.create_project', () {
       final decision = compiler.compile(
         'Please build in more error handling for this project.',
@@ -371,7 +375,8 @@ void main() {
   group(
     'permission separation: ChatRiskClass is UX only (Improvement #10)',
     () {
-      test('two capabilities sharing a ChatRiskClass still route to different '
+      test(
+          'two capabilities sharing a ChatRiskClass still route to different '
           'real runtime effects', () {
         final test = registry.byId('project.test')!;
         final run = registry.byId('project.run')!;
@@ -380,13 +385,13 @@ void main() {
         expect(
           test.route,
           isNot(run.route),
-          reason:
-              'identical ChatRiskClass must never imply identical '
+          reason: 'identical ChatRiskClass must never imply identical '
               'real authority or effect',
         );
       });
 
-      test('the same capability targeting two different real projects reports '
+      test(
+          'the same capability targeting two different real projects reports '
           'the same ChatRiskClass -- real authority is per-target, decided by '
           'ProductRuntime, never by this presentation-only value', () {
         const projectB = ChatTarget(
@@ -492,7 +497,8 @@ void main() {
       );
     });
 
-    test('Unicode text does not throw; the mention grammar is ASCII-bounded '
+    test(
+        'Unicode text does not throw; the mention grammar is ASCII-bounded '
         'by design and simply stops at the first non-ASCII character', () {
       final parsed = parser.parse('@josé quiere café ☕ por favor');
       expect(parsed.mentions, <String>{'jos'});
@@ -577,7 +583,8 @@ void main() {
   });
 
   group('target-only input is safe by construction', () {
-    test('a bare mention naming a navigation capability references it '
+    test(
+        'a bare mention naming a navigation capability references it '
         'directly -- never a fabricated create/mutation decision', () {
       final decision = compiler.compile(
         '@project-manager',
@@ -591,7 +598,8 @@ void main() {
       expect(decision.ambiguous, isFalse);
     });
 
-    test('a bare project mention is a non-mutating reference, not '
+    test(
+        'a bare project mention is a non-mutating reference, not '
         'agent.create_project', () {
       final decision = compiler.compile(
         '@rome-clock',
@@ -607,7 +615,8 @@ void main() {
       expect(decision.ambiguous, isFalse);
     });
 
-    test('multiple resolved targets in one bare-mention message clarify '
+    test(
+        'multiple resolved targets in one bare-mention message clarify '
         'rather than silently picking one', () {
       final decision = compiler.compile(
         '@rome-clock @phi4-mini',
@@ -619,7 +628,8 @@ void main() {
       expect(decision.ambiguous, isTrue);
     });
 
-    test('an unresolved bare mention is a reference with no targets, not '
+    test(
+        'an unresolved bare mention is a reference with no targets, not '
         'a fabricated action', () {
       final decision = compiler.compile(
         '@does-not-exist',
@@ -633,7 +643,8 @@ void main() {
       expect(decision.riskClass, ChatRiskClass.none);
     });
 
-    test('target-only detection ignores trailing punctuation but requires '
+    test(
+        'target-only detection ignores trailing punctuation but requires '
         'the mention to be the only content', () {
       final bareWithPunctuation = compiler.compile(
         '@rome-clock.',

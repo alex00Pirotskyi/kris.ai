@@ -23,12 +23,12 @@ import 'universal_task_plan.dart';
 
 enum KernelPlanOrigin { planned, conservativeFallback }
 
-typedef KernelLiveSelfModelResolver =
-    Future<SelfModelPlanningContext> Function({
-      required ProjectRecord? project,
-      required ModelIdentity? model,
-      required Set<String> relevantCapabilityIds,
-    });
+typedef KernelLiveSelfModelResolver = Future<SelfModelPlanningContext>
+    Function({
+  required ProjectRecord? project,
+  required ModelIdentity? model,
+  required Set<String> relevantCapabilityIds,
+});
 
 /// Product composition may register a live self-model resolver for a kernel.
 /// The kernel only intersects its caller-provided capability set with this
@@ -128,22 +128,22 @@ class KernelRequestContext {
       );
 
   UnderstandingContext get understandingContext => UnderstandingContext(
-    availableCapabilities: availableCapabilities
-        .where((item) => liveAvailableCapabilityIds.contains(item.id))
-        .toList(growable: false),
-    knownTargets: knownTargets,
-    hasSelectedProject: project != null,
-  );
+        availableCapabilities: availableCapabilities
+            .where((item) => liveAvailableCapabilityIds.contains(item.id))
+            .toList(growable: false),
+        knownTargets: knownTargets,
+        hasSelectedProject: project != null,
+      );
 
   PlanningContext get planningContext => PlanningContext(
-    project: project,
-    model: model,
-    availableCapabilityIds: liveAvailableCapabilityIds,
-    availableToolNames: availableToolNames,
-    consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
-    localOnly: localOnly,
-    maxLeafTasks: maxLeafTasks,
-  );
+        project: project,
+        model: model,
+        availableCapabilityIds: liveAvailableCapabilityIds,
+        availableToolNames: availableToolNames,
+        consumedCoordinatorCapabilities: consumedCoordinatorCapabilities,
+        localOnly: localOnly,
+        maxLeafTasks: maxLeafTasks,
+      );
 }
 
 class UniversalTaskKernel {
@@ -202,7 +202,8 @@ class UniversalTaskKernel {
   RoutingDecision route({
     required TaskSpecification specification,
     required ChatInteractionDecision decision,
-  }) => router.route(specification: specification, decision: decision);
+  }) =>
+      router.route(specification: specification, decision: decision);
 
   Future<KernelPlanResult> plan({
     required TaskSpecification specification,
@@ -299,13 +300,14 @@ class UniversalTaskKernel {
     required KernelRequestContext requestContext,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) => plan(
-    specification: specification,
-    routing: routing,
-    context: requestContext.planningContext,
-    cancellation: cancellation,
-    isCancelled: isCancelled,
-  );
+  }) =>
+      plan(
+        specification: specification,
+        routing: routing,
+        context: requestContext.planningContext,
+        cancellation: cancellation,
+        isCancelled: isCancelled,
+      );
 
   CompiledTaskPlan compile({
     required UniversalTaskPlan plan,
@@ -321,9 +323,8 @@ class UniversalTaskKernel {
       plan: plan,
       project: project,
       mode: mode,
-      request: request.trim().isEmpty
-          ? plan.specification.originalRequest
-          : request,
+      request:
+          request.trim().isEmpty ? plan.specification.originalRequest : request,
       selectedTaskIds: selectedTaskIds,
       additionalConstraints: additionalConstraints,
       additionalCriteria: additionalCriteria,
@@ -354,11 +355,10 @@ class UniversalTaskKernel {
         authorityScopes.addAll(decision.requiredScopes);
       }
     }
-    final missing =
-        authorityScopes
-            .difference(compiled.contract.requiredPermissions)
-            .toList(growable: false)
-          ..sort((a, b) => a.name.compareTo(b.name));
+    final missing = authorityScopes
+        .difference(compiled.contract.requiredPermissions)
+        .toList(growable: false)
+      ..sort((a, b) => a.name.compareTo(b.name));
     if (missing.isNotEmpty) {
       throw ProductException(
         'capability_authority_not_compiled',
@@ -366,11 +366,10 @@ class UniversalTaskKernel {
         details: <String, dynamic>{
           'capabilityIds': capabilityIds.toList()..sort(),
           'missingScopes': missing.map((scope) => scope.name).toList(),
-          'contractScopes':
-              compiled.contract.requiredPermissions
-                  .map((scope) => scope.name)
-                  .toList()
-                ..sort(),
+          'contractScopes': compiled.contract.requiredPermissions
+              .map((scope) => scope.name)
+              .toList()
+            ..sort(),
         },
       );
     }
@@ -380,11 +379,12 @@ class UniversalTaskKernel {
     required UniversalTaskPlan previous,
     required UniversalTaskPlan revised,
     required List<CompletedTaskRecord> completed,
-  }) => reconciler.reconcile(
-    previous: previous,
-    revised: revised,
-    completed: completed,
-  );
+  }) =>
+      reconciler.reconcile(
+        previous: previous,
+        revised: revised,
+        completed: completed,
+      );
 
   TaskFamilyPlanner? _plannerFor(
     TaskFamily family,

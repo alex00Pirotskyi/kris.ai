@@ -155,8 +155,8 @@ extension _P5VerificationWorkspaces
     final selected = savedRun == null || state.selectedEvidenceId == null
         ? null
         : evidence
-              .where((item) => item.id == state.selectedEvidenceId)
-              .firstOrNull;
+            .where((item) => item.id == state.selectedEvidenceId)
+            .firstOrNull;
     return _scrollWorkspace(
       context,
       children: <Widget>[
@@ -357,21 +357,18 @@ extension _P5VerificationWorkspaces
         return Column(
           key: const Key('evidence-markdown-preview'),
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: fixture.content
-              .split('\n')
-              .map((line) {
-                if (line.startsWith('# ')) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      line.substring(2),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  );
-                }
-                return SelectableText(line);
-              })
-              .toList(growable: false),
+          children: fixture.content.split('\n').map((line) {
+            if (line.startsWith('# ')) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  line.substring(2),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              );
+            }
+            return SelectableText(line);
+          }).toList(growable: false),
         );
       case P5EvidenceKind.table:
         final rows = fixture.content
@@ -446,8 +443,8 @@ extension _P5VerificationWorkspaces
       final status = !available
           ? 'Unavailable'
           : settings!.enabled
-          ? (settings.unattended ? 'Enabled unattended' : 'Enabled')
-          : 'Available, off';
+              ? (settings.unattended ? 'Enabled unattended' : 'Enabled')
+              : 'Available, off';
       return _scrollWorkspace(
         context,
         children: <Widget>[
@@ -473,8 +470,8 @@ extension _P5VerificationWorkspaces
                   Text(
                     available
                         ? 'Approval: ${settings!.approvalPolicy.name} • '
-                              'terminals: $terminalCount • supervised trees: '
-                              '${(supervision?['watchdogIds'] as List?)?.length ?? 0}'
+                            'terminals: $terminalCount • supervised trees: '
+                            '${(supervision?['watchdogIds'] as List?)?.length ?? 0}'
                         : liveHandle.recoveryMessage,
                   ),
                   const SizedBox(height: 8),
@@ -489,8 +486,7 @@ extension _P5VerificationWorkspaces
                         icon: Icons.verified_user_outlined,
                       ),
                       _StatusChip(
-                        label:
-                            'Runtime: '
+                        label: 'Runtime: '
                             '${available ? 'available' : liveHandle.diagnosticCode}',
                         icon: available
                             ? Icons.check_circle_outline

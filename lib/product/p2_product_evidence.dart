@@ -185,35 +185,32 @@ final class P2ProductAssertionEvidence {
       final specialized = <String, bool>{
         'P2-001':
             osEffect['kind'] == 'owner_mode_settings_enable_disable_reset' &&
-            postcondition['explicitAcknowledgementRequired'] == true &&
-            postcondition['fullCurrentAccountLabelObserved'] == true &&
-            postcondition['notSandboxLabelObserved'] == true &&
-            postcondition['persistentIndicatorObserved'] == true &&
-            postcondition['disableResetObserved'] == true &&
-            postcondition['settingsPersistedAfterReenable'] == true,
-        'P2-005':
-            osEffect['kind'] == 'interactive_pty_detach_reconnect' &&
+                postcondition['explicitAcknowledgementRequired'] == true &&
+                postcondition['fullCurrentAccountLabelObserved'] == true &&
+                postcondition['notSandboxLabelObserved'] == true &&
+                postcondition['persistentIndicatorObserved'] == true &&
+                postcondition['disableResetObserved'] == true &&
+                postcondition['settingsPersistedAfterReenable'] == true,
+        'P2-005': osEffect['kind'] == 'interactive_pty_detach_reconnect' &&
             postcondition['consumerDetached'] == true &&
             postcondition['outputWhileDetached'] == true &&
             postcondition['backlogReplayExact'] == true &&
             postcondition['noDuplicationOrLoss'] == true,
-        'P2-006':
-            osEffect['kind'] == 'managed_process_tree_kill' &&
+        'P2-006': osEffect['kind'] == 'managed_process_tree_kill' &&
             postcondition['descendantProcessCreated'] == true &&
             postcondition['identityVerified'] == true &&
             postcondition['activeProcesses'] == 0 &&
             postcondition['zeroSurvivingDescendants'] == true,
         'P2-007':
             osEffect['kind'] == 'controlled_target_host_package_lifecycle' &&
-            postcondition['controlledTargetHost'] == true &&
-            postcondition['dryRunObserved'] == true &&
-            postcondition['installObserved'] == true &&
-            postcondition['installedStateObserved'] == true &&
-            postcondition['removeObserved'] == true &&
-            postcondition['removedStateObserved'] == true &&
-            postcondition['executableVersionProvenanceObserved'] == true,
-        'P2-008':
-            osEffect['kind'] ==
+                postcondition['controlledTargetHost'] == true &&
+                postcondition['dryRunObserved'] == true &&
+                postcondition['installObserved'] == true &&
+                postcondition['installedStateObserved'] == true &&
+                postcondition['removeObserved'] == true &&
+                postcondition['removedStateObserved'] == true &&
+                postcondition['executableVersionProvenanceObserved'] == true,
+        'P2-008': osEffect['kind'] ==
                 'controlled_user_service_and_application_lifecycle' &&
             postcondition['startObserved'] == true &&
             postcondition['runningObserved'] == true &&
@@ -224,15 +221,13 @@ final class P2ProductAssertionEvidence {
             postcondition['elevationExercised'] == false,
         'P2-009':
             osEffect['kind'] == 'interactive_clipboard_screen_active_window' &&
-            postcondition['clipboardRoundTrip'] == true &&
-            postcondition['screenCaptured'] == true &&
-            postcondition['activeWindowObserved'] == true &&
-            postcondition['ordinaryLogContentAbsent'] == true,
-        'P2-010':
-            osEffect['kind'] == 'product_snapshot_restore' &&
+                postcondition['clipboardRoundTrip'] == true &&
+                postcondition['screenCaptured'] == true &&
+                postcondition['activeWindowObserved'] == true &&
+                postcondition['ordinaryLogContentAbsent'] == true,
+        'P2-010': osEffect['kind'] == 'product_snapshot_restore' &&
             postcondition['restoredContent'] == true,
-        'P2-011':
-            osEffect['kind'] ==
+        'P2-011': osEffect['kind'] ==
                 'product_runtime_external_watchdog_kill_during_ui_freeze' &&
             postcondition['watchdogAutomaticallyArmed'] == true &&
             postcondition['heartbeatObserved'] == true &&
@@ -243,16 +238,15 @@ final class P2ProductAssertionEvidence {
             postcondition['zeroSurvivingDescendants'] == true,
         'P2-012':
             osEffect['kind'] == 'shipped_terminal_workspace_managed_session' &&
-            postcondition['tabCreatedFromManagedPty'] == true &&
-            postcondition['shellAndCwdObserved'] == true &&
-            postcondition['runTaskGrantIdentityObserved'] == true &&
-            postcondition['searchObserved'] == true &&
-            postcondition['accessibilityLabelObserved'] == true &&
-            postcondition['keyboardEmergencyActionExposed'] == true &&
-            postcondition['interruptObserved'] == true &&
-            postcondition['terminateTreeObserved'] == true,
-        'P2-013':
-            osEffect['kind'] ==
+                postcondition['tabCreatedFromManagedPty'] == true &&
+                postcondition['shellAndCwdObserved'] == true &&
+                postcondition['runTaskGrantIdentityObserved'] == true &&
+                postcondition['searchObserved'] == true &&
+                postcondition['accessibilityLabelObserved'] == true &&
+                postcondition['keyboardEmergencyActionExposed'] == true &&
+                postcondition['interruptObserved'] == true &&
+                postcondition['terminateTreeObserved'] == true,
+        'P2-013': osEffect['kind'] ==
                 'production_authority_restart_replay_reconciliation' &&
             postcondition['firstDispatchSucceeded'] == true &&
             postcondition['durableConsumptionRecorded'] == true &&

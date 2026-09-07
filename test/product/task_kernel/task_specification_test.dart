@@ -10,24 +10,25 @@ void main() {
     // The scenario from the product brief: "Make this app faster but
     // don't change the database and keep the UI simple."
     TaskSpecification fasterApp() => TaskSpecification(
-      id: 'spec_faster',
-      originalRequest:
-          'Make this app faster but do not change the '
-          'database and keep the UI simple.',
-      objective: 'Improve application performance',
-      hardConstraints: <SpecificationClaim>[
-        const SpecificationClaim.stated('The database must not be modified.'),
-      ],
-      preferences: <SpecificationClaim>[
-        const SpecificationClaim.stated('Keep UI changes minimal.'),
-      ],
-      successCriteria: <SpecificationClaim>[
-        const SpecificationClaim.inferred(
-          'A measurable performance improvement is observable.',
-        ),
-        const SpecificationClaim.inferred('Existing behavior remains valid.'),
-      ],
-    );
+          id: 'spec_faster',
+          originalRequest: 'Make this app faster but do not change the '
+              'database and keep the UI simple.',
+          objective: 'Improve application performance',
+          hardConstraints: <SpecificationClaim>[
+            const SpecificationClaim.stated(
+                'The database must not be modified.'),
+          ],
+          preferences: <SpecificationClaim>[
+            const SpecificationClaim.stated('Keep UI changes minimal.'),
+          ],
+          successCriteria: <SpecificationClaim>[
+            const SpecificationClaim.inferred(
+              'A measurable performance improvement is observable.',
+            ),
+            const SpecificationClaim.inferred(
+                'Existing behavior remains valid.'),
+          ],
+        );
 
     test('a hard constraint is not interchangeable with a preference', () {
       final specification = fasterApp();

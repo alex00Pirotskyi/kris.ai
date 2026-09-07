@@ -52,9 +52,9 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
   }
 
   File _record(String entity, String id) => File(
-    '${root.path}${Platform.pathSeparator}$entity'
-    '${Platform.pathSeparator}${_requireId(id)}.json',
-  );
+        '${root.path}${Platform.pathSeparator}$entity'
+        '${Platform.pathSeparator}${_requireId(id)}.json',
+      );
 
   File get _version =>
       File('${root.path}${Platform.pathSeparator}schema-version.txt');
@@ -110,9 +110,8 @@ final class P4JsonResearchAuthorityStore implements P4ResearchAuthorityStore {
     final output = <Map<String, Object?>>[];
     await for (final child in directory.list(followLinks: false)) {
       if (child is! File || !child.path.endsWith('.json')) continue;
-      final filename = child.uri.pathSegments
-          .where((segment) => segment.isNotEmpty)
-          .last;
+      final filename =
+          child.uri.pathSegments.where((segment) => segment.isNotEmpty).last;
       final id = filename.substring(0, filename.length - '.json'.length);
       output.add(
         await _readRecord(child, expectedEntity: entity, expectedId: id),
@@ -210,9 +209,8 @@ final class P4ResearchAuthorityMigrator {
     final applied = <P4ResearchAuthorityMigration>[];
     try {
       while (current != p4ResearchAuthorityVersion) {
-        final migration = migrations
-            .where((item) => item.fromVersion == current)
-            .firstOrNull;
+        final migration =
+            migrations.where((item) => item.fromVersion == current).firstOrNull;
         if (migration == null) {
           throw const P4ResearchException(
             'research_authority_migration_missing',

@@ -29,15 +29,15 @@ class SourceIndexEntry {
   final String text;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'path': path,
-    'sha256': sha256,
-    'bytes': bytes,
-    'modifiedAt': modifiedAt.toUtc().toIso8601String(),
-    'language': language,
-    'symbols': symbols,
-    'dependencies': dependencies,
-    'text': text,
-  };
+        'path': path,
+        'sha256': sha256,
+        'bytes': bytes,
+        'modifiedAt': modifiedAt.toUtc().toIso8601String(),
+        'language': language,
+        'symbols': symbols,
+        'dependencies': dependencies,
+        'text': text,
+      };
 
   factory SourceIndexEntry.fromJson(Map<String, dynamic> json) =>
       SourceIndexEntry(
@@ -70,13 +70,13 @@ class SourceIndexReport {
   final DateTime generatedAt;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'scanned': scanned,
-    'changed': changed,
-    'removed': removed,
-    'skipped': skipped,
-    'total': total,
-    'generatedAt': generatedAt.toUtc().toIso8601String(),
-  };
+        'scanned': scanned,
+        'changed': changed,
+        'removed': removed,
+        'skipped': skipped,
+        'total': total,
+        'generatedAt': generatedAt.toUtc().toIso8601String(),
+      };
 }
 
 class SourceIndexService {
@@ -89,8 +89,8 @@ class SourceIndexService {
   final PerformanceSpanSink _performance;
 
   AtomicJsonFile _file(String projectId) => AtomicJsonFile(
-    File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'),
-  );
+        File('${indexDirectory.path}${Platform.pathSeparator}$projectId.json'),
+      );
 
   Future<SourceIndexReport> update(ProjectRecord project) async {
     await indexDirectory.create(recursive: true);
@@ -291,8 +291,7 @@ class SourceIndexService {
         }
         final offset = lowerText.indexOf(term);
         if (offset >= 0) {
-          score +=
-              1 +
+          score += 1 +
               min(
                     10,
                     RegExp(RegExp.escape(term)).allMatches(lowerText).length,
@@ -340,10 +339,7 @@ class SourceIndexService {
     return results;
   }
 
-  bool _ignored(String path) => path
-      .replaceAll('\\', '/')
-      .split('/')
-      .any(
+  bool _ignored(String path) => path.replaceAll('\\', '/').split('/').any(
         const <String>{
           '.git',
           '.dart_tool',
@@ -363,9 +359,8 @@ class SourceIndexService {
       );
 
   String _language(String path) {
-    final extension = path.contains('.')
-        ? path.split('.').last.toLowerCase()
-        : '';
+    final extension =
+        path.contains('.') ? path.split('.').last.toLowerCase() : '';
     return const <String, String>{
           'dart': 'dart',
           'py': 'python',
@@ -475,11 +470,11 @@ class SkillPackage {
   final Set<String> recommendedTools;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'id': id,
-    'title': title,
-    'recommendedTools': recommendedTools.toList()..sort(),
-    'instructions': instructions,
-  };
+        'id': id,
+        'title': title,
+        'recommendedTools': recommendedTools.toList()..sort(),
+        'instructions': instructions,
+      };
 }
 
 class SkillRegistry {
@@ -510,8 +505,7 @@ class SkillRegistry {
     }
     return skills
         .map(
-          (skill) =>
-              '''
+          (skill) => '''
 SKILL ${skill.id} — ${skill.title}
 These are product-authored advisory instructions. They never expand tools, permissions, paths, or budgets.
 ${skill.instructions}

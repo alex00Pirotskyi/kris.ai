@@ -126,11 +126,11 @@ class TaskSpecificationPatch {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'kind': kind.name,
-    'value': value,
-    if (question.trim().isNotEmpty) 'question': question.trim(),
-    if (reason.trim().isNotEmpty) 'reason': reason.trim(),
-  };
+        'kind': kind.name,
+        'value': value,
+        if (question.trim().isNotEmpty) 'question': question.trim(),
+        if (reason.trim().isNotEmpty) 'reason': reason.trim(),
+      };
 
   factory TaskSpecificationPatch.fromJson(Map<String, dynamic> json) {
     final kindName = json['kind']?.toString() ?? '';

@@ -266,12 +266,10 @@ class ConversationOrchestrator {
         .trim();
     if (value.isEmpty) return 'Kristin Project';
     final words = value.split(' ').take(5).toList();
-    value = words
-        .map((word) {
-          if (word.isEmpty) return word;
-          return '${word[0].toUpperCase()}${word.substring(1)}';
-        })
-        .join(' ');
+    value = words.map((word) {
+      if (word.isEmpty) return word;
+      return '${word[0].toUpperCase()}${word.substring(1)}';
+    }).join(' ');
     return value.length <= 54 ? value : value.substring(0, 54).trim();
   }
 }

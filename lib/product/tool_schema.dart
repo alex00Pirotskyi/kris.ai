@@ -85,10 +85,11 @@ class ToolSchemaRegistry {
   List<Map<String, dynamic>> descriptors({
     Set<String>? allowlist,
     base.ToolDescriptorDialect dialect = base.ToolDescriptorDialect.canonical,
-  }) => names
-      .where((name) => allowlist == null || allowlist.contains(name))
-      .map((name) => require(name).descriptor(dialect: dialect))
-      .toList(growable: false);
+  }) =>
+      names
+          .where((name) => allowlist == null || allowlist.contains(name))
+          .map((name) => require(name).descriptor(dialect: dialect))
+          .toList(growable: false);
 
   void verifyCoverage(Iterable<String> handlerNames) =>
       _base.verifyCoverage(handlerNames);

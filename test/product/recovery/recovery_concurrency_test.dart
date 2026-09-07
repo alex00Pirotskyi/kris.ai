@@ -32,11 +32,12 @@ class _Provider implements KristinCapabilityProvider {
   Future<CapabilityAvailability> resolveAvailability(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) async => CapabilityAvailability(
-    capabilityId: descriptor.id,
-    state: CapabilityAvailabilityState.available,
-    observedAt: DateTime.now().toUtc(),
-  );
+  ) async =>
+      CapabilityAvailability(
+        capabilityId: descriptor.id,
+        state: CapabilityAvailabilityState.available,
+        observedAt: DateTime.now().toUtc(),
+      );
 }
 
 class _App implements ApplicationSnapshotProvider {
@@ -44,11 +45,12 @@ class _App implements ApplicationSnapshotProvider {
   Future<ApplicationSnapshot> capture({
     bool forceRefresh = false,
     SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
-  }) async => ApplicationSnapshot(
-    capturedAt: DateTime.utc(2026, 1, 1),
-    applicationIdentity: 'kris.ai',
-    platform: 'linux',
-  );
+  }) async =>
+      ApplicationSnapshot(
+        capturedAt: DateTime.utc(2026, 1, 1),
+        applicationIdentity: 'kris.ai',
+        platform: 'linux',
+      );
 }
 
 class _Journal implements FailureJournal {
@@ -98,6 +100,13 @@ class _GatedActuator implements RecoveryActuator {
   int performed = 0;
   bool throwOnPerform = false;
 
+  /// Latched by [releaseAll]. Supervision is serialized per recurrence
+  /// signature, so a queued second supervision reaches perform() only after
+  /// the first one finishes -- strictly after the test has already released.
+  /// Without this latch its gate would be created post-release and block
+  /// forever, turning a passing invariant into a timeout.
+  bool _released = false;
+
   @override
   Future<RecoveryActionResult> perform(
     RecoveryDecision decision,
@@ -106,6 +115,7 @@ class _GatedActuator implements RecoveryActuator {
     performed += 1;
     final gate = Completer<void>();
     release.add(gate);
+    if (_released) gate.complete();
     if (entered.isNotEmpty) {
       final waiter = entered.removeAt(0);
       if (!waiter.isCompleted) waiter.complete();
@@ -123,7 +133,8 @@ class _GatedActuator implements RecoveryActuator {
     RecoveryDecision decision,
     FailureEvent failure,
     RecoveryActionResult action,
-  ) async => const RecoveryActionResult(summary: 'rolled back');
+  ) async =>
+      const RecoveryActionResult(summary: 'rolled back');
 
   /// Completes when the next perform() call has been entered.
   Future<void> nextEntry() {
@@ -133,6 +144,7 @@ class _GatedActuator implements RecoveryActuator {
   }
 
   void releaseAll() {
+    _released = true;
     for (final gate in release) {
       if (!gate.isCompleted) gate.complete();
     }

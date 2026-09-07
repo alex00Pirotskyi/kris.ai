@@ -20,24 +20,6 @@ const String benchmarkAuthoritySignature =
     'ddf694726663b106c024eec83e5aebd796af11d2edfb07ba59445c276e949d06';
 
 Map<String, Object?> _benchmarkJson() => <String, Object?>{
-  'benchmarkId': 'p6.code-fixture-v1',
-  'taskClassId': 'code-generation',
-  'modelDigest': digestA,
-  'score': 0.91,
-  'scoreUnit': 'ratio',
-  'higherIsBetter': true,
-  'sampleCount': 100,
-  'measuredAt': '2026-08-06T00:00:00.000Z',
-  'executionId': benchmarkExecutionId,
-  'evidence': <String, Object?>{
-    'locationKind': 'embedded_content_addressed',
-    'sha256': benchmarkEvidenceSha,
-    'payload': <String, Object?>{
-      'schemaVersion': '1.0.0',
-      'kind': 'MODEL_BENCHMARK_RESULT',
-      'candidateCommit': candidateCommit,
-      'candidateTree': candidateTree,
-      'executionId': benchmarkExecutionId,
       'benchmarkId': 'p6.code-fixture-v1',
       'taskClassId': 'code-generation',
       'modelDigest': digestA,
@@ -46,30 +28,48 @@ Map<String, Object?> _benchmarkJson() => <String, Object?>{
       'higherIsBetter': true,
       'sampleCount': 100,
       'measuredAt': '2026-08-06T00:00:00.000Z',
-    },
-    'authority': <String, Object?>{
-      'kind': 'ed25519_protected_key',
-      'keyId': benchmarkAuthorityKeyId,
-      'signature': benchmarkAuthoritySignature,
-    },
-  },
-};
+      'executionId': benchmarkExecutionId,
+      'evidence': <String, Object?>{
+        'locationKind': 'embedded_content_addressed',
+        'sha256': benchmarkEvidenceSha,
+        'payload': <String, Object?>{
+          'schemaVersion': '1.0.0',
+          'kind': 'MODEL_BENCHMARK_RESULT',
+          'candidateCommit': candidateCommit,
+          'candidateTree': candidateTree,
+          'executionId': benchmarkExecutionId,
+          'benchmarkId': 'p6.code-fixture-v1',
+          'taskClassId': 'code-generation',
+          'modelDigest': digestA,
+          'score': 0.91,
+          'scoreUnit': 'ratio',
+          'higherIsBetter': true,
+          'sampleCount': 100,
+          'measuredAt': '2026-08-06T00:00:00.000Z',
+        },
+        'authority': <String, Object?>{
+          'kind': 'ed25519_protected_key',
+          'keyId': benchmarkAuthorityKeyId,
+          'signature': benchmarkAuthoritySignature,
+        },
+      },
+    };
 
 ModelLimits _limits() => ModelLimits(
-  evidenceLevel: ModelEvidenceLevel.measured,
-  contextWindowTokens: 32768,
-  maxOutputTokens: 4096,
-  maxConcurrentRequests: 1,
-  maxToolCallsPerTurn: 0,
-  supportsStreaming: true,
-);
+      evidenceLevel: ModelEvidenceLevel.measured,
+      contextWindowTokens: 32768,
+      maxOutputTokens: 4096,
+      maxConcurrentRequests: 1,
+      maxToolCallsPerTurn: 0,
+      supportsStreaming: true,
+    );
 
 ModelToolProfile _tools() => ModelToolProfile(
-  evidenceLevel: ModelEvidenceLevel.measured,
-  supportsToolCalling: false,
-  supportsStructuredOutput: true,
-  supportsParallelToolCalls: false,
-);
+      evidenceLevel: ModelEvidenceLevel.measured,
+      supportsToolCalling: false,
+      supportsStructuredOutput: true,
+      supportsParallelToolCalls: false,
+    );
 
 ModelBenchmarkTrustContext _callerSuppliedTrust() {
   final keys = ProtectedKeyRegistryV2();

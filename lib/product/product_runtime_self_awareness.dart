@@ -22,14 +22,12 @@ final class RuntimeCapabilityProvider
   final Future<CapabilityAvailability> Function(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  )
-  resolver;
+  ) resolver;
   final Future<CapabilityHealth> Function(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
     CapabilityAvailability availability,
-  )?
-  healthResolver;
+  )? healthResolver;
 
   @override
   Iterable<CapabilityDescriptor> describeCapabilities() => descriptors;
@@ -38,7 +36,8 @@ final class RuntimeCapabilityProvider
   Future<CapabilityAvailability> resolveAvailability(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) => resolver(descriptor, snapshot);
+  ) =>
+      resolver(descriptor, snapshot);
 
   @override
   Future<CapabilityHealth> resolveHealth(
@@ -54,8 +53,8 @@ final class RuntimeCapabilityProvider
       state: availability.state == CapabilityAvailabilityState.available
           ? CapabilityHealthState.healthy
           : availability.state == CapabilityAvailabilityState.degraded
-          ? CapabilityHealthState.degraded
-          : CapabilityHealthState.unknown,
+              ? CapabilityHealthState.degraded
+              : CapabilityHealthState.unknown,
       reasons: const <String>[
         'Runtime provider has not reported a separate direct health probe yet.',
       ],
@@ -78,24 +77,25 @@ SelfModelSessionOverlay productSelfOverlay({
   String key = 'chat',
   ProjectRecord? selectedProject,
   ModelIdentity? selectedModel,
-}) => SelfModelSessionOverlay(
-  key: key,
-  selectedProject: selectedProject == null
-      ? null
-      : <String, Object?>{
-          'id': selectedProject.id,
-          'name': selectedProject.name,
-          'rootPath': selectedProject.rootPath,
-        },
-  selectedModel: selectedModel == null
-      ? null
-      : <String, Object?>{
-          'providerId': selectedModel.providerId,
-          'name': selectedModel.name,
-          'digest': selectedModel.digest,
-          'exactId': selectedModel.exactId,
-        },
-);
+}) =>
+    SelfModelSessionOverlay(
+      key: key,
+      selectedProject: selectedProject == null
+          ? null
+          : <String, Object?>{
+              'id': selectedProject.id,
+              'name': selectedProject.name,
+              'rootPath': selectedProject.rootPath,
+            },
+      selectedModel: selectedModel == null
+          ? null
+          : <String, Object?>{
+              'providerId': selectedModel.providerId,
+              'name': selectedModel.name,
+              'digest': selectedModel.digest,
+              'exactId': selectedModel.exactId,
+            },
+    );
 
 /// Authoritative bounded ProductRuntime adapter. Provider discovery is cached
 /// independently from the five-second monitor tick and records each provider's
@@ -158,13 +158,11 @@ final class ProductRuntimeSnapshotProvider
     final models = _modelCache.take(maxModels).toList(growable: false);
     final selectedModel = overlay.selectedModel;
     final selectedExactId = selectedModel?['exactId']?.toString();
-    final selectedModelLive =
-        selectedExactId != null &&
+    final selectedModelLive = selectedExactId != null &&
         models.any((model) => model.exactId == selectedExactId);
     final selectedProject = overlay.selectedProject;
     final selectedProjectId = selectedProject?['id']?.toString();
-    final selectedProjectLive =
-        selectedProjectId != null &&
+    final selectedProjectLive = selectedProjectId != null &&
         projects.any((project) => project.id == selectedProjectId);
 
     final browser = runtime.p3BrowserRuntime;
@@ -182,9 +180,8 @@ final class ProductRuntimeSnapshotProvider
         )
         .toList(growable: false);
 
-    final providerFailures = _providerCache
-        .where((item) => item['status'] == 'failed')
-        .length;
+    final providerFailures =
+        _providerCache.where((item) => item['status'] == 'failed').length;
     final modelEvidenceConfidence = providerFailures == 0
         ? ObservationConfidence.high
         : ObservationConfidence.medium;
@@ -322,8 +319,8 @@ final class ProductRuntimeSnapshotProvider
       final started = Stopwatch()..start();
       try {
         final discovered = await provider.discover().timeout(
-          const Duration(seconds: 12),
-        );
+              const Duration(seconds: 12),
+            );
         started.stop();
         models.addAll(discovered);
         providers.add(<String, Object?>{
@@ -351,25 +348,26 @@ final class ProductRuntimeSnapshotProvider
   }
 }
 
-List<CapabilitySatisfactionStep>
-_projectSatisfactionPath() => const <CapabilitySatisfactionStep>[
-  CapabilitySatisfactionStep(
-    id: 'select_project',
-    description:
-        'Select an existing project whose identity is present in the current project repository.',
-    condition: 'The selected project exists in a fresh project snapshot.',
-  ),
-];
+List<CapabilitySatisfactionStep> _projectSatisfactionPath() =>
+    const <CapabilitySatisfactionStep>[
+      CapabilitySatisfactionStep(
+        id: 'select_project',
+        description:
+            'Select an existing project whose identity is present in the current project repository.',
+        condition: 'The selected project exists in a fresh project snapshot.',
+      ),
+    ];
 
-List<CapabilitySatisfactionStep>
-_modelSatisfactionPath() => const <CapabilitySatisfactionStep>[
-  CapabilitySatisfactionStep(
-    id: 'select_live_model',
-    description:
-        'Select a model whose exact identity is present in fresh provider discovery.',
-    condition: 'The selected model appears in a fresh provider observation.',
-  ),
-];
+List<CapabilitySatisfactionStep> _modelSatisfactionPath() =>
+    const <CapabilitySatisfactionStep>[
+      CapabilitySatisfactionStep(
+        id: 'select_live_model',
+        description:
+            'Select a model whose exact identity is present in fresh provider discovery.',
+        condition:
+            'The selected model appears in a fresh provider observation.',
+      ),
+    ];
 
 KristinCapabilityRegistry buildProductCapabilityRegistry(
   ProductRuntime runtime,
@@ -464,8 +462,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(
             state: !available
                 ? CapabilityAvailabilityState.ownerAuthorityUnavailable
                 : eligible
-                ? CapabilityAvailabilityState.approvalRequired
-                : CapabilityAvailabilityState.additionalAuthorityRequired,
+                    ? CapabilityAvailabilityState.approvalRequired
+                    : CapabilityAvailabilityState.additionalAuthorityRequired,
             reasons: <String>[
               if (!available)
                 'Owner Mode runtime is unavailable: ${snapshot.ownerMode['diagnosticCode']}.'
@@ -558,9 +556,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(
                 ? 'The application-owned Browser runtime is provisioned.'
                 : 'Browser runtime unavailable: ${snapshot.browser['statusCode']}.',
           ],
-          missingPrerequisites: available
-              ? const <String>{}
-              : const <String>{'browserRuntime'},
+          missingPrerequisites:
+              available ? const <String>{} : const <String>{'browserRuntime'},
           authorityObservation: AuthorityObservationState.notRequired,
           observedAt: snapshot.capturedAt,
           evidence: <KnowledgeEvidence>[
@@ -658,8 +655,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(
           state: !available
               ? CapabilityAvailabilityState.ownerAuthorityUnavailable
               : eligible
-              ? CapabilityAvailabilityState.approvalRequired
-              : CapabilityAvailabilityState.additionalAuthorityRequired,
+                  ? CapabilityAvailabilityState.approvalRequired
+                  : CapabilityAvailabilityState.additionalAuthorityRequired,
           reasons: <String>[
             if (!available)
               'Owner Mode runtime is unavailable.'
@@ -707,8 +704,8 @@ KristinCapabilityRegistry buildProductCapabilityRegistry(
           state: !available
               ? CapabilityHealthState.failing
               : eligible && isolated
-              ? CapabilityHealthState.healthy
-              : CapabilityHealthState.degraded,
+                  ? CapabilityHealthState.healthy
+                  : CapabilityHealthState.degraded,
           reasons: <String>[
             if (!available)
               'Owner runtime is unavailable.'
@@ -788,7 +785,7 @@ final class ProductSelfAwarenessRuntime {
         );
       },
     )..start(tick: const Duration(seconds: 5));
-    _runtimeEvents = runtime.eventStream.listen(
+    runtime.eventStream.listen(
       _scheduleRuntimeRefresh,
       onDone: () {
         _eventDebounce?.cancel();
@@ -808,7 +805,6 @@ final class ProductSelfAwarenessRuntime {
   late final CausalStateGraph causalGraph;
   late final SelfIntegrityMonitor integrity;
   late final SelfConsistencyMonitor consistency;
-  StreamSubscription<EventEnvelope>? _runtimeEvents;
   Timer? _eventDebounce;
   EventEnvelope? _lastRuntimeEvent;
   final Map<String, List<SelfInvariantViolation>> _integrityByOverlay =
@@ -820,11 +816,12 @@ final class ProductSelfAwarenessRuntime {
     String key = 'chat',
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => productSelfOverlay(
-    key: key,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      productSelfOverlay(
+        key: key,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<KristinSelfSnapshot> snapshot({
     ProjectRecord? selectedProject,
@@ -930,14 +927,15 @@ final class ProductSelfAwarenessRuntime {
     ModelIdentity? selectedModel,
     String sessionKey = 'chat',
     bool force = true,
-  }) => consistency.runDue(
-    force: force,
-    overlay: overlay(
-      key: sessionKey,
-      selectedProject: selectedProject,
-      selectedModel: selectedModel,
-    ),
-  );
+  }) =>
+      consistency.runDue(
+        force: force,
+        overlay: overlay(
+          key: sessionKey,
+          selectedProject: selectedProject,
+          selectedModel: selectedModel,
+        ),
+      );
 
   Future<T> observeOperation<T>(
     String operation,
@@ -1023,12 +1021,11 @@ final class ProductSelfAwarenessRuntime {
     SelfModelSessionOverlay overlay,
   ) async {
     final browser = runtime.p3BrowserRuntime;
-    final affected =
-        snapshot.capabilities
-            .where((item) => item.descriptor.browserRequired)
-            .map((item) => item.descriptor.id)
-            .toSet()
-          ..add('browser.navigate');
+    final affected = snapshot.capabilities
+        .where((item) => item.descriptor.browserRequired)
+        .map((item) => item.descriptor.id)
+        .toSet()
+      ..add('browser.navigate');
     if (!browser.available) {
       return SelfConsistencyProbeResult(
         probeId: 'browser.runtime.startup',
@@ -1068,16 +1065,14 @@ final class ProductSelfAwarenessRuntime {
     SelfModelSessionOverlay overlay,
   ) async {
     final owner = runtime.p2OwnerMode;
-    final affected =
-        snapshot.capabilities
-            .where(
-              (item) =>
-                  item.descriptor.authorityClass ==
-                  CapabilityAuthorityClass.owner,
-            )
-            .map((item) => item.descriptor.id)
-            .toSet()
-          ..add('owner.recovery.actuate');
+    final affected = snapshot.capabilities
+        .where(
+          (item) =>
+              item.descriptor.authorityClass == CapabilityAuthorityClass.owner,
+        )
+        .map((item) => item.descriptor.id)
+        .toSet()
+      ..add('owner.recovery.actuate');
     if (!owner.available) {
       return SelfConsistencyProbeResult(
         probeId: 'owner.runtime.readiness',
@@ -1192,5 +1187,6 @@ final class _FixedOverlaySnapshotProvider
   Future<ApplicationSnapshot> capture({
     bool forceRefresh = false,
     SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
-  }) => delegate.capture(forceRefresh: forceRefresh, overlay: fixedOverlay);
+  }) =>
+      delegate.capture(forceRefresh: forceRefresh, overlay: fixedOverlay);
 }

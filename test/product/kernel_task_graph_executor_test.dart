@@ -6,20 +6,20 @@ import 'package:kristin_local_agent/product/task_kernel/universal_task_plan.dart
 
 void main() {
   TaskSpecification specification() => TaskSpecification(
-    id: 'spec',
-    originalRequest: 'research x then summarize it',
-    objective: 'Research x and summarize it.',
-  );
+        id: 'spec',
+        originalRequest: 'research x then summarize it',
+        objective: 'Research x and summarize it.',
+      );
 
   UniversalTaskPlan planWith(List<UniversalTask> tasks) => UniversalTaskPlan(
-    id: 'plan',
-    specification: specification(),
-    family: TaskFamily.research,
-    route: PlanningRoute.compact,
-    title: 'Research',
-    rationale: 'test',
-    tasks: tasks,
-  );
+        id: 'plan',
+        specification: specification(),
+        family: TaskFamily.research,
+        route: PlanningRoute.compact,
+        title: 'Research',
+        rationale: 'test',
+        tasks: tasks,
+      );
 
   test('executes canonical dependencies before dependants', () async {
     final plan = planWith(const <UniversalTask>[

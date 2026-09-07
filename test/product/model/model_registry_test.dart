@@ -35,58 +35,58 @@ ModelProviderDescriptor _localProvider({String providerId = 'ollama.local'}) =>
     );
 
 ModelLimits _measuredLimits() => ModelLimits(
-  evidenceLevel: ModelEvidenceLevel.measured,
-  contextWindowTokens: 32768,
-  maxOutputTokens: 4096,
-  maxConcurrentRequests: 1,
-  maxToolCallsPerTurn: 0,
-  supportsStreaming: true,
-);
+      evidenceLevel: ModelEvidenceLevel.measured,
+      contextWindowTokens: 32768,
+      maxOutputTokens: 4096,
+      maxConcurrentRequests: 1,
+      maxToolCallsPerTurn: 0,
+      supportsStreaming: true,
+    );
 
 ModelToolProfile _measuredNoTools() => ModelToolProfile(
-  evidenceLevel: ModelEvidenceLevel.measured,
-  supportsToolCalling: false,
-  supportsStructuredOutput: true,
-  supportsParallelToolCalls: false,
-);
+      evidenceLevel: ModelEvidenceLevel.measured,
+      supportsToolCalling: false,
+      supportsStructuredOutput: true,
+      supportsParallelToolCalls: false,
+    );
 
 Map<String, Object?> _benchmarkPayload() => <String, Object?>{
-  'schemaVersion': '1.0.0',
-  'kind': 'MODEL_BENCHMARK_RESULT',
-  'candidateCommit': candidateCommit,
-  'candidateTree': candidateTree,
-  'executionId': benchmarkExecutionId,
-  'benchmarkId': 'p6.code-fixture-v1',
-  'taskClassId': 'code-generation',
-  'modelDigest': digestA,
-  'score': 0.91,
-  'scoreUnit': 'ratio',
-  'higherIsBetter': true,
-  'sampleCount': 100,
-  'measuredAt': '2026-08-06T00:00:00.000Z',
-};
+      'schemaVersion': '1.0.0',
+      'kind': 'MODEL_BENCHMARK_RESULT',
+      'candidateCommit': candidateCommit,
+      'candidateTree': candidateTree,
+      'executionId': benchmarkExecutionId,
+      'benchmarkId': 'p6.code-fixture-v1',
+      'taskClassId': 'code-generation',
+      'modelDigest': digestA,
+      'score': 0.91,
+      'scoreUnit': 'ratio',
+      'higherIsBetter': true,
+      'sampleCount': 100,
+      'measuredAt': '2026-08-06T00:00:00.000Z',
+    };
 
 Map<String, Object?> _benchmarkJson() => <String, Object?>{
-  'benchmarkId': 'p6.code-fixture-v1',
-  'taskClassId': 'code-generation',
-  'modelDigest': digestA,
-  'score': 0.91,
-  'scoreUnit': 'ratio',
-  'higherIsBetter': true,
-  'sampleCount': 100,
-  'measuredAt': '2026-08-06T00:00:00.000Z',
-  'executionId': benchmarkExecutionId,
-  'evidence': <String, Object?>{
-    'locationKind': 'embedded_content_addressed',
-    'sha256': benchmarkEvidenceSha,
-    'payload': _benchmarkPayload(),
-    'authority': <String, Object?>{
-      'kind': 'ed25519_protected_key',
-      'keyId': benchmarkAuthorityKeyId,
-      'signature': benchmarkAuthoritySignature,
-    },
-  },
-};
+      'benchmarkId': 'p6.code-fixture-v1',
+      'taskClassId': 'code-generation',
+      'modelDigest': digestA,
+      'score': 0.91,
+      'scoreUnit': 'ratio',
+      'higherIsBetter': true,
+      'sampleCount': 100,
+      'measuredAt': '2026-08-06T00:00:00.000Z',
+      'executionId': benchmarkExecutionId,
+      'evidence': <String, Object?>{
+        'locationKind': 'embedded_content_addressed',
+        'sha256': benchmarkEvidenceSha,
+        'payload': _benchmarkPayload(),
+        'authority': <String, Object?>{
+          'kind': 'ed25519_protected_key',
+          'keyId': benchmarkAuthorityKeyId,
+          'signature': benchmarkAuthoritySignature,
+        },
+      },
+    };
 
 ModelBenchmarkTrustContext _benchmarkTrust({
   Map<String, String>? candidateTreesByCommit,
@@ -111,34 +111,33 @@ ModelBenchmarkTrustContext _benchmarkTrust({
   }
   return ModelBenchmarkTrustContext(
     trustedKeys: keys,
-    candidateTreesByCommit:
-        candidateTreesByCommit ??
+    candidateTreesByCommit: candidateTreesByCommit ??
         const <String, String>{candidateCommit: candidateTree},
   );
 }
 
 ModelBenchmarkEvidence _benchmark() => ModelBenchmarkEvidence.fromJson(
-  _benchmarkJson(),
-  trustContext: _benchmarkTrust(),
-);
+      _benchmarkJson(),
+      trustContext: _benchmarkTrust(),
+    );
 
 Map<String, Object?> _approvedPolicyJson() => <String, Object?>{
-  'providerId': 'ollama.local',
-  'modelId': 'qwen3:14b',
-  'displayName': 'Qwen 3 14B',
-  'digest': digestA,
-  'parameterSize': '14B',
-  'quantization': 'Q4_K_M',
-  'aliases': <String>['qwen3-latest'],
-  'limits': _measuredLimits().toJson(),
-  'toolProfile': _measuredNoTools().toJson(),
-  'dataBoundary': ModelDataBoundary.localOnly.wireName,
-  'cost': ModelCostProfile.noDirectCharge().toJson(),
-  'benchmarks': <Object?>[_benchmarkJson()],
-  'approvedTaskClasses': <String>['code-generation'],
-  'supportStatus': 'approved',
-  'evaluationReasons': <String>[],
-};
+      'providerId': 'ollama.local',
+      'modelId': 'qwen3:14b',
+      'displayName': 'Qwen 3 14B',
+      'digest': digestA,
+      'parameterSize': '14B',
+      'quantization': 'Q4_K_M',
+      'aliases': <String>['qwen3-latest'],
+      'limits': _measuredLimits().toJson(),
+      'toolProfile': _measuredNoTools().toJson(),
+      'dataBoundary': ModelDataBoundary.localOnly.wireName,
+      'cost': ModelCostProfile.noDirectCharge().toJson(),
+      'benchmarks': <Object?>[_benchmarkJson()],
+      'approvedTaskClasses': <String>['code-generation'],
+      'supportStatus': 'approved',
+      'evaluationReasons': <String>[],
+    };
 
 ModelDefinition _approvedModel({
   String providerId = 'ollama.local',
@@ -146,21 +145,22 @@ ModelDefinition _approvedModel({
   String digest = digestA,
   Iterable<String> aliases = const <String>['qwen3-latest'],
   Iterable<ModelBenchmarkEvidence>? benchmarks,
-}) => ModelDefinition.approved(
-  providerId: providerId,
-  modelId: modelId,
-  displayName: 'Qwen 3 14B',
-  digest: digest,
-  parameterSize: '14B',
-  quantization: 'Q4_K_M',
-  aliases: aliases,
-  limits: _measuredLimits(),
-  toolProfile: _measuredNoTools(),
-  dataBoundary: ModelDataBoundary.localOnly,
-  cost: ModelCostProfile.noDirectCharge(),
-  benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
-  approvedTaskClasses: const <String>['code-generation'],
-);
+}) =>
+    ModelDefinition.approved(
+      providerId: providerId,
+      modelId: modelId,
+      displayName: 'Qwen 3 14B',
+      digest: digest,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      aliases: aliases,
+      limits: _measuredLimits(),
+      toolProfile: _measuredNoTools(),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
+      approvedTaskClasses: const <String>['code-generation'],
+    );
 
 ModelDefinition _registeredModel({
   String providerId = 'ollama.local',
@@ -168,23 +168,24 @@ ModelDefinition _registeredModel({
   String digest = digestA,
   Iterable<String> aliases = const <String>['qwen3-latest'],
   Iterable<ModelBenchmarkEvidence>? benchmarks,
-}) => ModelDefinition.evaluationOnly(
-  providerId: providerId,
-  modelId: modelId,
-  displayName: 'Qwen 3 14B',
-  digest: digest,
-  parameterSize: '14B',
-  quantization: 'Q4_K_M',
-  aliases: aliases,
-  limits: _measuredLimits(),
-  toolProfile: _measuredNoTools(),
-  dataBoundary: ModelDataBoundary.localOnly,
-  cost: ModelCostProfile.noDirectCharge(),
-  benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
-  evaluationReasons: const <String>[
-    'host-controlled benchmark authority is not configured',
-  ],
-);
+}) =>
+    ModelDefinition.evaluationOnly(
+      providerId: providerId,
+      modelId: modelId,
+      displayName: 'Qwen 3 14B',
+      digest: digest,
+      parameterSize: '14B',
+      quantization: 'Q4_K_M',
+      aliases: aliases,
+      limits: _measuredLimits(),
+      toolProfile: _measuredNoTools(),
+      dataBoundary: ModelDataBoundary.localOnly,
+      cost: ModelCostProfile.noDirectCharge(),
+      benchmarks: benchmarks ?? <ModelBenchmarkEvidence>[_benchmark()],
+      evaluationReasons: const <String>[
+        'host-controlled benchmark authority is not configured',
+      ],
+    );
 
 ModelIdentity _identity({
   String providerId = 'ollama.local',
@@ -192,14 +193,15 @@ ModelIdentity _identity({
   String digest = digestA,
   String parameterSize = '14B',
   String quantization = 'Q4_K_M',
-}) => ModelIdentity(
-  providerId: providerId,
-  name: name,
-  digest: digest,
-  parameterSize: parameterSize,
-  quantization: quantization,
-  discoveredAt: DateTime.utc(2026, 8, 6),
-);
+}) =>
+    ModelIdentity(
+      providerId: providerId,
+      name: name,
+      digest: digest,
+      parameterSize: parameterSize,
+      quantization: quantization,
+      discoveredAt: DateTime.utc(2026, 8, 6),
+    );
 
 void main() {
   group('P6-001 model registry v2', () {
@@ -446,9 +448,8 @@ void main() {
       'caller benchmark verification rejects unknown signer and forged score',
       () {
         final unknownSigner = _benchmarkJson();
-        final authority =
-            ((unknownSigner['evidence'] as Map<String, Object?>)['authority']
-                as Map<String, Object?>);
+        final authority = ((unknownSigner['evidence']
+            as Map<String, Object?>)['authority'] as Map<String, Object?>);
         authority['keyId'] = 'unknown-benchmark-key';
         expect(
           () => ModelBenchmarkEvidence.fromJson(
@@ -487,9 +488,8 @@ void main() {
 
     test('benchmark payload rejects mutable or malformed model identity', () {
       final json = _benchmarkJson();
-      final payload =
-          ((json['evidence'] as Map<String, Object?>)['payload']
-              as Map<String, Object?>);
+      final payload = ((json['evidence'] as Map<String, Object?>)['payload']
+          as Map<String, Object?>);
       payload['modelDigest'] = 'latest';
       json['modelDigest'] = 'latest';
       expect(
@@ -507,8 +507,7 @@ void main() {
     test('benchmark payload rejects wrong schema and candidate identity', () {
       final wrongSchema = _benchmarkJson();
       (((wrongSchema['evidence'] as Map<String, Object?>)['payload'])
-              as Map<String, Object?>)['schemaVersion'] =
-          '2.0.0';
+          as Map<String, Object?>)['schemaVersion'] = '2.0.0';
       expect(
         () => ModelBenchmarkEvidence.fromJson(wrongSchema),
         throwsA(
@@ -522,8 +521,7 @@ void main() {
 
       final wrongCandidate = _benchmarkJson();
       (((wrongCandidate['evidence'] as Map<String, Object?>)['payload'])
-              as Map<String, Object?>)['candidateCommit'] =
-          'not-a-git-object';
+          as Map<String, Object?>)['candidateCommit'] = 'not-a-git-object';
       expect(
         () => ModelBenchmarkEvidence.fromJson(wrongCandidate),
         throwsA(
@@ -831,9 +829,8 @@ void main() {
           throwsA(isA<ModelRegistryValidationException>()),
         );
         final raw = _benchmarkJson();
-        final payload =
-            ((raw['evidence'] as Map<String, Object?>)['payload']
-                as Map<String, Object?>);
+        final payload = ((raw['evidence'] as Map<String, Object?>)['payload']
+            as Map<String, Object?>);
         payload['measuredAt'] = '2026-08-06T00:00:00';
         raw['measuredAt'] = '2026-08-06T00:00:00';
         expect(

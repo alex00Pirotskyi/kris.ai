@@ -274,16 +274,16 @@ void main() {
 }
 
 P4FetchVersion _fetch() => P4FetchVersion(
-  id: 'fetch-fixture',
-  url: 'https://example.com/source',
-  canonicalUrl: 'https://example.com/source',
-  fetchedAt: DateTime.utc(2026, 8, 20),
-  rawObjectSha256: 'a' * 64,
-  extractionObjectSha256: 'b' * 64,
-  extractionHash: 'b' * 64,
-  title: 'Fixture source',
-  trustLabel: 'fixture',
-);
+      id: 'fetch-fixture',
+      url: 'https://example.com/source',
+      canonicalUrl: 'https://example.com/source',
+      fetchedAt: DateTime.utc(2026, 8, 20),
+      rawObjectSha256: 'a' * 64,
+      extractionObjectSha256: 'b' * 64,
+      extractionHash: 'b' * 64,
+      title: 'Fixture source',
+      trustLabel: 'fixture',
+    );
 
 final class _SemanticIndex implements P4SemanticIndex {
   _SemanticIndex(this.ids);
@@ -293,5 +293,6 @@ final class _SemanticIndex implements P4SemanticIndex {
     String query, {
     required String scope,
     int limit = 20,
-  }) async => ids.take(limit).toList();
+  }) async =>
+      ids.take(limit).toList();
 }

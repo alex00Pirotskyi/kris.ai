@@ -269,9 +269,8 @@ Future<void> _serveReadiness(
   _RecordingProcessHost host,
 ) async {
   await for (final request in server) {
-    request.response.statusCode = host.ready
-        ? HttpStatus.ok
-        : HttpStatus.notFound;
+    request.response.statusCode =
+        host.ready ? HttpStatus.ok : HttpStatus.notFound;
     request.response.write(host.ready ? 'ready' : 'starting');
     await request.response.close();
   }
@@ -303,14 +302,14 @@ const P2ProcessIdentity _previewIdentity = P2ProcessIdentity(
 );
 
 P2EffectBinding _previewBinding() => const P2EffectBinding(
-  runId: 'run-preview',
-  taskId: 'P3-013',
-  actorId: 'desktop_host',
-  toolId: 'web_preview',
-  accessProfileId: 'owner',
-  capabilityId: 'pty',
-  operation: 'pty.open',
-);
+      runId: 'run-preview',
+      taskId: 'P3-013',
+      actorId: 'desktop_host',
+      toolId: 'web_preview',
+      accessProfileId: 'owner',
+      capabilityId: 'pty',
+      operation: 'pty.open',
+    );
 
 final class _RecordingPreviewPtyBackend implements P2PtyBackend {
   int openCount = 0;
@@ -353,14 +352,16 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> detach(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> input(
@@ -368,14 +369,16 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     List<int> bytes, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<void> interrupt(
     String sessionId, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 
   @override
   Stream<List<int>> output(
@@ -383,7 +386,8 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int fromCursor, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => const Stream<List<int>>.empty();
+  }) =>
+      const Stream<List<int>>.empty();
 
   @override
   Future<void> resize(
@@ -392,7 +396,8 @@ final class _RecordingPreviewPtyBackend implements P2PtyBackend {
     int rows, {
     required P2EffectBinding binding,
     required String grantDigest,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 }
 
 final class _RecordingPreviewProcessTreeAdapter

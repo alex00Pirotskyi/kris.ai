@@ -108,7 +108,7 @@ void main() {
                     : null,
                 interactiveDesktopAttested:
                     Platform.environment['KRISTIN_P2_INTERACTIVE_DESKTOP'] ==
-                    '1',
+                        '1',
                 fixtureRoot: temporary.path,
               ),
               authority: authority,
@@ -216,28 +216,28 @@ void main() {
             );
             processAuthorizations[pty.session.processIdentity.pid] =
                 P2ProcessAuthorization(
-                  binding: pty.binding,
-                  grantDigest: pty.grantDigest,
-                );
+              binding: pty.binding,
+              grantDigest: pty.grantDigest,
+            );
             if (taskId == 'P2-005') {
               final observed = <int>[];
               final marker = Completer<void>();
               final subscription = composition.ptyBackend
                   .output(
-                    pty.session.sessionId,
-                    0,
-                    binding: pty.binding,
-                    grantDigest: pty.grantDigest,
-                  )
+                pty.session.sessionId,
+                0,
+                binding: pty.binding,
+                grantDigest: pty.grantDigest,
+              )
                   .listen((List<int> bytes) {
-                    observed.addAll(bytes);
-                    if (!marker.isCompleted &&
-                        utf8
-                            .decode(observed, allowMalformed: true)
-                            .contains('KRISTIN_PTY_UNICODE_λ')) {
-                      marker.complete();
-                    }
-                  });
+                observed.addAll(bytes);
+                if (!marker.isCompleted &&
+                    utf8
+                        .decode(observed, allowMalformed: true)
+                        .contains('KRISTIN_PTY_UNICODE_λ')) {
+                  marker.complete();
+                }
+              });
               final command = Platform.isWindows
                   ? 'echo KRISTIN_PTY_UNICODE_λ\r\n'
                   : "printf 'KRISTIN_PTY_UNICODE_λ\\n'\n";
@@ -284,8 +284,7 @@ void main() {
                 'resizeRows': 44,
                 'reconnectCursor': attached.transcriptCursor,
               };
-              receipt =
-                  composition.ptyBackend
+              receipt = composition.ptyBackend
                       .receiptFor(pty.session.sessionId)
                       ?.toJson() ??
                   <String, Object?>{'status': 'missing'};
@@ -429,13 +428,13 @@ void main() {
               serviceId,
               _binding(taskId, 'service.stop'),
             );
-            final opened = await composition.hostOperations
-                .applicationOpenExecutable(
-                  node,
-                  const <String>['-e', 'setInterval(()=>{},1000)'],
-                  _binding(taskId, 'application.open'),
-                  cwd: temporary.path,
-                );
+            final opened =
+                await composition.hostOperations.applicationOpenExecutable(
+              node,
+              const <String>['-e', 'setInterval(()=>{},1000)'],
+              _binding(taskId, 'application.open'),
+              cwd: temporary.path,
+            );
             final identity = opened.output['identity'];
             expect(identity, isA<String>());
             final closed = await composition.hostOperations.applicationClose(
@@ -475,10 +474,10 @@ void main() {
             final screen = await composition.hostOperations.captureScreen(
               _binding(taskId, 'screen.capture'),
             );
-            final window = await composition.hostOperations
-                .activeWindowMetadata(
-                  _binding(taskId, 'screen.activeWindowMetadata'),
-                );
+            final window =
+                await composition.hostOperations.activeWindowMetadata(
+              _binding(taskId, 'screen.activeWindowMetadata'),
+            );
             expect(read, marker);
             expect(screen, isNotEmpty);
             expect(window, isNotEmpty);
@@ -870,19 +869,19 @@ final class _MemoryJournal implements P2EffectJournal {
   }
 
   P2EffectReceipt last(String operation) => receipts.lastWhere(
-    (P2EffectReceipt receipt) => receipt.operation == operation,
-  );
+        (P2EffectReceipt receipt) => receipt.operation == operation,
+      );
 }
 
 P2EffectBinding _binding(String taskId, String operation) => P2EffectBinding(
-  runId: 'p2-product-runtime-run',
-  taskId: taskId,
-  actorId: 'owner-operator-fixture',
-  toolId: 'p2-product-runtime',
-  accessProfileId: 'owner',
-  capabilityId: 'p2.owner.host-effect',
-  operation: operation,
-);
+      runId: 'p2-product-runtime-run',
+      taskId: taskId,
+      actorId: 'owner-operator-fixture',
+      toolId: 'p2-product-runtime',
+      accessProfileId: 'owner',
+      capabilityId: 'p2.owner.host-effect',
+      operation: operation,
+    );
 
 String _requiredAbsoluteExecutable(String name) {
   final value = Platform.environment[name];

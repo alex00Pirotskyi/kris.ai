@@ -81,7 +81,8 @@ void main() {
       expect(all, hasLength(1));
     });
 
-    test('the original admission reason and timestamp are preserved across '
+    test(
+        'the original admission reason and timestamp are preserved across '
         'later touches; only lastMeaningfulActivityAt refreshes', () async {
       final first = await admission.admitOrTouch(
         rootPath: projectDirectory.path,
@@ -181,7 +182,8 @@ void main() {
       expect(project.admissionReason, ProjectAdmissionReason.userCreated);
     });
 
-    test('a failing random-folder read does not admit a project '
+    test(
+        'a failing random-folder read does not admit a project '
         '(inspectProject alone never calls admission)', () async {
       final project = await runtime.addProject(
         name: 'Fixture project',

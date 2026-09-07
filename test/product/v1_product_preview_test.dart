@@ -54,7 +54,8 @@ void main() {
       );
     });
 
-    test('accepts an in-project absolute path when the project root sits '
+    test(
+        'accepts an in-project absolute path when the project root sits '
         'behind a reparse point', () async {
       if (!Platform.isWindows) {
         return;
@@ -426,8 +427,8 @@ void main() {
         );
         expect(deploymentTask.allowedTools, contains('package_deployment'));
         expect(deploymentTask.allowedTools, contains('start_process'));
-        final deploymentInstructions = deploymentTask.instructions
-            .toLowerCase();
+        final deploymentInstructions =
+            deploymentTask.instructions.toLowerCase();
         expect(
           deploymentInstructions,
           contains('do not deploy to an external service'),
@@ -526,7 +527,8 @@ void main() {
       },
     );
 
-    test('promotes artifact-producing plan tasks to governed build work', () async {
+    test('promotes artifact-producing plan tasks to governed build work',
+        () async {
       const draft = PromptStudioDraft(
         title: 'Calculator delivery plan',
         purpose: 'Create a calculator application and its design artifacts.',

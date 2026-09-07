@@ -211,7 +211,8 @@ final class _FixtureFormatter implements P3WebStudioFormatter {
     required String path,
     required P3WebStudioLanguage language,
     required String content,
-  }) async => '${content.trimRight()}\n';
+  }) async =>
+      '${content.trimRight()}\n';
 }
 
 final class _FixtureDiagnostics implements P3WebStudioDiagnosticsProvider {
@@ -220,16 +221,17 @@ final class _FixtureDiagnostics implements P3WebStudioDiagnosticsProvider {
   @override
   Future<List<P3WebStudioDiagnostic>> inspect(
     P3WebStudioDocument document,
-  ) async => <P3WebStudioDiagnostic>[
-    P3WebStudioDiagnostic(
-      path: document.path,
-      message: 'fixture warning',
-      severity: P3WebStudioDiagnosticSeverity.warning,
-      line: 1,
-      column: 1,
-      code: 'fixture',
-    ),
-  ];
+  ) async =>
+      <P3WebStudioDiagnostic>[
+        P3WebStudioDiagnostic(
+          path: document.path,
+          message: 'fixture warning',
+          severity: P3WebStudioDiagnosticSeverity.warning,
+          line: 1,
+          column: 1,
+          code: 'fixture',
+        ),
+      ];
 }
 
 final class _FixtureSourceControl implements P3WebStudioSourceControl {

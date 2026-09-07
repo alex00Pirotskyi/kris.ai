@@ -132,10 +132,10 @@ class KristinCapability {
   /// Derived from [route] rather than an id list so a new orchestration
   /// route cannot silently become executable by being forgotten here.
   bool get isCoordinatorCapability => const <ChatExecutionRoute>{
-    ChatExecutionRoute.createProject,
-    ChatExecutionRoute.modifyProject,
-    ChatExecutionRoute.fixProject,
-  }.contains(route);
+        ChatExecutionRoute.createProject,
+        ChatExecutionRoute.modifyProject,
+        ChatExecutionRoute.fixProject,
+      }.contains(route);
 }
 
 /// The orchestration capability ids: coordinated by Chat, never executed
@@ -597,9 +597,9 @@ class ChatCapabilityRegistry {
 
   KristinCapability? bySlash(String slash) {
     final normalized = slash.trim().toLowerCase().replaceFirst(
-      RegExp(r'^/'),
-      '',
-    );
+          RegExp(r'^/'),
+          '',
+        );
     for (final capability in capabilities) {
       if (capability.slashCommands.contains(normalized)) return capability;
     }
@@ -608,9 +608,9 @@ class ChatCapabilityRegistry {
 
   KristinCapability? byMention(String mention) {
     final normalized = mention.trim().toLowerCase().replaceFirst(
-      RegExp(r'^@'),
-      '',
-    );
+          RegExp(r'^@'),
+          '',
+        );
     for (final capability in capabilities) {
       if (capability.mentionAliases.contains(normalized)) return capability;
     }
@@ -625,17 +625,16 @@ class ChatCapabilityRegistry {
       final aliases = capability.slashCommands;
       final exact = aliases.any((value) => value == needle);
       final prefix = aliases.any((value) => value.startsWith(needle));
-      final contains =
-          aliases.any((value) => value.contains(needle)) ||
+      final contains = aliases.any((value) => value.contains(needle)) ||
           capability.displayName.toLowerCase().contains(needle) ||
           capability.description.toLowerCase().contains(needle);
       final score = exact
           ? 0
           : prefix
-          ? 1
-          : contains
-          ? 2
-          : 3;
+              ? 1
+              : contains
+                  ? 2
+                  : 3;
       if (needle.isEmpty || score < 3) {
         ranked.add(_CapabilityScore(capability, score));
       }
@@ -928,8 +927,7 @@ class ChatIntentCompiler {
         risk: _riskFor(capability, parsed.originalText),
         understanding: policy.needsUnderstanding(capability),
         plan: policy.needsPlan(capability, parsed, naturalLanguage: false),
-        ambiguous:
-            unresolved.isNotEmpty ||
+        ambiguous: unresolved.isNotEmpty ||
             (!capability.availableWithoutTarget && targets.isEmpty),
       );
     }
@@ -996,8 +994,7 @@ class ChatIntentCompiler {
         risk: _riskFor(capability, parsed.originalText),
         understanding: policy.needsUnderstanding(capability),
         plan: policy.needsPlan(capability, parsed, naturalLanguage: true),
-        ambiguous:
-            unresolved.isNotEmpty ||
+        ambiguous: unresolved.isNotEmpty ||
             (capability.id == 'agent.create_project' &&
                 _isUnderspecifiedCreateRequest(parsed)),
       );
@@ -1036,8 +1033,7 @@ class ChatIntentCompiler {
       mode: inferredMode,
       risk: fallback?.riskClass ?? ChatRiskClass.mutation,
       understanding: true,
-      plan:
-          fallback != null &&
+      plan: fallback != null &&
           policy.needsPlan(fallback, parsed, naturalLanguage: true),
       ambiguous: true,
     );
@@ -1244,9 +1240,8 @@ class ChatIntentCompiler {
     ).hasMatch(original)) {
       return registry.byId('agent.modify_project');
     }
-    final requestText = parsed.hasExplicitCommand
-        ? parsed.arguments.toLowerCase()
-        : original;
+    final requestText =
+        parsed.hasExplicitCommand ? parsed.arguments.toLowerCase() : original;
     final outcome = RegExp(
       r'\b(?:app|application|website|site|tool|service|bot|dashboard|game|api|project)\b',
     ).hasMatch(requestText);
@@ -1278,9 +1273,9 @@ class ChatIntentCompiler {
     final target = targets.isEmpty ? '' : targets.first.displayName;
     final argument = parsed.hasExplicitCommand
         ? parsed.arguments
-              .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
-              .replaceAll(RegExp(r'\s+'), ' ')
-              .trim()
+            .replaceAll(RegExp(r'@[A-Za-z0-9][A-Za-z0-9._:-]*'), ' ')
+            .replaceAll(RegExp(r'\s+'), ' ')
+            .trim()
         : parsed.originalText.trim();
     switch (capability.id) {
       case 'utility.time':
@@ -1461,18 +1456,15 @@ class ChatAutocompleteEngine {
     final trimmedLeft = prefix.trimLeft();
     if (trimmedLeft.startsWith('/') && !trimmedLeft.contains(RegExp(r'\s'))) {
       final query = trimmedLeft.substring(1);
-      return registry
-          .searchSlash(query, limit: limit)
-          .map((capability) {
-            return ChatAutocompleteSuggestion(
-              kind: ChatAutocompleteKind.command,
-              insertText: '${capability.canonicalSlash} ',
-              label: capability.canonicalSlash,
-              description: capability.description,
-              capability: capability,
-            );
-          })
-          .toList(growable: false);
+      return registry.searchSlash(query, limit: limit).map((capability) {
+        return ChatAutocompleteSuggestion(
+          kind: ChatAutocompleteKind.command,
+          insertText: '${capability.canonicalSlash} ',
+          label: capability.canonicalSlash,
+          description: capability.description,
+          capability: capability,
+        );
+      }).toList(growable: false);
     }
 
     final mentionMatch = RegExp(r'@([A-Za-z0-9._:-]*)$').firstMatch(prefix);
@@ -1499,23 +1491,16 @@ class ChatAutocompleteEngine {
       if (availability != 0) return availability;
       return a.displayName.compareTo(b.displayName);
     });
-    return ranked
-        .take(limit)
-        .map((target) {
-          final alias = target.aliases.isEmpty
-              ? target.id
-              : target.aliases.first;
-          return ChatAutocompleteSuggestion(
-            kind: ChatAutocompleteKind.mention,
-            insertText: '@${_normalizeMention(alias)}',
-            label: '@${_normalizeMention(alias)}',
-            description: target.status.isEmpty
-                ? target.description
-                : target.status,
-            target: target,
-          );
-        })
-        .toList(growable: false);
+    return ranked.take(limit).map((target) {
+      final alias = target.aliases.isEmpty ? target.id : target.aliases.first;
+      return ChatAutocompleteSuggestion(
+        kind: ChatAutocompleteKind.mention,
+        insertText: '@${_normalizeMention(alias)}',
+        label: '@${_normalizeMention(alias)}',
+        description: target.status.isEmpty ? target.description : target.status,
+        target: target,
+      );
+    }).toList(growable: false);
   }
 }
 

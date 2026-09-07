@@ -69,7 +69,8 @@ void main() {
       }
     });
 
-    test('assembles project, git state, and NOT_RUN quality for a fresh '
+    test(
+        'assembles project, git state, and NOT_RUN quality for a fresh '
         'project', () async {
       final status = await runtime.projectControl.status(project.id);
       expect(status.project.id, project.id);
@@ -84,7 +85,8 @@ void main() {
       expect(status.launchProfiles, isEmpty);
     });
 
-    test('a passing test result at the current git HEAD reports PASS, and '
+    test(
+        'a passing test result at the current git HEAD reports PASS, and '
         'STALE once a new commit lands', () async {
       await runtime.testProject(project.id);
       final freshStatus = await runtime.projectControl.status(
@@ -113,7 +115,8 @@ void main() {
       expect(staleStatus.testState, ProjectQualityState.stale);
     });
 
-    test('git state is cached within the TTL and only reprobed on '
+    test(
+        'git state is cached within the TTL and only reprobed on '
         'forceRefresh', () async {
       final first = await runtime.projectControl.status(project.id);
       final firstCapturedAt = first.git!.capturedAt;
@@ -160,19 +163,22 @@ void main() {
       }
     });
 
-    test('lists every project with an active durable runtime session, '
+    test(
+        'lists every project with an active durable runtime session, '
         'joined against the project registry', () async {
       final projectA = await runtime.addProject(
         name: 'A',
         rootPath: (await Directory(
           '${temporary.path}${Platform.pathSeparator}a',
-        ).create()).path,
+        ).create())
+            .path,
       );
       final projectB = await runtime.addProject(
         name: 'B',
         rootPath: (await Directory(
           '${temporary.path}${Platform.pathSeparator}b',
-        ).create()).path,
+        ).create())
+            .path,
       );
 
       await runtime.repositories.workflow.insertManagedProjectProcess(

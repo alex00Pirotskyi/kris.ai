@@ -74,12 +74,14 @@ void main() {
         Future<void> expectCode(
           BuiltInDuckDuckGoSearchProvider provider,
           String code,
-        ) => expectLater(
-          provider.search(const SearchProviderRequest(query: 'docs')),
-          throwsA(
-            isA<ProductException>().having((error) => error.code, 'code', code),
-          ),
-        );
+        ) =>
+            expectLater(
+              provider.search(const SearchProviderRequest(query: 'docs')),
+              throwsA(
+                isA<ProductException>()
+                    .having((error) => error.code, 'code', code),
+              ),
+            );
 
         await expectCode(
           BuiltInDuckDuckGoSearchProvider(
@@ -191,17 +193,17 @@ void main() {
 
   group('provider router', () {
     SearchProvider builtInSuccess() => BuiltInDuckDuckGoSearchProvider(
-      timeout: const Duration(seconds: 1),
-      maxBytes: 16 * 1024,
-      transport: (_) async => SearchHttpResponse(
-        statusCode: 200,
-        headers: const <String, String>{'content-type': 'text/html'},
-        body: utf8.encode('''
+          timeout: const Duration(seconds: 1),
+          maxBytes: 16 * 1024,
+          transport: (_) async => SearchHttpResponse(
+            statusCode: 200,
+            headers: const <String, String>{'content-type': 'text/html'},
+            body: utf8.encode('''
               <a class="result__a" href="https://example.com/free">Free result</a>
               <a class="result__snippet">No key required.</a>
             '''),
-      ),
-    );
+          ),
+        );
 
     test('zero-key built-in search is the healthy baseline', () async {
       final router = SearchProviderRouter(builtIn: builtInSuccess());
@@ -421,23 +423,26 @@ RunCapabilityProbeResult _probeResult(
   RunCapabilityRequirement requirement,
   bool ok,
   String message,
-) => RunCapabilityProbeResult(
-  key: requirement.key,
-  label: requirement.label,
-  ok: ok,
-  required: requirement.required,
-  message: message,
-  durationMilliseconds: 1,
-);
+) =>
+    RunCapabilityProbeResult(
+      key: requirement.key,
+      label: requirement.label,
+      ok: ok,
+      required: requirement.required,
+      message: message,
+      durationMilliseconds: 1,
+    );
 
 Future<RunCapabilityProbeResult> _readyModel(
   ModelIdentity model,
   RunCapabilityRequirement requirement,
-) async => _probeResult(requirement, true, 'model ready');
+) async =>
+    _probeResult(requirement, true, 'model ready');
 
 Future<RunCapabilityProbeResult> _readyBrowser(
   RunCapabilityRequirement requirement,
-) async => _probeResult(requirement, true, 'browser ready');
+) async =>
+    _probeResult(requirement, true, 'browser ready');
 
 Future<({ProjectRecord project, RunRecord run})> _preflightFixture({
   required bool localOnly,
@@ -462,9 +467,8 @@ Future<({ProjectRecord project, RunRecord run})> _preflightFixture({
     revision: 2,
     projectId: project.id,
     mode: CommandMode.ask,
-    request: localOnly
-        ? 'Research current docs locally'
-        : 'Research current docs',
+    request:
+        localOnly ? 'Research current docs locally' : 'Research current docs',
     acceptanceCriteria: const <AcceptanceCriterion>[
       AcceptanceCriterion(
         id: 'criterion',

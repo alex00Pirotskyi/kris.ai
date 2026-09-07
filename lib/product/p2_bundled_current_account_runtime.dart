@@ -92,8 +92,8 @@ final class P2BundledCurrentAccountRuntime {
           resources.sourceCommit == sourceCommit &&
           resources.sourceTree == sourceTree &&
           resources.runtimeBuildSha256 == runtimeBuildSha256 &&
-          resources
-                  .provisionedEnvironment['KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
+          resources.provisionedEnvironment[
+                  'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'] ==
               '1' &&
           !resources.provisionedEnvironment.containsKey(
             'KRISTIN_OWNER_RISK_QA',

@@ -91,7 +91,7 @@ final class P1AuthorityServiceConnectorRegistryV1 {
   }
 
   static Future<P1AuthorityServiceProductRuntimeV1?>
-  openInstalledOrTest() async {
+      openInstalledOrTest() async {
     final connector = _testConnector;
     if (connector != null) {
       return P1AuthorityServiceProductRuntimeV1.open(connector: connector);

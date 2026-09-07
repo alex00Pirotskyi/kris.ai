@@ -21,10 +21,10 @@ final class RecoveryVersionIdentity {
   final String artifactIdentity;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'version': version,
-    'sourceIdentity': sourceIdentity,
-    'artifactIdentity': artifactIdentity,
-  };
+        'version': version,
+        'sourceIdentity': sourceIdentity,
+        'artifactIdentity': artifactIdentity,
+      };
 }
 
 /// Durable state owned by an independent recovery boundary, not by the
@@ -56,17 +56,17 @@ final class RecoveryHostState {
       health == RecoveryHostHealth.crashLoop || consecutiveStartupFailures >= 3;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'current': current.toJson(),
-    'lastKnownGood': lastKnownGood.toJson(),
-    if (candidate != null) 'candidate': candidate!.toJson(),
-    'health': health.name,
-    'candidateState': candidateState.name,
-    'startupAttemptCount': startupAttemptCount,
-    'consecutiveStartupFailures': consecutiveStartupFailures,
-    'crashLoopDetected': crashLoopDetected,
-    'lastFailureEvidence': lastFailureEvidence,
-    if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
-  };
+        'current': current.toJson(),
+        'lastKnownGood': lastKnownGood.toJson(),
+        if (candidate != null) 'candidate': candidate!.toJson(),
+        'health': health.name,
+        'candidateState': candidateState.name,
+        'startupAttemptCount': startupAttemptCount,
+        'consecutiveStartupFailures': consecutiveStartupFailures,
+        'crashLoopDetected': crashLoopDetected,
+        'lastFailureEvidence': lastFailureEvidence,
+        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      };
 }
 
 final class RecoveryCandidateProbe {

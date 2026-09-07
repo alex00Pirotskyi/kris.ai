@@ -105,12 +105,12 @@ class _P5InformationArchitecturePrototypeState
   );
   late final TextEditingController _composerAttachmentsController =
       TextEditingController(
-        text: widget.controller.state.attachments.join('\n'),
-      );
+    text: widget.controller.state.attachments.join('\n'),
+  );
   late final TextEditingController _composerCriteriaController =
       TextEditingController(
-        text: widget.controller.state.acceptanceCriteria.join('\n'),
-      );
+    text: widget.controller.state.acceptanceCriteria.join('\n'),
+  );
   final TextEditingController _webProfileController = TextEditingController(
     text: 'work',
   );
@@ -302,8 +302,7 @@ class _P5InformationArchitecturePrototypeState
   }
 
   Widget _buildShell(BuildContext context) {
-    final compact =
-        MediaQuery.sizeOf(context).width <
+    final compact = MediaQuery.sizeOf(context).width <
         P5ShellLayoutState.minimumThreePaneWidth;
     final state = controller.state;
     final accessibilityCompact =
@@ -394,15 +393,15 @@ class _P5InformationArchitecturePrototypeState
               tooltip: compact
                   ? 'Open inspector'
                   : controller.shellLayout.inspectorOpen
-                  ? 'Hide inspector'
-                  : 'Show inspector',
+                      ? 'Hide inspector'
+                      : 'Show inspector',
               onPressed: compact
                   ? () => Scaffold.of(buttonContext).openEndDrawer()
                   : () => _updateP5ShellLayout(
-                      controller.shellLayout.copyWith(
-                        inspectorOpen: !controller.shellLayout.inspectorOpen,
+                        controller.shellLayout.copyWith(
+                          inspectorOpen: !controller.shellLayout.inspectorOpen,
+                        ),
                       ),
-                    ),
               icon: const Icon(Icons.tune_outlined),
             ),
           ),
@@ -608,13 +607,13 @@ class _P5InformationArchitecturePrototypeState
       P5WorkspaceId.settingsDiagnostics => _settingsWorkspace(context),
       P5WorkspaceId.webStudio => _webStudioWorkspace(context),
       P5WorkspaceId.searchResearch => _futureCapabilityWorkspace(
-        context,
-        workspace,
-      ),
+          context,
+          workspace,
+        ),
       P5WorkspaceId.nativeAutomation => _futureCapabilityWorkspace(
-        context,
-        workspace,
-      ),
+          context,
+          workspace,
+        ),
       P5WorkspaceId.devices => _futureCapabilityWorkspace(context, workspace),
     };
   }

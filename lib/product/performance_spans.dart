@@ -177,8 +177,8 @@ final class PerformanceSpan {
     required this.role,
     required this.taskClass,
     required PerformanceSpanSink sink,
-  }) : _sink = sink,
-       _stopwatch = Stopwatch()..start();
+  })  : _sink = sink,
+        _stopwatch = Stopwatch()..start();
 
   factory PerformanceSpan.start(
     String operation, {
@@ -274,8 +274,7 @@ final class PerformanceSpan {
       processStartupDuration: processStartupDuration,
       browserStartupDuration: browserStartupDuration,
       analyzerDuration: analyzerDuration,
-      indexUpdateDuration:
-          indexUpdateDuration ??
+      indexUpdateDuration: indexUpdateDuration ??
           (operation == 'source.index.update' ? elapsed : null),
       indexQueryDuration:
           indexQueryDuration ?? (operation == 'source.search' ? elapsed : null),

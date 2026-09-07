@@ -5,17 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('P3 in-app acquisition is pinned and application owned', () {
-    final lock =
-        jsonDecode(
-              File(
-                'config/application_runtime_acquisition.v1.json',
-              ).readAsStringSync(),
-            )
-            as Map<String, dynamic>;
+    final lock = jsonDecode(
+      File(
+        'config/application_runtime_acquisition.v1.json',
+      ).readAsStringSync(),
+    ) as Map<String, dynamic>;
     final network = lock['networkAcquisition'] as Map<String, dynamic>;
-    final windows =
-        (lock['platforms'] as Map<String, dynamic>)['windows-x64']
-            as Map<String, dynamic>;
+    final windows = (lock['platforms'] as Map<String, dynamic>)['windows-x64']
+        as Map<String, dynamic>;
     final node = windows['node'] as Map<String, dynamic>;
     final p3 = windows['p3'] as Map<String, dynamic>;
 

@@ -106,13 +106,13 @@ void main() {
       );
     }
 
-    test('a substantial request compiles into a real per-request multi-task '
+    test(
+        'a substantial request compiles into a real per-request multi-task '
         'plan, not the generic inspect/implement/verify template', () async {
       final service = serviceWith(_validMp3PlanGenerator(model));
 
       final draft = await service.generatePrompt(
-        goal:
-            'Flutter web app to convert mp3 file to urls, no account or '
+        goal: 'Flutter web app to convert mp3 file to urls, no account or '
             'security logic needed, progress bar and upload/download '
             'buttons, simple good UX/UI',
         model: model,
@@ -149,8 +149,7 @@ void main() {
               title.toLowerCase().contains('download'),
         ),
         isTrue,
-        reason:
-            'plan should decompose the actual requested feature, '
+        reason: 'plan should decompose the actual requested feature, '
             'not a generic phase list: $titles',
       );
 
@@ -201,22 +200,23 @@ void main() {
 }
 
 Map<String, dynamic> _draftJson() => <String, dynamic>{
-  'title': 'MP3 to URL converter',
-  'purpose': 'Convert an uploaded MP3 file into a downloadable result.',
-  'systemPrompt': 'Act as a careful Flutter web engineer. Keep the UX minimal.',
-  'userPrompt': 'Build a simple MP3-to-URL converter for {{platform}}.',
-  'variables': <String>['platform'],
-  'assumptions': <String>['No accounts or authentication are required.'],
-  'clarifyingQuestions': <String>[],
-  'acceptanceCriteria': <String>[
-    'A user can upload an mp3 and download the converted result.',
-  ],
-  'outputExpectations': <String>['Application source', 'Automated tests'],
-  'guardrails': <String>['Do not add account or security logic.'],
-  'stopConditions': <String>[],
-  'evaluationCases': <String>['An uploaded mp3 produces a download link.'],
-  'mode': 'build',
-};
+      'title': 'MP3 to URL converter',
+      'purpose': 'Convert an uploaded MP3 file into a downloadable result.',
+      'systemPrompt':
+          'Act as a careful Flutter web engineer. Keep the UX minimal.',
+      'userPrompt': 'Build a simple MP3-to-URL converter for {{platform}}.',
+      'variables': <String>['platform'],
+      'assumptions': <String>['No accounts or authentication are required.'],
+      'clarifyingQuestions': <String>[],
+      'acceptanceCriteria': <String>[
+        'A user can upload an mp3 and download the converted result.',
+      ],
+      'outputExpectations': <String>['Application source', 'Automated tests'],
+      'guardrails': <String>['Do not add account or security logic.'],
+      'stopConditions': <String>[],
+      'evaluationCases': <String>['An uploaded mp3 produces a download link.'],
+      'mode': 'build',
+    };
 
 Map<String, dynamic> _taskJson({
   required String id,
@@ -225,29 +225,30 @@ Map<String, dynamic> _taskJson({
   required String title,
   required String objective,
   List<String> dependencies = const <String>[],
-}) => <String, dynamic>{
-  'id': id,
-  'phase': phase,
-  'parentId': parentId,
-  'title': title,
-  'objective': objective,
-  'instructions': objective,
-  'dependencies': dependencies,
-  'acceptanceCriteria': <String>['$title is observably complete.'],
-  'verificationSteps': <String>['Run the detected analyzer and tests.'],
-  'expectedArtifacts': <String>['Updated project source'],
-  'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
-  'complexity': 3,
-  'effortPoints': 3,
-  'uncertainty': 'low',
-  'risk': 'low',
-  'estimateConfidence': 0.8,
-  'expectedModelTurns': 3,
-  'expectedToolCalls': 4,
-  'maxAttempts': 2,
-  'enabled': true,
-  'manual': false,
-};
+}) =>
+    <String, dynamic>{
+      'id': id,
+      'phase': phase,
+      'parentId': parentId,
+      'title': title,
+      'objective': objective,
+      'instructions': objective,
+      'dependencies': dependencies,
+      'acceptanceCriteria': <String>['$title is observably complete.'],
+      'verificationSteps': <String>['Run the detected analyzer and tests.'],
+      'expectedArtifacts': <String>['Updated project source'],
+      'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
+      'complexity': 3,
+      'effortPoints': 3,
+      'uncertainty': 'low',
+      'risk': 'low',
+      'estimateConfidence': 0.8,
+      'expectedModelTurns': 3,
+      'expectedToolCalls': 4,
+      'maxAttempts': 2,
+      'enabled': true,
+      'manual': false,
+    };
 
 ModelGenerationResult _resultFor(
   ModelIdentity model,

@@ -65,8 +65,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                       ),
                       onChanged: controller.canChangePlanOnly
                           ? (_) => controller.apply(
-                              P5PrototypeAction.choosePlanOnly,
-                            )
+                                P5PrototypeAction.choosePlanOnly,
+                              )
                           : null,
                     ),
                   ),
@@ -81,8 +81,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           key: const Key('review-plan-button'),
                           onPressed: controller.canReviewPlan
                               ? () => controller.apply(
-                                  P5PrototypeAction.reviewPlan,
-                                )
+                                    P5PrototypeAction.reviewPlan,
+                                  )
                               : null,
                           icon: const Icon(Icons.fact_check_outlined),
                           label: const Text('Review concise plan'),
@@ -102,8 +102,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           state.composerLaunchTiming ==
                                   P5ComposerLaunchTiming.runNow
                               ? (state.planOnly
-                                    ? 'Review plan only'
-                                    : 'Run now')
+                                  ? 'Review plan only'
+                                  : 'Run now')
                               : 'Request schedule',
                         ),
                       ),
@@ -243,8 +243,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           maxLines: 4,
                           onChanged: (value) =>
                               controller.updateComposerAttachments(
-                                const LineSplitter().convert(value),
-                              ),
+                            const LineSplitter().convert(value),
+                          ),
                           decoration: InputDecoration(
                             labelText: 'Attachment references',
                             helperText:
@@ -262,8 +262,8 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                           maxLines: 4,
                           onChanged: (value) =>
                               controller.updateAcceptanceCriteria(
-                                const LineSplitter().convert(value),
-                              ),
+                            const LineSplitter().convert(value),
+                          ),
                           decoration: InputDecoration(
                             labelText: 'Acceptance criteria',
                             helperText:
@@ -505,7 +505,7 @@ extension _P5TaskWorkspaces on _P5InformationArchitecturePrototypeState {
                         key: const Key('review-plan-button'),
                         onPressed: controller.canReviewPlan
                             ? () =>
-                                  controller.apply(P5PrototypeAction.reviewPlan)
+                                controller.apply(P5PrototypeAction.reviewPlan)
                             : null,
                         icon: const Icon(Icons.fact_check_outlined),
                         label: const Text('Review new plan'),

@@ -215,9 +215,8 @@ extension _P5ShellWorkspace on _P5InformationArchitecturePrototypeState {
             ),
             _DomainCard(
               title: 'Browser runtime',
-              value: widget.browserRuntimeAvailable
-                  ? 'Available'
-                  : 'Unavailable',
+              value:
+                  widget.browserRuntimeAvailable ? 'Available' : 'Unavailable',
               detail: widget.browserRuntimeStatusCode,
               icon: Icons.web_outlined,
             ),
@@ -235,9 +234,8 @@ extension _P5ShellWorkspace on _P5InformationArchitecturePrototypeState {
     BuildContext context,
     P5PresentationState state,
   ) {
-    final runtimeActivity = _webActivity.reversed
-        .take(8)
-        .toList(growable: false);
+    final runtimeActivity =
+        _webActivity.reversed.take(8).toList(growable: false);
     final rows = <String>[
       'Workspace: ${state.workspace.label}',
       'Run state: ${state.runState.label}',
@@ -305,12 +303,10 @@ class _P5ResizeHandle extends StatelessWidget {
             : SystemMouseCursors.resizeRow,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onHorizontalDragUpdate: vertical
-              ? (details) => onDrag(details.delta.dx)
-              : null,
-          onVerticalDragUpdate: vertical
-              ? null
-              : (details) => onDrag(details.delta.dy),
+          onHorizontalDragUpdate:
+              vertical ? (details) => onDrag(details.delta.dx) : null,
+          onVerticalDragUpdate:
+              vertical ? null : (details) => onDrag(details.delta.dy),
           child: SizedBox(
             width: vertical ? 8 : double.infinity,
             height: vertical ? double.infinity : 8,

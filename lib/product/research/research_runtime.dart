@@ -55,19 +55,19 @@ final class P4FetchVersion {
   final String trustLabel;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': '1.0.0',
-    'id': id,
-    'url': url,
-    'canonicalUrl': canonicalUrl,
-    'fetchedAt': fetchedAt.toUtc().toIso8601String(),
-    'rawObjectSha256': rawObjectSha256,
-    'renderedObjectSha256': renderedObjectSha256,
-    'screenshotObjectSha256': screenshotObjectSha256,
-    'extractionObjectSha256': extractionObjectSha256,
-    'extractionHash': extractionHash,
-    'title': title,
-    'trustLabel': trustLabel,
-  };
+        'schemaVersion': '1.0.0',
+        'id': id,
+        'url': url,
+        'canonicalUrl': canonicalUrl,
+        'fetchedAt': fetchedAt.toUtc().toIso8601String(),
+        'rawObjectSha256': rawObjectSha256,
+        'renderedObjectSha256': renderedObjectSha256,
+        'screenshotObjectSha256': screenshotObjectSha256,
+        'extractionObjectSha256': extractionObjectSha256,
+        'extractionHash': extractionHash,
+        'title': title,
+        'trustLabel': trustLabel,
+      };
 }
 
 final class P4CitationSpan {
@@ -90,20 +90,20 @@ final class P4CitationSpan {
   final String quoteHash;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': '1.0.0',
-    'id': id,
-    'fetchVersionId': fetchVersionId,
-    'extractionHash': extractionHash,
-    'claim': claim,
-    'start': start,
-    'end': end,
-    'quoteHash': quoteHash,
-  };
+        'schemaVersion': '1.0.0',
+        'id': id,
+        'fetchVersionId': fetchVersionId,
+        'extractionHash': extractionHash,
+        'claim': claim,
+        'start': start,
+        'end': end,
+        'quoteHash': quoteHash,
+      };
 }
 
 final class P4ResearchContentStore {
   P4ResearchContentStore(this.root, {DateTime Function()? clock})
-    : _clock = clock ?? DateTime.now;
+      : _clock = clock ?? DateTime.now;
 
   final Directory root;
   final DateTime Function() _clock;
@@ -233,8 +233,13 @@ final class P4ResearchContentStore {
       throw const P4ResearchException('citation_span_invalid');
     }
     final quote = extractedText.substring(start, end);
-    final id =
-        'cite_${Sha256.text(canonicalJson(<String, Object?>{'fetch': fetch.id, 'extractionHash': fetch.extractionHash, 'start': start, 'end': end, 'claim': claim})).substring(0, 32)}';
+    final id = 'cite_${Sha256.text(canonicalJson(<String, Object?>{
+          'fetch': fetch.id,
+          'extractionHash': fetch.extractionHash,
+          'start': start,
+          'end': end,
+          'claim': claim
+        })).substring(0, 32)}';
     final citation = P4CitationSpan(
       id: id,
       fetchVersionId: fetch.id,
@@ -368,9 +373,8 @@ final class P4LexicalIndex {
         lexical += titleCount * 3.0 + bodyCount.toDouble();
       }
       final semanticPosition = semanticRank[document.id];
-      final semanticScore = semanticPosition == null
-          ? 0.0
-          : 2.0 / (1.0 + semanticPosition);
+      final semanticScore =
+          semanticPosition == null ? 0.0 : 2.0 / (1.0 + semanticPosition);
       final score = lexical + semanticScore;
       if (score > 0) hits.add(P4LexicalHit(document, score));
     }
@@ -400,9 +404,9 @@ final class P4DatasetTransform {
   final Map<String, Object?> arguments;
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'kind': kind.name,
-    'arguments': arguments,
-  };
+        'kind': kind.name,
+        'arguments': arguments,
+      };
 }
 
 final class P4DatasetVersion {
@@ -482,7 +486,7 @@ final class P4DatasetEngine {
       case P4DatasetTransformKind.select:
         final fields =
             (args['fields'] as List?)?.map((e) => e.toString()).toList() ??
-            const <String>[];
+                const <String>[];
         return rows
             .map(
               (row) => <String, Object?>{
@@ -534,7 +538,7 @@ final class P4DatasetEngine {
       case P4DatasetTransformKind.dedupe:
         final fields =
             (args['fields'] as List?)?.map((e) => e.toString()).toList() ??
-            const <String>[];
+                const <String>[];
         final seen = <String>{};
         return rows.where((row) {
           final key = canonicalJson(<String, Object?>{
@@ -549,9 +553,9 @@ final class P4DatasetEngine {
           final value = copy[field];
           if (value != null) {
             copy[field] = value.toString().trim().replaceAll(
-              RegExp(r'\s+'),
-              ' ',
-            );
+                  RegExp(r'\s+'),
+                  ' ',
+                );
           }
           return copy;
         }).toList();
@@ -563,7 +567,7 @@ final class P4DatasetEngine {
       case P4DatasetTransformKind.validateRequired:
         final fields =
             (args['fields'] as List?)?.map((e) => e.toString()).toList() ??
-            const <String>[];
+                const <String>[];
         for (final row in rows) {
           for (final field in fields) {
             final value = row[field];
@@ -629,18 +633,14 @@ final class P4DatasetEngine {
           final fields = version.schema.keys.toList();
           const quote = '"';
           const escapedQuote = '""';
-          final definitions = fields
-              .map((field) {
-                return '$quote${field.replaceAll(quote, escapedQuote)}$quote TEXT';
-              })
-              .join(', ');
+          final definitions = fields.map((field) {
+            return '$quote${field.replaceAll(quote, escapedQuote)}$quote TEXT';
+          }).join(', ');
           db.execute('CREATE TABLE data ($definitions)');
           if (fields.isNotEmpty) {
-            final columns = fields
-                .map((field) {
-                  return '$quote${field.replaceAll(quote, escapedQuote)}$quote';
-                })
-                .join(', ');
+            final columns = fields.map((field) {
+              return '$quote${field.replaceAll(quote, escapedQuote)}$quote';
+            }).join(', ');
             final placeholders = List.filled(fields.length, '?').join(', ');
             final statement = db.prepare(
               'INSERT INTO data ($columns) VALUES ($placeholders)',

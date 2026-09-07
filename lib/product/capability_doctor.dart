@@ -39,10 +39,10 @@ final class CapabilityDoctorReport {
     required this.depth,
     required List<CapabilityDoctorCheck> checks,
     DateTime? checkedAt,
-  }) : checks = List<CapabilityDoctorCheck>.unmodifiable(
-         _validatedChecks(checks),
-       ),
-       checkedAt = checkedAt ?? DateTime.now().toUtc();
+  })  : checks = List<CapabilityDoctorCheck>.unmodifiable(
+          _validatedChecks(checks),
+        ),
+        checkedAt = checkedAt ?? DateTime.now().toUtc();
 
   final CapabilityDoctorDepth depth;
   final List<CapabilityDoctorCheck> checks;

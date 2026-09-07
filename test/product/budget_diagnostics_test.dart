@@ -171,25 +171,25 @@ void main() {
   group('budget-aware execution', () {
     test('plan budgets scale to the documented 100-task ceiling', () {
       ExecutionPlan plan(int count, int complexity) => ExecutionPlan(
-        id: 'plan-$count',
-        contractId: 'contract-$count',
-        complexity: complexity,
-        rationale: 'Budget fixture.',
-        items: List<WorkItem>.generate(
-          count,
-          (index) => WorkItem(
-            id: 'work-$index',
-            title: 'Task $index',
-            description: 'Complete bounded task $index.',
-            dependencies: index == 0
-                ? const <String>{}
-                : <String>{'work-${index - 1}'},
-            allowedTools: const <String>{'read_file'},
-            acceptanceCriteria: const <String>['Evidence is recorded.'],
-          ),
-        ),
-        createdAt: DateTime.utc(2026, 7, 17),
-      );
+            id: 'plan-$count',
+            contractId: 'contract-$count',
+            complexity: complexity,
+            rationale: 'Budget fixture.',
+            items: List<WorkItem>.generate(
+              count,
+              (index) => WorkItem(
+                id: 'work-$index',
+                title: 'Task $index',
+                description: 'Complete bounded task $index.',
+                dependencies: index == 0
+                    ? const <String>{}
+                    : <String>{'work-${index - 1}'},
+                allowedTools: const <String>{'read_file'},
+                acceptanceCriteria: const <String>['Evidence is recorded.'],
+              ),
+            ),
+            createdAt: DateTime.utc(2026, 7, 17),
+          );
 
       final small = AutonomyBudget.forPlan(plan(1, 2));
       final large = AutonomyBudget.forPlan(plan(100, 9));
@@ -220,9 +220,8 @@ void main() {
       'tool descriptors expose required arguments and canonical examples',
       () {
         final tools = ToolRegistry.standard();
-        final descriptor = tools
-            .descriptors(allowlist: const <String>{'write_file'})
-            .single;
+        final descriptor =
+            tools.descriptors(allowlist: const <String>{'write_file'}).single;
         final schema = descriptor['argumentSchema'] as Map<String, dynamic>;
 
         expect(schema['required'], containsAll(<String>['path', 'content']));
@@ -543,10 +542,10 @@ void main() {
         );
         await runtime.events
             .publish('diagnostic.fixture', failedRun.id, <String, dynamic>{
-              'runId': failedRun.id,
-              'apiKey': 'diagnostic-key-value',
-              'budget': failedRun.budget.toJson(),
-            });
+          'runId': failedRun.id,
+          'apiKey': 'diagnostic-key-value',
+          'budget': failedRun.budget.toJson(),
+        });
 
         final bundle = await runtime.createSupportBundle(
           projectId: project.id,

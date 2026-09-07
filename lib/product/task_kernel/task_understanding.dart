@@ -183,8 +183,7 @@ class UnderstandingContext {
     if (availableCapabilities.isEmpty) return 'none';
     return availableCapabilities
         .map(
-          (capability) =>
-              '- ${capability.id}: ${capability.description} '
+          (capability) => '- ${capability.id}: ${capability.description} '
               '(accepts: ${capability.acceptedTargetTypes.isEmpty ? 'no targets' : capability.acceptedTargetTypes.map((type) => type.name).join('/')})',
         )
         .join('\n');
@@ -194,8 +193,7 @@ class UnderstandingContext {
     if (knownTargets.isEmpty) return 'none';
     return knownTargets
         .map(
-          (target) =>
-              '- ${target.type.name}: ${target.id} '
+          (target) => '- ${target.type.name}: ${target.id} '
               '(${target.displayName})',
         )
         .join('\n');
@@ -216,7 +214,7 @@ class ModelBackedUnderstanding {
   /// The model call. Injected rather than taken as a ModelRegistry so
   /// this stays a plain, deterministically-testable unit.
   final Future<ModelGenerationResult> Function(ModelGenerationRequest request)
-  generate;
+      generate;
 
   final UnderstandingValidator validator;
 
@@ -268,8 +266,7 @@ Rules:
         'There is nothing to understand in an empty request.',
       );
     }
-    final user =
-        '''
+    final user = '''
 USER REQUEST
 $normalized
 
@@ -697,9 +694,8 @@ class UnderstandingService {
     UnderstandingOutcome outcome,
     ChatInteractionDecision decision,
   ) {
-    final existing = outcome.specification.targetRefs
-        .map((item) => item.value)
-        .toSet();
+    final existing =
+        outcome.specification.targetRefs.map((item) => item.value).toSet();
     final merged = <TaskTargetRef>[
       ...outcome.specification.targetRefs,
       for (final target in decision.targets)

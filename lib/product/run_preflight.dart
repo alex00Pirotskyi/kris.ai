@@ -57,14 +57,14 @@ class RunCapabilityProbeResult {
   final Map<String, dynamic> details;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'key': key,
-    'label': label,
-    'ok': ok,
-    'required': required,
-    'message': message,
-    'durationMilliseconds': durationMilliseconds,
-    if (details.isNotEmpty) 'details': details,
-  };
+        'key': key,
+        'label': label,
+        'ok': ok,
+        'required': required,
+        'message': message,
+        'durationMilliseconds': durationMilliseconds,
+        if (details.isNotEmpty) 'details': details,
+      };
 }
 
 class RunPreflightReceipt {
@@ -101,14 +101,14 @@ class RunPreflightReceipt {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'id': id,
-    'runId': runId,
-    'verdict': verdict.name,
-    'startedAt': startedAt.toIso8601String(),
-    'completedAt': completedAt.toIso8601String(),
-    'summary': summary,
-    'probes': probes.map((probe) => probe.toJson()).toList(),
-  };
+        'id': id,
+        'runId': runId,
+        'verdict': verdict.name,
+        'startedAt': startedAt.toIso8601String(),
+        'completedAt': completedAt.toIso8601String(),
+        'summary': summary,
+        'probes': probes.map((probe) => probe.toJson()).toList(),
+      };
 }
 
 class RunCapabilityResolver {
@@ -116,9 +116,8 @@ class RunCapabilityResolver {
 
   List<RunCapabilityRequirement> resolve(PreparedCommand command) {
     final request = command.contract.request.toLowerCase();
-    final tools = command.plan.items
-        .expand((item) => item.allowedTools)
-        .toSet();
+    final tools =
+        command.plan.items.expand((item) => item.allowedTools).toSet();
     final requirements = <String, RunCapabilityRequirement>{};
 
     void add(RunCapabilityRequirement requirement) {
@@ -134,8 +133,7 @@ class RunCapabilityResolver {
       ),
     );
 
-    final conversational =
-        command.contract.mode == CommandMode.ask &&
+    final conversational = command.contract.mode == CommandMode.ask &&
         isConversationalRequest(command.contract.request);
     if (!conversational) {
       add(
@@ -279,20 +277,17 @@ class RunCapabilityResolver {
   }
 }
 
-typedef RunModelProbe =
-    Future<RunCapabilityProbeResult> Function(
-      ModelIdentity model,
-      RunCapabilityRequirement requirement,
-    );
-typedef RunBrowserProbe =
-    Future<RunCapabilityProbeResult> Function(
-      RunCapabilityRequirement requirement,
-    );
-typedef RunResearchSearchProbe =
-    Future<RunCapabilityProbeResult> Function(
-      RunRecord run,
-      RunCapabilityRequirement requirement,
-    );
+typedef RunModelProbe = Future<RunCapabilityProbeResult> Function(
+  ModelIdentity model,
+  RunCapabilityRequirement requirement,
+);
+typedef RunBrowserProbe = Future<RunCapabilityProbeResult> Function(
+  RunCapabilityRequirement requirement,
+);
+typedef RunResearchSearchProbe = Future<RunCapabilityProbeResult> Function(
+  RunRecord run,
+  RunCapabilityRequirement requirement,
+);
 typedef RunBuiltInResearchSearchProbe = Future<SearchProviderProbe> Function();
 typedef RunSettingsProvider = ProductSettings Function();
 
@@ -327,8 +322,8 @@ class RunPreflightService {
     final verdict = requiredFailure
         ? RunPreflightVerdict.blocked
         : warning
-        ? RunPreflightVerdict.readyWithWarnings
-        : RunPreflightVerdict.ready;
+            ? RunPreflightVerdict.readyWithWarnings
+            : RunPreflightVerdict.ready;
     return RunPreflightReceipt(
       id: newId('preflight'),
       runId: run.id,
@@ -479,14 +474,13 @@ class RunPreflightService {
   ) async {
     SearchProviderProbe builtIn;
     try {
-      final probe =
-          builtInResearchSearchProbe ??
+      final probe = builtInResearchSearchProbe ??
           () => SearchProviderRouter(
-            builtIn: BuiltInDuckDuckGoSearchProvider(
-              timeout: const Duration(seconds: 8),
-              maxBytes: 512 * 1024,
-            ),
-          ).probe();
+                builtIn: BuiltInDuckDuckGoSearchProvider(
+                  timeout: const Duration(seconds: 8),
+                  maxBytes: 512 * 1024,
+                ),
+              ).probe();
       builtIn = await probe();
     } on Object {
       builtIn = const SearchProviderProbe(
@@ -559,13 +553,12 @@ class RunPreflightService {
     }
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 5);
     try {
-      final request = await client
-          .headUrl(uri)
-          .timeout(const Duration(seconds: 6));
+      final request =
+          await client.headUrl(uri).timeout(const Duration(seconds: 6));
       request.followRedirects = false;
       final response = await request.close().timeout(
-        const Duration(seconds: 8),
-      );
+            const Duration(seconds: 8),
+          );
       final ok = response.statusCode >= 200 && response.statusCode < 500;
       return _result(
         requirement,

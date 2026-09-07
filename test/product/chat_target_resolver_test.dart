@@ -43,7 +43,8 @@ void main() {
       );
     });
 
-    test('adding a new target family means adding one provider, not editing '
+    test(
+        'adding a new target family means adding one provider, not editing '
         'the resolver', () {
       // A future target type (e.g. a desktop-file target) is just
       // another ChatTargetProvider implementation appended to the
@@ -113,11 +114,11 @@ class _FixtureTargetProvider implements ChatTargetProvider {
 
   @override
   List<ChatTarget> resolve() => const <ChatTarget>[
-    ChatTarget(
-      id: 'fixture',
-      type: ChatTargetType.workspace,
-      displayName: 'Fixture',
-      aliases: <String>['fixture'],
-    ),
-  ];
+        ChatTarget(
+          id: 'fixture',
+          type: ChatTargetType.workspace,
+          displayName: 'Fixture',
+          aliases: <String>['fixture'],
+        ),
+      ];
 }

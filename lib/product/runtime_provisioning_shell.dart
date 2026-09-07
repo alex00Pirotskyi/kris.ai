@@ -64,10 +64,7 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
   @override
   Widget build(BuildContext context) {
     final reducedMotion = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations;
+        .instance.platformDispatcher.accessibilityFeatures.disableAnimations;
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
@@ -313,8 +310,8 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
                       _ownerPreparing
                           ? Icons.hourglass_top
                           : ownerAvailable
-                          ? Icons.admin_panel_settings_outlined
-                          : Icons.admin_panel_settings_outlined,
+                              ? Icons.admin_panel_settings_outlined
+                              : Icons.admin_panel_settings_outlined,
                     ),
                     selectedIcon: Icon(
                       _ownerPreparing
@@ -429,10 +426,10 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
       browserRuntimeStatusCode: _webReady
           ? 'p3_browser_runtime_available'
           : _webPreparing
-          ? 'p3_runtime_preparing'
-          : _webFailure == null
-          ? 'p3_runtime_provisionable'
-          : 'p3_runtime_prepare_failed',
+              ? 'p3_runtime_preparing'
+              : _webFailure == null
+                  ? 'p3_runtime_provisionable'
+                  : 'p3_runtime_prepare_failed',
       browserRuntimeProvenance: <String, Object?>{
         ...widget.runtime.p3BrowserRuntime.provenance,
         'provisionable': true,
@@ -445,12 +442,12 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
       ),
       browserSessionStarter: () =>
           widget.runtime.startProvisionedBrowserSessions(
-            stateDirectory: Directory(
-              '${widget.runtime.directories.cache.path}${Platform.pathSeparator}'
-              'p5-web-studio-browser',
-            ),
-            requestTimeout: const Duration(seconds: 60),
-          ),
+        stateDirectory: Directory(
+          '${widget.runtime.directories.cache.path}${Platform.pathSeparator}'
+          'p5-web-studio-browser',
+        ),
+        requestTimeout: const Duration(seconds: 60),
+      ),
       onOpenOwnerMode: () => _selectDestination(2),
     );
     if (_experienceController.state.workspace != P5WorkspaceId.webStudio ||
@@ -527,8 +524,8 @@ class _RuntimePreparingView extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: 12),
                 Text(message, textAlign: TextAlign.center),
@@ -579,8 +576,8 @@ class _RuntimeFailureView extends StatelessWidget {
                   title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
@@ -622,19 +619,19 @@ class _RuntimeStatusBanner extends StatelessWidget {
     required this.title,
     required this.message,
     required this.progress,
-  }) : diagnosticCode = null,
-       onRetry = null,
-       failure = false;
+  })  : diagnosticCode = null,
+        onRetry = null,
+        failure = false;
 
   const _RuntimeStatusBanner.failure({
     super.key,
     required this.title,
     required this.diagnosticCode,
     required this.onRetry,
-  }) : message =
-           'Kristin could not safely finish preparing the browser runtime.',
-       progress = null,
-       failure = true;
+  })  : message =
+            'Kristin could not safely finish preparing the browser runtime.',
+        progress = null,
+        failure = true;
 
   final String title;
   final String message;

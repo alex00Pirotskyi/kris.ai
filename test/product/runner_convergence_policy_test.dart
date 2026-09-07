@@ -25,15 +25,16 @@ SemanticProgressSnapshot _errors(
   Map<String, String> artifacts = const <String, String>{},
   Set<String> criteria = const <String>{},
   Set<String> external = const <String>{},
-}) => SemanticProgressSnapshot(
-  errorCodes: errors.toSet(),
-  actionHash: actionHash,
-  resultHash: resultHash,
-  evidenceIds: evidence,
-  artifacts: artifacts,
-  satisfiedCriteria: criteria,
-  externalState: external,
-);
+}) =>
+    SemanticProgressSnapshot(
+      errorCodes: errors.toSet(),
+      actionHash: actionHash,
+      resultHash: resultHash,
+      evidenceIds: evidence,
+      artifacts: artifacts,
+      satisfiedCriteria: criteria,
+      externalState: external,
+    );
 
 void main() {
   group('Runner progress-aware convergence', () {

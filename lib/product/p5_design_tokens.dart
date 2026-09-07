@@ -503,9 +503,8 @@ abstract final class P5DesignSystem {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: dark
-            ? const Color(0xfff3f0f7)
-            : const Color(0xff202127),
+        backgroundColor:
+            dark ? const Color(0xfff3f0f7) : const Color(0xff202127),
         contentTextStyle: TextStyle(
           color: dark ? const Color(0xff17151b) : Colors.white,
           fontSize: tokens.bodyFontSize,
@@ -523,9 +522,8 @@ abstract final class P5DesignSystem {
           color: dark ? Colors.white : const Color(0xff202127),
           borderRadius: BorderRadius.circular(tokens.radiusSm),
         ),
-        waitDuration: reducedMotion
-            ? Duration.zero
-            : const Duration(milliseconds: 450),
+        waitDuration:
+            reducedMotion ? Duration.zero : const Duration(milliseconds: 450),
       ),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: tokens.focusRing,
@@ -541,15 +539,12 @@ abstract final class P5DesignSystem {
     required bool reducedMotion,
   }) {
     final dark = brightness == Brightness.dark;
-    final fast = reducedMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 100);
-    final standard = reducedMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 180);
-    final slow = reducedMotion
-        ? Duration.zero
-        : const Duration(milliseconds: 280);
+    final fast =
+        reducedMotion ? Duration.zero : const Duration(milliseconds: 100);
+    final standard =
+        reducedMotion ? Duration.zero : const Duration(milliseconds: 180);
+    final slow =
+        reducedMotion ? Duration.zero : const Duration(milliseconds: 280);
 
     if (highContrast && dark) {
       return P5DesignTokens(
@@ -717,6 +712,7 @@ Duration _lerpDuration(Duration start, Duration end, double t) {
       start.inMicroseconds.toDouble(),
       end.inMicroseconds.toDouble(),
       t,
-    )!.round(),
+    )!
+        .round(),
   );
 }

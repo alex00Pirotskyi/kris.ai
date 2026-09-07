@@ -88,8 +88,7 @@ Map<String, Object?> _downloadReceiptEnvelope({
     'sourceUrl': 'https://example.test/export',
     'suggestedFilename': suggestedFilename,
     'content': <String, Object?>{
-      'relativePath':
-          'downloads/quarantine/$sessionKind/$scopeId/'
+      'relativePath': 'downloads/quarantine/$sessionKind/$scopeId/'
           '$downloadId/payload.bin',
       'bytes': 4,
       'sha256': Sha256.hex(<int>[1, 2, 3, 4]),

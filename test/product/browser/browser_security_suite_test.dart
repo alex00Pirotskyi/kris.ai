@@ -118,11 +118,13 @@ final class _RejectingCipher implements P3BrowserProfileCipher {
   Future<List<int>> seal(
     List<int> plaintext, {
     required List<int> associatedData,
-  }) async => throw StateError('cipher_should_not_be_reached');
+  }) async =>
+      throw StateError('cipher_should_not_be_reached');
 
   @override
   Future<List<int>> open(
     List<int> ciphertext, {
     required List<int> associatedData,
-  }) async => throw StateError('cipher_should_not_be_reached');
+  }) async =>
+      throw StateError('cipher_should_not_be_reached');
 }

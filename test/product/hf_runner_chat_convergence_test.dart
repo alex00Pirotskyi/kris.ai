@@ -177,13 +177,13 @@ void main() {
         ),
         researchSearchProbe: (run, requirement) async =>
             RunCapabilityProbeResult(
-              key: requirement.key,
-              label: requirement.label,
-              ok: true,
-              required: requirement.required,
-              message: 'ready',
-              durationMilliseconds: 1,
-            ),
+          key: requirement.key,
+          label: requirement.label,
+          ok: true,
+          required: requirement.required,
+          message: 'ready',
+          durationMilliseconds: 1,
+        ),
         settingsProvider: () =>
             const ProductSettings(localOnly: false, allowPackageNetwork: true),
       );
@@ -406,8 +406,7 @@ PreparedCommand _command({
     ],
     constraints: const <String>[],
     researchQuestions: const <String>[],
-    requiredPermissions:
-        requiredPermissions ??
+    requiredPermissions: requiredPermissions ??
         (mode == CommandMode.build
             ? const <PermissionScope>{
                 PermissionScope.projectRead,
@@ -421,8 +420,7 @@ PreparedCommand _command({
     title: 'Work',
     description: 'Complete the requested work.',
     dependencies: const <String>{},
-    allowedTools:
-        allowedTools ??
+    allowedTools: allowedTools ??
         (mode == CommandMode.ask
             ? const <String>{}
             : const <String>{'read_file', 'write_file', 'git_status'}),

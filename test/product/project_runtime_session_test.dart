@@ -44,7 +44,8 @@ void main() {
       }
     });
 
-    test('stopEphemeral terminates an ephemeral process but leaves a '
+    test(
+        'stopEphemeral terminates an ephemeral process but leaves a '
         'persistUntilStopped one running', () async {
       final script = await _writeSleeperScript(root);
       final ephemeral = await service.start(
@@ -83,7 +84,8 @@ void main() {
   });
 
   group('ProcessIdentityProbe', () {
-    test('verify reports unverifiablePlatform when there is no recorded '
+    test(
+        'verify reports unverifiablePlatform when there is no recorded '
         'identity to compare against, regardless of platform', () async {
       const probe = ProcessIdentityProbe();
       expect(
@@ -204,7 +206,8 @@ void main() {
           : 'no process identity reader for this platform in Wave A',
     );
 
-    test('a session recorded with a mismatched/stale identity is reconciled '
+    test(
+        'a session recorded with a mismatched/stale identity is reconciled '
         'to interrupted, never assumed alive', () async {
       await runtime.repositories.workflow.insertManagedProjectProcess(
         id: 'reconcile-stale',
@@ -289,7 +292,8 @@ void main() {
       }
     });
 
-    test('starting a project writes a durable persist-until-stopped session, '
+    test(
+        'starting a project writes a durable persist-until-stopped session, '
         'and stopping it marks that session stopped', () async {
       final project = await runtime.addProject(
         name: 'Sleeper project',

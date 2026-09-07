@@ -278,12 +278,14 @@ void main() {
       expect(absentSnapshot.application.browser['available'], isNull);
       expect(absentSnapshot.application.ownerMode['available'], isNull);
 
-      final present = _service(<KristinCapabilityProvider>[
-        _FakeProvider('p1', <CapabilityDescriptor>[_descriptor('a')]),
-      ], _app(
-        browser: <String, Object?>{'available': true},
-        ownerMode: <String, Object?>{'available': true},
-      ));
+      final present = _service(
+          <KristinCapabilityProvider>[
+            _FakeProvider('p1', <CapabilityDescriptor>[_descriptor('a')]),
+          ],
+          _app(
+            browser: <String, Object?>{'available': true},
+            ownerMode: <String, Object?>{'available': true},
+          ));
       final presentSnapshot = await present.snapshot();
       expect(presentSnapshot.application.browser['available'], isTrue);
       expect(presentSnapshot.application.ownerMode['available'], isTrue);
@@ -355,9 +357,15 @@ void main() {
         );
         final now = DateTime.now().toUtc();
         final evidence = <KnowledgeEvidence>[
+          // 'owner.reset' is a sensitive capability, so operational usability
+          // additionally requires directly-observed evidence at high
+          // confidence. State that explicitly here: this test varies only the
+          // authority dimension, and the default (medium) confidence would
+          // otherwise fail the positive case for an unrelated reason.
           KnowledgeEvidence(
             kind: KnowledgeEvidenceKind.observed,
             source: 'test',
+            confidence: ObservationConfidence.high,
           ),
         ];
         final health = CapabilityHealth(
@@ -489,11 +497,13 @@ void main() {
 
     test('current authority is read from observed state, never synthesised',
         () async {
-      final service = _service(<KristinCapabilityProvider>[
-        _FakeProvider('p1', <CapabilityDescriptor>[_descriptor('a')]),
-      ], _app(authority: <String, Object?>{
-        'granted': <String>['project.read'],
-      }));
+      final service = _service(
+          <KristinCapabilityProvider>[
+            _FakeProvider('p1', <CapabilityDescriptor>[_descriptor('a')]),
+          ],
+          _app(authority: <String, Object?>{
+            'granted': <String>['project.read'],
+          }));
       final context = await service.planningContext();
       expect(context.currentAuthority, <String>{'project.read'});
 

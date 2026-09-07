@@ -90,8 +90,7 @@ class _FakeGateway implements ChatRuntimeGateway {
   }) async {
     calls.add('provisionProjectForRequest:$request');
     final now = DateTime.utc(2026);
-    final project =
-        provisioned ??
+    final project = provisioned ??
         ProjectRecord(
           id: 'new-project',
           name: suggestedName ?? 'New project',
@@ -137,21 +136,21 @@ class _FakeGateway implements ChatRuntimeGateway {
   }
 
   ProjectDiagnosticReport _report() => ProjectDiagnosticReport(
-    projectId: 'p1',
-    projectType: 'Flutter',
-    testCommand: 'flutter test',
-    buildCommand: 'flutter build',
-    runCommand: 'flutter run',
-    checks: const <DiagnosticCheck>[
-      DiagnosticCheck(
-        id: 'ok',
-        title: 'ok',
-        status: DiagnosticStatus.passed,
-        message: 'ok',
-      ),
-    ],
-    generatedAt: _fixedTime,
-  );
+        projectId: 'p1',
+        projectType: 'Flutter',
+        testCommand: 'flutter test',
+        buildCommand: 'flutter build',
+        runCommand: 'flutter run',
+        checks: const <DiagnosticCheck>[
+          DiagnosticCheck(
+            id: 'ok',
+            title: 'ok',
+            status: DiagnosticStatus.passed,
+            message: 'ok',
+          ),
+        ],
+        generatedAt: _fixedTime,
+      );
 }
 
 void main() {
@@ -261,7 +260,8 @@ void main() {
   });
 
   group('ChatActionDispatcher.resolveAgentProject', () {
-    test('agent.create_project always provisions a new project, never the '
+    test(
+        'agent.create_project always provisions a new project, never the '
         'selected one', () async {
       final gateway = _FakeGateway()
         ..provisioned = ProjectRecord(
@@ -293,7 +293,8 @@ void main() {
       );
     });
 
-    test('agent.modify_project and agent.fix_project never provision -- '
+    test(
+        'agent.modify_project and agent.fix_project never provision -- '
         'they use whatever project is already selected', () async {
       final gateway = _FakeGateway();
       final dispatcher = ChatActionDispatcher(gateway);
@@ -324,7 +325,8 @@ void main() {
       );
     });
 
-    test('agent.modify_project with no selected project resolves to null '
+    test(
+        'agent.modify_project with no selected project resolves to null '
         'rather than guessing one', () async {
       final dispatcher = ChatActionDispatcher(_FakeGateway());
       final resolved = await dispatcher.resolveAgentProject(

@@ -51,19 +51,20 @@ void main() {
   ModelBackedUnderstanding understandingReturning(
     Map<String, dynamic> payload, {
     void Function(ModelGenerationRequest request)? capture,
-  }) => ModelBackedUnderstanding(
-    generate: (request) async {
-      capture?.call(request);
-      final now = DateTime.now().toUtc();
-      return ModelGenerationResult(
-        text: jsonEncode(payload),
-        identity: model,
-        startedAt: now,
-        firstTokenAt: now,
-        completedAt: now,
+  }) =>
+      ModelBackedUnderstanding(
+        generate: (request) async {
+          capture?.call(request);
+          final now = DateTime.now().toUtc();
+          return ModelGenerationResult(
+            text: jsonEncode(payload),
+            identity: model,
+            startedAt: now,
+            firstTokenAt: now,
+            completedAt: now,
+          );
+        },
       );
-    },
-  );
 
   group('deterministic understanding', () {
     test('an explicit command needs no model at all', () {
@@ -140,8 +141,7 @@ void main() {
 
   group('model-backed understanding is validated, never trusted', () {
     test('a real reading produces a structured specification', () async {
-      const request =
-          'Make this app faster but do not change the database '
+      const request = 'Make this app faster but do not change the database '
           'and keep the UI simple';
       final understanding = understandingReturning(<String, dynamic>{
         'objective': 'Improve application performance',
@@ -259,7 +259,8 @@ void main() {
       },
     );
 
-    test('MODEL UNDERSTANDING != AUTHORIZATION: a granted-permission claim '
+    test(
+        'MODEL UNDERSTANDING != AUTHORIZATION: a granted-permission claim '
         'is refused', () async {
       final understanding = understandingReturning(<String, dynamic>{
         'objective': 'Reorganize the project',
@@ -307,7 +308,8 @@ void main() {
       );
     });
 
-    test('a hard constraint the user never stated is demoted to an '
+    test(
+        'a hard constraint the user never stated is demoted to an '
         'assumption', () async {
       final understanding = understandingReturning(<String, dynamic>{
         'objective': 'Speed up the app',
@@ -376,9 +378,9 @@ void main() {
 
   group('UnderstandingService failure handling', () {
     ChatInteractionDecision substantial() => compiler.compile(
-      'Build a Flutter web app that converts mp3 files with a progress '
-      'bar and a download button',
-    );
+          'Build a Flutter web app that converts mp3 files with a progress '
+          'bar and a download button',
+        );
 
     test(
       'a bad model response degrades to the honest deterministic reading',

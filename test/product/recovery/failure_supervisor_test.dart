@@ -25,11 +25,12 @@ class _Provider implements KristinCapabilityProvider {
   Future<CapabilityAvailability> resolveAvailability(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) async => CapabilityAvailability(
-    capabilityId: descriptor.id,
-    state: CapabilityAvailabilityState.available,
-    observedAt: DateTime.now().toUtc(),
-  );
+  ) async =>
+      CapabilityAvailability(
+        capabilityId: descriptor.id,
+        state: CapabilityAvailabilityState.available,
+        observedAt: DateTime.now().toUtc(),
+      );
 }
 
 class _App implements ApplicationSnapshotProvider {
@@ -37,11 +38,12 @@ class _App implements ApplicationSnapshotProvider {
   Future<ApplicationSnapshot> capture({
     bool forceRefresh = false,
     SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
-  }) async => ApplicationSnapshot(
-    capturedAt: DateTime.utc(2026, 1, 1),
-    applicationIdentity: 'kris.ai',
-    platform: 'linux',
-  );
+  }) async =>
+      ApplicationSnapshot(
+        capturedAt: DateTime.utc(2026, 1, 1),
+        applicationIdentity: 'kris.ai',
+        platform: 'linux',
+      );
 }
 
 KristinSelfModelService _selfModel({List<String> capabilityIds = const []}) {
@@ -86,9 +88,7 @@ class _Events implements RecoveryEventSink {
 }
 
 class _Router implements RecoveryTaskRouter {
-  _Router({this.workResult, this.onContinue});
-  final RecoveryActionResult? workResult;
-  final void Function()? onContinue;
+  _Router();
   int continued = 0;
   int recoveryWork = 0;
   RecoveryObjective? lastObjective;
@@ -99,25 +99,23 @@ class _Router implements RecoveryTaskRouter {
   ) async {
     recoveryWork += 1;
     lastObjective = objective;
-    return workResult ??
-        const RecoveryActionResult(
-          summary: 'kernel repair complete',
-          materialProgress: true,
-        );
+    return const RecoveryActionResult(
+      summary: 'kernel repair complete',
+      materialProgress: true,
+    );
   }
 
   @override
-  Future<RecoveryActionResult> continueOriginalTask(FailureEvent failure) async {
+  Future<RecoveryActionResult> continueOriginalTask(
+      FailureEvent failure) async {
     continued += 1;
-    onContinue?.call();
     return const RecoveryActionResult(summary: 'original task resumed');
   }
 }
 
 class _Actuator implements RecoveryActuator {
-  _Actuator({this.throwOnPerform = false, this.result});
+  _Actuator({this.throwOnPerform = false});
   final bool throwOnPerform;
-  final RecoveryActionResult? result;
   int performed = 0;
   int rolledBack = 0;
   final List<String> strategies = <String>[];
@@ -132,11 +130,10 @@ class _Actuator implements RecoveryActuator {
     if (throwOnPerform) {
       throw StateError('actuator exploded');
     }
-    return result ??
-        const RecoveryActionResult(
-          summary: 'action performed',
-          materialProgress: true,
-        );
+    return const RecoveryActionResult(
+      summary: 'action performed',
+      materialProgress: true,
+    );
   }
 
   @override
@@ -190,10 +187,11 @@ class _AllowAuthority implements RecoveryAuthorityGate {
   Future<RecoveryAuthorityEvaluation> evaluate(
     FailureEvent failure,
     RecoveryDecision decision,
-  ) async => const RecoveryAuthorityEvaluation(
-    allowed: true,
-    reason: 'test grants authority',
-  );
+  ) async =>
+      const RecoveryAuthorityEvaluation(
+        allowed: true,
+        reason: 'test grants authority',
+      );
 }
 
 class _DenyAuthority implements RecoveryAuthorityGate {
@@ -201,11 +199,12 @@ class _DenyAuthority implements RecoveryAuthorityGate {
   Future<RecoveryAuthorityEvaluation> evaluate(
     FailureEvent failure,
     RecoveryDecision decision,
-  ) async => const RecoveryAuthorityEvaluation(
-    allowed: false,
-    reason: 'authority is not granted',
-    missing: <String>{'owner'},
-  );
+  ) async =>
+      const RecoveryAuthorityEvaluation(
+        allowed: false,
+        reason: 'authority is not granted',
+        missing: <String>{'owner'},
+      );
 }
 
 class _SelfRepair implements RecoverySelfRepairCoordinator {
@@ -258,7 +257,8 @@ FailureSupervisor _supervisor({
 
 void main() {
   group('verify before resume', () {
-    test('a successful action alone does not resume the original task', () async {
+    test('a successful action alone does not resume the original task',
+        () async {
       final router = _Router();
       final actuator = _Actuator();
       final verifier = _Verifier.failing();

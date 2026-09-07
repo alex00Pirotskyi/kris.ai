@@ -120,15 +120,16 @@ void main() {
 
 P4BrowserAwareResearchService _service({
   required Future<ResearchSource> Function(Uri url) baseFetch,
-}) => P4BrowserAwareResearchService(
-  policy: const ResearchPolicy(
-    maxBytes: 1024 * 1024,
-    maxRedirects: 3,
-    timeout: Duration(seconds: 5),
-  ),
-  redactor: SecretRedactor(),
-  baseFetchOverride: baseFetch,
-);
+}) =>
+    P4BrowserAwareResearchService(
+      policy: const ResearchPolicy(
+        maxBytes: 1024 * 1024,
+        maxRedirects: 3,
+        timeout: Duration(seconds: 5),
+      ),
+      redactor: SecretRedactor(),
+      baseFetchOverride: baseFetch,
+    );
 
 ResearchSource _source({required String content, required String rawContent}) =>
     ResearchSource(

@@ -26,85 +26,88 @@ void main() {
     String phase = 'Implementation',
     Set<String> dependencies = const <String>{},
     String? parentId,
-  }) => UniversalTask(
-    id: id,
-    title: title,
-    objective: title,
-    instructions: title,
-    phase: phase,
-    parentId: parentId,
-    dependencies: dependencies,
-    acceptanceCriteria: <String>['$title is complete.'],
-    verificationSteps: const <String>['Run the detected checks.'],
-  );
+  }) =>
+      UniversalTask(
+        id: id,
+        title: title,
+        objective: title,
+        instructions: title,
+        phase: phase,
+        parentId: parentId,
+        dependencies: dependencies,
+        acceptanceCriteria: <String>['$title is complete.'],
+        verificationSteps: const <String>['Run the detected checks.'],
+      );
 
   TaskSpecification specification({
     List<SpecificationClaim> hardConstraints = const <SpecificationClaim>[],
-  }) => TaskSpecification(
-    id: 'spec_app',
-    originalRequest: 'Build the app',
-    objective: 'Build the app',
-    hardConstraints: hardConstraints,
-  );
+  }) =>
+      TaskSpecification(
+        id: 'spec_app',
+        originalRequest: 'Build the app',
+        objective: 'Build the app',
+        hardConstraints: hardConstraints,
+      );
 
   UniversalTaskPlan planWith(
     List<UniversalTask> tasks, {
     TaskSpecification? spec,
     String id = 'plan_1',
-  }) => UniversalTaskPlan(
-    id: id,
-    specification: spec ?? specification(),
-    family: TaskFamily.software,
-    route: PlanningRoute.graph,
-    title: 'App plan',
-    rationale: 'Incremental delivery.',
-    tasks: tasks,
-  );
+  }) =>
+      UniversalTaskPlan(
+        id: id,
+        specification: spec ?? specification(),
+        family: TaskFamily.software,
+        route: PlanningRoute.graph,
+        title: 'App plan',
+        rationale: 'Incremental delivery.',
+        tasks: tasks,
+      );
 
   UniversalTaskPlan originalPlan() => planWith(<UniversalTask>[
-    task('t1', 'Inspect project', phase: 'Inspect'),
-    task(
-      't2',
-      'Define architecture',
-      phase: 'Design',
-      dependencies: <String>{'t1'},
-    ),
-    task('t3', 'Implement Firebase storage', dependencies: <String>{'t2'}),
-    task('t4', 'Build result UI', dependencies: <String>{'t2'}),
-    task(
-      't5',
-      'Write tests',
-      phase: 'Qualification',
-      dependencies: <String>{'t3', 't4'},
-    ),
-  ]);
+        task('t1', 'Inspect project', phase: 'Inspect'),
+        task(
+          't2',
+          'Define architecture',
+          phase: 'Design',
+          dependencies: <String>{'t1'},
+        ),
+        task('t3', 'Implement Firebase storage', dependencies: <String>{'t2'}),
+        task('t4', 'Build result UI', dependencies: <String>{'t2'}),
+        task(
+          't5',
+          'Write tests',
+          phase: 'Qualification',
+          dependencies: <String>{'t3', 't4'},
+        ),
+      ]);
 
   /// The replan: same work, minus Firebase, plus a Firebase-free store.
   UniversalTaskPlan revisedPlan() => planWith(
-    <UniversalTask>[
-      task('r1', 'Inspect project', phase: 'Inspect'),
-      task(
-        'r2',
-        'Define architecture',
-        phase: 'Design',
-        dependencies: <String>{'r1'},
-      ),
-      task('r3', 'Implement local storage', dependencies: <String>{'r2'}),
-      task('r4', 'Build result UI', dependencies: <String>{'r2'}),
-      task(
-        'r5',
-        'Write tests',
-        phase: 'Qualification',
-        dependencies: <String>{'r3', 'r4'},
-      ),
-    ],
-    spec: specification(
-      hardConstraints: <SpecificationClaim>[
-        const SpecificationClaim.stated('Do not use Firebase.'),
-      ],
-    ),
-    id: 'plan_2',
-  );
+        <UniversalTask>[
+          task('r1', 'Inspect project', phase: 'Inspect'),
+          task(
+            'r2',
+            'Define architecture',
+            phase: 'Design',
+            dependencies: <String>{'r1'},
+          ),
+          task('r3', 'Implement local storage', dependencies: <String>{'r2'}),
+          task('r4', 'Build result UI', dependencies: <String>{'r2'}),
+          task(
+            'r5',
+            'Write tests',
+            phase: 'Qualification',
+            dependencies: <String>{'r3', 'r4'},
+          ),
+        ],
+        spec: specification(
+          hardConstraints: <SpecificationClaim>[
+            const SpecificationClaim.stated('Do not use Firebase.'),
+          ],
+        ),
+        id: 'plan_2',
+      );
 
   group('completed work is preserved across a replan', () {
     late PlanReconciliationResult result;
@@ -128,9 +131,8 @@ void main() {
     });
 
     test('the two finished tasks are kept, not redone', () {
-      final preservedTitles = result.preserved
-          .map((item) => item.title)
-          .toSet();
+      final preservedTitles =
+          result.preserved.map((item) => item.title).toSet();
       expect(
         preservedTitles,
         containsAll(<String>['Inspect project', 'Define architecture']),

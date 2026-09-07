@@ -63,8 +63,8 @@ final class P5UiPerformanceSnapshot {
   final int largeCollectionSampleCount;
 
   bool get allMeasured => metrics.every(
-    (metric) => metric.state != P5UiPerformanceMetricState.notMeasured,
-  );
+        (metric) => metric.state != P5UiPerformanceMetricState.notMeasured,
+      );
 
   bool get meetsInitialTargets =>
       allMeasured &&
@@ -197,8 +197,8 @@ final class P5UiPerformanceMonitor extends ChangeNotifier {
     final worstMounted = largeCollections.isEmpty
         ? null
         : largeCollections
-              .map((sample) => sample.peakMountedItems)
-              .reduce(math.max);
+            .map((sample) => sample.peakMountedItems)
+            .reduce(math.max);
     final residentMiB = _residentMemoryBytes == null
         ? null
         : _residentMemoryBytes! / (1024 * 1024);
@@ -353,8 +353,8 @@ class P5UiPerformanceDashboard extends StatelessWidget {
         final overall = snapshot.meetsInitialTargets
             ? 'PASS'
             : snapshot.failedCount > 0
-            ? 'OVER BUDGET'
-            : 'CALIBRATING';
+                ? 'OVER BUDGET'
+                : 'CALIBRATING';
         return Semantics(
           container: true,
           label: 'UI performance dashboard: $overall',

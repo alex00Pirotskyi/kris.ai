@@ -134,16 +134,16 @@ class P2GrantConsumption {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-    'schemaVersion': '1.0.0',
-    'grantId': grantId,
-    'requestId': requestId,
-    'useNumber': useNumber,
-    'previousUseNumber': previousUseNumber,
-    'stateVersion': stateVersion,
-    'revocationEpoch': revocationEpoch,
-    'consumedAt': consumedAt.toUtc().toIso8601String(),
-    'auth': auth,
-  };
+        'schemaVersion': '1.0.0',
+        'grantId': grantId,
+        'requestId': requestId,
+        'useNumber': useNumber,
+        'previousUseNumber': previousUseNumber,
+        'stateVersion': stateVersion,
+        'revocationEpoch': revocationEpoch,
+        'consumedAt': consumedAt.toUtc().toIso8601String(),
+        'auth': auth,
+      };
 }
 
 abstract interface class P2GrantUseLedger {

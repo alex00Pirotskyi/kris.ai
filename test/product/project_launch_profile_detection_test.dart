@@ -49,7 +49,8 @@ void main() {
       },
     );
 
-    test('a Node project (package.json with a dev script) detects as a web '
+    test(
+        'a Node project (package.json with a dev script) detects as a web '
         'launch kind', () async {
       await File(
         '${root.path}${Platform.pathSeparator}package.json',
@@ -85,7 +86,8 @@ void main() {
       expect(detectProjectLaunchKind('Static website'), ProjectLaunchKind.web);
     });
 
-    test('unrecognized/unknown project types fall back to command, never '
+    test(
+        'unrecognized/unknown project types fall back to command, never '
         'a guessed web/server kind', () {
       expect(detectProjectLaunchKind('Unknown'), ProjectLaunchKind.command);
       expect(detectProjectLaunchKind('Dart'), ProjectLaunchKind.command);

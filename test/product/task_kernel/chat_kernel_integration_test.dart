@@ -122,35 +122,37 @@ void main() {
   UniversalTaskKernel kernelWith(
     ModelGenerationDelegate planningGenerator, {
     ModelGenerationDelegate? understandingGenerator,
-  }) => buildUniversalTaskKernel(
-    planning: planningWith(planningGenerator),
-    tools: ToolRegistry.standard(),
-    models: ModelRegistry(
-      settings: const ProductSettings(ollamaBaseUrl: ''),
-      vault: SecretVault(
-        repositories.secretReferences,
-        SecretRedactor(),
-        audit,
-      ),
-      redactor: SecretRedactor(),
-    ),
-    understandingGenerator: understandingGenerator,
-  );
+  }) =>
+      buildUniversalTaskKernel(
+        planning: planningWith(planningGenerator),
+        tools: ToolRegistry.standard(),
+        models: ModelRegistry(
+          settings: const ProductSettings(ollamaBaseUrl: ''),
+          vault: SecretVault(
+            repositories.secretReferences,
+            SecretRedactor(),
+            audit,
+          ),
+          redactor: SecretRedactor(),
+        ),
+        understandingGenerator: understandingGenerator,
+      );
 
   PlanningContext contextFor() => PlanningContext(
-    project: project,
-    model: model,
-    availableCapabilityIds: kKristinCapabilities.map((item) => item.id).toSet(),
-    availableToolNames: ToolRegistry.standard().names,
-  );
+        project: project,
+        model: model,
+        availableCapabilityIds:
+            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableToolNames: ToolRegistry.standard().names,
+      );
 
-  const mp3Request =
-      'Create a Flutter web app that converts MP3 files. '
+  const mp3Request = 'Create a Flutter web app that converts MP3 files. '
       'No accounts. Upload an MP3, show progress and provide a '
       'downloadable result with simple UX.';
 
   group('SCENARIO C: Chat -> kernel -> the same executable graph', () {
-    test('a substantial request decomposes into request-specific tasks that '
+    test(
+        'a substantial request decomposes into request-specific tasks that '
         'reach the Runner unchanged', () async {
       final captured = <ModelGenerationRequest>[];
       final kernel = kernelWith(
@@ -270,7 +272,8 @@ void main() {
       );
     });
 
-    test('NO Prompt Studio artifact is created just because the user asked '
+    test(
+        'NO Prompt Studio artifact is created just because the user asked '
         'Kristin to do something', () async {
       final kernel = kernelWith(
         _mp3PlanGenerator(model),
@@ -345,7 +348,8 @@ void main() {
   });
 
   group('SCENARIO D: a stated constraint cannot be silently lost', () {
-    test('the hard constraint reaches the draft, the planner and the '
+    test(
+        'the hard constraint reaches the draft, the planner and the '
         'contract', () async {
       final captured = <ModelGenerationRequest>[];
       final kernel = kernelWith(
@@ -355,8 +359,7 @@ void main() {
       );
       final specification = TaskSpecification(
         id: 'spec_faster',
-        originalRequest:
-            'Make this app faster but do not change the '
+        originalRequest: 'Make this app faster but do not change the '
             'database and keep the UI simple.',
         objective: 'Improve application performance',
         hardConstraints: <SpecificationClaim>[
@@ -423,10 +426,10 @@ void main() {
 
   group('the failure taxonomy at the real planning boundary', () {
     TaskSpecification softwareSpecification() => TaskSpecification(
-      id: 'spec_fail',
-      originalRequest: mp3Request,
-      objective: 'Build an MP3 converter',
-    );
+          id: 'spec_fail',
+          originalRequest: mp3Request,
+          objective: 'Build an MP3 converter',
+        );
 
     const softwareRouting = RoutingDecision(
       route: PlanningRoute.graph,
@@ -434,7 +437,8 @@ void main() {
       rationale: 'test',
     );
 
-    test('SCENARIO I: an invalid plan after repair degrades to the '
+    test(
+        'SCENARIO I: an invalid plan after repair degrades to the '
         'conservative plan, truthfully labelled', () async {
       final kernel = kernelWith(_alwaysInvalidPlanGenerator(model));
       final result = await kernel.plan(
@@ -619,28 +623,31 @@ class _AlwaysFailingResearchPlanner implements TaskFamilyPlanner {
     required PlanningContext context,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) async => throw ProductException('task_plan_invalid', 'nope');
+  }) async =>
+      throw ProductException('task_plan_invalid', 'nope');
 }
 
 Map<String, dynamic> _draftJson({
   List<String> guardrails = const <String>[],
-}) => <String, dynamic>{
-  'title': 'MP3 to URL converter',
-  'purpose': 'Convert an uploaded MP3 file into a downloadable result.',
-  'systemPrompt': 'Act as a careful Flutter web engineer. Keep the UX minimal.',
-  'userPrompt': 'Build a simple MP3-to-URL converter for {{platform}}.',
-  'variables': <String>['platform'],
-  'assumptions': <String>['No accounts or authentication are required.'],
-  'clarifyingQuestions': <String>[],
-  'acceptanceCriteria': <String>[
-    'A user can upload an mp3 and download the converted result.',
-  ],
-  'outputExpectations': <String>['Application source', 'Automated tests'],
-  'guardrails': guardrails,
-  'stopConditions': <String>[],
-  'evaluationCases': <String>['An uploaded mp3 produces a download link.'],
-  'mode': 'build',
-};
+}) =>
+    <String, dynamic>{
+      'title': 'MP3 to URL converter',
+      'purpose': 'Convert an uploaded MP3 file into a downloadable result.',
+      'systemPrompt':
+          'Act as a careful Flutter web engineer. Keep the UX minimal.',
+      'userPrompt': 'Build a simple MP3-to-URL converter for {{platform}}.',
+      'variables': <String>['platform'],
+      'assumptions': <String>['No accounts or authentication are required.'],
+      'clarifyingQuestions': <String>[],
+      'acceptanceCriteria': <String>[
+        'A user can upload an mp3 and download the converted result.',
+      ],
+      'outputExpectations': <String>['Application source', 'Automated tests'],
+      'guardrails': guardrails,
+      'stopConditions': <String>[],
+      'evaluationCases': <String>['An uploaded mp3 produces a download link.'],
+      'mode': 'build',
+    };
 
 Map<String, dynamic> _taskJson({
   required String id,
@@ -649,29 +656,30 @@ Map<String, dynamic> _taskJson({
   required String title,
   required String objective,
   List<String> dependencies = const <String>[],
-}) => <String, dynamic>{
-  'id': id,
-  'phase': phase,
-  'parentId': parentId,
-  'title': title,
-  'objective': objective,
-  'instructions': objective,
-  'dependencies': dependencies,
-  'acceptanceCriteria': <String>['$title is observably complete.'],
-  'verificationSteps': <String>['Run the detected analyzer and tests.'],
-  'expectedArtifacts': <String>['Updated project source'],
-  'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
-  'complexity': 3,
-  'effortPoints': 3,
-  'uncertainty': 'low',
-  'risk': 'low',
-  'estimateConfidence': 0.8,
-  'expectedModelTurns': 3,
-  'expectedToolCalls': 4,
-  'maxAttempts': 2,
-  'enabled': true,
-  'manual': false,
-};
+}) =>
+    <String, dynamic>{
+      'id': id,
+      'phase': phase,
+      'parentId': parentId,
+      'title': title,
+      'objective': objective,
+      'instructions': objective,
+      'dependencies': dependencies,
+      'acceptanceCriteria': <String>['$title is observably complete.'],
+      'verificationSteps': <String>['Run the detected analyzer and tests.'],
+      'expectedArtifacts': <String>['Updated project source'],
+      'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
+      'complexity': 3,
+      'effortPoints': 3,
+      'uncertainty': 'low',
+      'risk': 'low',
+      'estimateConfidence': 0.8,
+      'expectedModelTurns': 3,
+      'expectedToolCalls': 4,
+      'maxAttempts': 2,
+      'enabled': true,
+      'manual': false,
+    };
 
 ModelGenerationResult _resultFor(
   ModelIdentity model,
@@ -690,100 +698,102 @@ ModelGenerationResult _resultFor(
 }
 
 Map<String, dynamic> _mp3PlanJson() => <String, dynamic>{
-  'title': 'MP3 to URL delivery plan',
-  'rationale': 'Build the upload/convert/download flow incrementally.',
-  'tasks': <Map<String, dynamic>>[
-    _taskJson(
-      id: 'task_001',
-      phase: 'Foundation',
-      title: 'Define upload and conversion flow',
-      objective: 'Decide the upload -> convert -> download data flow.',
-    ),
-    _taskJson(
-      id: 'task_002',
-      phase: 'UI',
-      parentId: 'task_001',
-      dependencies: <String>['task_001'],
-      title: 'Build upload and progress bar UI',
-      objective: 'Implement the upload control and progress indicator.',
-    ),
-    _taskJson(
-      id: 'task_003',
-      phase: 'Conversion',
-      parentId: 'task_001',
-      dependencies: <String>['task_001'],
-      title: 'Implement mp3 conversion service boundary',
-      objective: 'Implement the conversion service and its interface.',
-    ),
-    _taskJson(
-      id: 'task_004',
-      phase: 'UI',
-      parentId: 'task_002',
-      dependencies: <String>['task_002', 'task_003'],
-      title: 'Build download result UI',
-      objective: 'Implement the download button and result state.',
-    ),
-    _taskJson(
-      id: 'task_005',
-      phase: 'Qualification',
-      parentId: 'task_001',
-      dependencies: <String>['task_004'],
-      title: 'Verify end-to-end conversion',
-      objective: 'Verify an uploaded mp3 produces a downloadable result.',
-    ),
-  ],
-};
+      'title': 'MP3 to URL delivery plan',
+      'rationale': 'Build the upload/convert/download flow incrementally.',
+      'tasks': <Map<String, dynamic>>[
+        _taskJson(
+          id: 'task_001',
+          phase: 'Foundation',
+          title: 'Define upload and conversion flow',
+          objective: 'Decide the upload -> convert -> download data flow.',
+        ),
+        _taskJson(
+          id: 'task_002',
+          phase: 'UI',
+          parentId: 'task_001',
+          dependencies: <String>['task_001'],
+          title: 'Build upload and progress bar UI',
+          objective: 'Implement the upload control and progress indicator.',
+        ),
+        _taskJson(
+          id: 'task_003',
+          phase: 'Conversion',
+          parentId: 'task_001',
+          dependencies: <String>['task_001'],
+          title: 'Implement mp3 conversion service boundary',
+          objective: 'Implement the conversion service and its interface.',
+        ),
+        _taskJson(
+          id: 'task_004',
+          phase: 'UI',
+          parentId: 'task_002',
+          dependencies: <String>['task_002', 'task_003'],
+          title: 'Build download result UI',
+          objective: 'Implement the download button and result state.',
+        ),
+        _taskJson(
+          id: 'task_005',
+          phase: 'Qualification',
+          parentId: 'task_001',
+          dependencies: <String>['task_004'],
+          title: 'Verify end-to-end conversion',
+          objective: 'Verify an uploaded mp3 produces a downloadable result.',
+        ),
+      ],
+    };
 
 /// Understanding fixture: a deterministic structured reading of the MP3
 /// request. Deterministic on purpose -- the assertions are about what the
 /// validator did with it, not about the fixture being intelligent.
 ModelGenerationDelegate _mp3UnderstandingGenerator(ModelIdentity model) =>
     (request) async => _resultFor(model, <String, dynamic>{
-      'objective': 'Build a Flutter web MP3 converter',
-      'subObjectives': <String>[
-        'upload an MP3 file',
-        'show conversion progress',
-        'download the converted result',
-      ],
-      'capabilityHints': <String>['agent.create_project'],
-      'targets': <String>[],
-      'hardConstraints': <String>['No accounts or authentication'],
-      'preferences': <String>['Simple UX'],
-      'successCriteria': <String>[
-        'An uploaded MP3 produces a downloadable result',
-        'Progress is visible during conversion',
-      ],
-      'assumptions': <String>[],
-      'unresolvedQuestions': <String>[],
-      'confidence': 0.9,
-    });
+          'objective': 'Build a Flutter web MP3 converter',
+          'subObjectives': <String>[
+            'upload an MP3 file',
+            'show conversion progress',
+            'download the converted result',
+          ],
+          'capabilityHints': <String>['agent.create_project'],
+          'targets': <String>[],
+          'hardConstraints': <String>['No accounts or authentication'],
+          'preferences': <String>['Simple UX'],
+          'successCriteria': <String>[
+            'An uploaded MP3 produces a downloadable result',
+            'Progress is visible during conversion',
+          ],
+          'assumptions': <String>[],
+          'unresolvedQuestions': <String>[],
+          'confidence': 0.9,
+        });
 
 ModelGenerationDelegate _mp3PlanGenerator(
   ModelIdentity model, {
   void Function(ModelGenerationRequest request)? capture,
-}) => (request) async {
-  capture?.call(request);
-  final isPlan = request.systemPrompt.contains('task-planning model');
-  if (!isPlan) {
-    return _resultFor(
-      model,
-      _draftJson(guardrails: <String>['Do not add account logic.']),
-    );
-  }
-  return _resultFor(model, _mp3PlanJson());
-};
+}) =>
+    (request) async {
+      capture?.call(request);
+      final isPlan = request.systemPrompt.contains('task-planning model');
+      if (!isPlan) {
+        return _resultFor(
+          model,
+          _draftJson(guardrails: <String>['Do not add account logic.']),
+        );
+      }
+      return _resultFor(model, _mp3PlanJson());
+    };
 
 /// A draft generator that returns NO guardrails, so the test can prove
 /// deterministic code re-asserts the specification's hard constraint.
 ModelGenerationDelegate _constraintDroppingGenerator(
   ModelIdentity model, {
   void Function(ModelGenerationRequest request)? capture,
-}) => (request) async {
-  capture?.call(request);
-  final isPlan = request.systemPrompt.contains('task-planning model');
-  if (!isPlan) return _resultFor(model, _draftJson());
-  return _resultFor(model, _mp3PlanJson());
-};
+}) =>
+    (request) async {
+      capture?.call(request);
+      final isPlan = request.systemPrompt.contains('task-planning model');
+      if (!isPlan) return _resultFor(model, _draftJson());
+      return _resultFor(model, _mp3PlanJson());
+    };
 
 ModelGenerationDelegate _alwaysInvalidPlanGenerator(ModelIdentity model) =>
     (request) async {

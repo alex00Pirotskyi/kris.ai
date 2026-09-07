@@ -127,7 +127,7 @@ class ChatActionDispatcher {
     if (gateway is! ChatSelfAwarenessGateway) {
       throw StateError('chat_self_awareness_gateway_unavailable');
     }
-    return gateway;
+    return gateway as ChatSelfAwarenessGateway;
   }
 
   CapabilityAuthorityDecision authorize({
@@ -136,35 +136,38 @@ class ChatActionDispatcher {
     Set<PermissionScope> requestedScopes = const <PermissionScope>{},
     bool modelProposed = false,
     String reason = '',
-  }) => authorityResolver.resolve(
-    CapabilityInvocation(
-      capabilityId: capabilityId,
-      targetIds: targetIds,
-      requestedScopes: requestedScopes,
-      modelProposed: modelProposed,
-      reason: reason,
-    ),
-  );
+  }) =>
+      authorityResolver.resolve(
+        CapabilityInvocation(
+          capabilityId: capabilityId,
+          targetIds: targetIds,
+          requestedScopes: requestedScopes,
+          modelProposed: modelProposed,
+          reason: reason,
+        ),
+      );
 
   Future<KristinSelfSnapshot> selfAwareness({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     bool forceRefresh = false,
-  }) => _selfGateway.selfSnapshot(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-    forceRefresh: forceRefresh,
-  );
+  }) =>
+      _selfGateway.selfSnapshot(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        forceRefresh: forceRefresh,
+      );
 
   Future<SelfModelPlanningContext> selfPlanningContext({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     Set<String> relevantCapabilityIds = const <String>{},
-  }) => _selfGateway.selfPlanningContext(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-    relevantCapabilityIds: relevantCapabilityIds,
-  );
+  }) =>
+      _selfGateway.selfPlanningContext(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        relevantCapabilityIds: relevantCapabilityIds,
+      );
 
   Future<String> explainCapabilityAvailability(
     String capabilityId, {
@@ -183,47 +186,52 @@ class ChatActionDispatcher {
     String capabilityId, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => _selfGateway.capabilityRequirements(
-    capabilityId,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      _selfGateway.capabilityRequirements(
+        capabilityId,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<List<KnownCapability>> capabilitiesForObjective(
     String objective, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => _selfGateway.capabilitiesForObjective(
-    objective,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      _selfGateway.capabilitiesForObjective(
+        objective,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<List<SelfModelChange>> selfChangesSince(
     DateTime since, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => _selfGateway.selfChangesSince(
-    since,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      _selfGateway.selfChangesSince(
+        since,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<List<SelfInvariantViolation>> selfIntegrity({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => _selfGateway.selfIntegrity(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      _selfGateway.selfIntegrity(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => _selfGateway.runSelfConsistencyProbes(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      _selfGateway.runSelfConsistencyProbes(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   Future<KernelPreparedPlan> prepareThroughKernel({
     required TaskSpecification specification,
@@ -237,7 +245,7 @@ class ChatActionDispatcher {
     if (gateway is! ChatSelfAwarePlanningGateway) {
       throw StateError('chat_self_aware_planning_gateway_unavailable');
     }
-    return gateway.prepareThroughKernel(
+    return (gateway as ChatSelfAwarePlanningGateway).prepareThroughKernel(
       specification: specification,
       routing: routing,
       project: project,
@@ -399,7 +407,8 @@ class ProductRuntimeChatGateway
         required ProjectRecord? project,
         required ModelIdentity? model,
         required Set<String> relevantCapabilityIds,
-      }) => live.planningContext(
+      }) =>
+          live.planningContext(
         selectedProject: project,
         selectedModel: model,
         sessionKey:
@@ -422,74 +431,81 @@ class ProductRuntimeChatGateway
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     bool forceRefresh = false,
-  }) => awareness.snapshot(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-    forceRefresh: forceRefresh,
-  );
+  }) =>
+      awareness.snapshot(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        forceRefresh: forceRefresh,
+      );
 
   @override
   Future<SelfModelPlanningContext> selfPlanningContext({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     Set<String> relevantCapabilityIds = const <String>{},
-  }) => awareness.planningContext(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-    relevantCapabilityIds: relevantCapabilityIds,
-  );
+  }) =>
+      awareness.planningContext(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        relevantCapabilityIds: relevantCapabilityIds,
+      );
 
   @override
   Future<CapabilityRequirementReport> capabilityRequirements(
     String capabilityId, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => awareness.requirementsFor(
-    capabilityId,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      awareness.requirementsFor(
+        capabilityId,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   @override
   Future<List<KnownCapability>> capabilitiesForObjective(
     String objective, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => awareness.capabilitiesFor(
-    objective,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      awareness.capabilitiesFor(
+        objective,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   @override
   Future<List<SelfModelChange>> selfChangesSince(
     DateTime since, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) async => awareness.changesSince(
-    since,
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) async =>
+      awareness.changesSince(
+        since,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   @override
   Future<List<SelfInvariantViolation>> selfIntegrity({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => awareness.integrityReport(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-  );
+  }) =>
+      awareness.integrityReport(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+      );
 
   @override
   Future<List<SelfConsistencyProbeResult>> runSelfConsistencyProbes({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) => awareness.runProbes(
-    selectedProject: selectedProject,
-    selectedModel: selectedModel,
-    force: true,
-  );
+  }) =>
+      awareness.runProbes(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        force: true,
+      );
 
   @override
   Future<KernelPreparedPlan> prepareThroughKernel({
@@ -545,8 +561,7 @@ class ProductRuntimeChatGateway
       ),
       contract: compiled.contract,
       plan: compiled.plan,
-      model:
-          model ??
+      model: model ??
           ModelIdentity(
             providerId: 'none',
             name: 'unselected',
@@ -563,27 +578,27 @@ class ProductRuntimeChatGateway
       await runtime.repositories.commands.put(prepared);
       await runtime.audit
           .append('task_kernel.compiled', prepared.id, <String, dynamic>{
-            'commandId': prepared.id,
-            'projectId': project.id,
-            'family': result.plan.family.name,
-            'route': result.plan.route.name,
-            'conservative': result.isConservative,
-            'coordinatorCapabilitiesConsumed': consumed.toList()..sort(),
-            'specificationSource': specification.source.name,
-            'workItems': compiled.plan.items.length,
-            'planHash': result.plan.contentHash,
-            'selfModelFreshnessWarnings': selfContext.freshnessWarnings,
-          });
+        'commandId': prepared.id,
+        'projectId': project.id,
+        'family': result.plan.family.name,
+        'route': result.plan.route.name,
+        'conservative': result.isConservative,
+        'coordinatorCapabilitiesConsumed': consumed.toList()..sort(),
+        'specificationSource': specification.source.name,
+        'workItems': compiled.plan.items.length,
+        'planHash': result.plan.contentHash,
+        'selfModelFreshnessWarnings': selfContext.freshnessWarnings,
+      });
       await runtime.events
           .publish('command.prepared', prepared.id, <String, dynamic>{
-            'commandId': prepared.id,
-            'projectId': project.id,
-            'mode': compiled.contract.mode.name,
-            'complexity': compiled.plan.complexity,
-            'generatedTaskPlan': !result.isConservative,
-            'taskFamily': result.plan.family.name,
-            'selfAwarePlanning': true,
-          });
+        'commandId': prepared.id,
+        'projectId': project.id,
+        'mode': compiled.contract.mode.name,
+        'complexity': compiled.plan.complexity,
+        'generatedTaskPlan': !result.isConservative,
+        'taskFamily': result.plan.family.name,
+        'selfAwarePlanning': true,
+      });
     }
     return KernelPreparedPlan(
       command: command,
@@ -630,13 +645,14 @@ class ProductRuntimeChatGateway
   Future<List<Map<String, String>>> searchWeb({
     required String query,
     int count = 10,
-  }) => _observe(
-    'research.search',
-    <String, Object?>{'query': query, 'count': count},
-    () => runtime.searchWeb(query: query, count: count),
-    stateChanging: false,
-    capabilityId: 'research.search',
-  );
+  }) =>
+      _observe(
+        'research.search',
+        <String, Object?>{'query': query, 'count': count},
+        () => runtime.searchWeb(query: query, count: count),
+        stateChanging: false,
+        capabilityId: 'research.search',
+      );
 
   @override
   Future<void> archiveResearchIfProject({
@@ -664,67 +680,68 @@ class ProductRuntimeChatGateway
 
   @override
   Future<ProjectDiagnosticReport> analyzeProject(String projectId) => _observe(
-    'project.analyze',
-    <String, Object?>{'projectId': projectId},
-    () => runtime.analyzeProject(projectId),
-    stateChanging: false,
-    projectId: projectId,
-    capabilityId: 'project.analyze',
-  );
+        'project.analyze',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.analyzeProject(projectId),
+        stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'project.analyze',
+      );
 
   @override
   Future<ProjectDiagnosticReport> testProject(String projectId) => _observe(
-    'project.test',
-    <String, Object?>{'projectId': projectId},
-    () => runtime.testProject(projectId),
-    stateChanging: false,
-    projectId: projectId,
-    capabilityId: 'project.test',
-  );
+        'project.test',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.testProject(projectId),
+        stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'project.test',
+      );
 
   @override
   Future<ProjectDiagnosticReport> buildProject(String projectId) => _observe(
-    'project.build',
-    <String, Object?>{'projectId': projectId},
-    () => runtime.buildProject(projectId),
-    projectId: projectId,
-    capabilityId: 'project.build',
-  );
+        'project.build',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.buildProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.build',
+      );
 
   @override
   Future<ProjectProcessStatus> startProject(String projectId) => _observe(
-    'project.start',
-    <String, Object?>{'projectId': projectId},
-    () => runtime.startProject(projectId),
-    projectId: projectId,
-    capabilityId: 'project.run',
-  );
+        'project.start',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.startProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.run',
+      );
 
   @override
   Future<ProjectProcessStatus?> stopProject(String projectId) => _observe(
-    'project.stop',
-    <String, Object?>{'projectId': projectId},
-    () => runtime.stopProject(projectId),
-    projectId: projectId,
-    capabilityId: 'project.stop',
-  );
+        'project.stop',
+        <String, Object?>{'projectId': projectId},
+        () => runtime.stopProject(projectId),
+        projectId: projectId,
+        capabilityId: 'project.stop',
+      );
 
   @override
   Future<ProjectRecord> provisionProjectForRequest({
     required String request,
     String? suggestedName,
-  }) => _observe(
-    'project.provision',
-    <String, Object?>{
-      'request': request,
-      if (suggestedName != null) 'suggestedName': suggestedName,
-    },
-    () => runtime.provisionProjectForRequest(
-      request: request,
-      suggestedName: suggestedName,
-    ),
-    capabilityId: 'agent.create_project',
-  );
+  }) =>
+      _observe(
+        'project.provision',
+        <String, Object?>{
+          'request': request,
+          if (suggestedName != null) 'suggestedName': suggestedName,
+        },
+        () => runtime.provisionProjectForRequest(
+          request: request,
+          suggestedName: suggestedName,
+        ),
+        capabilityId: 'agent.create_project',
+      );
 
   @override
   Future<PreparedCommand> prepare({
@@ -732,41 +749,43 @@ class ProductRuntimeChatGateway
     required CommandMode mode,
     required String request,
     required ModelIdentity model,
-  }) => _observe(
-    'command.prepare',
-    <String, Object?>{
-      'projectId': projectId,
-      'mode': mode.name,
-      'model': model.exactId,
-    },
-    () => runtime.prepare(
-      projectId: projectId,
-      mode: mode,
-      request: request,
-      model: model,
-    ),
-    projectId: projectId,
-    modelExactId: model.exactId,
-  );
+  }) =>
+      _observe(
+        'command.prepare',
+        <String, Object?>{
+          'projectId': projectId,
+          'mode': mode.name,
+          'model': model.exactId,
+        },
+        () => runtime.prepare(
+          projectId: projectId,
+          mode: mode,
+          request: request,
+          model: model,
+        ),
+        projectId: projectId,
+        modelExactId: model.exactId,
+      );
 
   @override
   Future<CapabilityDoctorReport> inspectCapabilities({
     String? projectId,
     List<ModelIdentity>? discoveredModels,
     CapabilityDoctorDepth depth = CapabilityDoctorDepth.quick,
-  }) => _observe(
-    'system.capability_doctor',
-    <String, Object?>{
-      if (projectId != null) 'projectId': projectId,
-      'depth': depth.name,
-    },
-    () => runtime.inspectCapabilities(
-      projectId: projectId,
-      discoveredModels: discoveredModels,
-      depth: depth,
-    ),
-    stateChanging: false,
-    projectId: projectId,
-    capabilityId: 'system.diagnose',
-  );
+  }) =>
+      _observe(
+        'system.capability_doctor',
+        <String, Object?>{
+          if (projectId != null) 'projectId': projectId,
+          'depth': depth.name,
+        },
+        () => runtime.inspectCapabilities(
+          projectId: projectId,
+          discoveredModels: discoveredModels,
+          depth: depth,
+        ),
+        stateChanging: false,
+        projectId: projectId,
+        capabilityId: 'system.diagnose',
+      );
 }

@@ -117,18 +117,17 @@ void main() {
   }
 
   TaskSpecification createSpecification() => TaskSpecification(
-    id: 'spec_create',
-    originalRequest:
-        '/create flutter web application to convert mp3 '
-        'files to URLs, simple UI, upload/download, progress bar',
-    objective: 'Build a Flutter web MP3-to-URL converter',
-    // Chat routed this to agent.create_project. The hint is
-    // orchestration metadata -- it records what Chat did, not what
-    // the executor should do.
-    capabilityHints: const <String>['agent.create_project'],
-    source: TaskSpecificationSource.modelUnderstanding,
-    confidence: 0.9,
-  );
+        id: 'spec_create',
+        originalRequest: '/create flutter web application to convert mp3 '
+            'files to URLs, simple UI, upload/download, progress bar',
+        objective: 'Build a Flutter web MP3-to-URL converter',
+        // Chat routed this to agent.create_project. The hint is
+        // orchestration metadata -- it records what Chat did, not what
+        // the executor should do.
+        capabilityHints: const <String>['agent.create_project'],
+        source: TaskSpecificationSource.modelUnderstanding,
+        confidence: 0.9,
+      );
 
   const routing = RoutingDecision(
     route: PlanningRoute.graph,
@@ -137,12 +136,13 @@ void main() {
   );
 
   PlanningContext contextFor() => PlanningContext(
-    project: project,
-    model: model,
-    availableCapabilityIds: kKristinCapabilities.map((item) => item.id).toSet(),
-    availableToolNames: ToolRegistry.standard().names,
-    consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
-  );
+        project: project,
+        model: model,
+        availableCapabilityIds:
+            kKristinCapabilities.map((item) => item.id).toSet(),
+        availableToolNames: ToolRegistry.standard().names,
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
+      );
 
   test('the coordinator capability set is derived from routes, not a list', () {
     expect(
@@ -259,7 +259,8 @@ void main() {
     },
   );
 
-  test('a leaked coordinator instruction fails compile with a precise '
+  test(
+      'a leaked coordinator instruction fails compile with a precise '
       'diagnostic instead of reaching the model', () async {
     // The defect this guard exists for: a planner that still writes
     // "Use the agent.create_project capability" into a task.
@@ -350,49 +351,50 @@ ModelGenerationResult _resultFor(
 }
 
 Map<String, dynamic> _draftJson() => <String, dynamic>{
-  'title': 'MP3 to URL converter',
-  'purpose': 'Convert an uploaded MP3 into a downloadable result.',
-  'systemPrompt': 'Act as a careful Flutter web engineer.',
-  'userPrompt': 'Build a simple MP3-to-URL converter.',
-  'variables': <String>[],
-  'assumptions': <String>[],
-  'clarifyingQuestions': <String>[],
-  'acceptanceCriteria': <String>['An uploaded mp3 produces a download.'],
-  'outputExpectations': <String>['Application source'],
-  'guardrails': <String>[],
-  'stopConditions': <String>[],
-  'evaluationCases': <String>['Upload produces a link.'],
-  'mode': 'build',
-};
+      'title': 'MP3 to URL converter',
+      'purpose': 'Convert an uploaded MP3 into a downloadable result.',
+      'systemPrompt': 'Act as a careful Flutter web engineer.',
+      'userPrompt': 'Build a simple MP3-to-URL converter.',
+      'variables': <String>[],
+      'assumptions': <String>[],
+      'clarifyingQuestions': <String>[],
+      'acceptanceCriteria': <String>['An uploaded mp3 produces a download.'],
+      'outputExpectations': <String>['Application source'],
+      'guardrails': <String>[],
+      'stopConditions': <String>[],
+      'evaluationCases': <String>['Upload produces a link.'],
+      'mode': 'build',
+    };
 
 Map<String, dynamic> _task({
   required String id,
   required String title,
   required String instructions,
   List<String> dependencies = const <String>[],
-}) => <String, dynamic>{
-  'id': id,
-  'phase': 'Implementation',
-  'parentId': null,
-  'title': title,
-  'objective': title,
-  'instructions': instructions,
-  'dependencies': dependencies,
-  'acceptanceCriteria': <String>['$title is complete.'],
-  'verificationSteps': <String>['Run the detected analyzer and tests.'],
-  'expectedArtifacts': <String>['lib/main.dart'],
-  'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
-  'complexity': 3,
-  'effortPoints': 3,
-  'uncertainty': 'low',
-  'risk': 'low',
-  'estimateConfidence': 0.8,
-  'expectedModelTurns': 3,
-  'expectedToolCalls': 4,
-  'maxAttempts': 2,
-  'enabled': true,
-  'manual': false,
-};
+}) =>
+    <String, dynamic>{
+      'id': id,
+      'phase': 'Implementation',
+      'parentId': null,
+      'title': title,
+      'objective': title,
+      'instructions': instructions,
+      'dependencies': dependencies,
+      'acceptanceCriteria': <String>['$title is complete.'],
+      'verificationSteps': <String>['Run the detected analyzer and tests.'],
+      'expectedArtifacts': <String>['lib/main.dart'],
+      'allowedTools': <String>['read_file', 'write_file', 'verify_project'],
+      'complexity': 3,
+      'effortPoints': 3,
+      'uncertainty': 'low',
+      'risk': 'low',
+      'estimateConfidence': 0.8,
+      'expectedModelTurns': 3,
+      'expectedToolCalls': 4,
+      'maxAttempts': 2,
+      'enabled': true,
+      'manual': false,
+    };
 
 /// A well-behaved planner: concrete, tool-shaped instructions.
 ModelGenerationDelegate _validPlanGenerator(ModelIdentity model) =>
@@ -407,15 +409,13 @@ ModelGenerationDelegate _validPlanGenerator(ModelIdentity model) =>
           _task(
             id: 'task_001',
             title: 'Write the upload screen',
-            instructions:
-                'Write lib/upload_screen.dart with the upload '
+            instructions: 'Write lib/upload_screen.dart with the upload '
                 'control and a progress indicator.',
           ),
           _task(
             id: 'task_002',
             title: 'Write the conversion service',
-            instructions:
-                'Write lib/conversion_service.dart implementing '
+            instructions: 'Write lib/conversion_service.dart implementing '
                 'the mp3 conversion boundary.',
             dependencies: <String>['task_001'],
           ),
@@ -437,8 +437,7 @@ ModelGenerationDelegate _leakyPlanGenerator(ModelIdentity model) =>
           _task(
             id: 'task_001',
             title: 'Initialize a new Flutter web application project',
-            instructions:
-                'Use the "agent.create_project" capability to '
+            instructions: 'Use the "agent.create_project" capability to '
                 'create a new Flutter web application project.',
           ),
         ],

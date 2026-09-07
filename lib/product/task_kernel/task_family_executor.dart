@@ -4,13 +4,12 @@ import '../storage_security.dart';
 import 'kernel_task_graph_executor.dart';
 import 'universal_task_plan.dart';
 
-typedef ResearchSearchDelegate =
-    Future<List<Map<String, String>>> Function(String query);
-typedef ResearchSynthesisDelegate =
-    Future<String> Function(
-      String originalRequest,
-      List<Map<String, String>> sources,
-    );
+typedef ResearchSearchDelegate = Future<List<Map<String, String>>> Function(
+    String query);
+typedef ResearchSynthesisDelegate = Future<String> Function(
+  String originalRequest,
+  List<Map<String, String>> sources,
+);
 typedef DiagnosticsCollectDelegate = Future<CapabilityDoctorReport> Function();
 
 class ResearchTaskExecutionResult {
@@ -137,7 +136,8 @@ class ResearchTaskFamilyExecutor {
           final answer = (await synthesize(
             plan.specification.originalRequest,
             sources,
-          )).trim();
+          ))
+              .trim();
           if (answer.isEmpty) {
             return KernelTaskNodeResult(
               taskId: task.id,
@@ -359,17 +359,14 @@ List<Map<String, String>> _sourcesFromDependencies(
 List<Map<String, String>> _sourcesFromEvidence(Map<String, dynamic> evidence) {
   final raw = evidence['sources'];
   if (raw is! List) return const <Map<String, String>>[];
-  return raw
-      .whereType<Map>()
-      .map((item) {
-        final map = Map<Object?, Object?>.from(item);
-        return <String, String>{
-          'title': map['title']?.toString() ?? '',
-          'url': map['url']?.toString() ?? '',
-          'snippet': map['snippet']?.toString() ?? '',
-        };
-      })
-      .toList(growable: false);
+  return raw.whereType<Map>().map((item) {
+    final map = Map<Object?, Object?>.from(item);
+    return <String, String>{
+      'title': map['title']?.toString() ?? '',
+      'url': map['url']?.toString() ?? '',
+      'snippet': map['snippet']?.toString() ?? '',
+    };
+  }).toList(growable: false);
 }
 
 KernelTaskNodeResult? _lastByPhase(
@@ -387,7 +384,8 @@ KernelTaskNodeResult? _lastByPhase(
 
 bool _dependenciesContainReport(
   Map<String, KernelTaskNodeResult> dependencies,
-) => dependencies.values.any((result) => result.evidence['report'] is Map);
+) =>
+    dependencies.values.any((result) => result.evidence['report'] is Map);
 
 Map<String, dynamic> _reportEvidence(CapabilityDoctorReport report) =>
     <String, dynamic>{

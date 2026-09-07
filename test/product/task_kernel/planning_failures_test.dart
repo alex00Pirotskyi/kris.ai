@@ -127,7 +127,8 @@ void main() {
   });
 
   group('the taxonomy is grounded in codes the product actually throws', () {
-    test('the real provider/model failure codes classify as provider '
+    test(
+        'the real provider/model failure codes classify as provider '
         'unavailable', () {
       // These are thrown by ModelRegistry.providerFor and the providers
       // themselves. Before they were listed, a missing provider
@@ -163,8 +164,7 @@ void main() {
         expect(
           classify(code).kind,
           PlanningFailureKind.recoverablePlanning,
-          reason:
-              '$code means the model answered badly, not that it '
+          reason: '$code means the model answered badly, not that it '
               'failed to run',
         );
       }

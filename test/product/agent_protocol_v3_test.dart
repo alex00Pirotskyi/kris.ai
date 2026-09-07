@@ -19,12 +19,12 @@ void main() {
   const adapter = AgentProtocolV3Adapter();
 
   Map<String, Object?> terminalDecision() => <String, Object?>{
-    'protocolVersion': '3.0.0',
-    'action': 'terminal',
-    'operation': 'terminal.exec',
-    'arguments': <String, Object?>{'command': 'git status'},
-    'expectedPostcondition': 'Command exits and status is captured.',
-  };
+        'protocolVersion': '3.0.0',
+        'action': 'terminal',
+        'operation': 'terminal.exec',
+        'arguments': <String, Object?>{'command': 'git status'},
+        'expectedPostcondition': 'Command exits and status is captured.',
+      };
 
   group('P6-004 cross-provider action protocol v3', () {
     test('normalizes v3 decisions across provider envelopes', () {

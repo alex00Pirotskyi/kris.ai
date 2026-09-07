@@ -40,21 +40,20 @@ class KernelTaskGraphResult {
   }
 }
 
-typedef KernelTaskNodeExecutor =
-    Future<KernelTaskNodeResult> Function(
-      UniversalTask task,
-      Map<String, KernelTaskNodeResult> dependencyResults,
-    );
+typedef KernelTaskNodeExecutor = Future<KernelTaskNodeResult> Function(
+  UniversalTask task,
+  Map<String, KernelTaskNodeResult> dependencyResults,
+);
 
-typedef KernelAuthorizedTaskNodeExecutor =
-    Future<KernelTaskNodeResult> Function(
-      UniversalTask task,
-      Map<String, KernelTaskNodeResult> dependencyResults,
-      Map<String, CapabilityAuthorityDecision> authorityDecisions,
-    );
+typedef KernelAuthorizedTaskNodeExecutor = Future<KernelTaskNodeResult>
+    Function(
+  UniversalTask task,
+  Map<String, KernelTaskNodeResult> dependencyResults,
+  Map<String, CapabilityAuthorityDecision> authorityDecisions,
+);
 
-typedef KernelTaskNodeStateListener =
-    void Function(KernelTaskNodeResult result);
+typedef KernelTaskNodeStateListener = void Function(
+    KernelTaskNodeResult result);
 
 /// Executes non-Runner task families from the same canonical DAG used by
 /// planning and UI projection. Research/diagnostics/utilities bind their own

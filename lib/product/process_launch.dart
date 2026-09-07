@@ -34,9 +34,9 @@ Future<String?> resolveExecutableOnPath(String executable) async {
   final pathSeparator = Platform.isWindows ? ';' : ':';
   final extensions = Platform.isWindows
       ? (Platform.environment['PATHEXT'] ?? '.EXE;.CMD;.BAT;.COM')
-            .split(';')
-            .where((item) => item.trim().isNotEmpty)
-            .toList(growable: false)
+          .split(';')
+          .where((item) => item.trim().isNotEmpty)
+          .toList(growable: false)
       : const <String>[''];
 
   for (final rawDirectory in path.split(pathSeparator)) {
@@ -45,8 +45,7 @@ Future<String?> resolveExecutableOnPath(String executable) async {
       continue;
     }
     for (final extension in extensions) {
-      final hasExtension =
-          Platform.isWindows &&
+      final hasExtension = Platform.isWindows &&
           value.toLowerCase().endsWith(extension.toLowerCase());
       final candidate = File(
         '$directory${Platform.pathSeparator}$value${hasExtension ? '' : extension}',

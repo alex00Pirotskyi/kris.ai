@@ -75,9 +75,8 @@ Future<Map<String, Object?>> _runHostedLinuxQualificationProbe({
     mode: ProcessStartMode.normal,
   );
   final stderr = StringBuffer();
-  final stderrSubscription = process.stderr
-      .transform(utf8.decoder)
-      .listen(stderr.write);
+  final stderrSubscription =
+      process.stderr.transform(utf8.decoder).listen(stderr.write);
   try {
     final line = await process.stdout
         .transform(utf8.decoder)
@@ -290,8 +289,7 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 4)),
-    skip: executable.isEmpty
-        ? 'requires packaged P2+P3 product payload'
-        : false,
+    skip:
+        executable.isEmpty ? 'requires packaged P2+P3 product payload' : false,
   );
 }

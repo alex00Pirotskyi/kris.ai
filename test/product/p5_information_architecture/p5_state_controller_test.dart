@@ -43,14 +43,12 @@ void main() {
       final run = controller.state.selectedRunId;
       final owner = controller.state.ownerModeState;
       final sideEffects = controller.sideEffects;
-      final simpleIds = controller.visibleWorkspaces
-          .map((item) => item.id)
-          .toSet();
+      final simpleIds =
+          controller.visibleWorkspaces.map((item) => item.id).toSet();
 
       controller.changeExperienceLevel(P5ExperienceLevel.advanced);
-      final advancedIds = controller.visibleWorkspaces
-          .map((item) => item.id)
-          .toSet();
+      final advancedIds =
+          controller.visibleWorkspaces.map((item) => item.id).toSet();
       controller.changeExperienceLevel(P5ExperienceLevel.developer);
 
       expect(advancedIds.length, greaterThan(simpleIds.length));

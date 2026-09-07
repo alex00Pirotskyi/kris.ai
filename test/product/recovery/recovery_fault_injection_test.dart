@@ -24,11 +24,12 @@ class _Provider implements KristinCapabilityProvider {
   Future<CapabilityAvailability> resolveAvailability(
     CapabilityDescriptor descriptor,
     ApplicationSnapshot snapshot,
-  ) async => CapabilityAvailability(
-    capabilityId: descriptor.id,
-    state: CapabilityAvailabilityState.available,
-    observedAt: DateTime.now().toUtc(),
-  );
+  ) async =>
+      CapabilityAvailability(
+        capabilityId: descriptor.id,
+        state: CapabilityAvailabilityState.available,
+        observedAt: DateTime.now().toUtc(),
+      );
 }
 
 class _App implements ApplicationSnapshotProvider {
@@ -36,11 +37,12 @@ class _App implements ApplicationSnapshotProvider {
   Future<ApplicationSnapshot> capture({
     bool forceRefresh = false,
     SelfModelSessionOverlay overlay = const SelfModelSessionOverlay(),
-  }) async => ApplicationSnapshot(
-    capturedAt: DateTime.utc(2026, 1, 1),
-    applicationIdentity: 'kris.ai',
-    platform: 'linux',
-  );
+  }) async =>
+      ApplicationSnapshot(
+        capturedAt: DateTime.utc(2026, 1, 1),
+        applicationIdentity: 'kris.ai',
+        platform: 'linux',
+      );
 }
 
 class _Journal implements FailureJournal {
@@ -104,7 +106,8 @@ class _Actuator implements RecoveryActuator {
     RecoveryDecision decision,
     FailureEvent failure,
     RecoveryActionResult action,
-  ) async => const RecoveryActionResult(summary: 'rolled back');
+  ) async =>
+      const RecoveryActionResult(summary: 'rolled back');
 }
 
 class _Verifier implements RecoveryVerifier {
@@ -114,12 +117,13 @@ class _Verifier implements RecoveryVerifier {
   Future<RecoveryVerification> verify(
     FailureEvent originalFailure,
     RecoveryActionResult action,
-  ) async => RecoveryVerification(
-    passed: passes,
-    check: 'original_failure_absent',
-    observed: passes ? 'gone' : 'still present',
-    materialProgress: passes,
-  );
+  ) async =>
+      RecoveryVerification(
+        passed: passes,
+        check: 'original_failure_absent',
+        observed: passes ? 'gone' : 'still present',
+        materialProgress: passes,
+      );
 }
 
 class _Allow implements RecoveryAuthorityGate {

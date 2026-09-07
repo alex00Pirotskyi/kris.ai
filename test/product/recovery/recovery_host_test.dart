@@ -125,8 +125,8 @@ void main() {
     test('a healthy candidate is staged, qualified, activated then verified',
         () async {
       final host = _FakeHost();
-      final state = await StagedSelfRepairCoordinator(host)
-          .activateVerifiedCandidate(
+      final state =
+          await StagedSelfRepairCoordinator(host).activateVerifiedCandidate(
         _candidate,
         failureEvidence: const <String>['failure-1'],
       );
@@ -159,16 +159,16 @@ void main() {
     test('failing pre-activation qualification skips activation entirely',
         () async {
       final host = _FakeHost(qualifyHealthy: false);
-      final state = await StagedSelfRepairCoordinator(host)
-          .activateVerifiedCandidate(
+      final state =
+          await StagedSelfRepairCoordinator(host).activateVerifiedCandidate(
         _candidate,
         failureEvidence: const <String>['failure-1'],
       );
 
       expect(host.calls, isNot(contains('activate')));
       expect(host.calls, contains('rollback'));
-      expect(host.rollbackReason,
-          'candidate_failed_pre_activation_qualification');
+      expect(
+          host.rollbackReason, 'candidate_failed_pre_activation_qualification');
       expect(state.current.version, '1.9.0',
           reason: 'the running version is untouched');
       expect(state.candidateState, RecoveryCandidateState.rolledBack);
@@ -187,8 +187,8 @@ void main() {
   group('a candidate that activates but is unhealthy rolls back', () {
     test('post-activation health failure restores last-known-good', () async {
       final host = _FakeHost(verifyHealthy: false);
-      final state = await StagedSelfRepairCoordinator(host)
-          .activateVerifiedCandidate(
+      final state =
+          await StagedSelfRepairCoordinator(host).activateVerifiedCandidate(
         _candidate,
         failureEvidence: const <String>['failure-1'],
       );

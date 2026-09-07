@@ -98,8 +98,8 @@ void main() {
     await pumpPrototype(tester, controller);
 
     CheckboxListTile planOnlyTile() => tester.widget<CheckboxListTile>(
-      find.byKey(const Key('plan-only-toggle')),
-    );
+          find.byKey(const Key('plan-only-toggle')),
+        );
 
     expect(planOnlyTile().onChanged, isNotNull);
     await tapKey(tester, const Key('review-plan-button'));
@@ -121,11 +121,11 @@ void main() {
     await tapKey(tester, const Key('start-run-button'));
 
     FilledButton reviewButton() => tester.widget<FilledButton>(
-      find.byKey(const Key('review-plan-button')),
-    );
+          find.byKey(const Key('review-plan-button')),
+        );
     OutlinedButton startButton() => tester.widget<OutlinedButton>(
-      find.byKey(const Key('start-run-button')),
-    );
+          find.byKey(const Key('start-run-button')),
+        );
 
     expect(controller.state.runState, P5RunPresentationState.running);
     expect(reviewButton().onPressed, isNull);

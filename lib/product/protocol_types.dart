@@ -15,11 +15,11 @@ enum Retryability {
 
 extension RetryabilityWireName on Retryability {
   String get wireName => switch (this) {
-    Retryability.never => 'never',
-    Retryability.modelCorrection => 'model_correction',
-    Retryability.stateRefresh => 'state_refresh',
-    Retryability.transient => 'transient',
-  };
+        Retryability.never => 'never',
+        Retryability.modelCorrection => 'model_correction',
+        Retryability.stateRefresh => 'state_refresh',
+        Retryability.transient => 'transient',
+      };
 }
 
 class SchemaIssue {
@@ -38,10 +38,10 @@ class SchemaIssue {
   final String? actualType;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-    'path': path,
-    'keyword': keyword,
-    'message': message,
-    if (expected != null) 'expected': expected,
-    if (actualType != null) 'actualType': actualType,
-  };
+        'path': path,
+        'keyword': keyword,
+        'message': message,
+        if (expected != null) 'expected': expected,
+        if (actualType != null) 'actualType': actualType,
+      };
 }

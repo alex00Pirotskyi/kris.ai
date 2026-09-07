@@ -118,9 +118,8 @@ class P5OwnerModeGlobalAutonomyPort implements P5GlobalAutonomyOwnerPort {
       ownerAvailable: true,
       ownerEnabled: settings.enabled,
       terminalCount: runtime.terminalModel.tabs.length,
-      supervisedProcessTreeCount: rawWatchdogs is List
-          ? rawWatchdogs.length
-          : 0,
+      supervisedProcessTreeCount:
+          rawWatchdogs is List ? rawWatchdogs.length : 0,
     );
   }
 
@@ -150,18 +149,18 @@ class P5GlobalAutonomySnapshot {
   });
 
   factory P5GlobalAutonomySnapshot.initial() => const P5GlobalAutonomySnapshot(
-    profileLabel: 'chat',
-    modelLabel: 'No active model',
-    activeRunCount: 0,
-    ownerTerminalCount: 0,
-    browserSessionCount: 0,
-    supervisedProcessTreeCount: 0,
-    takeoverLabel: 'Not globally bound',
-    networkLabel: 'Not requested',
-    canPause: false,
-    canStop: false,
-    canEmergencyKill: false,
-  );
+        profileLabel: 'chat',
+        modelLabel: 'No active model',
+        activeRunCount: 0,
+        ownerTerminalCount: 0,
+        browserSessionCount: 0,
+        supervisedProcessTreeCount: 0,
+        takeoverLabel: 'Not globally bound',
+        networkLabel: 'Not requested',
+        canPause: false,
+        canStop: false,
+        canEmergencyKill: false,
+      );
 
   final String profileLabel;
   final String modelLabel;
@@ -199,8 +198,8 @@ class P5GlobalAutonomyController extends P5GlobalAutonomyBinding {
     P5GlobalAutonomyRunPort? runPort,
     Stream<Object?>? events,
     Duration? refreshInterval = const Duration(seconds: 1),
-  }) : _ownerPort = ownerPort,
-       _runPort = runPort {
+  })  : _ownerPort = ownerPort,
+        _runPort = runPort {
     if (events != null) {
       _events = events.listen((_) => unawaited(refresh()));
     }
@@ -216,13 +215,14 @@ class P5GlobalAutonomyController extends P5GlobalAutonomyBinding {
   factory P5GlobalAutonomyController.product({
     ProductRuntime? runtime,
     required P2ProductRuntimeOwnerModeHandle ownerMode,
-  }) => P5GlobalAutonomyController(
-    runPort: runtime == null
-        ? null
-        : P5ProductRuntimeGlobalAutonomyRunPort(runtime),
-    ownerPort: P5OwnerModeGlobalAutonomyPort(ownerMode),
-    events: runtime?.eventStream,
-  );
+  }) =>
+      P5GlobalAutonomyController(
+        runPort: runtime == null
+            ? null
+            : P5ProductRuntimeGlobalAutonomyRunPort(runtime),
+        ownerPort: P5OwnerModeGlobalAutonomyPort(ownerMode),
+        events: runtime?.eventStream,
+      );
 
   final P5GlobalAutonomyRunPort? _runPort;
   final P5GlobalAutonomyOwnerPort _ownerPort;
@@ -262,15 +262,15 @@ class P5GlobalAutonomyController extends P5GlobalAutonomyBinding {
       final profile = owner.ownerEnabled
           ? owner.profileId
           : active.isNotEmpty
-          ? 'project'
-          : 'chat';
+              ? 'project'
+              : 'chat';
       final network = owner.ownerEnabled
           ? 'Owner policy'
           : networkRequested
-          ? 'Granted to active task'
-          : _browserSessionCount > 0
-          ? 'Browser runtime active'
-          : 'Not requested';
+              ? 'Granted to active task'
+              : _browserSessionCount > 0
+                  ? 'Browser runtime active'
+                  : 'Not requested';
       if (_disposed) {
         return;
       }
@@ -285,8 +285,7 @@ class P5GlobalAutonomyController extends P5GlobalAutonomyBinding {
         networkLabel: network,
         canPause: running,
         canStop: stoppable,
-        canEmergencyKill:
-            stoppable ||
+        canEmergencyKill: stoppable ||
             owner.supervisedProcessTreeCount > 0 ||
             (_browserSessionCount > 0 && _browserEmergencyStop != null),
       );
@@ -479,8 +478,7 @@ class _P5GlobalAutonomyBarState extends State<P5GlobalAutonomyBar> {
           child: Semantics(
             container: true,
             liveRegion: true,
-            label:
-                'Global autonomy status. Profile ${snapshot.profileLabel}. '
+            label: 'Global autonomy status. Profile ${snapshot.profileLabel}. '
                 'Running model ${snapshot.modelLabel}. ${snapshot.sessionBreakdown}. '
                 'Takeover ${snapshot.takeoverLabel}. Network ${snapshot.networkLabel}.',
             child: SafeArea(
@@ -606,9 +604,9 @@ class _P5AutonomyStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3),
-      child: Chip(avatar: Icon(icon, size: 16), label: Text(label)),
-    ),
-  );
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 3),
+          child: Chip(avatar: Icon(icon, size: 16), label: Text(label)),
+        ),
+      );
 }
