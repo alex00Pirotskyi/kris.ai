@@ -254,8 +254,8 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   void initState() {
     super.initState();
     // Composition is initialized before any understanding/planning turn so
-    // the kernel's live self-model resolver and failure supervisor are active
-    // from the first governed request, not only after a direct Chat action.
+    // the unified cognitive resolver and failure supervisor are active from
+    // the first governed request.
     _dispatcher = ChatActionDispatcher(ProductRuntimeChatGateway(runtime));
     liveSubscription = runtime.liveRunStream.listen(_onLiveSignal);
     refreshTimer = Timer.periodic(const Duration(seconds: 2), (_) {
@@ -453,8 +453,7 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
   }
 
   List<ChatTarget> _knownTargets() {
-    final providerIds =
-        runtime.models.providers().map((item) => item.id).toSet();
+    final providerIds = runtime.models.providers().map((item) => item.id).toSet();
     return ChatTargetResolver(<ChatTargetProvider>[
       ProjectTargetProvider(
         projects: projects,
@@ -570,6 +569,31 @@ class _ChatControlPlaneStudioState extends State<ChatControlPlaneStudio> {
           () => runtime.resume(run.id),
         );
         await _refreshCurrentRun();
+        return;
+      }
+    }
+
+    // The deterministic intent compiler remains the fast path. When it does
+    // not recognize a natural-language knowledge turn, ask the reasoning model
+    // only for semantic routing, with the same authoritative cognitive state.
+    // This makes the language of a question irrelevant to whether it becomes
+    // conversation or governed execution. The classifier cannot grant or run.
+    if (!decision.explicitCommand &&
+        !decision.isInformational &&
+        selectedModel != null) {
+      final classification = await dispatcher.classifyConversation(
+        message: request,
+        model: selectedModel!,
+        selectedProject: selectedProject,
+        workingMemory: <String>[
+          if (_recentConversation().isNotEmpty) _recentConversation(),
+        ],
+      );
+      if (classification?.kind.name == 'knowledgeOnly') {
+        _archiveFinishedRun();
+        conversationSession.addUserMessage(request);
+        composerController.clear();
+        await _answerInformationalStreaming(decision);
         return;
       }
     }
