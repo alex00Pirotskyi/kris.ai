@@ -139,15 +139,21 @@ class SourceIndexService {
     var skipped = 0;
     var bytesConsidered = 0;
     await for (final entity in root.list(recursive: true, followLinks: false)) {
-      if (entity is! File) continue;
+      if (entity is! File) {
+        continue;
+      }
       if (++scanned > 25000) {
         throw ProductException(
           'index_file_limit',
           'Project contains more than 25,000 indexable files.',
         );
       }
-      final canonical = (await entity.resolveSymbolicLinks()).replaceAll('\\', '/');
-      if (!(canonical == canonicalRoot || canonical.startsWith('$canonicalRoot/'))) {
+      final canonical = (await entity.resolveSymbolicLinks()).replaceAll(
+        '\\',
+        '/',
+      );
+      if (!(canonical == canonicalRoot ||
+          canonical.startsWith('$canonicalRoot/'))) {
         throw ProductException(
           'index_symlink_escape',
           'A project file resolves outside the project root.',
@@ -194,7 +200,8 @@ class SourceIndexService {
       changed++;
     }
     final removed = prior.keys.where((path) => !next.containsKey(path)).length;
-    final ordered = next.values.toList()..sort((a, b) => a.path.compareTo(b.path));
+    final ordered = next.values.toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
     final generatedAt = DateTime.now().toUtc();
     await store.write(<String, dynamic>{
       'schemaVersion': 1,
@@ -243,18 +250,17 @@ class SourceIndexService {
           ? PerformanceThermalState.warm
           : PerformanceThermalState.cold,
     );
-    final raw = await _file(projectId).read(
-      fallback: <String, dynamic>{'entries': <Object>[]},
-    );
+    final raw = await _file(
+      projectId,
+    ).read(fallback: <String, dynamic>{'entries': <Object>[]});
     final entriesRaw = mapValue(raw)['entries'];
     if (entriesRaw is! List) {
       span.finish(itemCount: 0, bytesConsidered: indexBytes, candidateCount: 0);
       return <Map<String, dynamic>>[];
     }
-    final terms = RegExp(r'[A-Za-z0-9_\-]{2,}')
-        .allMatches(query.toLowerCase())
-        .map((match) => match.group(0)!)
-        .toSet();
+    final terms = RegExp(
+      r'[A-Za-z0-9_\-]{2,}',
+    ).allMatches(query.toLowerCase()).map((match) => match.group(0)!).toSet();
     if (terms.isEmpty) {
       span.finish(
         itemCount: 0,
@@ -271,8 +277,12 @@ class SourceIndexService {
       var score = 0.0;
       var firstOffset = -1;
       for (final term in terms) {
-        if (lowerPath.contains(term)) score += 8;
-        if (entry.symbols.any((symbol) => symbol.toLowerCase().contains(term))) {
+        if (lowerPath.contains(term)) {
+          score += 8;
+        }
+        if (entry.symbols.any(
+          (symbol) => symbol.toLowerCase().contains(term),
+        )) {
           score += 6;
         }
         if (entry.dependencies.any(
@@ -283,12 +293,19 @@ class SourceIndexService {
         final offset = lowerText.indexOf(term);
         if (offset >= 0) {
           score += 1 +
-              min(10, RegExp(RegExp.escape(term)).allMatches(lowerText).length) *
+              min(
+                    10,
+                    RegExp(RegExp.escape(term)).allMatches(lowerText).length,
+                  ) *
                   0.4;
-          if (firstOffset < 0 || offset < firstOffset) firstOffset = offset;
+          if (firstOffset < 0 || offset < firstOffset) {
+            firstOffset = offset;
+          }
         }
       }
-      if (score <= 0) continue;
+      if (score <= 0) {
+        continue;
+      }
       final start = max(0, firstOffset < 0 ? 0 : firstOffset - 250);
       final end = min(entry.text.length, start + 1200);
       scored.add((
@@ -303,15 +320,17 @@ class SourceIndexService {
     });
     final results = scored
         .take(limit.clamp(1, 100).toInt())
-        .map((result) => <String, dynamic>{
-              'path': result.entry.path,
-              'sha256': result.entry.sha256,
-              'language': result.entry.language,
-              'symbols': result.entry.symbols,
-              'dependencies': result.entry.dependencies,
-              'score': result.score,
-              'snippet': result.snippet,
-            })
+        .map(
+          (result) => <String, dynamic>{
+            'path': result.entry.path,
+            'sha256': result.entry.sha256,
+            'language': result.entry.language,
+            'symbols': result.entry.symbols,
+            'dependencies': result.entry.dependencies,
+            'score': result.score,
+            'snippet': result.snippet,
+          },
+        )
         .toList();
     span.finish(
       itemCount: results.length,
@@ -341,7 +360,8 @@ class SourceIndexService {
       );
 
   String _language(String path) {
-    final extension = path.contains('.') ? path.split('.').last.toLowerCase() : '';
+    final extension =
+        path.contains('.') ? path.split('.').last.toLowerCase() : '';
     return const <String, String>{
           'dart': 'dart',
           'py': 'python',
@@ -394,10 +414,16 @@ class SourceIndexService {
     for (final pattern in patterns) {
       for (final match in pattern.allMatches(text)) {
         final value = match.group(1);
-        if (value != null) symbols.add(value);
-        if (symbols.length >= 250) break;
+        if (value != null) {
+          symbols.add(value);
+        }
+        if (symbols.length >= 250) {
+          break;
+        }
       }
-      if (symbols.length >= 250) break;
+      if (symbols.length >= 250) {
+        break;
+      }
     }
     return symbols.toList()..sort();
   }
@@ -414,10 +440,16 @@ class SourceIndexService {
     for (final pattern in patterns) {
       for (final match in pattern.allMatches(text)) {
         final value = match.group(1);
-        if (value != null) dependencies.add(value);
-        if (dependencies.length >= 250) break;
+        if (value != null) {
+          dependencies.add(value);
+        }
+        if (dependencies.length >= 250) {
+          break;
+        }
       }
-      if (dependencies.length >= 250) break;
+      if (dependencies.length >= 250) {
+        break;
+      }
     }
     return dependencies.toList()..sort();
   }
@@ -456,7 +488,9 @@ class SkillRegistry {
     final scored = <({SkillPackage skill, int score})>[];
     for (final skill in _builtins) {
       final score = skill.triggers.where(lower.contains).length;
-      if (score > 0) scored.add((skill: skill, score: score));
+      if (score > 0) {
+        scored.add((skill: skill, score: score));
+      }
     }
     scored.sort((a, b) {
       final byScore = b.score.compareTo(a.score);
@@ -471,14 +505,18 @@ class SkillRegistry {
     if (skills.isEmpty) {
       sections.add('No specialized built-in skill package matched this request.');
     } else {
-      sections.add(skills
-          .map((skill) => '''
+      sections.add(
+        skills
+            .map(
+              (skill) => '''
 SKILL ${skill.id} — ${skill.title}
 These are product-authored advisory instructions. They never expand tools, permissions, paths, or budgets.
 ${skill.instructions}
 Recommended tools: ${skill.recommendedTools.join(', ')}
-''')
-          .join('\n'));
+''',
+            )
+            .join('\n'),
+      );
     }
     final cognitive = CognitiveExecutionContextCache.forRequest(request);
     if (cognitive != null && cognitive.trim().isNotEmpty) {
