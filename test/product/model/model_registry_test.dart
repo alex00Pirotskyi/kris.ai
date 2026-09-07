@@ -277,40 +277,41 @@ void main() {
     });
 
     test(
-        'approval requires digest, measured limits, cost, and benchmark evidence',
-        () {
-      expect(
-        () => ModelDefinition.approved(
-          providerId: 'ollama.local',
-          modelId: 'unmeasured:latest',
-          displayName: 'Unmeasured',
-          limits: ModelLimits.unknown(),
-          toolProfile: ModelToolProfile.unknown(),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.unknown(),
-          benchmarks: const <ModelBenchmarkEvidence>[],
-          approvedTaskClasses: const <String>['code-generation'],
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>()
-              .having(
-                (error) => error.message,
-                'message',
-                contains('artifact digest is required for approval'),
-              )
-              .having(
-                (error) => error.message,
-                'message',
-                contains('limits are not measured and complete'),
-              )
-              .having(
-                (error) => error.message,
-                'message',
-                contains('no trusted benchmark execution receipt'),
-              ),
-        ),
-      );
-    });
+      'approval requires digest, measured limits, cost, and benchmark evidence',
+      () {
+        expect(
+          () => ModelDefinition.approved(
+            providerId: 'ollama.local',
+            modelId: 'unmeasured:latest',
+            displayName: 'Unmeasured',
+            limits: ModelLimits.unknown(),
+            toolProfile: ModelToolProfile.unknown(),
+            dataBoundary: ModelDataBoundary.localOnly,
+            cost: ModelCostProfile.unknown(),
+            benchmarks: const <ModelBenchmarkEvidence>[],
+            approvedTaskClasses: const <String>['code-generation'],
+          ),
+          throwsA(
+            isA<ModelRegistryValidationException>()
+                .having(
+                  (error) => error.message,
+                  'message',
+                  contains('artifact digest is required for approval'),
+                )
+                .having(
+                  (error) => error.message,
+                  'message',
+                  contains('limits are not measured and complete'),
+                )
+                .having(
+                  (error) => error.message,
+                  'message',
+                  contains('no trusted benchmark execution receipt'),
+                ),
+          ),
+        );
+      },
+    );
 
     test('artifact identities require canonical SHA-256 grammar', () {
       const invalid = <String>[
@@ -396,9 +397,8 @@ void main() {
       final metadataOnly = ModelBenchmarkEvidence.fromJson(raw);
       expect(metadataOnly.hasTrustedExecutionReceipt, isFalse);
       expect(
-        () => _approvedModel(
-          benchmarks: <ModelBenchmarkEvidence>[metadataOnly],
-        ),
+        () =>
+            _approvedModel(benchmarks: <ModelBenchmarkEvidence>[metadataOnly]),
         throwsA(
           isA<ModelRegistryValidationException>().having(
             (error) => error.message,
@@ -445,45 +445,46 @@ void main() {
     });
 
     test(
-        'caller benchmark verification rejects unknown signer and forged score',
-        () {
-      final unknownSigner = _benchmarkJson();
-      final authority = ((unknownSigner['evidence']
-          as Map<String, Object?>)['authority'] as Map<String, Object?>);
-      authority['keyId'] = 'unknown-benchmark-key';
-      expect(
-        () => ModelBenchmarkEvidence.fromJson(
-          unknownSigner,
-          trustContext: _benchmarkTrust(),
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('authority key is not trusted'),
+      'caller benchmark verification rejects unknown signer and forged score',
+      () {
+        final unknownSigner = _benchmarkJson();
+        final authority = ((unknownSigner['evidence']
+            as Map<String, Object?>)['authority'] as Map<String, Object?>);
+        authority['keyId'] = 'unknown-benchmark-key';
+        expect(
+          () => ModelBenchmarkEvidence.fromJson(
+            unknownSigner,
+            trustContext: _benchmarkTrust(),
           ),
-        ),
-      );
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('authority key is not trusted'),
+            ),
+          ),
+        );
 
-      final forgedScore = _benchmarkJson();
-      forgedScore['score'] = 0.99;
-      final evidence = forgedScore['evidence'] as Map<String, Object?>;
-      (evidence['payload'] as Map<String, Object?>)['score'] = 0.99;
-      evidence['sha256'] = forgedScoreEvidenceSha;
-      expect(
-        () => ModelBenchmarkEvidence.fromJson(
-          forgedScore,
-          trustContext: _benchmarkTrust(),
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('authority signature is invalid'),
+        final forgedScore = _benchmarkJson();
+        forgedScore['score'] = 0.99;
+        final evidence = forgedScore['evidence'] as Map<String, Object?>;
+        (evidence['payload'] as Map<String, Object?>)['score'] = 0.99;
+        evidence['sha256'] = forgedScoreEvidenceSha;
+        expect(
+          () => ModelBenchmarkEvidence.fromJson(
+            forgedScore,
+            trustContext: _benchmarkTrust(),
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('authority signature is invalid'),
+            ),
+          ),
+        );
+      },
+    );
 
     test('benchmark payload rejects mutable or malformed model identity', () {
       final json = _benchmarkJson();
@@ -533,72 +534,81 @@ void main() {
       );
     });
 
-    test('approval rejects benchmark evidence measured for another artifact',
-        () {
-      expect(
-        () => _approvedModel(digest: digestC),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            allOf(contains('belongs to artifact $digestA'), contains(digestC)),
+    test(
+      'approval rejects benchmark evidence measured for another artifact',
+      () {
+        expect(
+          () => _approvedModel(digest: digestC),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              allOf(
+                contains('belongs to artifact $digestA'),
+                contains(digestC),
+              ),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test(
-        'evaluation-only model rejects benchmark evidence from another artifact',
-        () {
-      expect(
-        () => ModelDefinition.evaluationOnly(
-          providerId: 'ollama.local',
-          modelId: 'evaluation:latest',
-          displayName: 'Evaluation',
-          digest: digestC,
-          parameterSize: '14B',
-          quantization: 'Q4_K_M',
-          limits: _measuredLimits(),
-          toolProfile: _measuredNoTools(),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.noDirectCharge(),
-          benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
-          evaluationReasons: const <String>['evaluation pending'],
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('belongs to artifact $digestA'),
+      'evaluation-only model rejects benchmark evidence from another artifact',
+      () {
+        expect(
+          () => ModelDefinition.evaluationOnly(
+            providerId: 'ollama.local',
+            modelId: 'evaluation:latest',
+            displayName: 'Evaluation',
+            digest: digestC,
+            parameterSize: '14B',
+            quantization: 'Q4_K_M',
+            limits: _measuredLimits(),
+            toolProfile: _measuredNoTools(),
+            dataBoundary: ModelDataBoundary.localOnly,
+            cost: ModelCostProfile.noDirectCharge(),
+            benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
+            evaluationReasons: const <String>['evaluation pending'],
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('belongs to artifact $digestA'),
+            ),
+          ),
+        );
+      },
+    );
 
-    test('evaluation-only benchmark evidence requires model artifact identity',
-        () {
-      expect(
-        () => ModelDefinition.evaluationOnly(
-          providerId: 'ollama.local',
-          modelId: 'evaluation:digestless',
-          displayName: 'Evaluation digestless',
-          limits: _measuredLimits(),
-          toolProfile: _measuredNoTools(),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.noDirectCharge(),
-          benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
-          evaluationReasons: const <String>['evaluation pending'],
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains(
-                'benchmark evidence must contain an immutable artifact digest'),
+    test(
+      'evaluation-only benchmark evidence requires model artifact identity',
+      () {
+        expect(
+          () => ModelDefinition.evaluationOnly(
+            providerId: 'ollama.local',
+            modelId: 'evaluation:digestless',
+            displayName: 'Evaluation digestless',
+            limits: _measuredLimits(),
+            toolProfile: _measuredNoTools(),
+            dataBoundary: ModelDataBoundary.localOnly,
+            cost: ModelCostProfile.noDirectCharge(),
+            benchmarks: <ModelBenchmarkEvidence>[_benchmark()],
+            evaluationReasons: const <String>['evaluation pending'],
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains(
+                'benchmark evidence must contain an immutable artifact digest',
+              ),
+            ),
+          ),
+        );
+      },
+    );
 
     test('approved JSON stays fail-closed with caller benchmark trust', () {
       for (final benchmarkTrust in <ModelBenchmarkTrustContext?>[
@@ -621,24 +631,24 @@ void main() {
       }
     });
 
-    test('approved policy JSON cannot relabel artifact with stale evidence',
-        () {
-      final raw = _approvedPolicyJson();
-      raw['digest'] = digestC;
-      expect(
-        () => ModelDefinition.fromJson(
-          raw,
-          benchmarkTrust: _benchmarkTrust(),
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('belongs to artifact $digestA'),
+    test(
+      'approved policy JSON cannot relabel artifact with stale evidence',
+      () {
+        final raw = _approvedPolicyJson();
+        raw['digest'] = digestC;
+        expect(
+          () =>
+              ModelDefinition.fromJson(raw, benchmarkTrust: _benchmarkTrust()),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('belongs to artifact $digestA'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
     test('string lookup and runtime metadata never expose approval state', () {
       final registry = ModelDefinitionRegistry(
@@ -715,10 +725,10 @@ void main() {
         registry.providers.map((provider) => provider.providerId),
         <String>['ollama.local', 'openai.remote'],
       );
-      expect(
-        registry.models.map((model) => model.registryKey),
-        <String>['ollama.local::qwen3:14b', 'openai.remote::future-model'],
-      );
+      expect(registry.models.map((model) => model.registryKey), <String>[
+        'ollama.local::qwen3:14b',
+        'openai.remote::future-model',
+      ]);
       final first = jsonEncode(registry.toMetadataJson());
       final second = jsonEncode(registry.toMetadataJson());
       expect(second, first);
@@ -730,7 +740,7 @@ void main() {
         () => ModelDefinitionRegistry(
           providers: <ModelProviderDescriptor>[
             _localProvider(),
-            _localProvider()
+            _localProvider(),
           ],
           models: const <ModelDefinition>[],
         ),
@@ -792,60 +802,67 @@ void main() {
         required: true,
         purpose: 'Authenticate without persisting secret material.',
       );
-      expect(
-        requirement.toJson().keys.toSet(),
-        <String>{'referenceId', 'resolver', 'required', 'purpose'},
-      );
+      expect(requirement.toJson().keys.toSet(), <String>{
+        'referenceId',
+        'resolver',
+        'required',
+        'purpose',
+      });
       expect(jsonEncode(requirement.toJson()), isNot(contains('secret-value')));
       expect(
-        () => CredentialReferenceRequirement.fromJson(
-          <String, Object?>{...requirement.toJson(), 'value': 'secret-value'},
-        ),
+        () => CredentialReferenceRequirement.fromJson(<String, Object?>{
+          ...requirement.toJson(),
+          'value': 'secret-value',
+        }),
         throwsA(isA<ModelRegistryValidationException>()),
       );
     });
 
     test(
-        'unknown JSON fields and timezone-free benchmark evidence are rejected',
-        () {
-      expect(
-        () => ModelProviderDescriptor.fromJson(
-          <String, Object?>{..._localProvider().toJson(), 'apiKey': 'secret'},
-        ),
-        throwsA(isA<ModelRegistryValidationException>()),
-      );
-      final raw = _benchmarkJson();
-      final payload = ((raw['evidence'] as Map<String, Object?>)['payload']
-          as Map<String, Object?>);
-      payload['measuredAt'] = '2026-08-06T00:00:00';
-      raw['measuredAt'] = '2026-08-06T00:00:00';
-      expect(
-        () => ModelBenchmarkEvidence.fromJson(raw),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('must include a UTC offset'),
+      'unknown JSON fields and timezone-free benchmark evidence are rejected',
+      () {
+        expect(
+          () => ModelProviderDescriptor.fromJson(<String, Object?>{
+            ..._localProvider().toJson(),
+            'apiKey': 'secret',
+          }),
+          throwsA(isA<ModelRegistryValidationException>()),
+        );
+        final raw = _benchmarkJson();
+        final payload = ((raw['evidence'] as Map<String, Object?>)['payload']
+            as Map<String, Object?>);
+        payload['measuredAt'] = '2026-08-06T00:00:00';
+        raw['measuredAt'] = '2026-08-06T00:00:00';
+        expect(
+          () => ModelBenchmarkEvidence.fromJson(raw),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('must include a UTC offset'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
 
-    test('evaluation-only policy JSON cannot smuggle approved task classes',
-        () {
-      final raw = _approvedPolicyJson();
-      raw['supportStatus'] = 'evaluation_only';
-      raw['evaluationReasons'] = <String>['not approved'];
-      expect(
-        () => ModelDefinition.fromJson(raw),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('evaluation-only JSON'),
+    test(
+      'evaluation-only policy JSON cannot smuggle approved task classes',
+      () {
+        final raw = _approvedPolicyJson();
+        raw['supportStatus'] = 'evaluation_only';
+        raw['evaluationReasons'] = <String>['not approved'];
+        expect(
+          () => ModelDefinition.fromJson(raw),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('evaluation-only JSON'),
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   });
 }

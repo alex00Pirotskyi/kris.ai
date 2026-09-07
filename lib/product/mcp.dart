@@ -262,16 +262,17 @@ class McpTrustService {
       late final Set<String> capabilities;
       if (protocol.usesInitialize) {
         final initialized = await session.request(
-            'initialize',
-            <String, dynamic>{
-              'protocolVersion': protocol.version,
-              'capabilities': <String, dynamic>{},
-              'clientInfo': <String, String>{
-                'name': 'Kristin Local Agent',
-                'version': kristinVersion,
-              },
+          'initialize',
+          <String, dynamic>{
+            'protocolVersion': protocol.version,
+            'capabilities': <String, dynamic>{},
+            'clientInfo': <String, String>{
+              'name': 'Kristin Local Agent',
+              'version': kristinVersion,
             },
-            timeout: timeout);
+          },
+          timeout: timeout,
+        );
         capabilities = protocol.validateLegacyInitialize(
           initialized,
           requiredCapabilities: const <String>{'tools'},
@@ -320,12 +321,11 @@ class McpTrustService {
 
     for (var pageIndex = 0; pageIndex < maxPages; pageIndex++) {
       final result = await session.request(
-        'tools/list',
-        <String, dynamic>{
-          if (cursor != null) 'cursor': cursor,
-        },
-        timeout: timeout,
-      );
+          'tools/list',
+          <String, dynamic>{
+            if (cursor != null) 'cursor': cursor,
+          },
+          timeout: timeout);
       final page = protocol.parseToolCatalogPage(result);
       for (final name in page.toolNames) {
         if (!available.add(name)) {

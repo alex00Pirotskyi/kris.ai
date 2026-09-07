@@ -122,7 +122,9 @@ final class P4ResearchWorkspace extends StatelessWidget {
               child: TabBarView(
                 children: <Widget>[
                   _ResearchSearchPanel(
-                      controller: controller, onSearch: onSearch),
+                    controller: controller,
+                    onSearch: onSearch,
+                  ),
                   _ResearchResults(controller: controller),
                   _ResearchSource(controller: controller),
                   _ResearchExtraction(controller: controller),
@@ -194,8 +196,10 @@ final class _ResearchToolbar extends StatelessWidget {
 }
 
 final class _ResearchSearchPanel extends StatelessWidget {
-  const _ResearchSearchPanel(
-      {required this.controller, required this.onSearch});
+  const _ResearchSearchPanel({
+    required this.controller,
+    required this.onSearch,
+  });
   final P4ResearchWorkspaceController controller;
   final ValueChanged<String>? onSearch;
 
@@ -333,7 +337,8 @@ final class _ResearchCollections extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
         child: Text(
-            '${controller.sources.length} sources available for collections'),
+          '${controller.sources.length} sources available for collections',
+        ),
       );
 }
 
@@ -345,9 +350,11 @@ final class _ResearchChanges extends StatelessWidget {
         children: <Widget>[
           for (final change in controller.changes)
             ListTile(
-              leading: Icon(change.changed
-                  ? Icons.change_circle_outlined
-                  : Icons.check_circle_outline),
+              leading: Icon(
+                change.changed
+                    ? Icons.change_circle_outlined
+                    : Icons.check_circle_outline,
+              ),
               title: Text(change.canonicalUrl),
               subtitle: Text(
                 change.changed
@@ -453,18 +460,23 @@ final class P4DataWorkspace extends StatelessWidget {
                             _VirtualTable(version: selected),
                             _JsonValue(value: selected.schema),
                             _JsonValue(
-                                value: selected.transforms
-                                    .map((e) => e.toJson())
-                                    .toList()),
+                              value: selected.transforms
+                                  .map((e) => e.toJson())
+                                  .toList(),
+                            ),
                             _QualityPanel(version: selected),
-                            _JsonValue(value: <String, Object?>{
-                              'sourceHashes': selected.sourceHashes,
-                              'manifestHash': selected.manifestHash
-                            }),
-                            _JsonValue(value: <String, Object?>{
-                              'parentVersionId': selected.parentVersionId,
-                              'versionId': selected.id
-                            }),
+                            _JsonValue(
+                              value: <String, Object?>{
+                                'sourceHashes': selected.sourceHashes,
+                                'manifestHash': selected.manifestHash,
+                              },
+                            ),
+                            _JsonValue(
+                              value: <String, Object?>{
+                                'parentVersionId': selected.parentVersionId,
+                                'versionId': selected.id,
+                              },
+                            ),
                             _DatasetExport(
                                 version: selected, onExport: onExport),
                           ],
@@ -491,8 +503,9 @@ final class _VirtualTable extends StatelessWidget {
           final values = index == 0
               ? fields
               : fields
-                  .map((field) =>
-                      version.rows[index - 1][field]?.toString() ?? '')
+                  .map(
+                    (field) => version.rows[index - 1][field]?.toString() ?? '',
+                  )
                   .toList();
           return Row(
             children: <Widget>[
@@ -535,7 +548,7 @@ final class _QualityPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final missing = <String, int>{
-      for (final field in version.schema.keys) field: 0
+      for (final field in version.schema.keys) field: 0,
     };
     for (final row in version.rows) {
       for (final field in version.schema.keys) {
@@ -547,11 +560,14 @@ final class _QualityPanel extends StatelessWidget {
     return ListView(
       children: <Widget>[
         ListTile(
-            title: const Text('Rows'),
-            trailing: Text('${version.rows.length}')),
+          title: const Text('Rows'),
+          trailing: Text('${version.rows.length}'),
+        ),
         for (final entry in missing.entries)
           ListTile(
-              title: Text(entry.key), trailing: Text('${entry.value} missing')),
+            title: Text(entry.key),
+            trailing: Text('${entry.value} missing'),
+          ),
       ],
     );
   }

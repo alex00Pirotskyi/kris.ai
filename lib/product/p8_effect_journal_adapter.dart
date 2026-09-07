@@ -30,12 +30,9 @@ class P8ReconciledEffectJournal implements P2EffectJournal {
       if (decoded is! Map) {
         throw const FormatException('p8_effect_journal_line_invalid');
       }
-      final receipt = ExternalEffectReceipt.fromJson(
-        <String, Object?>{
-          for (final entry in decoded.entries)
-            entry.key.toString(): entry.value,
-        },
-      );
+      final receipt = ExternalEffectReceipt.fromJson(<String, Object?>{
+        for (final entry in decoded.entries) entry.key.toString(): entry.value,
+      });
       _receipts[receipt.effectId] = receipt;
     }
   }

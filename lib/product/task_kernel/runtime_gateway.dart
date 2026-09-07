@@ -11,6 +11,7 @@ import '../prompt_planning.dart';
 import '../workspace_tools.dart';
 import 'complexity_router.dart';
 import 'plan_compiler.dart';
+import 'semantic_slash_understanding.dart';
 import 'software_family.dart';
 import 'task_families.dart';
 import 'task_specification.dart';
@@ -102,13 +103,10 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     }
 
     return draft.copyWith(
-      guardrails: merge(
-        draft.guardrails,
-        <String>[
-          ...specification.hardConstraints.map((claim) => claim.statement),
-          ...specification.prohibitedEffects.map((effect) => 'Never: $effect'),
-        ],
-      ),
+      guardrails: merge(draft.guardrails, <String>[
+        ...specification.hardConstraints.map((claim) => claim.statement),
+        ...specification.prohibitedEffects.map((effect) => 'Never: $effect'),
+      ]),
       acceptanceCriteria: merge(
         draft.acceptanceCriteria,
         specification.successCriteria.map((claim) => claim.statement),
@@ -154,7 +152,7 @@ UniversalTaskKernel buildUniversalTaskKernel({
     capabilityBriefing: briefing,
   );
   return UniversalTaskKernel(
-    understanding: UnderstandingService(
+    understanding: SemanticSlashUnderstandingService(
       model: ModelBackedUnderstanding(
         generate: understandingGenerator ??
             (request) => models.providerFor(request.identity).generate(request),

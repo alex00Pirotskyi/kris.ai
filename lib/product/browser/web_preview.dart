@@ -125,8 +125,10 @@ final class P3PreviewProcessAuthorization {
     ];
     if (values.any((value) => value.trim().isEmpty) ||
         binding.operation != 'pty.open' ||
-        !RegExp(r'^[0-9a-f]{64}$', caseSensitive: false)
-            .hasMatch(grantDigest)) {
+        !RegExp(
+          r'^[0-9a-f]{64}$',
+          caseSensitive: false,
+        ).hasMatch(grantDigest)) {
       throw StateError('web_preview_process_authorization_invalid');
     }
   }
@@ -135,9 +137,7 @@ final class P3PreviewProcessAuthorization {
 typedef P3PreviewProcessAuthorizationResolver = P3PreviewProcessAuthorization
     Function(P3DevServerConfig config);
 typedef P3PreviewProcessCompletion = Future<void> Function(
-  String sessionId,
-  P2ProcessIdentity processIdentity,
-);
+    String sessionId, P2ProcessIdentity processIdentity);
 
 final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
   P3P2ManagedPreviewProcessHost({
@@ -163,8 +163,9 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
         shell: config.command,
         cwd: config.cwd,
         arguments: List<String>.unmodifiable(config.arguments),
-        environmentDelta:
-            Map<String, String?>.unmodifiable(config.environmentDelta),
+        environmentDelta: Map<String, String?>.unmodifiable(
+          config.environmentDelta,
+        ),
         transcriptBudgetBytes: 1024 * 1024,
       ),
       authorization.binding,
@@ -175,8 +176,9 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
       throw StateError('web_preview_process_session_duplicate');
     }
     try {
-      final identity =
-          await _processTrees.adoptManaged(session.processIdentity);
+      final identity = await _processTrees.adoptManaged(
+        session.processIdentity,
+      );
       _sessions[session.sessionId] = _P3P2ManagedPreviewSession(
         session: session,
         authorization: authorization,
@@ -213,10 +215,7 @@ final class P3P2ManagedPreviewProcessHost implements P3PreviewProcessHost {
   }
 
   @override
-  Future<void> stop(
-    P3PreviewProcessSession session,
-    Duration grace,
-  ) async {
+  Future<void> stop(P3PreviewProcessSession session, Duration grace) async {
     final record = _sessions[session.sessionId];
     if (record == null) {
       throw StateError('web_preview_process_session_unknown');
@@ -399,9 +398,7 @@ final class P3LivePreviewService {
             response.statusCode <= config.acceptedStatusMaximum) {
           return;
         }
-        lastError = StateError(
-          'readiness_status_${response.statusCode}',
-        );
+        lastError = StateError('readiness_status_${response.statusCode}');
       } catch (error) {
         lastError = error;
       } finally {

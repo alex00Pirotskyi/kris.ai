@@ -33,8 +33,10 @@ void main() {
 
   group('interaction policy', () {
     test('plain arithmetic question stays informational', () {
-      final decision =
-          compiler.compile('1 + 1?', inferredMode: CommandMode.build);
+      final decision = compiler.compile(
+        '1 + 1?',
+        inferredMode: CommandMode.build,
+      );
       expect(decision.kind, ChatInteractionKind.informational);
       expect(decision.mode, CommandMode.ask);
       expect(decision.needsUnderstanding, isFalse);
@@ -49,8 +51,10 @@ void main() {
         'Is Owner Mode dangerous?',
         'What is the difference between analyze and test?',
       ]) {
-        final decision =
-            compiler.compile(request, inferredMode: CommandMode.build);
+        final decision = compiler.compile(
+          request,
+          inferredMode: CommandMode.build,
+        );
         expect(
           decision.kind,
           ChatInteractionKind.informational,
@@ -124,19 +128,21 @@ void main() {
       expect(decision.needsUnderstanding, isFalse);
     });
 
-    test('model selection is action because execution configuration changes',
-        () {
-      final decision = compiler.compile(
-        'Use @phi4-mini for this task.',
-        inferredMode: CommandMode.ask,
-        knownTargets: targets,
-      );
-      expect(decision.kind, ChatInteractionKind.action);
-      expect(decision.capability?.id, 'model.select');
-      expect(decision.targets.single.id, 'phi4-mini');
-      expect(decision.needsUnderstanding, isTrue);
-      expect(decision.needsPlan, isFalse);
-    });
+    test(
+      'model selection is action because execution configuration changes',
+      () {
+        final decision = compiler.compile(
+          'Use @phi4-mini for this task.',
+          inferredMode: CommandMode.ask,
+          knownTargets: targets,
+        );
+        expect(decision.kind, ChatInteractionKind.action);
+        expect(decision.capability?.id, 'model.select');
+        expect(decision.targets.single.id, 'phi4-mini');
+        expect(decision.needsUnderstanding, isTrue);
+        expect(decision.needsPlan, isFalse);
+      },
+    );
 
     test('destructive wording raises risk without granting authority', () {
       final decision = compiler.compile(
@@ -174,12 +180,18 @@ void main() {
         cursorOffset: 6,
         targets: targets,
       );
-      expect(runSuggestions.map((item) => item.target?.id),
-          contains('rome-clock'));
-      expect(runSuggestions.map((item) => item.target?.id),
-          isNot(contains('phi4-mini')));
-      expect(runSuggestions.map((item) => item.target?.id),
-          isNot(contains('openai')));
+      expect(
+        runSuggestions.map((item) => item.target?.id),
+        contains('rome-clock'),
+      );
+      expect(
+        runSuggestions.map((item) => item.target?.id),
+        isNot(contains('phi4-mini')),
+      );
+      expect(
+        runSuggestions.map((item) => item.target?.id),
+        isNot(contains('openai')),
+      );
 
       final useSuggestions = autocomplete.suggestions(
         text: '/use @',
@@ -187,10 +199,14 @@ void main() {
         targets: targets,
       );
       expect(
-          useSuggestions.map((item) => item.target?.id), contains('phi4-mini'));
+        useSuggestions.map((item) => item.target?.id),
+        contains('phi4-mini'),
+      );
       expect(useSuggestions.map((item) => item.target?.id), contains('openai'));
-      expect(useSuggestions.map((item) => item.target?.id),
-          isNot(contains('rome-clock')));
+      expect(
+        useSuggestions.map((item) => item.target?.id),
+        isNot(contains('rome-clock')),
+      );
     });
   });
 
@@ -218,7 +234,9 @@ void main() {
       final alternate = original.alternate(decision);
       expect(alternate.current.summary, contains(decision.interpretedGoal));
       expect(
-          alternate.current.originalRequest, original.current.originalRequest);
+        alternate.current.originalRequest,
+        original.current.originalRequest,
+      );
       expect(alternate.current.revision, 2);
     });
   });
@@ -243,57 +261,51 @@ void main() {
     });
 
     test(
-      'an unscoped "build me a clock app" is agent.create_project, not '
-      'project.build',
-      () {
-        final decision = compiler.compile(
-          'Build me a small app showing the live time in Rome.',
-          inferredMode: CommandMode.build,
-        );
-        expect(decision.capability?.id, 'agent.create_project');
-      },
-    );
+        'an unscoped "build me a clock app" is agent.create_project, not '
+        'project.build', () {
+      final decision = compiler.compile(
+        'Build me a small app showing the live time in Rome.',
+        inferredMode: CommandMode.build,
+      );
+      expect(decision.capability?.id, 'agent.create_project');
+    });
 
     test(
-      '"build @project" (natural language, project mentioned) is '
-      'project.build, not agent.create_project',
-      () {
-        final decision = compiler.compile(
-          'build @rome-clock',
-          inferredMode: CommandMode.build,
-          knownTargets: targets,
-        );
-        expect(decision.capability?.id, 'project.build');
-      },
-    );
+        '"build @project" (natural language, project mentioned) is '
+        'project.build, not agent.create_project', () {
+      final decision = compiler.compile(
+        'build @rome-clock',
+        inferredMode: CommandMode.build,
+        knownTargets: targets,
+      );
+      expect(decision.capability?.id, 'project.build');
+    });
 
     test(
-      'a modification verb with no explicit target is agent.modify_project, '
-      'never a fresh project',
-      () {
-        final decision = compiler.compile(
-          'Add a dark mode toggle to the settings screen.',
-          inferredMode: CommandMode.build,
-        );
-        expect(decision.capability?.id, 'agent.modify_project');
-      },
-    );
+        'a modification verb with no explicit target is agent.modify_project, '
+        'never a fresh project', () {
+      final decision = compiler.compile(
+        'Add a dark mode toggle to the settings screen.',
+        inferredMode: CommandMode.build,
+      );
+      expect(decision.capability?.id, 'agent.modify_project');
+    });
 
     test(
-      '"fix this project" style wording is agent.modify_project, not '
-      'agent.create_project',
-      () {
-        final decision = compiler.compile(
-          'Please build in more error handling for this project.',
-          inferredMode: CommandMode.build,
-        );
-        expect(decision.capability?.id, 'agent.modify_project');
-      },
-    );
+        '"fix this project" style wording is agent.modify_project, not '
+        'agent.create_project', () {
+      final decision = compiler.compile(
+        'Please build in more error handling for this project.',
+        inferredMode: CommandMode.build,
+      );
+      expect(decision.capability?.id, 'agent.modify_project');
+    });
 
     test('"fix it" / "fix @project" is always agent.fix_project', () {
-      final natural =
-          compiler.compile('Fix it.', inferredMode: CommandMode.fix);
+      final natural = compiler.compile(
+        'Fix it.',
+        inferredMode: CommandMode.fix,
+      );
       expect(natural.capability?.id, 'agent.fix_project');
       final explicit = compiler.compile(
         '/fix @rome-clock',
@@ -313,8 +325,10 @@ void main() {
       );
       expect(decision.capability?.id, 'project.verify');
       expect(decision.capability?.actionClass, ChatActionClass.informational);
-      expect(decision.capability?.understandingPolicy,
-          ChatUnderstandingPolicy.never);
+      expect(
+        decision.capability?.understandingPolicy,
+        ChatUnderstandingPolicy.never,
+      );
       expect(decision.capability?.route, ChatExecutionRoute.projectVerify);
     });
 
@@ -337,13 +351,14 @@ void main() {
     });
 
     test(
-        'research.search never routes through the project-gated agent pipeline',
-        () {
-      final capability = registry.byId('research.search')!;
-      expect(capability.route, isNot(ChatExecutionRoute.createProject));
-      expect(capability.route, isNot(ChatExecutionRoute.modifyProject));
-      expect(capability.route, isNot(ChatExecutionRoute.fixProject));
-    });
+      'research.search never routes through the project-gated agent pipeline',
+      () {
+        final capability = registry.byId('research.search')!;
+        expect(capability.route, isNot(ChatExecutionRoute.createProject));
+        expect(capability.route, isNot(ChatExecutionRoute.modifyProject));
+        expect(capability.route, isNot(ChatExecutionRoute.fixProject));
+      },
+    );
 
     test('a project mention enriches, rather than gates, the same search', () {
       final decision = compiler.compile(
@@ -357,12 +372,12 @@ void main() {
     });
   });
 
-  group('permission separation: ChatRiskClass is UX only (Improvement #10)',
-      () {
-    test(
-      'two capabilities sharing a ChatRiskClass still route to different '
-      'real runtime effects',
-      () {
+  group(
+    'permission separation: ChatRiskClass is UX only (Improvement #10)',
+    () {
+      test(
+          'two capabilities sharing a ChatRiskClass still route to different '
+          'real runtime effects', () {
         final test = registry.byId('project.test')!;
         final run = registry.byId('project.run')!;
         expect(test.riskClass, ChatRiskClass.execution);
@@ -373,14 +388,12 @@ void main() {
           reason: 'identical ChatRiskClass must never imply identical '
               'real authority or effect',
         );
-      },
-    );
+      });
 
-    test(
-      'the same capability targeting two different real projects reports '
-      'the same ChatRiskClass -- real authority is per-target, decided by '
-      'ProductRuntime, never by this presentation-only value',
-      () {
+      test(
+          'the same capability targeting two different real projects reports '
+          'the same ChatRiskClass -- real authority is per-target, decided by '
+          'ProductRuntime, never by this presentation-only value', () {
         const projectB = ChatTarget(
           id: 'other-project',
           type: ChatTargetType.project,
@@ -398,9 +411,9 @@ void main() {
           knownTargets: <ChatTarget>[...targets, projectB],
         );
         expect(onA.riskClass, onB.riskClass);
-      },
-    );
-  });
+      });
+    },
+  );
 
   group('command grammar: bounded and adversarial (Improvement #4)', () {
     const parser = ChatCommandMentionParser();
@@ -432,8 +445,10 @@ void main() {
     });
 
     test('an unknown slash command parses without throwing', () {
-      final decision =
-          compiler.compile('/unknown', inferredMode: CommandMode.ask);
+      final decision = compiler.compile(
+        '/unknown',
+        inferredMode: CommandMode.ask,
+      );
       expect(decision.capability, isNull);
       expect(decision.kind, ChatInteractionKind.ambiguous);
     });
@@ -447,11 +462,13 @@ void main() {
       expect(decision.unresolvedMentions, contains('unknown'));
     });
 
-    test('a mention right before sentence-final punctuation still resolves',
-        () {
-      final parsed = parser.parse('Please fix @rome-clock.');
-      expect(parsed.mentions, contains('rome-clock'));
-    });
+    test(
+      'a mention right before sentence-final punctuation still resolves',
+      () {
+        final parsed = parser.parse('Please fix @rome-clock.');
+        expect(parsed.mentions, contains('rome-clock'));
+      },
+    );
 
     test('a mention followed by a comma still resolves', () {
       final parsed = parser.parse('Fix @rome-clock, then run the tests.');
@@ -460,8 +477,10 @@ void main() {
 
     test('multiple mentions in one message are all captured', () {
       final parsed = parser.parse('Move @rome-clock and @other-project along.');
-      expect(parsed.mentions,
-          containsAll(<String>['rome-clock', 'other-project']));
+      expect(
+        parsed.mentions,
+        containsAll(<String>['rome-clock', 'other-project']),
+      );
     });
 
     test('repeated whitespace and a very long token do not throw', () {
@@ -479,22 +498,21 @@ void main() {
     });
 
     test(
-      'Unicode text does not throw; the mention grammar is ASCII-bounded '
-      'by design and simply stops at the first non-ASCII character',
-      () {
-        final parsed = parser.parse('@josé quiere café ☕ por favor');
-        expect(parsed.mentions, <String>{'jos'});
-      },
-    );
+        'Unicode text does not throw; the mention grammar is ASCII-bounded '
+        'by design and simply stops at the first non-ASCII character', () {
+      final parsed = parser.parse('@josé quiere café ☕ por favor');
+      expect(parsed.mentions, <String>{'jos'});
+    });
 
     test(
-        'explicit command parsing is unaffected by mentions in the same message',
-        () {
-      final parsed = parser.parse('/test @rome-clock --profile unit');
-      expect(parsed.commandToken, 'test');
-      expect(parsed.mentions, contains('rome-clock'));
-      expect(parsed.arguments, contains('--profile'));
-    });
+      'explicit command parsing is unaffected by mentions in the same message',
+      () {
+        final parsed = parser.parse('/test @rome-clock --profile unit');
+        expect(parsed.commandToken, 'test');
+        expect(parsed.mentions, contains('rome-clock'));
+        expect(parsed.arguments, contains('--profile'));
+      },
+    );
   });
 
   group('intent classification corpus (Improvement #3)', () {
@@ -508,11 +526,7 @@ void main() {
         'Do not run anything.',
       ]) {
         final decision = compiler.compile(input, inferredMode: CommandMode.ask);
-        expect(
-          decision.kind,
-          ChatInteractionKind.informational,
-          reason: input,
-        );
+        expect(decision.kind, ChatInteractionKind.informational, reason: input);
         // Improvement #3: the model/compiler never grants authority --
         // an informational decision never carries a capability, so
         // there is nothing to execute even by accident.
@@ -533,16 +547,18 @@ void main() {
       });
     });
 
-    test('explicit commands are deterministic regardless of surrounding text',
-        () {
-      final decision = compiler.compile(
-        '/use @phi4-mini',
-        inferredMode: CommandMode.ask,
-        knownTargets: targets,
-      );
-      expect(decision.capability?.id, 'model.select');
-      expect(decision.targets.single.id, 'phi4-mini');
-    });
+    test(
+      'explicit commands are deterministic regardless of surrounding text',
+      () {
+        final decision = compiler.compile(
+          '/use @phi4-mini',
+          inferredMode: CommandMode.ask,
+          knownTargets: targets,
+        );
+        expect(decision.capability?.id, 'model.select');
+        expect(decision.targets.single.id, 'phi4-mini');
+      },
+    );
 
     test('"is @project running?" stays informational, never an action', () {
       final decision = compiler.compile(

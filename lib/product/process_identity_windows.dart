@@ -41,10 +41,7 @@ typedef _OpenProcessNative = IntPtr Function(
   Uint32 processId,
 );
 typedef _OpenProcessDart = int Function(
-  int desiredAccess,
-  int inheritHandle,
-  int processId,
-);
+    int desiredAccess, int inheritHandle, int processId);
 
 typedef _GetProcessTimesNative = Int32 Function(
   IntPtr process,
@@ -94,23 +91,34 @@ WindowsProcessIdentity? readWindowsProcessIdentity(int pid) {
   }
 
   final int Function(int, int, int) openProcess;
-  final int Function(int, Pointer<_FileTime>, Pointer<_FileTime>,
-      Pointer<_FileTime>, Pointer<_FileTime>) getProcessTimes;
+  final int Function(
+    int,
+    Pointer<_FileTime>,
+    Pointer<_FileTime>,
+    Pointer<_FileTime>,
+    Pointer<_FileTime>,
+  ) getProcessTimes;
   final int Function(int) closeHandle;
   try {
-    openProcess = kernel32
-        .lookupFunction<_OpenProcessNative, _OpenProcessDart>('OpenProcess');
+    openProcess = kernel32.lookupFunction<_OpenProcessNative, _OpenProcessDart>(
+      'OpenProcess',
+    );
     getProcessTimes =
         kernel32.lookupFunction<_GetProcessTimesNative, _GetProcessTimesDart>(
-            'GetProcessTimes');
-    closeHandle = kernel32
-        .lookupFunction<_CloseHandleNative, _CloseHandleDart>('CloseHandle');
+      'GetProcessTimes',
+    );
+    closeHandle = kernel32.lookupFunction<_CloseHandleNative, _CloseHandleDart>(
+      'CloseHandle',
+    );
   } on ArgumentError {
     return null;
   }
 
-  final handle =
-      openProcess(_kProcessQueryLimitedInformation, 0 /* FALSE */, pid);
+  final handle = openProcess(
+    _kProcessQueryLimitedInformation,
+    0 /* FALSE */,
+    pid,
+  );
   if (handle == 0) {
     return null;
   }

@@ -177,8 +177,10 @@ class McpRegistryRecordV2 {
   final DateTime installedAt;
   final DateTime? updatedAt;
 
-  McpRegistryRecordV2 copyWith(
-          {McpLifecycleStateV2? state, DateTime? updatedAt}) =>
+  McpRegistryRecordV2 copyWith({
+    McpLifecycleStateV2? state,
+    DateTime? updatedAt,
+  }) =>
       McpRegistryRecordV2(
         id: id,
         projectId: projectId,
@@ -207,7 +209,8 @@ class McpRegistryRecordV2 {
         projectId: json['projectId']?.toString() ?? '',
         descriptor: McpServerDescriptorV2.fromPayload(
           Map<String, Object?>.from(
-              json['descriptor'] as Map? ?? const <String, Object?>{}),
+            json['descriptor'] as Map? ?? const <String, Object?>{},
+          ),
         ),
         manifestSha256: json['manifestSha256']?.toString() ?? '',
         signerKeyId: json['signerKeyId']?.toString() ?? '',
@@ -237,8 +240,9 @@ class McpExecutionGrantV2 {
         allowedResources = Set<String>.unmodifiable(allowedResources),
         allowedPrompts = Set<String>.unmodifiable(allowedPrompts),
         allowedRoots = Set<String>.unmodifiable(allowedRoots),
-        allowedNetworkDestinations =
-            Set<String>.unmodifiable(allowedNetworkDestinations),
+        allowedNetworkDestinations = Set<String>.unmodifiable(
+          allowedNetworkDestinations,
+        ),
         allowedSecretIds = Set<String>.unmodifiable(allowedSecretIds);
 
   final String projectId;
@@ -307,8 +311,9 @@ class McpRegistryV2 {
     required this.audit,
     required Map<String, McpDescriptorTrustKeyV2> trustedKeys,
     McpExecutionBackendV2 backend = const McpUnavailableExecutionBackendV2(),
-  })  : _trustedKeys =
-            Map<String, McpDescriptorTrustKeyV2>.unmodifiable(trustedKeys),
+  })  : _trustedKeys = Map<String, McpDescriptorTrustKeyV2>.unmodifiable(
+          trustedKeys,
+        ),
         _backend = backend,
         _repository = SqliteEntityRepository<McpRegistryRecordV2>(
           store: workflow,
@@ -499,7 +504,9 @@ class McpRegistryV2 {
     final scopeChanged = !_setsEqual(
             candidate.descriptor.tools, current.descriptor.tools) ||
         !_setsEqual(
-            candidate.descriptor.resources, current.descriptor.resources) ||
+          candidate.descriptor.resources,
+          current.descriptor.resources,
+        ) ||
         !_setsEqual(candidate.descriptor.prompts, current.descriptor.prompts) ||
         !_setsEqual(candidate.descriptor.roots, current.descriptor.roots) ||
         !_setsEqual(
@@ -507,7 +514,9 @@ class McpRegistryV2 {
           current.descriptor.networkDestinations,
         ) ||
         !_setsEqual(
-            candidate.descriptor.secretIds, current.descriptor.secretIds) ||
+          candidate.descriptor.secretIds,
+          current.descriptor.secretIds,
+        ) ||
         candidate.descriptor.executionMode != current.descriptor.executionMode;
     final next = McpRegistryRecordV2(
       id: current.id,
@@ -537,9 +546,9 @@ class McpRegistryV2 {
 
   static bool _isNewerVersion(String candidate, String current) {
     List<int>? parse(String value) {
-      final match = RegExp(r'^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$').firstMatch(
-        value.trim(),
-      );
+      final match = RegExp(
+        r'^(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$',
+      ).firstMatch(value.trim());
       if (match == null) {
         return null;
       }
@@ -628,9 +637,7 @@ class McpRegistryV2 {
     }
     await _backend.stop(id);
     await _repository.remove(id);
-    await audit.append('mcp.v2.removed', id, <String, dynamic>{
-      'serverId': id,
-    });
+    await audit.append('mcp.v2.removed', id, <String, dynamic>{'serverId': id});
   }
 
   Future<McpBackendReceiptV2> start({
@@ -794,7 +801,9 @@ class McpRegistryV2 {
     final record = await _repository.get(id);
     if (record == null) {
       throw ProductException(
-          'mcp_server_unregistered', 'MCP server is not registered.');
+        'mcp_server_unregistered',
+        'MCP server is not registered.',
+      );
     }
     return record;
   }

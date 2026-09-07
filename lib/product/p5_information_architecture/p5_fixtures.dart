@@ -212,10 +212,7 @@ class P5PrototypeFixtures {
     return null;
   }
 
-  static P5EvidenceFixture _evidenceFixture(
-    String runId,
-    P5EvidenceKind kind,
-  ) {
+  static P5EvidenceFixture _evidenceFixture(String runId, P5EvidenceKind kind) {
     final content = switch (kind) {
       P5EvidenceKind.textMetadata =>
         'charset=utf-8\nlines=42\nsource=fixture://evidence/$runId/notes.txt',

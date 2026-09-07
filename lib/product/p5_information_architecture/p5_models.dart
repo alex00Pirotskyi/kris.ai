@@ -652,10 +652,7 @@ class P5PresentationState {
 const Object _notProvided = Object();
 
 class P5InvalidTransition implements Exception {
-  const P5InvalidTransition({
-    required this.from,
-    required this.to,
-  });
+  const P5InvalidTransition({required this.from, required this.to});
 
   final P5WorkspaceState from;
   final P5WorkspaceState to;
@@ -725,16 +722,10 @@ class P5WorkspaceTransitionGraph {
     },
   };
 
-  static bool canTransition(
-    P5WorkspaceState from,
-    P5WorkspaceState to,
-  ) =>
+  static bool canTransition(P5WorkspaceState from, P5WorkspaceState to) =>
       from == to || (allowed[from]?.contains(to) ?? false);
 
-  static void validate(
-    P5WorkspaceState from,
-    P5WorkspaceState to,
-  ) {
+  static void validate(P5WorkspaceState from, P5WorkspaceState to) {
     if (!canTransition(from, to)) {
       throw P5InvalidTransition(from: from, to: to);
     }

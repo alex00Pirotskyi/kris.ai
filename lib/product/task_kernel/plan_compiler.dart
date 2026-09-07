@@ -268,10 +268,7 @@ class UniversalPlanCompiler {
     List<UniversalTask> tasks,
     Set<String> consumed,
   ) {
-    final coordinatorIds = <String>{
-      ...kCoordinatorCapabilityIds,
-      ...consumed,
-    };
+    final coordinatorIds = <String>{...kCoordinatorCapabilityIds, ...consumed};
     if (coordinatorIds.isEmpty) return;
     for (final task in tasks) {
       final required = task.requiredCapabilities

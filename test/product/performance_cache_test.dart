@@ -25,46 +25,45 @@ void main() {
     temporaryDirectories.clear();
   });
 
-  test('cache database is separate from authoritative workflow state',
-      () async {
-    final root = await temporaryRoot();
-    final state = Directory(
-      '${root.path}${Platform.pathSeparator}state',
-    );
-    final cacheDirectory = Directory(
-      '${root.path}${Platform.pathSeparator}cache',
-    );
-    await state.create(recursive: true);
-    final workflowFile = File(
-      '${state.path}${Platform.pathSeparator}workflow.sqlite3',
-    );
-    final workflow = sqlite3.open(workflowFile.path);
-    workflow.execute('CREATE TABLE authority(value TEXT NOT NULL)');
-    workflow.execute(
-      'INSERT INTO authority(value) VALUES (?)',
-      <Object?>['durable'],
-    );
-    workflow.dispose();
+  test(
+    'cache database is separate from authoritative workflow state',
+    () async {
+      final root = await temporaryRoot();
+      final state = Directory('${root.path}${Platform.pathSeparator}state');
+      final cacheDirectory = Directory(
+        '${root.path}${Platform.pathSeparator}cache',
+      );
+      await state.create(recursive: true);
+      final workflowFile = File(
+        '${state.path}${Platform.pathSeparator}workflow.sqlite3',
+      );
+      final workflow = sqlite3.open(workflowFile.path);
+      workflow.execute('CREATE TABLE authority(value TEXT NOT NULL)');
+      workflow.execute('INSERT INTO authority(value) VALUES (?)', <Object?>[
+        'durable',
+      ]);
+      workflow.dispose();
 
-    final cache = await RebuildableCacheDatabase.open(cacheDirectory);
-    final diagnostics = await cache.diagnostics();
+      final cache = await RebuildableCacheDatabase.open(cacheDirectory);
+      final diagnostics = await cache.diagnostics();
 
-    expect(diagnostics.persistent, isTrue);
-    expect(diagnostics.lastRebuildAt, isNotNull);
-    expect(
-      diagnostics.databasePath,
-      '${cacheDirectory.path}${Platform.pathSeparator}cache.sqlite3',
-    );
-    expect(workflowFile.path, isNot(diagnostics.databasePath));
+      expect(diagnostics.persistent, isTrue);
+      expect(diagnostics.lastRebuildAt, isNotNull);
+      expect(
+        diagnostics.databasePath,
+        '${cacheDirectory.path}${Platform.pathSeparator}cache.sqlite3',
+      );
+      expect(workflowFile.path, isNot(diagnostics.databasePath));
 
-    final reopenedWorkflow = sqlite3.open(workflowFile.path);
-    expect(
-      reopenedWorkflow.select('SELECT value FROM authority').single['value'],
-      'durable',
-    );
-    reopenedWorkflow.dispose();
-    await cache.close();
-  });
+      final reopenedWorkflow = sqlite3.open(workflowFile.path);
+      expect(
+        reopenedWorkflow.select('SELECT value FROM authority').single['value'],
+        'durable',
+      );
+      reopenedWorkflow.dispose();
+      await cache.close();
+    },
+  );
 
   test('records spans and advances namespaced generations', () async {
     final root = await temporaryRoot();
@@ -138,31 +137,33 @@ void main() {
     }
   });
 
-  test('invalid SQLite bytes are quarantined and rebuilt automatically',
-      () async {
-    final root = await temporaryRoot();
-    final cacheDirectory = Directory(
-      '${root.path}${Platform.pathSeparator}cache',
-    );
-    await cacheDirectory.create(recursive: true);
-    final cacheFile = File(
-      '${cacheDirectory.path}${Platform.pathSeparator}cache.sqlite3',
-    );
-    await cacheFile.writeAsString('not-a-sqlite-database', flush: true);
+  test(
+    'invalid SQLite bytes are quarantined and rebuilt automatically',
+    () async {
+      final root = await temporaryRoot();
+      final cacheDirectory = Directory(
+        '${root.path}${Platform.pathSeparator}cache',
+      );
+      await cacheDirectory.create(recursive: true);
+      final cacheFile = File(
+        '${cacheDirectory.path}${Platform.pathSeparator}cache.sqlite3',
+      );
+      await cacheFile.writeAsString('not-a-sqlite-database', flush: true);
 
-    final cache = await RebuildableCacheDatabase.open(cacheDirectory);
-    final diagnostics = await cache.diagnostics();
-    final quarantined = (await cacheDirectory.list().toList())
-        .whereType<File>()
-        .where((file) => file.path.contains('cache.sqlite3.invalid.'))
-        .toList();
+      final cache = await RebuildableCacheDatabase.open(cacheDirectory);
+      final diagnostics = await cache.diagnostics();
+      final quarantined = (await cacheDirectory.list().toList())
+          .whereType<File>()
+          .where((file) => file.path.contains('cache.sqlite3.invalid.'))
+          .toList();
 
-    expect(diagnostics.persistent, isTrue);
-    expect(diagnostics.startupMode, CacheDatabaseStartupMode.recovered);
-    expect(diagnostics.startupFailureType, 'cache_header_invalid');
-    expect(quarantined, hasLength(1));
-    await cache.close();
-  });
+      expect(diagnostics.persistent, isTrue);
+      expect(diagnostics.startupMode, CacheDatabaseStartupMode.recovered);
+      expect(diagnostics.startupFailureType, 'cache_header_invalid');
+      expect(quarantined, hasLength(1));
+      await cache.close();
+    },
+  );
 
   test('unsupported cache schema is discarded instead of migrated', () async {
     final root = await temporaryRoot();
@@ -189,23 +190,16 @@ void main() {
 
   test('disk cache failure falls back to a functioning memory cache', () async {
     final root = await temporaryRoot();
-    final blocker = File(
-      '${root.path}${Platform.pathSeparator}cache-blocker',
-    );
+    final blocker = File('${root.path}${Platform.pathSeparator}cache-blocker');
     await blocker.writeAsString('file-not-directory', flush: true);
 
-    final cache = await RebuildableCacheDatabase.open(
-      Directory(blocker.path),
-    );
+    final cache = await RebuildableCacheDatabase.open(Directory(blocker.path));
     final span = PerformanceSpan.start('source.search', sink: cache);
     span.finish();
     final diagnostics = await cache.diagnostics();
 
     expect(diagnostics.persistent, isFalse);
-    expect(
-      diagnostics.startupMode,
-      CacheDatabaseStartupMode.memoryFallback,
-    );
+    expect(diagnostics.startupMode, CacheDatabaseStartupMode.memoryFallback);
     expect(diagnostics.performanceSpanRows, 1);
     expect(cache.advanceGeneration('source'), 1);
     await cache.close();

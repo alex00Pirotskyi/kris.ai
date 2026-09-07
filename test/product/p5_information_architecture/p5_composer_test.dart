@@ -18,20 +18,15 @@ void main() {
     controller.updateComposerAttachments(
       List<String>.generate(12, (index) => 'attachment-$index.md'),
     );
-    controller.updateAcceptanceCriteria(
-      <String>[
-        'Build succeeds without warnings.',
-        'Tests verify the requested behavior.',
-        'Tests verify the requested behavior.',
-      ],
-    );
+    controller.updateAcceptanceCriteria(<String>[
+      'Build succeeds without warnings.',
+      'Tests verify the requested behavior.',
+      'Tests verify the requested behavior.',
+    ]);
 
     expect(controller.state.composerProfile, P5ComposerProfile.owner);
     expect(controller.state.composerModel, P5ComposerModel.localDeep);
-    expect(
-      controller.state.composerAccess,
-      P5ComposerAccess.requestAdditional,
-    );
+    expect(controller.state.composerAccess, P5ComposerAccess.requestAdditional);
     expect(controller.state.composerBudget, P5ComposerBudget.thorough);
     expect(controller.state.attachments, hasLength(8));
     expect(controller.state.acceptanceCriteria, hasLength(2));
@@ -61,10 +56,7 @@ void main() {
     expect(controller.state.composerModel, before.composerModel);
     expect(controller.state.composerAccess, before.composerAccess);
     expect(controller.state.composerBudget, before.composerBudget);
-    expect(
-      controller.state.composerLaunchTiming,
-      before.composerLaunchTiming,
-    );
+    expect(controller.state.composerLaunchTiming, before.composerLaunchTiming);
     expect(controller.state.attachments, before.attachments);
     expect(controller.state.acceptanceCriteria, before.acceptanceCriteria);
     expect(controller.state.recoveryMessage, contains('cannot change'));
@@ -81,7 +73,9 @@ void main() {
     expect(controller.state.selectedRunId, isNull);
     expect(controller.state.planReviewed, isFalse);
     expect(
-        controller.state.recoveryMessage, contains('Scheduling is not bound'));
+      controller.state.recoveryMessage,
+      contains('Scheduling is not bound'),
+    );
     expect(controller.sideEffects.isZero, isTrue);
   });
 
@@ -125,8 +119,9 @@ void main() {
     expect(find.byKey(const Key('start-run-button')), findsOneWidget);
   });
 
-  testWidgets('P5-006 Ctrl+Enter uses the same launch path as Run now',
-      (tester) async {
+  testWidgets('P5-006 Ctrl+Enter uses the same launch path as Run now', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final controller = P5InformationArchitectureController();
@@ -150,8 +145,9 @@ void main() {
     expect(controller.sideEffects.isZero, isTrue);
   });
 
-  testWidgets('P5-006 Cmd+Enter is keyboard-complete on macOS layout',
-      (tester) async {
+  testWidgets('P5-006 Cmd+Enter is keyboard-complete on macOS layout', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(1280, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     final controller = P5InformationArchitectureController();

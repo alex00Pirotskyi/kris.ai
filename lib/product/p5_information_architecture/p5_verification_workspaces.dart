@@ -101,10 +101,12 @@ extension _P5VerificationWorkspaces
                       key: Key('verification-result-${result.testId}'),
                       leading: Icon(_resultIcon(result.state)),
                       title: Text(result.title),
-                      subtitle: Text(<String>[
-                        if (advanced) result.evidenceLabel,
-                        if (developer) result.testId,
-                      ].join('\n')),
+                      subtitle: Text(
+                        <String>[
+                          if (advanced) result.evidenceLabel,
+                          if (developer) result.testId,
+                        ].join('\n'),
+                      ),
                       trailing: _StatusChip(
                         label: result.state.label,
                         icon: _resultIcon(result.state),
@@ -309,10 +311,7 @@ extension _P5VerificationWorkspaces
     );
   }
 
-  Widget _evidenceViewerBody(
-    BuildContext context,
-    P5EvidenceFixture fixture,
-  ) {
+  Widget _evidenceViewerBody(BuildContext context, P5EvidenceFixture fixture) {
     switch (fixture.kind) {
       case P5EvidenceKind.image:
         try {
@@ -339,9 +338,8 @@ extension _P5VerificationWorkspaces
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.none,
                     gaplessPlayback: true,
-                    errorBuilder: (context, error, stackTrace) => const Text(
-                      'Saved image bytes could not be decoded.',
-                    ),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Text('Saved image bytes could not be decoded.'),
                   ),
                 ),
                 const SizedBox(height: 8),

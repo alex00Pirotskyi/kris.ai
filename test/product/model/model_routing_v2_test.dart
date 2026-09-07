@@ -101,10 +101,7 @@ void main() {
     test('every role is explicit and no model role can grant authority', () {
       const authority = ModelRoleAuthorityPolicyV2();
       expect(
-        authority.allows(
-          ModelRoleV2.planner,
-          ModelRoleOperationV2.proposePlan,
-        ),
+        authority.allows(ModelRoleV2.planner, ModelRoleOperationV2.proposePlan),
         isTrue,
       );
       expect(

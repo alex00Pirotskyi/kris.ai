@@ -8,8 +8,10 @@ void main() {
       ChatConversationState state = const ChatIdle();
       state = chatConversationTransition(state, ChatConversationEvent.submit)!;
       expect(state, isA<ChatInterpreting>());
-      state =
-          chatConversationTransition(state, ChatConversationEvent.compiled)!;
+      state = chatConversationTransition(
+        state,
+        ChatConversationEvent.compiled,
+      )!;
       expect(state, isA<ChatUnderstanding>());
       state = chatConversationTransition(
         state,
@@ -49,21 +51,18 @@ void main() {
       expect(state, isA<ChatCompleted>());
     });
 
-    test(
-      'Planning -> AwaitingPermission -> Denied on decline',
-      () {
-        var state = chatConversationTransition(
-          const ChatPlanning(),
-          ChatConversationEvent.planNotNeeded,
-        )!;
-        expect(state, isA<ChatAwaitingPermission>());
-        state = chatConversationTransition(
-          state,
-          ChatConversationEvent.permissionDeclined,
-        )!;
-        expect(state, isA<ChatDenied>());
-      },
-    );
+    test('Planning -> AwaitingPermission -> Denied on decline', () {
+      var state = chatConversationTransition(
+        const ChatPlanning(),
+        ChatConversationEvent.planNotNeeded,
+      )!;
+      expect(state, isA<ChatAwaitingPermission>());
+      state = chatConversationTransition(
+        state,
+        ChatConversationEvent.permissionDeclined,
+      )!;
+      expect(state, isA<ChatDenied>());
+    });
 
     test('Planning skips permission entirely when none is required', () {
       final state = chatConversationTransition(
@@ -225,17 +224,19 @@ void main() {
       expect(state, isA<ChatAwaitingPermission>());
     });
 
-    test('run awaiting approval: AwaitingPermission regardless of the flag',
-        () {
-      final state = chatConversationSnapshot(
-        hasPendingDecision: true,
-        ambiguous: false,
-        hasPreparedCommand: true,
-        awaitingPermission: false,
-        currentRunState: RunState.awaitingApproval,
-      );
-      expect(state, isA<ChatAwaitingPermission>());
-    });
+    test(
+      'run awaiting approval: AwaitingPermission regardless of the flag',
+      () {
+        final state = chatConversationSnapshot(
+          hasPendingDecision: true,
+          ambiguous: false,
+          hasPreparedCommand: true,
+          awaitingPermission: false,
+          currentRunState: RunState.awaitingApproval,
+        );
+        expect(state, isA<ChatAwaitingPermission>());
+      },
+    );
 
     test('run states map to Executing/Completed/Failed/Cancelled', () {
       const executing = <RunState>{

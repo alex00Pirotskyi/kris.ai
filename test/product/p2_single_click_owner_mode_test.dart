@@ -121,13 +121,7 @@ void main() {
       provisioner,
       contains('p2_secure_runtime_materialization_unavailable'),
     );
-    expect(
-      provisioner,
-      contains("'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'"),
-    );
-    expect(
-      provisioner,
-      contains("'KRISTIN_OWNER_RISK_QA'"),
-    );
+    expect(provisioner, contains("'KRISTIN_CURRENT_ACCOUNT_OWNER_PRODUCT'"));
+    expect(provisioner, contains("'KRISTIN_OWNER_RISK_QA'"));
   });
 }

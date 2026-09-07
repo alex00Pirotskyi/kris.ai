@@ -7,6 +7,8 @@ import 'domain.dart';
 import 'knowledge_memory_v2.dart';
 import 'durable_workflow.dart';
 import 'repository.dart';
+import 'run_steering_record.dart';
+import 'task_kernel/command_planning_context.dart';
 
 class ProductException implements Exception {
   ProductException(
@@ -404,6 +406,8 @@ class ProductRepositories {
     required this.secretReferences,
     required this.tokens,
     required this.evidence,
+    required this.runSteeringRecords,
+    required this.commandPlanningContexts,
     required this.settingsFile,
     required this.eventFile,
     required this.auditFile,
@@ -425,6 +429,8 @@ class ProductRepositories {
   final EntityRepository<SecretReference> secretReferences;
   final EntityRepository<ApiTokenRecord> tokens;
   final EntityRepository<EvidenceRecord> evidence;
+  final EntityRepository<RunSteeringRecord> runSteeringRecords;
+  final EntityRepository<CommandPlanningContextRecord> commandPlanningContexts;
   final JsonDocumentRepository settingsFile;
   final File eventFile;
   final File auditFile;
@@ -562,6 +568,18 @@ class ProductRepositories {
       evidence: collection<EvidenceRecord>(
         name: 'evidence',
         fromJson: EvidenceRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      runSteeringRecords: collection<RunSteeringRecord>(
+        name: 'run_steering_records',
+        fromJson: RunSteeringRecord.fromJson,
+        toJson: (value) => value.toJson(),
+        idOf: (value) => value.id,
+      ),
+      commandPlanningContexts: collection<CommandPlanningContextRecord>(
+        name: 'command_planning_contexts',
+        fromJson: CommandPlanningContextRecord.fromJson,
         toJson: (value) => value.toJson(),
         idOf: (value) => value.id,
       ),

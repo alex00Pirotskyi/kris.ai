@@ -71,14 +71,8 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
-      theme: _studioTheme(
-        Brightness.light,
-        reducedMotion: reducedMotion,
-      ),
-      darkTheme: _studioTheme(
-        Brightness.dark,
-        reducedMotion: reducedMotion,
-      ),
+      theme: _studioTheme(Brightness.light, reducedMotion: reducedMotion),
+      darkTheme: _studioTheme(Brightness.dark, reducedMotion: reducedMotion),
       highContrastTheme: _studioTheme(
         Brightness.light,
         highContrast: true,
@@ -90,8 +84,9 @@ class _KristinAppState extends State<KristinApp> with WidgetsBindingObserver {
         reducedMotion: reducedMotion,
       ),
       themeMode: ThemeMode.system,
-      themeAnimationDuration:
-          P5DesignSystem.themeTransitionDuration(reducedMotion),
+      themeAnimationDuration: P5DesignSystem.themeTransitionDuration(
+        reducedMotion,
+      ),
       themeAnimationCurve: Curves.easeOutCubic,
       home: KristinMainShell(
         runtime: widget.runtime,
@@ -353,15 +348,19 @@ class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
     final target = file;
     final directory = target.parent;
     await directory.create(recursive: true);
-    final directoryType =
-        await FileSystemEntity.type(directory.path, followLinks: false);
+    final directoryType = await FileSystemEntity.type(
+      directory.path,
+      followLinks: false,
+    );
     if (directoryType != FileSystemEntityType.directory) {
       throw const FileSystemException(
         'P5 shell layout directory is not a regular directory.',
       );
     }
-    final targetType =
-        await FileSystemEntity.type(target.path, followLinks: false);
+    final targetType = await FileSystemEntity.type(
+      target.path,
+      followLinks: false,
+    );
     if (targetType != FileSystemEntityType.notFound &&
         targetType != FileSystemEntityType.file) {
       throw const FileSystemException(
@@ -369,8 +368,10 @@ class P5ApplicationShellLayoutPersistence implements P5ShellLayoutPersistence {
       );
     }
     final temporary = File('${target.path}.tmp');
-    final temporaryType =
-        await FileSystemEntity.type(temporary.path, followLinks: false);
+    final temporaryType = await FileSystemEntity.type(
+      temporary.path,
+      followLinks: false,
+    );
     if (temporaryType != FileSystemEntityType.notFound) {
       await temporary.delete(recursive: true);
     }

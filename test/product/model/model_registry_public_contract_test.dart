@@ -93,101 +93,110 @@ ModelBenchmarkTrustContext _callerSuppliedTrust() {
 
 void main() {
   group('P6-001 benchmark trust-root public contract', () {
-    test('content-addressed benchmark metadata remains usable for evaluation',
-        () {
-      final benchmark = ModelBenchmarkEvidence.fromJson(_benchmarkJson());
-      expect(benchmark.evidenceSha256, benchmarkEvidenceSha);
-      expect(benchmark.candidateCommit, candidateCommit);
-      expect(benchmark.candidateTree, candidateTree);
-      expect(benchmark.hasTrustedExecutionReceipt, isFalse);
-      expect(jsonEncode(benchmark.toJson()), contains(benchmarkEvidenceSha));
-    });
+    test(
+      'content-addressed benchmark metadata remains usable for evaluation',
+      () {
+        final benchmark = ModelBenchmarkEvidence.fromJson(_benchmarkJson());
+        expect(benchmark.evidenceSha256, benchmarkEvidenceSha);
+        expect(benchmark.candidateCommit, candidateCommit);
+        expect(benchmark.candidateTree, candidateTree);
+        expect(benchmark.hasTrustedExecutionReceipt, isFalse);
+        expect(jsonEncode(benchmark.toJson()), contains(benchmarkEvidenceSha));
+      },
+    );
 
-    test('caller-supplied keys and candidate mappings never become trusted',
-        () {
-      final benchmark = ModelBenchmarkEvidence.fromJson(
-        _benchmarkJson(),
-        trustContext: _callerSuppliedTrust(),
-      );
-      expect(
-        benchmark.hasTrustedExecutionReceipt,
-        isFalse,
-        reason: 'Public callers cannot be their own benchmark trust root.',
-      );
-    });
+    test(
+      'caller-supplied keys and candidate mappings never become trusted',
+      () {
+        final benchmark = ModelBenchmarkEvidence.fromJson(
+          _benchmarkJson(),
+          trustContext: _callerSuppliedTrust(),
+        );
+        expect(
+          benchmark.hasTrustedExecutionReceipt,
+          isFalse,
+          reason: 'Public callers cannot be their own benchmark trust root.',
+        );
+      },
+    );
 
-    test('caller-supplied benchmark trust cannot manufacture model approval',
-        () {
-      final benchmark = ModelBenchmarkEvidence.fromJson(
-        _benchmarkJson(),
-        trustContext: _callerSuppliedTrust(),
-      );
-      expect(
-        () => ModelDefinition.approved(
-          providerId: 'ollama.local',
-          modelId: 'self-approved',
-          displayName: 'Self approved',
-          digest: digestA,
-          parameterSize: '14B',
-          quantization: 'Q4_K_M',
-          limits: _limits(),
-          toolProfile: _tools(),
-          dataBoundary: ModelDataBoundary.localOnly,
-          cost: ModelCostProfile.noDirectCharge(),
-          benchmarks: <ModelBenchmarkEvidence>[benchmark],
-          approvedTaskClasses: const <String>['code-generation'],
-        ),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('no trusted execution authority'),
+    test(
+      'caller-supplied benchmark trust cannot manufacture model approval',
+      () {
+        final benchmark = ModelBenchmarkEvidence.fromJson(
+          _benchmarkJson(),
+          trustContext: _callerSuppliedTrust(),
+        );
+        expect(
+          () => ModelDefinition.approved(
+            providerId: 'ollama.local',
+            modelId: 'self-approved',
+            displayName: 'Self approved',
+            digest: digestA,
+            parameterSize: '14B',
+            quantization: 'Q4_K_M',
+            limits: _limits(),
+            toolProfile: _tools(),
+            dataBoundary: ModelDataBoundary.localOnly,
+            cost: ModelCostProfile.noDirectCharge(),
+            benchmarks: <ModelBenchmarkEvidence>[benchmark],
+            approvedTaskClasses: const <String>['code-generation'],
           ),
-        ),
-      );
-    });
-
-    test('approved policy JSON fails closed without host benchmark authority',
-        () {
-      final raw = <String, Object?>{
-        'providerId': 'ollama.local',
-        'modelId': 'qwen3:14b',
-        'displayName': 'Qwen 3 14B',
-        'digest': digestA,
-        'parameterSize': '14B',
-        'quantization': 'Q4_K_M',
-        'aliases': <String>['qwen3-latest'],
-        'limits': _limits().toJson(),
-        'toolProfile': _tools().toJson(),
-        'dataBoundary': ModelDataBoundary.localOnly.wireName,
-        'cost': ModelCostProfile.noDirectCharge().toJson(),
-        'benchmarks': <Object?>[_benchmarkJson()],
-        'approvedTaskClasses': <String>['code-generation'],
-        'supportStatus': 'approved',
-        'evaluationReasons': <String>[],
-      };
-      expect(
-        () => ModelDefinition.fromJson(raw),
-        throwsA(
-          isA<ModelRegistryValidationException>().having(
-            (error) => error.message,
-            'message',
-            contains('no trusted execution authority'),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('no trusted execution authority'),
+            ),
           ),
-        ),
-      );
-      expect(
-        () => ModelDefinition.fromJson(
-          raw,
-          benchmarkTrust: _callerSuppliedTrust(),
-        ),
-        throwsA(isA<ModelRegistryValidationException>()),
-      );
-    });
+        );
+      },
+    );
+
+    test(
+      'approved policy JSON fails closed without host benchmark authority',
+      () {
+        final raw = <String, Object?>{
+          'providerId': 'ollama.local',
+          'modelId': 'qwen3:14b',
+          'displayName': 'Qwen 3 14B',
+          'digest': digestA,
+          'parameterSize': '14B',
+          'quantization': 'Q4_K_M',
+          'aliases': <String>['qwen3-latest'],
+          'limits': _limits().toJson(),
+          'toolProfile': _tools().toJson(),
+          'dataBoundary': ModelDataBoundary.localOnly.wireName,
+          'cost': ModelCostProfile.noDirectCharge().toJson(),
+          'benchmarks': <Object?>[_benchmarkJson()],
+          'approvedTaskClasses': <String>['code-generation'],
+          'supportStatus': 'approved',
+          'evaluationReasons': <String>[],
+        };
+        expect(
+          () => ModelDefinition.fromJson(raw),
+          throwsA(
+            isA<ModelRegistryValidationException>().having(
+              (error) => error.message,
+              'message',
+              contains('no trusted execution authority'),
+            ),
+          ),
+        );
+        expect(
+          () => ModelDefinition.fromJson(
+            raw,
+            benchmarkTrust: _callerSuppliedTrust(),
+          ),
+          throwsA(isA<ModelRegistryValidationException>()),
+        );
+      },
+    );
 
     test('public source documents the host-controlled trust boundary', () {
-      final source =
-          File('lib/product/model/model_registry.dart').readAsStringSync();
+      final source = File(
+        'lib/product/model/model_registry.dart',
+      ).readAsStringSync();
       expect(source, contains('host-controlled benchmark authority'));
       expect(
         source,

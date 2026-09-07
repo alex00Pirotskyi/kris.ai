@@ -170,10 +170,7 @@ void main() {
       if (Platform.isWindows) return;
       final temp = await Directory.systemTemp.createTemp('p3-browser-links-');
       addTearDown(() => temp.delete(recursive: true));
-      final root = await _writeBundle(
-        temp,
-        withInternalBrowserSymlinks: true,
-      );
+      final root = await _writeBundle(temp, withInternalBrowserSymlinks: true);
       final resolver = P3ApplicationOwnedBrowserRuntimeResolver(
         applicationDataRoot: temp.absolute,
       );

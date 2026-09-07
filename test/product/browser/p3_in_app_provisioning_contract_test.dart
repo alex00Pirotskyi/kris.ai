@@ -29,10 +29,7 @@ void main() {
     expect(network['globalBrowserFallback'], isFalse);
     expect(network['systemChromeFallback'], isFalse);
     expect(node['url'], startsWith('https://nodejs.org/dist/v24.18.0/'));
-    expect(
-      node['archiveSha256'],
-      matches(RegExp(r'^[0-9a-f]{64}$')),
-    );
+    expect(node['archiveSha256'], matches(RegExp(r'^[0-9a-f]{64}$')));
     expect(
       node['executableSha256'],
       '9a4eb5f1c29c6a2e93852ead46b999e284a6a5ca8bab4d4e241d587d025a52de',
@@ -131,10 +128,7 @@ void main() {
         'lib/product/product_runtime_provisioning.dart',
       ).readAsStringSync();
 
-      expect(
-        bridge,
-        contains('_runtimeProvisioningStates[this] = created;'),
-      );
+      expect(bridge, contains('_runtimeProvisioningStates[this] = created;'));
       expect(bridge, contains('_attachProvisionedResearchBrowser(this);'));
       expect(bridge, contains('P4BrowserAwareResearchService'));
       expect(bridge, contains('attachRenderedPageLoader'));

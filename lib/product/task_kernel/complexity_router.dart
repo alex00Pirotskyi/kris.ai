@@ -178,10 +178,7 @@ class ComplexityRouter {
   /// cost. Below it, a compact plan does the same job with less ceremony.
   static const int _graphThreshold = 4;
 
-  int _weigh(
-    TaskSpecification specification,
-    KristinCapability capability,
-  ) {
+  int _weigh(TaskSpecification specification, KristinCapability capability) {
     var weight = 0;
     if (capability.actionClass == ChatActionClass.substantial) weight += 2;
     // Provisioning a brand-new project is inherently multi-stage --

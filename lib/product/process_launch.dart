@@ -10,10 +10,7 @@ class ProcessLaunchTarget {
   final bool runInShell;
 }
 
-bool requiresWindowsCommandShell(
-  String executable, {
-  bool? isWindows,
-}) {
+bool requiresWindowsCommandShell(String executable, {bool? isWindows}) {
   final windows = isWindows ?? Platform.isWindows;
   if (!windows) {
     return false;

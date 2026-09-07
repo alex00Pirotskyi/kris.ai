@@ -254,11 +254,7 @@ class SourceIndexService {
     ).read(fallback: <String, dynamic>{'entries': <Object>[]});
     final entriesRaw = mapValue(raw)['entries'];
     if (entriesRaw is! List) {
-      span.finish(
-        itemCount: 0,
-        bytesConsidered: indexBytes,
-        candidateCount: 0,
-      );
+      span.finish(itemCount: 0, bytesConsidered: indexBytes, candidateCount: 0);
       return <Map<String, dynamic>>[];
     }
     final terms = RegExp(

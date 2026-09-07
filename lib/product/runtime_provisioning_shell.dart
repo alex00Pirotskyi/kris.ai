@@ -68,14 +68,8 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
     return MaterialApp(
       title: 'Kristin Local Agent',
       debugShowCheckedModeBanner: false,
-      theme: _runtimeTheme(
-        Brightness.light,
-        reducedMotion: reducedMotion,
-      ),
-      darkTheme: _runtimeTheme(
-        Brightness.dark,
-        reducedMotion: reducedMotion,
-      ),
+      theme: _runtimeTheme(Brightness.light, reducedMotion: reducedMotion),
+      darkTheme: _runtimeTheme(Brightness.dark, reducedMotion: reducedMotion),
       highContrastTheme: _runtimeTheme(
         Brightness.light,
         highContrast: true,
@@ -87,8 +81,9 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
         reducedMotion: reducedMotion,
       ),
       themeMode: ThemeMode.system,
-      themeAnimationDuration:
-          P5DesignSystem.themeTransitionDuration(reducedMotion),
+      themeAnimationDuration: P5DesignSystem.themeTransitionDuration(
+        reducedMotion,
+      ),
       themeAnimationCurve: Curves.easeOutCubic,
       home: _ProvisioningMainShell(
         runtime: widget.runtime,
@@ -103,10 +98,7 @@ class _ProvisioningKristinAppState extends State<ProvisioningKristinApp>
 }
 
 class _ProvisioningMainShell extends StatefulWidget {
-  const _ProvisioningMainShell({
-    required this.runtime,
-    required this.chat,
-  });
+  const _ProvisioningMainShell({required this.runtime, required this.chat});
 
   final ProductRuntime runtime;
   final Widget chat;
@@ -292,11 +284,7 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
   Widget build(BuildContext context) {
     final ownerAvailable = _ownerMode.available;
     final qaPreview = _ownerMode.runtimeProvenance['qaPreview'] == true;
-    final pages = <Widget>[
-      widget.chat,
-      _experiencePage(),
-      _ownerPage(),
-    ];
+    final pages = <Widget>[widget.chat, _experiencePage(), _ownerPage()];
     final wide = MediaQuery.sizeOf(context).width >= 1100;
     final workspaceBody = wide
         ? Row(
@@ -335,7 +323,9 @@ class _ProvisioningMainShellState extends State<_ProvisioningMainShell> {
                 ],
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: IndexedStack(index: _index, children: pages)),
+              Expanded(
+                child: IndexedStack(index: _index, children: pages),
+              ),
             ],
           )
         : IndexedStack(index: _index, children: pages);

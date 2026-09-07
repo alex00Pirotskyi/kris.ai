@@ -5,15 +5,7 @@ import 'dart:io';
 import 'crypto_utils.dart';
 import 'domain.dart';
 
-enum P8TelemetryCategory {
-  model,
-  policy,
-  tool,
-  terminal,
-  browser,
-  web,
-  update,
-}
+enum P8TelemetryCategory { model, policy, tool, terminal, browser, web, update }
 
 extension P8TelemetryCategoryWire on P8TelemetryCategory {
   String get wireName => name;
@@ -159,7 +151,8 @@ class P8TelemetryBuffer {
       ..sort();
     if (unknownKeys.isNotEmpty) {
       throw StateError(
-          'telemetry_attribute_not_allowlisted:${unknownKeys.join(',')}');
+        'telemetry_attribute_not_allowlisted:${unknownKeys.join(',')}',
+      );
     }
     final hashed = <String, String>{};
     if (_policy.hashSensitiveIdentifiers) {

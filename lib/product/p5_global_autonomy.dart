@@ -249,13 +249,16 @@ class P5GlobalAutonomyController extends P5GlobalAutonomyBinding {
           .where((session) => _p5ActiveRunStates.contains(session.state))
           .toList(growable: false);
       final owner = _ownerPort.snapshot();
-      final running =
-          active.any((session) => session.state == RunState.running);
-      final stoppable = active
-          .any((session) => _p5StoppableRunStates.contains(session.state));
+      final running = active.any(
+        (session) => session.state == RunState.running,
+      );
+      final stoppable = active.any(
+        (session) => _p5StoppableRunStates.contains(session.state),
+      );
       final model = active.isEmpty ? null : active.first.modelLabel;
-      final networkRequested =
-          active.any((session) => session.networkRequested);
+      final networkRequested = active.any(
+        (session) => session.networkRequested,
+      );
       final profile = owner.ownerEnabled
           ? owner.profileId
           : active.isNotEmpty
@@ -603,10 +606,7 @@ class _P5AutonomyStatusChip extends StatelessWidget {
   Widget build(BuildContext context) => Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: Chip(
-            avatar: Icon(icon, size: 16),
-            label: Text(label),
-          ),
+          child: Chip(avatar: Icon(icon, size: 16), label: Text(label)),
         ),
       );
 }

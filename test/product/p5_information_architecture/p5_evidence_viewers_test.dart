@@ -53,107 +53,113 @@ void main() {
     controller.selectEvidence('evidence.run.other.json');
     expect(controller.state.selectedEvidenceId, isNull);
     expect(
-        controller.state.recoveryMessage, contains('is not part of saved run'));
+      controller.state.recoveryMessage,
+      contains('is not part of saved run'),
+    );
   });
 
   testWidgets(
-      'P5-009 reopens every viewer from a saved run and retains selection',
-      (tester) async {
-    tester.view.physicalSize = const Size(1440, 1100);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+    'P5-009 reopens every viewer from a saved run and retains selection',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final controller = P5InformationArchitectureController();
-    controller.changeExperienceLevel(P5ExperienceLevel.advanced);
-    controller.selectRun('run.p5-complete-001');
-    controller.selectWorkspace(P5WorkspaceId.evidence);
+      final controller = P5InformationArchitectureController();
+      controller.changeExperienceLevel(P5ExperienceLevel.advanced);
+      controller.selectRun('run.p5-complete-001');
+      controller.selectWorkspace(P5WorkspaceId.evidence);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: P5InformationArchitecturePrototype(controller: controller),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: P5InformationArchitecturePrototype(controller: controller),
+          ),
         ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byKey(const Key('saved-run-evidence-index')), findsOneWidget);
-    expect(
-      find.byKey(const Key('evidence-viewer-textMetadata')),
-      findsNothing,
-    );
-    expect(
-      find.text(
-        'Choose a supported saved-run evidence type to open its viewer.',
-      ),
-      findsOneWidget,
-    );
-    for (final kind in P5EvidenceKind.values) {
-      final item = find.byKey(Key('evidence-item-${kind.name}'));
-      expect(item, findsOneWidget);
-      await tester.ensureVisible(item);
-      await tester.tap(item);
+      );
       await tester.pump();
-      final viewer = find.byKey(Key('evidence-viewer-${kind.name}'));
-      expect(viewer, findsOneWidget);
-      expect(controller.state.selectedEvidenceId, contains(kind.name));
-      if (kind == P5EvidenceKind.image) {
-        final image = find.descendant(
-          of: viewer,
-          matching: find.byKey(const Key('p5-evidence-image-bytes')),
-        );
-        expect(image, findsOneWidget);
-        final widget = tester.widget<Image>(image);
-        expect(widget.image, isA<MemoryImage>());
-        final provider = widget.image as MemoryImage;
-        expect(
-          provider.bytes.take(8),
-          orderedEquals(<int>[137, 80, 78, 71, 13, 10, 26, 10]),
-        );
-      }
-    }
 
-    final selectedId = controller.state.selectedEvidenceId;
-    expect(selectedId, contains(P5EvidenceKind.receipt.name));
-    controller.selectWorkspace(P5WorkspaceId.projects);
-    await tester.pump();
-    controller.selectWorkspace(P5WorkspaceId.evidence);
-    await tester.pump();
-    expect(controller.state.selectedEvidenceId, selectedId);
-    expect(
-      find.byKey(Key('evidence-viewer-${P5EvidenceKind.receipt.name}')),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('P5-009 current in-memory run does not fabricate saved evidence',
-      (tester) async {
-    tester.view.physicalSize = const Size(1280, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final initial = P5PrototypeFixtures.initialState().copyWith(
-      experienceLevel: P5ExperienceLevel.advanced,
-      workspace: P5WorkspaceId.evidence,
-      reopenWorkspace: P5WorkspaceId.evidence,
-      selectedRunId: 'run.p5-simulated-current',
-      runState: P5RunPresentationState.running,
-    );
-    final controller =
-        P5InformationArchitectureController(initialState: initial);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: P5InformationArchitecturePrototype(controller: controller),
+      expect(find.byKey(const Key('saved-run-evidence-index')), findsOneWidget);
+      expect(
+        find.byKey(const Key('evidence-viewer-textMetadata')),
+        findsNothing,
+      );
+      expect(
+        find.text(
+          'Choose a supported saved-run evidence type to open its viewer.',
         ),
-      ),
-    );
-    await tester.pump();
+        findsOneWidget,
+      );
+      for (final kind in P5EvidenceKind.values) {
+        final item = find.byKey(Key('evidence-item-${kind.name}'));
+        expect(item, findsOneWidget);
+        await tester.ensureVisible(item);
+        await tester.tap(item);
+        await tester.pump();
+        final viewer = find.byKey(Key('evidence-viewer-${kind.name}'));
+        expect(viewer, findsOneWidget);
+        expect(controller.state.selectedEvidenceId, contains(kind.name));
+        if (kind == P5EvidenceKind.image) {
+          final image = find.descendant(
+            of: viewer,
+            matching: find.byKey(const Key('p5-evidence-image-bytes')),
+          );
+          expect(image, findsOneWidget);
+          final widget = tester.widget<Image>(image);
+          expect(widget.image, isA<MemoryImage>());
+          final provider = widget.image as MemoryImage;
+          expect(
+            provider.bytes.take(8),
+            orderedEquals(<int>[137, 80, 78, 71, 13, 10, 26, 10]),
+          );
+        }
+      }
 
-    expect(find.byKey(const Key('evidence-no-saved-run')), findsOneWidget);
-    expect(find.byKey(const Key('saved-run-evidence-index')), findsNothing);
-  });
+      final selectedId = controller.state.selectedEvidenceId;
+      expect(selectedId, contains(P5EvidenceKind.receipt.name));
+      controller.selectWorkspace(P5WorkspaceId.projects);
+      await tester.pump();
+      controller.selectWorkspace(P5WorkspaceId.evidence);
+      await tester.pump();
+      expect(controller.state.selectedEvidenceId, selectedId);
+      expect(
+        find.byKey(Key('evidence-viewer-${P5EvidenceKind.receipt.name}')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'P5-009 current in-memory run does not fabricate saved evidence',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final initial = P5PrototypeFixtures.initialState().copyWith(
+        experienceLevel: P5ExperienceLevel.advanced,
+        workspace: P5WorkspaceId.evidence,
+        reopenWorkspace: P5WorkspaceId.evidence,
+        selectedRunId: 'run.p5-simulated-current',
+        runState: P5RunPresentationState.running,
+      );
+      final controller = P5InformationArchitectureController(
+        initialState: initial,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: P5InformationArchitecturePrototype(controller: controller),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byKey(const Key('evidence-no-saved-run')), findsOneWidget);
+      expect(find.byKey(const Key('saved-run-evidence-index')), findsNothing);
+    },
+  );
 }

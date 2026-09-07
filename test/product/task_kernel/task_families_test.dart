@@ -83,44 +83,49 @@ void main() {
         isTrue,
         reason: 'freshness must be verified before synthesis',
       );
-      final synthesis =
-          plan.tasks.firstWhere((task) => task.phase == 'Synthesis');
+      final synthesis = plan.tasks.firstWhere(
+        (task) => task.phase == 'Synthesis',
+      );
       expect(
         synthesis.dependencies.single,
         plan.tasks.firstWhere((task) => task.phase == 'Verification').id,
       );
     });
 
-    test('the graph exists but stays hidden -- planning is not display',
-        () async {
-      final plan = await const ResearchTaskFamilyPlanner().plan(
-        specification: weatherAndTime(),
-        route: PlanningRoute.compact,
-        context: contextWith(),
-      );
-      // Real tasks, really executed and verified...
-      expect(plan.enabledTasks.length, greaterThanOrEqualTo(4));
-      // ...and zero task cards for a two-fact question.
-      expect(plan.visibleTasks, isEmpty);
-    });
+    test(
+      'the graph exists but stays hidden -- planning is not display',
+      () async {
+        final plan = await const ResearchTaskFamilyPlanner().plan(
+          specification: weatherAndTime(),
+          route: PlanningRoute.compact,
+          context: contextWith(),
+        );
+        // Real tasks, really executed and verified...
+        expect(plan.enabledTasks.length, greaterThanOrEqualTo(4));
+        // ...and zero task cards for a two-fact question.
+        expect(plan.visibleTasks, isEmpty);
+      },
+    );
 
-    test('a single-subject question still produces one grounded retrieval',
-        () async {
-      final plan = await const ResearchTaskFamilyPlanner().plan(
-        specification: TaskSpecification(
-          id: 'spec_single',
-          originalRequest: 'What is the current price of gold?',
-          objective: 'Find the current price of gold',
-        ),
-        route: PlanningRoute.compact,
-        context: contextWith(),
-      );
-      expect(plan.validate(), isEmpty);
-      expect(
-        plan.tasks.where((task) => task.phase == 'Retrieval'),
-        hasLength(1),
-      );
-    });
+    test(
+      'a single-subject question still produces one grounded retrieval',
+      () async {
+        final plan = await const ResearchTaskFamilyPlanner().plan(
+          specification: TaskSpecification(
+            id: 'spec_single',
+            originalRequest: 'What is the current price of gold?',
+            objective: 'Find the current price of gold',
+          ),
+          route: PlanningRoute.compact,
+          context: contextWith(),
+        );
+        expect(plan.validate(), isEmpty);
+        expect(
+          plan.tasks.where((task) => task.phase == 'Retrieval'),
+          hasLength(1),
+        );
+      },
+    );
   });
 
   group('DIAGNOSTICS family', () {
@@ -138,8 +143,9 @@ void main() {
       expect(plan.validate(), isEmpty);
       expect(plan.family, TaskFamily.diagnostics);
       final collect = plan.tasks.firstWhere((task) => task.phase == 'Evidence');
-      final interpret =
-          plan.tasks.firstWhere((task) => task.phase == 'Analysis');
+      final interpret = plan.tasks.firstWhere(
+        (task) => task.phase == 'Analysis',
+      );
       final answer = plan.tasks.firstWhere((task) => task.phase == 'Synthesis');
       // Evidence -> analysis -> answer, enforced by the graph rather than
       // by hoping the executor does them in order.
@@ -173,33 +179,37 @@ void main() {
           ],
         );
 
-    test('produces resolve / effect / verify, not implementation trivia',
-        () async {
-      final plan = await const OwnerTaskFamilyPlanner().plan(
-        specification: desktopFile(),
-        route: PlanningRoute.compact,
-        context: contextWith(),
-      );
-      expect(plan.validate(), isEmpty);
-      expect(plan.family, TaskFamily.owner);
-      expect(
-        plan.phases,
-        containsAll(<String>['Authority', 'Effect', 'Verification']),
-      );
-      // Authority is resolved BEFORE the effect, structurally.
-      final resolve =
-          plan.tasks.firstWhere((task) => task.phase == 'Authority');
-      final effect = plan.tasks.firstWhere((task) => task.phase == 'Effect');
-      final verify =
-          plan.tasks.firstWhere((task) => task.phase == 'Verification');
-      expect(effect.dependencies, contains(resolve.id));
-      expect(verify.dependencies, contains(effect.id));
-      // No open-handle/write-bytes/flush/close noise.
-      final titles = plan.tasks.map((task) => task.title.toLowerCase());
-      for (final trivia in <String>['open handle', 'flush', 'write bytes']) {
-        expect(titles.any((title) => title.contains(trivia)), isFalse);
-      }
-    });
+    test(
+      'produces resolve / effect / verify, not implementation trivia',
+      () async {
+        final plan = await const OwnerTaskFamilyPlanner().plan(
+          specification: desktopFile(),
+          route: PlanningRoute.compact,
+          context: contextWith(),
+        );
+        expect(plan.validate(), isEmpty);
+        expect(plan.family, TaskFamily.owner);
+        expect(
+          plan.phases,
+          containsAll(<String>['Authority', 'Effect', 'Verification']),
+        );
+        // Authority is resolved BEFORE the effect, structurally.
+        final resolve = plan.tasks.firstWhere(
+          (task) => task.phase == 'Authority',
+        );
+        final effect = plan.tasks.firstWhere((task) => task.phase == 'Effect');
+        final verify = plan.tasks.firstWhere(
+          (task) => task.phase == 'Verification',
+        );
+        expect(effect.dependencies, contains(resolve.id));
+        expect(verify.dependencies, contains(effect.id));
+        // No open-handle/write-bytes/flush/close noise.
+        final titles = plan.tasks.map((task) => task.title.toLowerCase());
+        for (final trivia in <String>['open handle', 'flush', 'write bytes']) {
+          expect(titles.any((title) => title.contains(trivia)), isFalse);
+        }
+      },
+    );
 
     test('an Owner plan REQUIRES a capability; it never grants one', () async {
       final plan = await const OwnerTaskFamilyPlanner().plan(
@@ -274,8 +284,10 @@ void main() {
       // executor receives, not merely in the request text.
       expect(
         compiled.contract.constraints.join(' | '),
-        contains('Hard constraint (must not be violated): Only this file '
-            'may be affected.'),
+        contains(
+          'Hard constraint (must not be violated): Only this file '
+          'may be affected.',
+        ),
       );
       expect(
         compiled.contract.constraints.join(' | '),

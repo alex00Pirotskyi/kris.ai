@@ -108,15 +108,12 @@ final class P4ResearchContentStore {
   final Directory root;
   final DateTime Function() _clock;
 
-  Directory get _objects => Directory(
-        '${root.path}${Platform.pathSeparator}objects',
-      );
-  Directory get _fetches => Directory(
-        '${root.path}${Platform.pathSeparator}fetches',
-      );
-  Directory get _citations => Directory(
-        '${root.path}${Platform.pathSeparator}citations',
-      );
+  Directory get _objects =>
+      Directory('${root.path}${Platform.pathSeparator}objects');
+  Directory get _fetches =>
+      Directory('${root.path}${Platform.pathSeparator}fetches');
+  Directory get _citations =>
+      Directory('${root.path}${Platform.pathSeparator}citations');
 
   Future<void> initialize() async {
     await _objects.create(recursive: true);
@@ -182,8 +179,10 @@ final class P4ResearchContentStore {
     List<int>? screenshotBytes,
   }) async {
     await initialize();
-    final raw =
-        await putObject(rawBytes, mediaType: 'application/octet-stream');
+    final raw = await putObject(
+      rawBytes,
+      mediaType: 'application/octet-stream',
+    );
     final extractionBytes = utf8.encode(canonicalJson(extraction));
     final extracted = await putObject(
       extractionBytes,
@@ -239,7 +238,7 @@ final class P4ResearchContentStore {
           'extractionHash': fetch.extractionHash,
           'start': start,
           'end': end,
-          'claim': claim,
+          'claim': claim
         })).substring(0, 32)}';
     final citation = P4CitationSpan(
       id: id,
@@ -265,19 +264,21 @@ final class P4ResearchContentStore {
       final raw = jsonDecode(await entity.readAsString());
       if (raw is! Map) continue;
       final value = raw.map((key, item) => MapEntry(key.toString(), item));
-      output.add(P4FetchVersion(
-        id: value['id']!.toString(),
-        url: value['url']!.toString(),
-        canonicalUrl: value['canonicalUrl']!.toString(),
-        fetchedAt: DateTime.parse(value['fetchedAt']!.toString()).toUtc(),
-        rawObjectSha256: value['rawObjectSha256']!.toString(),
-        renderedObjectSha256: value['renderedObjectSha256']?.toString(),
-        screenshotObjectSha256: value['screenshotObjectSha256']?.toString(),
-        extractionObjectSha256: value['extractionObjectSha256']!.toString(),
-        extractionHash: value['extractionHash']!.toString(),
-        title: value['title']!.toString(),
-        trustLabel: value['trustLabel']!.toString(),
-      ));
+      output.add(
+        P4FetchVersion(
+          id: value['id']!.toString(),
+          url: value['url']!.toString(),
+          canonicalUrl: value['canonicalUrl']!.toString(),
+          fetchedAt: DateTime.parse(value['fetchedAt']!.toString()).toUtc(),
+          rawObjectSha256: value['rawObjectSha256']!.toString(),
+          renderedObjectSha256: value['renderedObjectSha256']?.toString(),
+          screenshotObjectSha256: value['screenshotObjectSha256']?.toString(),
+          extractionObjectSha256: value['extractionObjectSha256']!.toString(),
+          extractionHash: value['extractionHash']!.toString(),
+          title: value['title']!.toString(),
+          trustLabel: value['trustLabel']!.toString(),
+        ),
+      );
     }
     output.sort((a, b) => b.fetchedAt.compareTo(a.fetchedAt));
     return List<P4FetchVersion>.unmodifiable(output);
@@ -314,8 +315,11 @@ final class P4LexicalHit {
 }
 
 abstract interface class P4SemanticIndex {
-  Future<List<String>> searchIds(String query,
-      {required String scope, int limit});
+  Future<List<String>> searchIds(
+    String query, {
+    required String scope,
+    int limit,
+  });
 }
 
 final class P4LexicalIndex {
@@ -345,10 +349,9 @@ final class P4LexicalIndex {
     int limit = 20,
     bool semanticPreferred = false,
   }) async {
-    final terms = RegExp(r'[A-Za-z0-9]{2,}')
-        .allMatches(query.toLowerCase())
-        .map((match) => match.group(0)!)
-        .toSet();
+    final terms = RegExp(
+      r'[A-Za-z0-9]{2,}',
+    ).allMatches(query.toLowerCase()).map((match) => match.group(0)!).toSet();
     if (terms.isEmpty || limit < 1 || limit > 200) {
       throw const P4ResearchException('research_index_query_invalid');
     }
@@ -485,9 +488,11 @@ final class P4DatasetEngine {
             (args['fields'] as List?)?.map((e) => e.toString()).toList() ??
                 const <String>[];
         return rows
-            .map((row) => <String, Object?>{
-                  for (final field in fields) field: row[field],
-                })
+            .map(
+              (row) => <String, Object?>{
+                for (final field in fields) field: row[field],
+              },
+            )
             .toList();
       case P4DatasetTransformKind.rename:
         final from = args['from']?.toString() ?? '';
@@ -536,8 +541,9 @@ final class P4DatasetEngine {
                 const <String>[];
         final seen = <String>{};
         return rows.where((row) {
-          final key = canonicalJson(
-              <String, Object?>{for (final field in fields) field: row[field]});
+          final key = canonicalJson(<String, Object?>{
+            for (final field in fields) field: row[field],
+          });
           return seen.add(key);
         }).toList();
       case P4DatasetTransformKind.normalizeText:
@@ -546,8 +552,10 @@ final class P4DatasetEngine {
           final copy = Map<String, Object?>.from(row);
           final value = copy[field];
           if (value != null) {
-            copy[field] =
-                value.toString().trim().replaceAll(RegExp(r'\s+'), ' ');
+            copy[field] = value.toString().trim().replaceAll(
+                  RegExp(r'\s+'),
+                  ' ',
+                );
           }
           return copy;
         }).toList();
@@ -597,7 +605,8 @@ final class P4DatasetEngine {
         final lines = <String>[
           fields.map(escape).join(','),
           ...version.rows.map(
-              (row) => fields.map((field) => escape(row[field])).join(',')),
+            (row) => fields.map((field) => escape(row[field])).join(','),
+          ),
         ];
         await file.writeAsString('${lines.join(newline)}$newline', flush: true);
       case 'markdown':
@@ -633,21 +642,25 @@ final class P4DatasetEngine {
               return '$quote${field.replaceAll(quote, escapedQuote)}$quote';
             }).join(', ');
             final placeholders = List.filled(fields.length, '?').join(', ');
-            final statement = db
-                .prepare('INSERT INTO data ($columns) VALUES ($placeholders)');
+            final statement = db.prepare(
+              'INSERT INTO data ($columns) VALUES ($placeholders)',
+            );
             try {
               for (final row in version.rows) {
                 statement.execute(
-                    fields.map((field) => row[field]?.toString()).toList());
+                  fields.map((field) => row[field]?.toString()).toList(),
+                );
               }
             } finally {
               statement.dispose();
             }
           }
           db.execute(
-              'CREATE TABLE manifest (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
-          final statement =
-              db.prepare('INSERT INTO manifest (key, value) VALUES (?, ?)');
+            'CREATE TABLE manifest (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+          );
+          final statement = db.prepare(
+            'INSERT INTO manifest (key, value) VALUES (?, ?)',
+          );
           try {
             statement.execute(<Object?>['datasetVersionId', version.id]);
             statement.execute(<Object?>['manifestHash', version.manifestHash]);

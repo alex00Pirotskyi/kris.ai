@@ -46,9 +46,9 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final state = _runtimeProvisioningState;
     if (state.ownerMode.available && !repair) {
       if (!identical(state.ownerMode, p2OwnerMode)) {
-        return adoptProvisionedOwnerMode(state.ownerMode).then(
-          (_) => state.ownerMode,
-        );
+        return adoptProvisionedOwnerMode(
+          state.ownerMode,
+        ).then((_) => state.ownerMode);
       }
       return Future<P2ProductRuntimeOwnerModeHandle>.value(state.ownerMode);
     }
@@ -73,12 +73,13 @@ extension ProductRuntimeProvisioning on ProductRuntime {
     final inFlight = state.browserInFlight;
     if (inFlight != null) return inFlight;
     late final Future<P3BrowserRuntimeResourceSet> operation;
-    operation =
-        _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(() {
-      if (identical(state.browserInFlight, operation)) {
-        state.browserInFlight = null;
-      }
-    });
+    operation = _ensureBrowserRuntimeReady(state, repair: repair).whenComplete(
+      () {
+        if (identical(state.browserInFlight, operation)) {
+          state.browserInFlight = null;
+        }
+      },
+    );
     state.browserInFlight = operation;
     return operation;
   }

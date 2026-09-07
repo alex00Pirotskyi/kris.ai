@@ -52,15 +52,30 @@ void main() {
         rationale: 'Build the flow incrementally.',
         tasks: <UniversalTask>[
           task('task_001', 'Foundation'),
-          task('task_002', 'UI',
-              parentId: 'task_001', dependencies: <String>{'task_001'}),
-          task('task_003', 'Conversion',
-              parentId: 'task_001', dependencies: <String>{'task_001'}),
-          task('task_004', 'UI',
-              parentId: 'task_002',
-              dependencies: <String>{'task_002', 'task_003'}),
-          task('task_005', 'Qualification',
-              parentId: 'task_001', dependencies: <String>{'task_004'}),
+          task(
+            'task_002',
+            'UI',
+            parentId: 'task_001',
+            dependencies: <String>{'task_001'},
+          ),
+          task(
+            'task_003',
+            'Conversion',
+            parentId: 'task_001',
+            dependencies: <String>{'task_001'},
+          ),
+          task(
+            'task_004',
+            'UI',
+            parentId: 'task_002',
+            dependencies: <String>{'task_002', 'task_003'},
+          ),
+          task(
+            'task_005',
+            'Qualification',
+            parentId: 'task_001',
+            dependencies: <String>{'task_004'},
+          ),
         ],
       );
 
@@ -112,15 +127,18 @@ void main() {
 
     test('the canonical plan exposes the same stage grouping the UI shows', () {
       final plan = mp3Plan();
-      expect(
-        plan.phases,
-        <String>['Foundation', 'UI', 'Conversion', 'Qualification'],
-      );
+      expect(plan.phases, <String>[
+        'Foundation',
+        'UI',
+        'Conversion',
+        'Qualification',
+      ]);
       expect(plan.roots.map((task) => task.id), <String>['task_001']);
-      expect(
-        plan.childrenOf('task_001').map((task) => task.id),
-        <String>['task_002', 'task_003', 'task_005'],
-      );
+      expect(plan.childrenOf('task_001').map((task) => task.id), <String>[
+        'task_002',
+        'task_003',
+        'task_005',
+      ]);
     });
   });
 
@@ -145,8 +163,10 @@ void main() {
     test('a partial selection never leaves a dangling parent pointer', () {
       // task_004's parent (task_002) is pulled in as a dependency, but
       // selecting only task_003 excludes its parent task_001's children.
-      final compiled =
-          compile(mp3Plan(), selectedTaskIds: <String>{'task_003'});
+      final compiled = compile(
+        mp3Plan(),
+        selectedTaskIds: <String>{'task_003'},
+      );
       expect(compiled.plan.validate(), isEmpty);
       final ids = compiled.plan.items.map((item) => item.id).toSet();
       for (final item in compiled.plan.items) {

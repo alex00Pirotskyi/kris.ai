@@ -29,11 +29,7 @@ class ModelRegistryValidationException implements Exception {
 
 enum ModelSupportStatus { evaluationOnly, approved }
 
-enum ModelDataBoundary {
-  localOnly,
-  customerManagedEndpoint,
-  thirdPartyService,
-}
+enum ModelDataBoundary { localOnly, customerManagedEndpoint, thirdPartyService }
 
 enum ModelEvidenceLevel { unknown, declared, measured }
 
@@ -130,11 +126,7 @@ List<Object?> _objectList(Object? raw, String path) {
   return List<Object?>.from(raw);
 }
 
-String _requiredString(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+String _requiredString(Map<String, Object?> json, String key, String path) {
   final value = json[key];
   if (value is! String || value.trim().isEmpty) {
     throw ModelRegistryValidationException('$path.$key must be non-empty');
@@ -142,11 +134,7 @@ String _requiredString(
   return value;
 }
 
-String? _optionalString(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+String? _optionalString(Map<String, Object?> json, String key, String path) {
   final value = json[key];
   if (value == null) {
     return null;
@@ -203,11 +191,7 @@ void _rejectUnknownKeys(
   }
 }
 
-List<String> _stringList(
-  Map<String, Object?> json,
-  String key,
-  String path,
-) {
+List<String> _stringList(Map<String, Object?> json, String key, String path) {
   return _objectList(json[key] ?? const <Object?>[], '$path.$key').map((value) {
     if (value is! String) {
       throw ModelRegistryValidationException(
@@ -307,7 +291,8 @@ Object? _canonicalizeJson(Object? value, String path) {
   if (value is num) {
     if (!value.isFinite) {
       throw ModelRegistryValidationException(
-          '$path contains non-finite number');
+        '$path contains non-finite number',
+      );
     }
     return value;
   }
@@ -514,9 +499,7 @@ DateTime _parseUtcTimestamp(String raw, String path) {
     );
   }
   if (!value.isUtc) {
-    throw ModelRegistryValidationException(
-      '$path must include a UTC offset',
-    );
+    throw ModelRegistryValidationException('$path must include a UTC offset');
   }
   return value.toUtc();
 }
@@ -587,17 +570,16 @@ class ModelLimits {
 
   factory ModelLimits.fromJson(Map<String, Object?> json) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'evidenceLevel',
-        'contextWindowTokens',
-        'maxOutputTokens',
-        'maxConcurrentRequests',
-        'maxToolCallsPerTurn',
-        'supportsStreaming',
-      },
-      'limits',
-    );
+        json,
+        const <String>{
+          'evidenceLevel',
+          'contextWindowTokens',
+          'maxOutputTokens',
+          'maxConcurrentRequests',
+          'maxToolCallsPerTurn',
+          'supportsStreaming',
+        },
+        'limits');
     return ModelLimits(
       evidenceLevel: _parseEvidenceLevel(
         json['evidenceLevel'],
@@ -605,8 +587,11 @@ class ModelLimits {
       ),
       contextWindowTokens: _optionalInt(json, 'contextWindowTokens', 'limits'),
       maxOutputTokens: _optionalInt(json, 'maxOutputTokens', 'limits'),
-      maxConcurrentRequests:
-          _optionalInt(json, 'maxConcurrentRequests', 'limits'),
+      maxConcurrentRequests: _optionalInt(
+        json,
+        'maxConcurrentRequests',
+        'limits',
+      ),
       maxToolCallsPerTurn: _optionalInt(json, 'maxToolCallsPerTurn', 'limits'),
       supportsStreaming: _requiredBool(json, 'supportsStreaming', 'limits'),
     );
@@ -695,29 +680,40 @@ class ModelToolProfile {
 
   factory ModelToolProfile.fromJson(Map<String, Object?> json) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'evidenceLevel',
-        'supportsToolCalling',
-        'supportsStructuredOutput',
-        'supportsParallelToolCalls',
-        'supportedToolClasses',
-      },
-      'toolProfile',
-    );
+        json,
+        const <String>{
+          'evidenceLevel',
+          'supportsToolCalling',
+          'supportsStructuredOutput',
+          'supportsParallelToolCalls',
+          'supportedToolClasses',
+        },
+        'toolProfile');
     return ModelToolProfile(
       evidenceLevel: _parseEvidenceLevel(
         json['evidenceLevel'],
         'toolProfile.evidenceLevel',
       ),
-      supportsToolCalling:
-          _requiredBool(json, 'supportsToolCalling', 'toolProfile'),
-      supportsStructuredOutput:
-          _requiredBool(json, 'supportsStructuredOutput', 'toolProfile'),
-      supportsParallelToolCalls:
-          _requiredBool(json, 'supportsParallelToolCalls', 'toolProfile'),
-      supportedToolClasses:
-          _stringList(json, 'supportedToolClasses', 'toolProfile'),
+      supportsToolCalling: _requiredBool(
+        json,
+        'supportsToolCalling',
+        'toolProfile',
+      ),
+      supportsStructuredOutput: _requiredBool(
+        json,
+        'supportsStructuredOutput',
+        'toolProfile',
+      ),
+      supportsParallelToolCalls: _requiredBool(
+        json,
+        'supportsParallelToolCalls',
+        'toolProfile',
+      ),
+      supportedToolClasses: _stringList(
+        json,
+        'supportedToolClasses',
+        'toolProfile',
+      ),
     );
   }
 
@@ -769,10 +765,8 @@ class ModelCostProfile {
     _validate();
   }
 
-  factory ModelCostProfile.unknown() => ModelCostProfile(
-        kind: ModelCostKind.unknown,
-        estimated: false,
-      );
+  factory ModelCostProfile.unknown() =>
+      ModelCostProfile(kind: ModelCostKind.unknown, estimated: false);
 
   factory ModelCostProfile.noDirectCharge({bool estimated = false}) =>
       ModelCostProfile(
@@ -798,24 +792,29 @@ class ModelCostProfile {
 
   factory ModelCostProfile.fromJson(Map<String, Object?> json) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'kind',
-        'currencyCode',
-        'inputPerMillionTokens',
-        'outputPerMillionTokens',
-        'perRequest',
-        'estimated',
-      },
-      'cost',
-    );
+        json,
+        const <String>{
+          'kind',
+          'currencyCode',
+          'inputPerMillionTokens',
+          'outputPerMillionTokens',
+          'perRequest',
+          'estimated',
+        },
+        'cost');
     return ModelCostProfile(
       kind: _parseCostKind(json['kind'], 'cost.kind'),
       currencyCode: _optionalString(json, 'currencyCode', 'cost'),
-      inputPerMillionTokens:
-          _optionalDouble(json, 'inputPerMillionTokens', 'cost'),
-      outputPerMillionTokens:
-          _optionalDouble(json, 'outputPerMillionTokens', 'cost'),
+      inputPerMillionTokens: _optionalDouble(
+        json,
+        'inputPerMillionTokens',
+        'cost',
+      ),
+      outputPerMillionTokens: _optionalDouble(
+        json,
+        'outputPerMillionTokens',
+        'cost',
+      ),
       perRequest: _optionalDouble(json, 'perRequest', 'cost'),
       estimated: _requiredBool(json, 'estimated', 'cost'),
     );
@@ -991,29 +990,30 @@ class ModelBenchmarkEvidence {
   factory ModelBenchmarkEvidence._fromEvidencePayload({
     required Map<String, Object?> payload,
   }) {
-    final canonicalPayload =
-        _canonicalJson(payload, 'benchmark.evidence.payload');
+    final canonicalPayload = _canonicalJson(
+      payload,
+      'benchmark.evidence.payload',
+    );
     final parsed =
         (jsonDecode(canonicalPayload) as Map).cast<String, Object?>();
     _rejectUnknownKeys(
-      parsed,
-      const <String>{
-        'schemaVersion',
-        'kind',
-        'candidateCommit',
-        'candidateTree',
-        'executionId',
-        'benchmarkId',
-        'taskClassId',
-        'modelDigest',
-        'score',
-        'scoreUnit',
-        'higherIsBetter',
-        'sampleCount',
-        'measuredAt',
-      },
-      'benchmark.evidence.payload',
-    );
+        parsed,
+        const <String>{
+          'schemaVersion',
+          'kind',
+          'candidateCommit',
+          'candidateTree',
+          'executionId',
+          'benchmarkId',
+          'taskClassId',
+          'modelDigest',
+          'score',
+          'scoreUnit',
+          'higherIsBetter',
+          'sampleCount',
+          'measuredAt',
+        },
+        'benchmark.evidence.payload');
     if (_requiredString(
           parsed,
           'schemaVersion',
@@ -1043,11 +1043,7 @@ class ModelBenchmarkEvidence {
     _validateStableId(benchmarkId, 'benchmark.benchmarkId');
     _validateStableId(taskClassId, 'benchmark.taskClassId');
     final modelDigest = _canonicalSha256(
-      _requiredString(
-        parsed,
-        'modelDigest',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'modelDigest', 'benchmark.evidence.payload'),
       'benchmark.modelDigest',
     );
     final score = _optionalDouble(
@@ -1081,27 +1077,15 @@ class ModelBenchmarkEvidence {
       );
     }
     final measuredAt = _parseUtcTimestamp(
-      _requiredString(
-        parsed,
-        'measuredAt',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'measuredAt', 'benchmark.evidence.payload'),
       'benchmark.measuredAt',
     );
     final candidateCommit = _canonicalGitObjectId(
-      _requiredString(
-        parsed,
-        'candidateCommit',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'candidateCommit', 'benchmark.evidence.payload'),
       'benchmark.candidateCommit',
     );
     final candidateTree = _canonicalGitObjectId(
-      _requiredString(
-        parsed,
-        'candidateTree',
-        'benchmark.evidence.payload',
-      ),
+      _requiredString(parsed, 'candidateTree', 'benchmark.evidence.payload'),
       'benchmark.candidateTree',
     );
     final executionId = _requiredString(
@@ -1139,37 +1123,31 @@ class ModelBenchmarkEvidence {
     ModelBenchmarkTrustContext? trustContext,
   }) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'benchmarkId',
-        'taskClassId',
-        'modelDigest',
-        'score',
-        'scoreUnit',
-        'higherIsBetter',
-        'sampleCount',
-        'measuredAt',
-        'executionId',
-        'evidence',
-      },
-      'benchmark',
-    );
+        json,
+        const <String>{
+          'benchmarkId',
+          'taskClassId',
+          'modelDigest',
+          'score',
+          'scoreUnit',
+          'higherIsBetter',
+          'sampleCount',
+          'measuredAt',
+          'executionId',
+          'evidence',
+        },
+        'benchmark');
     final evidence = _objectMap(json['evidence'], 'benchmark.evidence');
     _rejectUnknownKeys(
-      evidence,
-      const <String>{
-        'locationKind',
-        'sha256',
-        'payload',
-        'authority',
-      },
-      'benchmark.evidence',
-    );
-    if (_requiredString(
-          evidence,
+        evidence,
+        const <String>{
           'locationKind',
-          'benchmark.evidence',
-        ) !=
+          'sha256',
+          'payload',
+          'authority',
+        },
+        'benchmark.evidence');
+    if (_requiredString(evidence, 'locationKind', 'benchmark.evidence') !=
         _benchmarkEvidenceLocationKind) {
       throw const ModelRegistryValidationException(
         'benchmark.evidence.locationKind must be embedded_content_addressed',
@@ -1179,10 +1157,13 @@ class ModelBenchmarkEvidence {
       _requiredString(evidence, 'sha256', 'benchmark.evidence'),
       'benchmark.evidence.sha256',
     );
-    final payload =
-        _objectMap(evidence['payload'], 'benchmark.evidence.payload');
-    final verified =
-        ModelBenchmarkEvidence._fromEvidencePayload(payload: payload);
+    final payload = _objectMap(
+      evidence['payload'],
+      'benchmark.evidence.payload',
+    );
+    final verified = ModelBenchmarkEvidence._fromEvidencePayload(
+      payload: payload,
+    );
     if (verified.evidenceSha256 != expectedSha) {
       throw ModelRegistryValidationException(
         'benchmark evidence digest mismatch: expected $expectedSha, '
@@ -1226,15 +1207,14 @@ class ModelBenchmarkEvidence {
         'benchmark.evidence.authority',
       );
       _rejectUnknownKeys(
-        authority,
-        const <String>{'kind', 'keyId', 'signature'},
-        'benchmark.evidence.authority',
-      );
-      if (_requiredString(
-            authority,
+          authority,
+          const <String>{
             'kind',
-            'benchmark.evidence.authority',
-          ) !=
+            'keyId',
+            'signature',
+          },
+          'benchmark.evidence.authority');
+      if (_requiredString(authority, 'kind', 'benchmark.evidence.authority') !=
           _benchmarkEvidenceAuthorityKind) {
         throw const ModelRegistryValidationException(
           'benchmark evidence authority kind must be ed25519_protected_key',
@@ -1245,10 +1225,7 @@ class ModelBenchmarkEvidence {
         'keyId',
         'benchmark.evidence.authority',
       );
-      _validateStableId(
-        authorityKeyId,
-        'benchmark.evidence.authority.keyId',
-      );
+      _validateStableId(authorityKeyId, 'benchmark.evidence.authority.keyId');
       authoritySignatureHex = _requiredString(
         authority,
         'signature',
@@ -1354,14 +1331,16 @@ class CredentialReferenceRequirement {
     }
   }
 
-  factory CredentialReferenceRequirement.fromJson(
-    Map<String, Object?> json,
-  ) {
+  factory CredentialReferenceRequirement.fromJson(Map<String, Object?> json) {
     _rejectUnknownKeys(
-      json,
-      const <String>{'referenceId', 'resolver', 'required', 'purpose'},
-      'credential',
-    );
+        json,
+        const <String>{
+          'referenceId',
+          'resolver',
+          'required',
+          'purpose',
+        },
+        'credential');
     return CredentialReferenceRequirement(
       referenceId: _requiredString(json, 'referenceId', 'credential'),
       resolver: _requiredString(json, 'resolver', 'credential'),
@@ -1421,20 +1400,21 @@ class ModelProviderDescriptor {
 
   factory ModelProviderDescriptor.fromJson(Map<String, Object?> json) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'providerId',
-        'displayName',
-        'dataBoundary',
-        'credentialRequirements',
-      },
-      'provider',
-    );
+        json,
+        const <String>{
+          'providerId',
+          'displayName',
+          'dataBoundary',
+          'credentialRequirements',
+        },
+        'provider');
     return ModelProviderDescriptor(
       providerId: _requiredString(json, 'providerId', 'provider'),
       displayName: _requiredString(json, 'displayName', 'provider'),
-      dataBoundary:
-          _parseDataBoundary(json['dataBoundary'], 'provider.dataBoundary'),
+      dataBoundary: _parseDataBoundary(
+        json['dataBoundary'],
+        'provider.dataBoundary',
+      ),
       credentialRequirements: _objectList(
         json['credentialRequirements'] ?? const <Object?>[],
         'provider.credentialRequirements',
@@ -1600,9 +1580,7 @@ class ModelDefinition {
     if (limits.isCompleteForApproval && toolProfile.isMeasured) {
       final maxToolCalls = limits.maxToolCallsPerTurn!;
       if (toolProfile.supportsToolCalling && maxToolCalls == 0) {
-        blockers.add(
-          'tool calling is enabled but the tool-call limit is zero',
-        );
+        blockers.add('tool calling is enabled but the tool-call limit is zero');
       }
       if (!toolProfile.supportsToolCalling && maxToolCalls != 0) {
         blockers.add(
@@ -1664,10 +1642,7 @@ class ModelDefinition {
         providerId: identity.providerId,
         modelId: identity.name,
         displayName: identity.name,
-        digest: _canonicalSha256OrNull(
-          identity.digest,
-          'discovered.digest',
-        ),
+        digest: _canonicalSha256OrNull(identity.digest, 'discovered.digest'),
         parameterSize: _nonBlankOrNull(identity.parameterSize),
         quantization: _nonBlankOrNull(identity.quantization),
         limits: ModelLimits.unknown(),
@@ -1685,28 +1660,29 @@ class ModelDefinition {
     ModelBenchmarkTrustContext? benchmarkTrust,
   }) {
     _rejectUnknownKeys(
-      json,
-      const <String>{
-        'providerId',
-        'modelId',
-        'displayName',
-        'digest',
-        'parameterSize',
-        'quantization',
-        'aliases',
-        'limits',
-        'toolProfile',
-        'dataBoundary',
-        'cost',
-        'benchmarks',
-        'approvedTaskClasses',
-        'supportStatus',
-        'evaluationReasons',
-      },
-      'model',
+        json,
+        const <String>{
+          'providerId',
+          'modelId',
+          'displayName',
+          'digest',
+          'parameterSize',
+          'quantization',
+          'aliases',
+          'limits',
+          'toolProfile',
+          'dataBoundary',
+          'cost',
+          'benchmarks',
+          'approvedTaskClasses',
+          'supportStatus',
+          'evaluationReasons',
+        },
+        'model');
+    final supportStatus = _parseSupportStatus(
+      json['supportStatus'],
+      'model.supportStatus',
     );
-    final supportStatus =
-        _parseSupportStatus(json['supportStatus'], 'model.supportStatus');
     final benchmarks = _objectList(
       json['benchmarks'] ?? const <Object?>[],
       'model.benchmarks',
@@ -1724,20 +1700,21 @@ class ModelDefinition {
       parameterSize: _optionalString(json, 'parameterSize', 'model'),
       quantization: _optionalString(json, 'quantization', 'model'),
       aliases: _stringList(json, 'aliases', 'model'),
-      limits: ModelLimits.fromJson(
-        _objectMap(json['limits'], 'model.limits'),
-      ),
+      limits: ModelLimits.fromJson(_objectMap(json['limits'], 'model.limits')),
       toolProfile: ModelToolProfile.fromJson(
         _objectMap(json['toolProfile'], 'model.toolProfile'),
       ),
-      dataBoundary:
-          _parseDataBoundary(json['dataBoundary'], 'model.dataBoundary'),
-      cost: ModelCostProfile.fromJson(
-        _objectMap(json['cost'], 'model.cost'),
+      dataBoundary: _parseDataBoundary(
+        json['dataBoundary'],
+        'model.dataBoundary',
       ),
+      cost: ModelCostProfile.fromJson(_objectMap(json['cost'], 'model.cost')),
     );
-    final approvedTaskClasses =
-        _stringList(json, 'approvedTaskClasses', 'model');
+    final approvedTaskClasses = _stringList(
+      json,
+      'approvedTaskClasses',
+      'model',
+    );
     final evaluationReasons = _stringList(json, 'evaluationReasons', 'model');
     if (supportStatus == ModelSupportStatus.evaluationOnly &&
         approvedTaskClasses.isNotEmpty) {
@@ -2031,10 +2008,13 @@ class ModelDefinitionRegistry {
     ModelBenchmarkTrustContext? benchmarkTrust,
   }) {
     _rejectUnknownKeys(
-      json,
-      const <String>{'schemaVersion', 'providers', 'models'},
-      'registry',
-    );
+        json,
+        const <String>{
+          'schemaVersion',
+          'providers',
+          'models',
+        },
+        'registry');
     if (json['schemaVersion'] != 2) {
       throw const ModelRegistryValidationException(
         'model registry schemaVersion must be 2',
@@ -2070,20 +2050,14 @@ class ModelDefinitionRegistry {
   ModelProviderDescriptor? provider(String providerId) =>
       _providers[providerId];
 
-  ModelDefinition? _lookupDefinition(
-    String providerId,
-    String modelIdOrAlias,
-  ) {
+  ModelDefinition? _lookupDefinition(String providerId, String modelIdOrAlias) {
     final key = '$providerId::$modelIdOrAlias';
     return _models[key] ?? _aliases[key];
   }
 
   /// Metadata lookup is non-authoritative. It intentionally omits approval
   /// status, approved task classes, and approval predicates.
-  ModelRegistryMetadata? lookup(
-    String providerId,
-    String modelIdOrAlias,
-  ) {
+  ModelRegistryMetadata? lookup(String providerId, String modelIdOrAlias) {
     final definition = _lookupDefinition(providerId, modelIdOrAlias);
     return definition == null ? null : ModelRegistryMetadata._(definition);
   }
@@ -2108,10 +2082,7 @@ class ModelDefinitionRegistry {
         providerId: identity.providerId,
         modelId: quarantineModelId,
         displayName: identity.name,
-        digest: _canonicalSha256OrNull(
-          identity.digest,
-          'discovered.digest',
-        ),
+        digest: _canonicalSha256OrNull(identity.digest, 'discovered.digest'),
         parameterSize: _nonBlankOrNull(identity.parameterSize),
         quantization: _nonBlankOrNull(identity.quantization),
         limits: ModelLimits.unknown(),
@@ -2148,8 +2119,9 @@ class ModelDefinitionRegistry {
           definition._supportStatus == ModelSupportStatus.evaluationOnly
               ? ModelResolutionDisposition.evaluationOnly
               : ModelResolutionDisposition.registeredIdentity,
-      evaluationReasons:
-          List<String>.unmodifiable(definition.evaluationReasons),
+      evaluationReasons: List<String>.unmodifiable(
+        definition.evaluationReasons,
+      ),
     );
   }
 

@@ -9,14 +9,7 @@ enum ChatCapabilityCategory {
   system,
 }
 
-enum ChatTargetType {
-  project,
-  model,
-  provider,
-  capability,
-  runtime,
-  workspace,
-}
+enum ChatTargetType { project, model, provider, capability, runtime, workspace }
 
 enum ChatActionClass { informational, small, substantial }
 
@@ -26,7 +19,7 @@ enum ChatRiskClass {
   execution,
   mutation,
   sensitive,
-  destructive
+  destructive,
 }
 
 enum ChatUnderstandingPolicy { never, actions }
@@ -51,6 +44,9 @@ enum ChatExecutionRoute {
   /// [ProductRuntime.prepare]'s project requirement -- see
   /// Architectural Improvement #9: research must not require a project.
   researchSearch,
+
+  /// Deterministic timezone lookup. Never depends on web search.
+  utilityTime,
 
   projectAnalyze,
   projectTest,
@@ -239,6 +235,22 @@ const List<KristinCapability> kKristinCapabilities = <KristinCapability>[
     understandingPolicy: ChatUnderstandingPolicy.actions,
     planningPolicy: ChatPlanningPolicy.never,
     route: ChatExecutionRoute.researchSearch,
+    preferredMode: CommandMode.ask,
+  ),
+  KristinCapability(
+    id: 'utility.time',
+    displayName: 'Time',
+    description:
+        'Return the current local time for an unambiguous city or IANA timezone.',
+    category: ChatCapabilityCategory.understand,
+    slashCommands: <String>['time', 'clock'],
+    mentionAliases: <String>['time'],
+    acceptedTargetTypes: <ChatTargetType>{},
+    actionClass: ChatActionClass.small,
+    riskClass: ChatRiskClass.none,
+    understandingPolicy: ChatUnderstandingPolicy.never,
+    planningPolicy: ChatPlanningPolicy.never,
+    route: ChatExecutionRoute.utilityTime,
     preferredMode: CommandMode.ask,
   ),
   // 'analyze' and 'review' share one route and one handler (both call
@@ -584,8 +596,10 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? bySlash(String slash) {
-    final normalized =
-        slash.trim().toLowerCase().replaceFirst(RegExp(r'^/'), '');
+    final normalized = slash.trim().toLowerCase().replaceFirst(
+          RegExp(r'^/'),
+          '',
+        );
     for (final capability in capabilities) {
       if (capability.slashCommands.contains(normalized)) return capability;
     }
@@ -593,8 +607,10 @@ class ChatCapabilityRegistry {
   }
 
   KristinCapability? byMention(String mention) {
-    final normalized =
-        mention.trim().toLowerCase().replaceFirst(RegExp(r'^@'), '');
+    final normalized = mention.trim().toLowerCase().replaceFirst(
+          RegExp(r'^@'),
+          '',
+        );
     for (final capability in capabilities) {
       if (capability.mentionAliases.contains(normalized)) return capability;
     }
@@ -743,8 +759,9 @@ class ChatCommandMentionParser {
   const ChatCommandMentionParser();
 
   static final RegExp _commandPattern = RegExp(r'^/([A-Za-z][A-Za-z0-9_-]*)');
-  static final RegExp _mentionPattern =
-      RegExp(r'^@([A-Za-z0-9][A-Za-z0-9._:-]*)');
+  static final RegExp _mentionPattern = RegExp(
+    r'^@([A-Za-z0-9][A-Za-z0-9._:-]*)',
+  );
 
   ParsedChatInput parse(String input) {
     final value = input.trim();
@@ -909,11 +926,7 @@ class ChatIntentCompiler {
         mode: capability.preferredMode,
         risk: _riskFor(capability, parsed.originalText),
         understanding: policy.needsUnderstanding(capability),
-        plan: policy.needsPlan(
-          capability,
-          parsed,
-          naturalLanguage: false,
-        ),
+        plan: policy.needsPlan(capability, parsed, naturalLanguage: false),
         ambiguous: unresolved.isNotEmpty ||
             (!capability.availableWithoutTarget && targets.isEmpty),
       );
@@ -930,6 +943,26 @@ class ChatIntentCompiler {
     // mutate anything.
     if (!parsed.hasExplicitCommand && _isTargetOnly(parsed)) {
       return _targetOnlyDecision(parsed, targets, unresolved);
+    }
+
+    final timeCapability = registry.byId('utility.time');
+    if (!parsed.hasExplicitCommand &&
+        timeCapability != null &&
+        !_isActionLanguage(parsed.originalText) &&
+        _isTimeLanguage(parsed.originalText)) {
+      return _decision(
+        kind: ChatInteractionKind.action,
+        parsed: parsed,
+        capability: timeCapability,
+        targets: targets,
+        unresolved: unresolved,
+        goal: _goalFor(timeCapability, parsed, targets),
+        mode: CommandMode.ask,
+        risk: ChatRiskClass.none,
+        understanding: false,
+        plan: false,
+        ambiguous: false,
+      );
     }
 
     if (_isInformationalLanguage(parsed.originalText)) {
@@ -960,11 +993,7 @@ class ChatIntentCompiler {
         mode: capability.preferredMode,
         risk: _riskFor(capability, parsed.originalText),
         understanding: policy.needsUnderstanding(capability),
-        plan: policy.needsPlan(
-          capability,
-          parsed,
-          naturalLanguage: true,
-        ),
+        plan: policy.needsPlan(capability, parsed, naturalLanguage: true),
         ambiguous: unresolved.isNotEmpty ||
             (capability.id == 'agent.create_project' &&
                 _isUnderspecifiedCreateRequest(parsed)),
@@ -1096,14 +1125,24 @@ class ChatIntentCompiler {
     );
   }
 
+  bool _isTimeLanguage(String input) {
+    final value = _normalized(input);
+    if (!RegExp(r'\btime\b').hasMatch(value)) return false;
+    return RegExp(
+      r'\b(?:time|local time)\s+(?:in|at)\s+[a-z0-9_+./ -]+'
+      r'|\bwhat(?: is|s)?\s+(?:the\s+)?(?:local\s+)?time\s+(?:in|at)\s+[a-z0-9_+./ -]+',
+    ).hasMatch(value);
+  }
+
   KristinCapability? _naturalCapability(
     ParsedChatInput parsed,
     CommandMode inferredMode,
     List<ChatTarget> targets,
   ) {
     final action = _leadingAction(parsed.originalText);
-    final hasProjectTarget =
-        targets.any((target) => target.type == ChatTargetType.project);
+    final hasProjectTarget = targets.any(
+      (target) => target.type == ChatTargetType.project,
+    );
 
     const createVerbs = <String>{
       'build',
@@ -1155,8 +1194,9 @@ class ChatIntentCompiler {
       // sentence's own verb is "run" -- a bare leading-verb match alone
       // would misclassify "Could you run the tests?" the same way it
       // misclassifies "run @project".
-      if (RegExp(r'\brun\s+(?:the\s+)?tests?\b')
-          .hasMatch(_normalized(parsed.originalText))) {
+      if (RegExp(
+        r'\brun\s+(?:the\s+)?tests?\b',
+      ).hasMatch(_normalized(parsed.originalText))) {
         return registry.byId('project.test');
       }
       return registry.byId('project.run');
@@ -1238,6 +1278,10 @@ class ChatIntentCompiler {
             .trim()
         : parsed.originalText.trim();
     switch (capability.id) {
+      case 'utility.time':
+        return argument.isEmpty
+            ? 'Return the current local time for the requested location.'
+            : 'Return the current local time for $argument without using web search.';
       case 'research.search':
         return argument.isEmpty
             ? 'Search current public sources.'
@@ -1439,8 +1483,9 @@ class ChatAutocompleteEngine {
         )
         .toList(growable: false);
     ranked.sort((a, b) {
-      final exact =
-          (a.matches(query) ? 0 : 1).compareTo(b.matches(query) ? 0 : 1);
+      final exact = (a.matches(query) ? 0 : 1).compareTo(
+        b.matches(query) ? 0 : 1,
+      );
       if (exact != 0) return exact;
       final availability = (b.available ? 1 : 0).compareTo(a.available ? 1 : 0);
       if (availability != 0) return availability;
@@ -1495,8 +1540,9 @@ bool _isActionLanguage(String input) {
   const action =
       r'(?:build|create|make|develop|implement|fix|repair|debug|refactor|migrate|run|launch|start|stop|restart|open|search|research|look up|analyze|analyse|inspect|review|audit|assess|test|verify|connect|use|enable owner mode|diagnose|troubleshoot|delete|remove|rename|move|update|change|add)';
   if (RegExp('^(?:please\\s+)?$action\\b').hasMatch(normalized)) return true;
-  if (RegExp('^(?:can|could|would|will)\\s+you\\s+$action\\b')
-      .hasMatch(normalized)) {
+  if (RegExp(
+    '^(?:can|could|would|will)\\s+you\\s+$action\\b',
+  ).hasMatch(normalized)) {
     return true;
   }
   if (RegExp(

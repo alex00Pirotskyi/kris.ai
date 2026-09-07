@@ -80,10 +80,7 @@ extension _P5ShellWorkspace on _P5InformationArchitecturePrototypeState {
                     width: layout.leftRailWidth,
                     child: Material(
                       color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      child: SafeArea(
-                        top: false,
-                        child: _navigation(context),
-                      ),
+                      child: SafeArea(top: false, child: _navigation(context)),
                     ),
                   ),
                   _P5ResizeHandle.vertical(

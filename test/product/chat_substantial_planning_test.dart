@@ -32,8 +32,9 @@ void main() {
     late ProjectRecord project;
 
     setUp(() async {
-      temporary =
-          await Directory.systemTemp.createTemp('kristin-chat-planning-');
+      temporary = await Directory.systemTemp.createTemp(
+        'kristin-chat-planning-',
+      );
       final directories = await AppDirectories.create(
         overrideRoot: '${temporary.path}${Platform.pathSeparator}app-data',
       );
@@ -106,59 +107,61 @@ void main() {
     }
 
     test(
-      'a substantial request compiles into a real per-request multi-task '
-      'plan, not the generic inspect/implement/verify template',
-      () async {
-        final service = serviceWith(_validMp3PlanGenerator(model));
+        'a substantial request compiles into a real per-request multi-task '
+        'plan, not the generic inspect/implement/verify template', () async {
+      final service = serviceWith(_validMp3PlanGenerator(model));
 
-        final draft = await service.generatePrompt(
-          goal: 'Flutter web app to convert mp3 file to urls, no account or '
-              'security logic needed, progress bar and upload/download '
-              'buttons, simple good UX/UI',
-          model: model,
-        );
-        final version = await service.savePromptVersion(
-          promptId: 'prompt-mp3',
-          sourceGoal: 'Convert mp3 to a shareable url',
-          action: PromptGenerationAction.generate,
-          draft: draft,
-          model: model,
-        );
-        final plan = await service.generateTaskPlan(
-          promptVersion: version,
-          projectId: project.id,
-          model: model,
-        );
-        expect(plan.validate(), isEmpty);
-        // ContractPlanner's fixed template is 3 items for a plain build
-        // request (inspect / implement / verify) -- a genuine per-request
-        // decomposition must exceed that, with titles that are actually
-        // about this feature rather than the generic phase names.
-        expect(plan.tasks.length, greaterThan(3));
-        final titles = plan.tasks.map((task) => task.title).toList();
-        expect(titles,
-            isNot(contains('Inspect project and establish evidence baseline')));
-        expect(titles, isNot(contains('Implement requested product behavior')));
-        expect(
-          titles.any((title) =>
+      final draft = await service.generatePrompt(
+        goal: 'Flutter web app to convert mp3 file to urls, no account or '
+            'security logic needed, progress bar and upload/download '
+            'buttons, simple good UX/UI',
+        model: model,
+      );
+      final version = await service.savePromptVersion(
+        promptId: 'prompt-mp3',
+        sourceGoal: 'Convert mp3 to a shareable url',
+        action: PromptGenerationAction.generate,
+        draft: draft,
+        model: model,
+      );
+      final plan = await service.generateTaskPlan(
+        promptVersion: version,
+        projectId: project.id,
+        model: model,
+      );
+      expect(plan.validate(), isEmpty);
+      // ContractPlanner's fixed template is 3 items for a plain build
+      // request (inspect / implement / verify) -- a genuine per-request
+      // decomposition must exceed that, with titles that are actually
+      // about this feature rather than the generic phase names.
+      expect(plan.tasks.length, greaterThan(3));
+      final titles = plan.tasks.map((task) => task.title).toList();
+      expect(
+        titles,
+        isNot(contains('Inspect project and establish evidence baseline')),
+      );
+      expect(titles, isNot(contains('Implement requested product behavior')));
+      expect(
+        titles.any(
+          (title) =>
               title.toLowerCase().contains('upload') ||
               title.toLowerCase().contains('progress') ||
-              title.toLowerCase().contains('download')),
-          isTrue,
-          reason: 'plan should decompose the actual requested feature, '
-              'not a generic phase list: $titles',
-        );
+              title.toLowerCase().contains('download'),
+        ),
+        isTrue,
+        reason: 'plan should decompose the actual requested feature, '
+            'not a generic phase list: $titles',
+      );
 
-        final prepared = await service.compilePlan(
-          plan: plan,
-          promptVersion: version,
-          project: project,
-          model: model,
-        );
-        expect(prepared.plan.items.length, plan.tasks.length);
-        expect(prepared.plan.validate(), isEmpty);
-      },
-    );
+      final prepared = await service.compilePlan(
+        plan: plan,
+        promptVersion: version,
+        project: project,
+        model: model,
+      );
+      expect(prepared.plan.items.length, plan.tasks.length);
+      expect(prepared.plan.validate(), isEmpty);
+    });
 
     test(
       'a plan that still fails validation after the built-in repair '
@@ -248,7 +251,9 @@ Map<String, dynamic> _taskJson({
     };
 
 ModelGenerationResult _resultFor(
-    ModelIdentity model, Map<String, dynamic> payload) {
+  ModelIdentity model,
+  Map<String, dynamic> payload,
+) {
   final now = DateTime.now().toUtc();
   return ModelGenerationResult(
     text: jsonEncode(payload),

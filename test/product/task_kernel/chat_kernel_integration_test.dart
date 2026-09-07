@@ -209,10 +209,12 @@ void main() {
         isNot(contains('Inspect project and establish evidence baseline')),
       );
       expect(
-        titles.any((title) =>
-            title.toLowerCase().contains('upload') ||
-            title.toLowerCase().contains('progress') ||
-            title.toLowerCase().contains('download')),
+        titles.any(
+          (title) =>
+              title.toLowerCase().contains('upload') ||
+              title.toLowerCase().contains('progress') ||
+              title.toLowerCase().contains('download'),
+        ),
         isTrue,
         reason: 'the plan must decompose the requested feature: $titles',
       );
@@ -263,8 +265,10 @@ void main() {
       //    contract, not merely present in the request text.
       expect(
         compiled.contract.constraints.join(' | '),
-        contains('Hard constraint (must not be violated): No accounts or '
-            'authentication'),
+        contains(
+          'Hard constraint (must not be violated): No accounts or '
+          'authentication',
+        ),
       );
     });
 
@@ -359,9 +363,7 @@ void main() {
             'database and keep the UI simple.',
         objective: 'Improve application performance',
         hardConstraints: <SpecificationClaim>[
-          const SpecificationClaim.stated(
-            'The database must not be modified.',
-          ),
+          const SpecificationClaim.stated('The database must not be modified.'),
         ],
         preferences: <SpecificationClaim>[
           const SpecificationClaim.stated('Keep UI changes minimal.'),
@@ -406,14 +408,18 @@ void main() {
       );
       expect(
         compiled.contract.constraints.join(' | '),
-        contains('Hard constraint (must not be violated): The database must '
-            'not be modified.'),
+        contains(
+          'Hard constraint (must not be violated): The database must '
+          'not be modified.',
+        ),
       );
       // The preference is carried too, but labelled as tradeable.
       expect(
         compiled.contract.constraints.join(' | '),
-        contains('Preference (trade off only when it conflicts with the '
-            'objective): Keep UI changes minimal.'),
+        contains(
+          'Preference (trade off only when it conflicts with the '
+          'objective): Keep UI changes minimal.',
+        ),
       );
     });
   });
@@ -471,35 +477,37 @@ void main() {
       );
     });
 
-    test('SCENARIO J: a persistence failure is NOT answered with a plan',
-        () async {
-      final kernel = kernelWith(
-        (request) async => throw ProductException(
-          'storage_corrupt',
-          'The task plan store is corrupted.',
-        ),
-      );
-      await expectLater(
-        kernel.plan(
-          specification: softwareSpecification(),
-          routing: softwareRouting,
-          context: contextFor(),
-        ),
-        throwsA(
-          isA<PlanningFailure>()
-              .having(
-                (failure) => failure.kind,
-                'kind',
-                PlanningFailureKind.persistenceFailure,
-              )
-              .having(
-                (failure) => failure.allowsConservativeFallback,
-                'allowsConservativeFallback',
-                isFalse,
-              ),
-        ),
-      );
-    });
+    test(
+      'SCENARIO J: a persistence failure is NOT answered with a plan',
+      () async {
+        final kernel = kernelWith(
+          (request) async => throw ProductException(
+            'storage_corrupt',
+            'The task plan store is corrupted.',
+          ),
+        );
+        await expectLater(
+          kernel.plan(
+            specification: softwareSpecification(),
+            routing: softwareRouting,
+            context: contextFor(),
+          ),
+          throwsA(
+            isA<PlanningFailure>()
+                .having(
+                  (failure) => failure.kind,
+                  'kind',
+                  PlanningFailureKind.persistenceFailure,
+                )
+                .having(
+                  (failure) => failure.allowsConservativeFallback,
+                  'allowsConservativeFallback',
+                  isFalse,
+                ),
+          ),
+        );
+      },
+    );
 
     test('an unavailable provider is NOT answered with a plan', () async {
       final kernel = kernelWith(
@@ -524,61 +532,65 @@ void main() {
       );
     });
 
-    test('an unexpected programming defect is NOT answered with a plan',
-        () async {
-      final kernel = kernelWith(
-        (request) async => throw StateError('Bad state: no element'),
-      );
-      await expectLater(
-        kernel.plan(
-          specification: softwareSpecification(),
-          routing: softwareRouting,
-          context: contextFor(),
-        ),
-        throwsA(
-          isA<PlanningFailure>()
-              .having(
-                (failure) => failure.kind,
-                'kind',
-                PlanningFailureKind.unexpected,
-              )
-              .having(
-                (failure) => failure.allowsConservativeFallback,
-                'allowsConservativeFallback',
-                isFalse,
-              ),
-        ),
-      );
-    });
+    test(
+      'an unexpected programming defect is NOT answered with a plan',
+      () async {
+        final kernel = kernelWith(
+          (request) async => throw StateError('Bad state: no element'),
+        );
+        await expectLater(
+          kernel.plan(
+            specification: softwareSpecification(),
+            routing: softwareRouting,
+            context: contextFor(),
+          ),
+          throwsA(
+            isA<PlanningFailure>()
+                .having(
+                  (failure) => failure.kind,
+                  'kind',
+                  PlanningFailureKind.unexpected,
+                )
+                .having(
+                  (failure) => failure.allowsConservativeFallback,
+                  'allowsConservativeFallback',
+                  isFalse,
+                ),
+          ),
+        );
+      },
+    );
 
-    test('a non-software family never degrades into inspect/implement/verify',
-        () async {
-      // Degrading a research request into a software lifecycle envelope
-      // would be nonsense, so the recoverable failure still surfaces.
-      final kernel = UniversalTaskKernel(
-        understanding: const UnderstandingService(),
-        compiler: UniversalPlanCompiler(tools: ToolRegistry.standard()),
-        planners: <TaskFamilyPlanner>[_AlwaysFailingResearchPlanner()],
-      );
-      await expectLater(
-        kernel.plan(
-          specification: softwareSpecification(),
-          routing: const RoutingDecision(
-            route: PlanningRoute.compact,
-            family: TaskFamily.research,
-            rationale: 'test',
+    test(
+      'a non-software family never degrades into inspect/implement/verify',
+      () async {
+        // Degrading a research request into a software lifecycle envelope
+        // would be nonsense, so the recoverable failure still surfaces.
+        final kernel = UniversalTaskKernel(
+          understanding: const UnderstandingService(),
+          compiler: UniversalPlanCompiler(tools: ToolRegistry.standard()),
+          planners: <TaskFamilyPlanner>[_AlwaysFailingResearchPlanner()],
+        );
+        await expectLater(
+          kernel.plan(
+            specification: softwareSpecification(),
+            routing: const RoutingDecision(
+              route: PlanningRoute.compact,
+              family: TaskFamily.research,
+              rationale: 'test',
+            ),
+            context: contextFor(),
           ),
-          context: contextFor(),
-        ),
-        throwsA(
-          isA<PlanningFailure>().having(
-            (failure) => failure.kind,
-            'kind',
-            PlanningFailureKind.recoverablePlanning,
+          throwsA(
+            isA<PlanningFailure>().having(
+              (failure) => failure.kind,
+              'kind',
+              PlanningFailureKind.recoverablePlanning,
+            ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   });
 
   test('every family the product ships is registered in the kernel', () {
@@ -615,7 +627,9 @@ class _AlwaysFailingResearchPlanner implements TaskFamilyPlanner {
       throw ProductException('task_plan_invalid', 'nope');
 }
 
-Map<String, dynamic> _draftJson({List<String> guardrails = const <String>[]}) =>
+Map<String, dynamic> _draftJson({
+  List<String> guardrails = const <String>[],
+}) =>
     <String, dynamic>{
       'title': 'MP3 to URL converter',
       'purpose': 'Convert an uploaded MP3 file into a downloadable result.',

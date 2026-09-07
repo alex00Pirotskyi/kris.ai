@@ -68,10 +68,12 @@ final class P4RenderedResearchFetcher {
           dom['text'] is! String ||
           visible['text'] is! String ||
           screenshot['sha256'] is! String ||
-          !RegExp(r'^[0-9a-f]{64}$')
-              .hasMatch(screenshot['sha256']! as String)) {
+          !RegExp(
+            r'^[0-9a-f]{64}$',
+          ).hasMatch(screenshot['sha256']! as String)) {
         throw const P4ResearchException(
-            'research_rendered_observation_invalid');
+          'research_rendered_observation_invalid',
+        );
       }
       final title = payload['title']?.toString() ?? '';
       final domText = dom['text']! as String;
@@ -184,8 +186,10 @@ final class P4BrowserAwareResearchService extends ResearchService {
       final evidence = await P4RenderedResearchFetcher(
         _P4OneShotRenderedBrowserBackend(loader),
       ).fetch(validatedOriginal);
-      final validatedFinal =
-          (await validateUri(evidence.finalUrl)).removeFragment();
+      final validatedFinal = (await validateUri(
+        evidence.finalUrl,
+      ))
+          .removeFragment();
       final visibleText = evidence.visibleText.trim();
       if (_looksLikeChallenge(visibleText)) {
         if (httpSource != null) return httpSource;

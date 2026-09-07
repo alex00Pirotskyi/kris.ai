@@ -66,24 +66,40 @@ void main() {
 
   UniversalTaskPlan originalPlan() => planWith(<UniversalTask>[
         task('t1', 'Inspect project', phase: 'Inspect'),
-        task('t2', 'Define architecture',
-            phase: 'Design', dependencies: <String>{'t1'}),
+        task(
+          't2',
+          'Define architecture',
+          phase: 'Design',
+          dependencies: <String>{'t1'},
+        ),
         task('t3', 'Implement Firebase storage', dependencies: <String>{'t2'}),
         task('t4', 'Build result UI', dependencies: <String>{'t2'}),
-        task('t5', 'Write tests',
-            phase: 'Qualification', dependencies: <String>{'t3', 't4'}),
+        task(
+          't5',
+          'Write tests',
+          phase: 'Qualification',
+          dependencies: <String>{'t3', 't4'},
+        ),
       ]);
 
   /// The replan: same work, minus Firebase, plus a Firebase-free store.
   UniversalTaskPlan revisedPlan() => planWith(
         <UniversalTask>[
           task('r1', 'Inspect project', phase: 'Inspect'),
-          task('r2', 'Define architecture',
-              phase: 'Design', dependencies: <String>{'r1'}),
+          task(
+            'r2',
+            'Define architecture',
+            phase: 'Design',
+            dependencies: <String>{'r1'},
+          ),
           task('r3', 'Implement local storage', dependencies: <String>{'r2'}),
           task('r4', 'Build result UI', dependencies: <String>{'r2'}),
-          task('r5', 'Write tests',
-              phase: 'Qualification', dependencies: <String>{'r3', 'r4'}),
+          task(
+            'r5',
+            'Write tests',
+            phase: 'Qualification',
+            dependencies: <String>{'r3', 'r4'},
+          ),
         ],
         spec: specification(
           hardConstraints: <SpecificationClaim>[
@@ -123,8 +139,9 @@ void main() {
       );
       // Preserved work is carried as satisfied rather than re-queued.
       for (final change in result.preserved) {
-        final task =
-            result.plan.tasks.firstWhere((item) => item.id == change.taskId);
+        final task = result.plan.tasks.firstWhere(
+          (item) => item.id == change.taskId,
+        );
         expect(task.enabled, isFalse, reason: '${task.title} must not rerun');
       }
     });
@@ -132,8 +149,9 @@ void main() {
     test('semantic identity survives a change of generated task id', () {
       // The revised plan renamed t1 -> r1. Reconciliation still matched
       // it, because identity is content, not the generator's counter.
-      final inspect = result.reconciliations
-          .firstWhere((item) => item.title == 'Inspect project');
+      final inspect = result.reconciliations.firstWhere(
+        (item) => item.title == 'Inspect project',
+      );
       expect(inspect.taskId, 'r1');
       expect(inspect.outcome, TaskReconciliationOutcome.preserved);
       expect(inspect.reason, contains('evidence'));
@@ -180,8 +198,11 @@ void main() {
             task('r1', 'Inspect project', phase: 'Inspect'),
             // The replan still contains the Firebase task (say the
             // planner re-emitted it); the constraint must override.
-            task('r3', 'Implement Firebase storage',
-                dependencies: <String>{'r1'}),
+            task(
+              'r3',
+              'Implement Firebase storage',
+              dependencies: <String>{'r1'},
+            ),
           ],
           spec: specification(
             hardConstraints: <SpecificationClaim>[
@@ -210,28 +231,29 @@ void main() {
       );
     });
 
-    test('completed work the revision simply omits is preserved, not erased',
-        () {
-      final previous = originalPlan();
-      final result = reconciler.reconcile(
-        previous: previous,
-        // The replan does not mention the completed inspection at all.
-        revised: planWith(
-          <UniversalTask>[task('r9', 'Ship it', phase: 'Release')],
-          id: 'plan_2',
-        ),
-        completed: <CompletedTaskRecord>[
-          CompletedTaskRecord.of(
-            previous.tasks.firstWhere((task) => task.id == 't1'),
-            evidence: <String, dynamic>{'runId': 'run_1'},
-          ),
-        ],
-      );
-      final preserved = result.preserved.single;
-      expect(preserved.title, 'Inspect project');
-      expect(preserved.reason, contains('preserved even though'));
-      expect(result.plan.validate(), isEmpty);
-    });
+    test(
+      'completed work the revision simply omits is preserved, not erased',
+      () {
+        final previous = originalPlan();
+        final result = reconciler.reconcile(
+          previous: previous,
+          // The replan does not mention the completed inspection at all.
+          revised: planWith(<UniversalTask>[
+            task('r9', 'Ship it', phase: 'Release'),
+          ], id: 'plan_2'),
+          completed: <CompletedTaskRecord>[
+            CompletedTaskRecord.of(
+              previous.tasks.firstWhere((task) => task.id == 't1'),
+              evidence: <String, dynamic>{'runId': 'run_1'},
+            ),
+          ],
+        );
+        final preserved = result.preserved.single;
+        expect(preserved.title, 'Inspect project');
+        expect(preserved.reason, contains('preserved even though'));
+        expect(result.plan.validate(), isEmpty);
+      },
+    );
 
     test('an unchanged specification invalidates nothing', () {
       final previous = originalPlan();

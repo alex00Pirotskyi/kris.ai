@@ -141,9 +141,7 @@ void main() {
         availableCapabilityIds:
             kKristinCapabilities.map((item) => item.id).toSet(),
         availableToolNames: ToolRegistry.standard().names,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
       );
 
   test('the coordinator capability set is derived from routes, not a list', () {
@@ -161,40 +159,42 @@ void main() {
     expect(kCoordinatorCapabilityIds, isNot(contains('system.diagnose')));
   });
 
-  test('the planning model is never briefed on coordinator capabilities',
-      () async {
-    final captured = <ModelGenerationRequest>[];
-    final kernel = kernelWith(
-      _validPlanGenerator(model),
-      capture: captured.add,
-    );
-    await kernel.plan(
-      specification: createSpecification(),
-      routing: routing,
-      context: contextFor(),
-    );
-    final planningPrompt = captured
-        .firstWhere(
-          (request) => request.systemPrompt.contains('task-planning model'),
-        )
-        .userPrompt;
-    // The briefing exists and names real execution capabilities...
-    expect(planningPrompt, contains('AVAILABLE KRISTIN CAPABILITIES'));
-    expect(planningPrompt, contains('research.search'));
-    // ...but never the orchestration ones, which is what taught the
-    // planner to emit "Use the agent.create_project capability".
-    for (final coordinator in kCoordinatorCapabilityIds) {
-      expect(
-        planningPrompt.contains('- $coordinator:'),
-        isFalse,
-        reason: '$coordinator must not be offered to the planner',
+  test(
+    'the planning model is never briefed on coordinator capabilities',
+    () async {
+      final captured = <ModelGenerationRequest>[];
+      final kernel = kernelWith(
+        _validPlanGenerator(model),
+        capture: captured.add,
       );
-    }
-    expect(
-      planningPrompt,
-      contains('never write an instruction telling the executor to create'),
-    );
-  });
+      await kernel.plan(
+        specification: createSpecification(),
+        routing: routing,
+        context: contextFor(),
+      );
+      final planningPrompt = captured
+          .firstWhere(
+            (request) => request.systemPrompt.contains('task-planning model'),
+          )
+          .userPrompt;
+      // The briefing exists and names real execution capabilities...
+      expect(planningPrompt, contains('AVAILABLE KRISTIN CAPABILITIES'));
+      expect(planningPrompt, contains('research.search'));
+      // ...but never the orchestration ones, which is what taught the
+      // planner to emit "Use the agent.create_project capability".
+      for (final coordinator in kCoordinatorCapabilityIds) {
+        expect(
+          planningPrompt.contains('- $coordinator:'),
+          isFalse,
+          reason: '$coordinator must not be offered to the planner',
+        );
+      }
+      expect(
+        planningPrompt,
+        contains('never write an instruction telling the executor to create'),
+      );
+    },
+  );
 
   test('no generated task carries a coordinator capability', () async {
     final kernel = kernelWith(_validPlanGenerator(model));
@@ -217,45 +217,47 @@ void main() {
     );
   });
 
-  test('the compiled work items are concrete, tool-shaped, and single-project',
-      () async {
-    final kernel = kernelWith(_validPlanGenerator(model));
-    final result = await kernel.plan(
-      specification: createSpecification(),
-      routing: routing,
-      context: contextFor(),
-    );
-    final compiled = kernel.compile(
-      plan: result.plan,
-      project: project,
-      mode: CommandMode.build,
-      consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
-    );
-    expect(compiled.plan.validate(), isEmpty);
-    expect(compiled.plan.items, isNotEmpty);
-    for (final item in compiled.plan.items) {
-      // No phantom tool.
-      expect(item.allowedTools, isNot(contains('create_project')));
-      expect(
-        item.allowedTools.intersection(kCoordinatorCapabilityIds),
-        isEmpty,
+  test(
+    'the compiled work items are concrete, tool-shaped, and single-project',
+    () async {
+      final kernel = kernelWith(_validPlanGenerator(model));
+      final result = await kernel.plan(
+        specification: createSpecification(),
+        routing: routing,
+        context: contextFor(),
       );
-      // No instruction naming an orchestration capability.
-      for (final coordinator in kCoordinatorCapabilityIds) {
+      final compiled = kernel.compile(
+        plan: result.plan,
+        project: project,
+        mode: CommandMode.build,
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
+      );
+      expect(compiled.plan.validate(), isEmpty);
+      expect(compiled.plan.items, isNotEmpty);
+      for (final item in compiled.plan.items) {
+        // No phantom tool.
+        expect(item.allowedTools, isNot(contains('create_project')));
         expect(
-          item.description.contains(coordinator),
-          isFalse,
-          reason: '${item.id} instructs the executor to use $coordinator',
+          item.allowedTools.intersection(kCoordinatorCapabilityIds),
+          isEmpty,
+        );
+        // No instruction naming an orchestration capability.
+        for (final coordinator in kCoordinatorCapabilityIds) {
+          expect(
+            item.description.contains(coordinator),
+            isFalse,
+            reason: '${item.id} instructs the executor to use $coordinator',
+          );
+        }
+        // Only governed Runner tools survive.
+        expect(item.allowedTools, isNotEmpty);
+        expect(
+          ToolRegistry.standard().names.containsAll(item.allowedTools),
+          isTrue,
         );
       }
-      // Only governed Runner tools survive.
-      expect(item.allowedTools, isNotEmpty);
-      expect(
-        ToolRegistry.standard().names.containsAll(item.allowedTools),
-        isTrue,
-      );
-    }
-  });
+    },
+  );
 
   test(
       'a leaked coordinator instruction fails compile with a precise '
@@ -273,9 +275,7 @@ void main() {
         plan: result.plan,
         project: project,
         mode: CommandMode.build,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
       ),
       throwsA(
         isA<ProductException>()
@@ -289,11 +289,7 @@ void main() {
               'capabilityId',
               contains('agent.create_project'),
             )
-            .having(
-              (error) => error.details['taskId'],
-              'taskId',
-              isNotEmpty,
-            ),
+            .having((error) => error.details['taskId'], 'taskId', isNotEmpty),
       ),
     );
   });
@@ -327,9 +323,7 @@ void main() {
         project: project,
         mode: CommandMode.build,
         request: specification.originalRequest,
-        consumedCoordinatorCapabilities: const <String>{
-          'agent.create_project',
-        },
+        consumedCoordinatorCapabilities: const <String>{'agent.create_project'},
       ),
       throwsA(
         isA<ProductException>().having(

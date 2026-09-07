@@ -18,8 +18,9 @@ final class NoopPerformanceSpanSink implements PerformanceSpanSink {
 }
 
 final class PerformanceSpanRecord {
-  static final RegExp _machineLabelPattern =
-      RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:/@+\-]*$');
+  static final RegExp _machineLabelPattern = RegExp(
+    r'^[A-Za-z0-9][A-Za-z0-9._:/@+\-]*$',
+  );
   static final RegExp _hexHashPattern = RegExp(r'^[A-Fa-f0-9]+$');
 
   PerformanceSpanRecord({
@@ -70,10 +71,7 @@ final class PerformanceSpanRecord {
     _validateDuration('analyzerDuration', analyzerDuration);
     _validateDuration('indexUpdateDuration', indexUpdateDuration);
     _validateDuration('indexQueryDuration', indexQueryDuration);
-    _validateDuration(
-      'knowledgeRetrievalDuration',
-      knowledgeRetrievalDuration,
-    );
+    _validateDuration('knowledgeRetrievalDuration', knowledgeRetrievalDuration);
     _validateCount('itemCount', itemCount);
     _validateCount('bytesConsidered', bytesConsidered);
     _validateCount('candidateCount', candidateCount);

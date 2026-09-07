@@ -11,8 +11,9 @@ import 'package:kristin_local_agent/product/ui.dart';
 
 void main() {
   group('P5-014 critical UX regression gate', () {
-    testWidgets('workspace history preserves the primary navigation flow',
-        (tester) async {
+    testWidgets('workspace history preserves the primary navigation flow', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1440, 960);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -45,38 +46,40 @@ void main() {
     });
 
     testWidgets(
-        'blocked Owner Mode remains a truthful recoverable failure state',
-        (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final ownerMode = P2ProductRuntimeOwnerModeHandle.blocked(
-        'Bad state: merged_p1a_service_unavailable',
-      );
+      'blocked Owner Mode remains a truthful recoverable failure state',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final ownerMode = P2ProductRuntimeOwnerModeHandle.blocked(
+          'Bad state: merged_p1a_service_unavailable',
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: P5DesignSystem.light(),
-          home: KristinMainShell(
-            ownerMode: ownerMode,
-            chat: const Center(child: Text('Chat surface')),
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: P5DesignSystem.light(),
+            home: KristinMainShell(
+              ownerMode: ownerMode,
+              chat: const Center(child: Text('Chat surface')),
+            ),
           ),
-        ),
-      );
-      await tester.tap(find.text('Owner Mode'));
-      await tester.pumpAndSettle();
+        );
+        await tester.tap(find.text('Owner Mode'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Owner Mode is unavailable'), findsOneWidget);
-      expect(
-        find.textContaining('Diagnostic: merged_p1a_service_unavailable'),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Bad state'), findsNothing);
-    });
+        expect(find.text('Owner Mode is unavailable'), findsOneWidget);
+        expect(
+          find.textContaining('Diagnostic: merged_p1a_service_unavailable'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Bad state'), findsNothing);
+      },
+    );
 
-    testWidgets('primary shell semantics survive advanced navigation',
-        (tester) async {
+    testWidgets('primary shell semantics survive advanced navigation', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1440, 960);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);

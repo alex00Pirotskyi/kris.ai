@@ -98,10 +98,7 @@ abstract interface class SearchProvider {
 }
 
 class SearchProviderRouter {
-  const SearchProviderRouter({
-    required this.builtIn,
-    this.preferred,
-  });
+  const SearchProviderRouter({required this.builtIn, this.preferred});
 
   final SearchProvider builtIn;
   final SearchProvider? preferred;
@@ -314,10 +311,7 @@ typedef BraveSearchCallback = Future<List<Map<String, String>>> Function({
 });
 
 class BraveSearchProvider implements SearchProvider {
-  const BraveSearchProvider({
-    required this.apiKey,
-    required this.callback,
-  });
+  const BraveSearchProvider({required this.apiKey, required this.callback});
 
   final String apiKey;
   final BraveSearchCallback callback;
@@ -382,8 +376,7 @@ class SearchHttpResponse {
 }
 
 typedef SearchHttpTransport = Future<SearchHttpResponse> Function(
-  SearchHttpRequest request,
-);
+    SearchHttpRequest request);
 
 Future<SearchHttpResponse> defaultSearchHttpTransport(
   SearchHttpRequest request,
@@ -564,13 +557,7 @@ List<SearchProviderResult> parseDuckDuckGoHtmlResults(
     final snippet = index < snippets.length
         ? _boundedText(snippets[index], _maxSearchSnippetCharacters)
         : '';
-    results.add(
-      SearchProviderResult(
-        title: title,
-        url: url,
-        snippet: snippet,
-      ),
-    );
+    results.add(SearchProviderResult(title: title, url: url, snippet: snippet));
   }
   return List<SearchProviderResult>.unmodifiable(results);
 }
@@ -734,9 +721,9 @@ String? _attribute(String attributes, String name) {
 
 String _plainHtmlText(String value) {
   final withoutTags = value.replaceAll(RegExp(r'<[^>]*>'), ' ');
-  return _decodeHtmlEntities(withoutTags)
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim();
+  return _decodeHtmlEntities(
+    withoutTags,
+  ).replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
 String _decodeHtmlEntities(String value) {

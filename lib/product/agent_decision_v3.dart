@@ -111,9 +111,7 @@ class AgentDecisionV3 {
       kind: kind,
       operation: _nonEmpty(json['operation']),
       arguments: rawArguments is Map
-          ? rawArguments.map(
-              (key, value) => MapEntry(key.toString(), value),
-            )
+          ? rawArguments.map((key, value) => MapEntry(key.toString(), value))
           : const <String, Object?>{},
       expectedPostcondition: _nonEmpty(json['expectedPostcondition']),
       idempotencyKey: _nonEmpty(json['idempotencyKey']),
@@ -199,7 +197,8 @@ class AgentDecisionV3 {
           task == null ||
           task!.isEmpty) {
         throw const FormatException(
-            'agent_decision_v3_delegate_target_required');
+          'agent_decision_v3_delegate_target_required',
+        );
       }
       return;
     }

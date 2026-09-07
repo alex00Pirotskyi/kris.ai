@@ -477,10 +477,7 @@ class TaskSpecification {
         'PREFERENCES (trade off only when they conflict with the objective)',
         preferences.map((item) => item.statement),
       ),
-      block(
-        'SUCCESS CRITERIA',
-        successCriteria.map((item) => item.statement),
-      ),
+      block('SUCCESS CRITERIA', successCriteria.map((item) => item.statement)),
       block(
         'ASSUMPTIONS (believed, not established)',
         assumptions.map((item) => item.statement),

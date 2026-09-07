@@ -60,8 +60,9 @@ class P2TerminalTab {
 
 class P2TerminalModel extends ChangeNotifier {
   final List<P2TerminalTab> _tabs = <P2TerminalTab>[];
-  late final List<P2TerminalTab> tabs =
-      UnmodifiableListView<P2TerminalTab>(_tabs);
+  late final List<P2TerminalTab> tabs = UnmodifiableListView<P2TerminalTab>(
+    _tabs,
+  );
   int _selectedIndex = 0;
 
   Map<P2TerminalAction, String> get shortcuts => const {

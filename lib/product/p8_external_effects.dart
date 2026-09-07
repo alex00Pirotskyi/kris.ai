@@ -56,8 +56,9 @@ class ExternalEffectTransition {
 
   factory ExternalEffectTransition.fromJson(Map<String, Object?> json) {
     final evidenceId = json['evidenceId']?.toString().trim() ?? '';
-    final recordedAt =
-        DateTime.tryParse(json['recordedAt']?.toString() ?? '')?.toUtc();
+    final recordedAt = DateTime.tryParse(
+      json['recordedAt']?.toString() ?? '',
+    )?.toUtc();
     if (evidenceId.isEmpty || recordedAt == null) {
       throw const FormatException('external_effect_transition_invalid');
     }
@@ -99,11 +100,9 @@ class ExternalEffectReceipt {
       if (raw is! Map) {
         throw const FormatException('external_effect_transition_invalid');
       }
-      final transition = ExternalEffectTransition.fromJson(
-        <String, Object?>{
-          for (final entry in raw.entries) entry.key.toString(): entry.value,
-        },
-      );
+      final transition = ExternalEffectTransition.fromJson(<String, Object?>{
+        for (final entry in raw.entries) entry.key.toString(): entry.value,
+      });
       if (transition.from != receipt.state) {
         throw const FormatException('external_effect_transition_chain_invalid');
       }
@@ -175,10 +174,7 @@ class ExternalEffectReceipt {
             .toList(growable: false),
       };
 
-  static bool _allowed(
-    ExternalEffectState current,
-    ExternalEffectState next,
-  ) {
+  static bool _allowed(ExternalEffectState current, ExternalEffectState next) {
     return switch (current) {
       ExternalEffectState.planned => next == ExternalEffectState.authorized,
       ExternalEffectState.authorized => next == ExternalEffectState.started,

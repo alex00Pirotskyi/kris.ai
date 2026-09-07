@@ -12,11 +12,7 @@ import 'process_identity_windows.dart';
 /// reconciled as interrupted rather than trusted, per the project's
 /// fail-closed process-identity policy: a bare PID is never enough on its
 /// own to resume "this is still my process."
-enum ProcessIdentityVerification {
-  alive,
-  mismatchOrGone,
-  unverifiablePlatform,
-}
+enum ProcessIdentityVerification { alive, mismatchOrGone, unverifiablePlatform }
 
 /// Captures and verifies PID-reuse-safe process identity across platforms.
 /// Linux and Windows are backed by real OS-level checks

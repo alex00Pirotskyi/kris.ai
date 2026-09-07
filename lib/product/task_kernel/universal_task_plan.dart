@@ -525,7 +525,9 @@ class UniversalTaskPlan {
         'createdAt': createdAt.toUtc().toIso8601String(),
       };
 
-  factory UniversalTaskPlan.fromJson(Map<String, dynamic> json) =>
+  factory UniversalTaskPlan.fromJson(
+    Map<String, dynamic> json,
+  ) =>
       UniversalTaskPlan(
         id: json['id']?.toString() ?? newId('universal_plan'),
         specification:

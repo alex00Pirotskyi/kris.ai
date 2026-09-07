@@ -37,11 +37,7 @@ class _WorkspaceHeader extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    super.key,
-    required this.label,
-    required this.icon,
-  });
+  const _StatusChip({super.key, required this.label, required this.icon});
 
   final String label;
   final IconData icon;
@@ -116,10 +112,7 @@ class _RecoveryCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(message),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: onAction,
-              child: Text(actionLabel),
-            ),
+            FilledButton.tonal(onPressed: onAction, child: Text(actionLabel)),
           ],
         ),
       ),
@@ -157,8 +150,10 @@ class _DomainCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 Text(title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 4),
-                Text(value,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(detail),
               ],
             ),

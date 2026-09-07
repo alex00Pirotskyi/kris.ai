@@ -89,13 +89,15 @@ final class P3BrowserWorkspace extends StatelessWidget {
                   Tab(text: 'Page', icon: Icon(Icons.public)),
                   Tab(text: 'DOM', icon: Icon(Icons.account_tree_outlined)),
                   Tab(
-                      text: 'Accessibility',
-                      icon: Icon(Icons.accessibility_new)),
+                    text: 'Accessibility',
+                    icon: Icon(Icons.accessibility_new),
+                  ),
                   Tab(text: 'Console', icon: Icon(Icons.terminal)),
                   Tab(text: 'Network', icon: Icon(Icons.swap_vert)),
                   Tab(
-                      text: 'Test tools',
-                      icon: Icon(Icons.fact_check_outlined)),
+                    text: 'Test tools',
+                    icon: Icon(Icons.fact_check_outlined),
+                  ),
                 ],
               ),
               Expanded(
@@ -165,10 +167,7 @@ final class _Toolbar extends StatelessWidget {
         final location = Expanded(
           child: Semantics(
             label: 'Current browser URL',
-            child: SelectableText(
-              url,
-              maxLines: 1,
-            ),
+            child: SelectableText(url, maxLines: 1),
           ),
         );
         final controls = Wrap(
@@ -306,8 +305,9 @@ final class _JsonPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final encoded = const JsonEncoder.withIndent('  ')
-        .convert(value ?? <String, Object?>{});
+    final encoded = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(value ?? <String, Object?>{});
     final bounded = encoded.length > 512 * 1024
         ? '${encoded.substring(0, 512 * 1024)}\n…truncated…'
         : encoded;

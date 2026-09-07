@@ -2121,7 +2121,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
         launchProfileId: row['launch_profile_id']?.toString(),
         state: ProjectRuntimeState.fromStorageValue(row['state']?.toString()),
         lifecycle: ManagedProcessLifecycle.fromStorageValue(
-            row['lifecycle']?.toString()),
+          row['lifecycle']?.toString(),
+        ),
         pid: row['pid'] == null ? null : _asInt(row['pid']),
         processIdentity: row['process_identity']?.toString(),
         kind: row['kind'] == null
@@ -2261,9 +2262,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
           args.add(projectId);
         }
         if (states != null && states.isNotEmpty) {
-          clauses.add(
-            'state IN (${List.filled(states.length, '?').join(', ')})',
-          );
+          clauses
+              .add('state IN (${List.filled(states.length, '?').join(', ')})');
           args.addAll(states.map((state) => state.storageValue));
         }
         final where = clauses.isEmpty ? '' : 'WHERE ${clauses.join(' AND ')}';

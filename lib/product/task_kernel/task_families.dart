@@ -148,10 +148,7 @@ abstract class _DeterministicFamilyPlanner implements TaskFamilyPlanner {
   /// Fails when the plan requires a capability the governed registry does
   /// not actually offer. A planner may require a capability; only the
   /// registry can supply one, and only authority can permit its effect.
-  void requireAvailable(
-    UniversalTaskPlan plan,
-    PlanningContext context,
-  ) {
+  void requireAvailable(UniversalTaskPlan plan, PlanningContext context) {
     final missing = plan.requiredCapabilities
         .where((id) => !context.availableCapabilityIds.contains(id))
         .toList(growable: false)
@@ -483,9 +480,7 @@ class OwnerTaskFamilyPlanner extends _DeterministicFamilyPlanner {
         instructions: 'Perform exactly the requested effect on exactly the '
             'requested target, and nothing else.',
         phase: 'Owner',
-        acceptanceCriteria: <String>[
-          'Only $targetLabel is affected.',
-        ],
+        acceptanceCriteria: <String>['Only $targetLabel is affected.'],
         verificationSteps: const <String>[
           'Confirm no target outside the request was touched.',
         ],

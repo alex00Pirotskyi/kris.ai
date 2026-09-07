@@ -59,11 +59,7 @@ enum P3BrowserAuditViewport {
   final int height;
 }
 
-enum P3BrowserAccessibilitySeverity {
-  info,
-  warning,
-  error,
-}
+enum P3BrowserAccessibilitySeverity { info, warning, error }
 
 final class P3BrowserAccessibilityFinding {
   const P3BrowserAccessibilityFinding({
@@ -160,11 +156,10 @@ final class P3BrowserQualitySnapshot {
       'browser_quality_observation_id_invalid',
     );
     _require(
-        url.hasScheme && url.host.isNotEmpty, 'browser_quality_url_invalid');
-    _requireSha256(
-      screenshotSha256,
-      'browser_quality_screenshot_hash_invalid',
+      url.hasScheme && url.host.isNotEmpty,
+      'browser_quality_url_invalid',
     );
+    _requireSha256(screenshotSha256, 'browser_quality_screenshot_hash_invalid');
     _requireSha256(domSha256, 'browser_quality_dom_hash_invalid');
     _requireSha256(
       accessibilitySha256,
@@ -259,10 +254,7 @@ final class P3BrowserVisualDiff {
 }
 
 final class P3BrowserQualityReport {
-  P3BrowserQualityReport({
-    required this.snapshot,
-    required this.visualDiff,
-  });
+  P3BrowserQualityReport({required this.snapshot, required this.visualDiff});
 
   final P3BrowserQualitySnapshot snapshot;
   final P3BrowserVisualDiff visualDiff;
@@ -288,12 +280,7 @@ final class P3BrowserQualityReport {
   String get reportSha256 => Sha256.text(_canonicalJson(toJson()));
 }
 
-enum P3BrowserSecurityDecision {
-  allow,
-  quarantine,
-  block,
-  takeover,
-}
+enum P3BrowserSecurityDecision { allow, quarantine, block, takeover }
 
 final class P3BrowserSecurityGuard {
   const P3BrowserSecurityGuard();
@@ -331,10 +318,7 @@ final class P3BrowserSecurityGuard {
     required String currentObservationId,
     required String targetObservationId,
   }) {
-    _require(
-      activePageId == targetPageId,
-      'browser_tab_confusion_blocked',
-    );
+    _require(activePageId == targetPageId, 'browser_tab_confusion_blocked');
     _require(
       currentObservationId == targetObservationId,
       'browser_stale_target_blocked',
@@ -584,16 +568,15 @@ final class P3BrowserRecipeReceipt {
     required List<String> completedStepIds,
   }) {
     _require(
-        _identity.hasMatch(sessionId), 'browser_recipe_session_id_invalid');
+      _identity.hasMatch(sessionId),
+      'browser_recipe_session_id_invalid',
+    );
     _require(_identity.hasMatch(pageId), 'browser_recipe_page_id_invalid');
     _requireSha256(
       observationSha256,
       'browser_recipe_observation_hash_invalid',
     );
-    _requireSha256(
-      qualityReportSha256,
-      'browser_recipe_quality_hash_invalid',
-    );
+    _requireSha256(qualityReportSha256, 'browser_recipe_quality_hash_invalid');
     final expectedSteps = recipe.steps.map((item) => item.id).toList();
     _require(
       completedStepIds.length == expectedSteps.length &&

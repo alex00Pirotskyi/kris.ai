@@ -122,10 +122,8 @@ class ProjectControlService {
       project.rootPath,
       forceRefresh: refreshGit,
     );
-    final launchProfiles =
-        await runtime.repositories.workflow.listProjectLaunchProfiles(
-      projectId,
-    );
+    final launchProfiles = await runtime.repositories.workflow
+        .listProjectLaunchProfiles(projectId);
     final activeSessions =
         await runtime.repositories.workflow.listManagedProjectProcesses(
       projectId: projectId,

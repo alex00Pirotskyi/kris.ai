@@ -197,9 +197,7 @@ class P5InformationArchitectureController extends ChangeNotifier {
     if (listEquals(normalized, _state.acceptanceCriteria)) {
       return;
     }
-    _commitComposerMutation(
-      _state.copyWith(acceptanceCriteria: normalized),
-    );
+    _commitComposerMutation(_state.copyWith(acceptanceCriteria: normalized));
   }
 
   void launchComposer() {

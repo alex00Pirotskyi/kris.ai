@@ -261,11 +261,7 @@ final class P3BrowserReplayRecorder {
     );
   }
 
-  void recordFailure({
-    required String code,
-    String? detail,
-    String? pageId,
-  }) {
+  void recordFailure({required String code, String? detail, String? pageId}) {
     if (code.trim().isEmpty) {
       throw StateError('browser_replay_failure_code_invalid');
     }
@@ -344,10 +340,7 @@ final class P3BrowserReplayRecorder {
 }
 
 final class P3RecordedBrowserSession {
-  P3RecordedBrowserSession({
-    required this.process,
-    required this.recorder,
-  });
+  P3RecordedBrowserSession({required this.process, required this.recorder});
 
   final P3BrowserSessionProcess process;
   final P3BrowserReplayRecorder recorder;

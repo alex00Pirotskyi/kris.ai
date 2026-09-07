@@ -44,14 +44,11 @@ void main() {
         .map((item) => item.toString().replaceAll('\\', '/'))
         .toList()
       ..sort();
-    expect(
-      support,
-      <String>[
-        'automation_host/probes/dart_native_probe.dart',
-        'tool/performance/benchmark_corpus.dart',
-        'tool/performance/run_wave_a_benchmarks.dart',
-      ],
-    );
+    expect(support, <String>[
+      'automation_host/probes/dart_native_probe.dart',
+      'tool/performance/benchmark_corpus.dart',
+      'tool/performance/run_wave_a_benchmarks.dart',
+    ]);
     expect(support.toSet().length, support.length);
     for (final path in support) {
       expect(File(path).existsSync(), isTrue, reason: path);

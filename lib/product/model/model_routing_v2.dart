@@ -65,8 +65,9 @@ class ModelRoleRouteV2 {
     required this.role,
     required this.taskClassId,
     required List<String> preferredExactModelIds,
-  }) : preferredExactModelIds =
-            List<String>.unmodifiable(preferredExactModelIds) {
+  }) : preferredExactModelIds = List<String>.unmodifiable(
+          preferredExactModelIds,
+        ) {
     if (taskClassId.trim().isEmpty ||
         !RegExp(r'^[a-z0-9][a-z0-9._-]*$').hasMatch(taskClassId)) {
       throw const ModelRegistryValidationException(

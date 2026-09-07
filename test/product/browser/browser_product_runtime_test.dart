@@ -52,8 +52,10 @@ Future<void> _writeFakeBundle(Directory dataRoot) async {
   final workerScript = File(
     _join(<String>[automationHost.path, 'browser-runtime.mjs']),
   );
-  await workerScript.writeAsString('// fake worker script identity\n',
-      flush: true);
+  await workerScript.writeAsString(
+    '// fake worker script identity\n',
+    flush: true,
+  );
   final packageLock = File(
     _join(<String>[automationHost.path, 'package-lock.json']),
   );
@@ -108,10 +110,13 @@ Future<void> main(List<String> args) async {
       Platform.isWindows ? 'fake-node.exe' : 'fake-node',
     ]),
   );
-  final compile = await Process.run(
-    _dartExecutable(),
-    <String>['compile', 'exe', workerSource.path, '-o', nodeExecutable.path],
-  );
+  final compile = await Process.run(_dartExecutable(), <String>[
+    'compile',
+    'exe',
+    workerSource.path,
+    '-o',
+    nodeExecutable.path,
+  ]);
   if (compile.exitCode != 0) {
     throw StateError(
       'p3_fake_worker_compile_failed:${compile.exitCode}:${compile.stderr}',
@@ -181,9 +186,7 @@ Future<void> main(List<String> args) async {
   ).writeAsString('${jsonEncode(manifest)}\n', flush: true);
 }
 
-Future<P3ProductRuntimeBrowserHandle> _openIsolatedHandle(
-  Directory root,
-) =>
+Future<P3ProductRuntimeBrowserHandle> _openIsolatedHandle(Directory root) =>
     P3ProductRuntimeBrowserHandle.open(
       applicationDataRoot: root.absolute,
       stateDirectory: Directory(
@@ -193,88 +196,95 @@ Future<P3ProductRuntimeBrowserHandle> _openIsolatedHandle(
     );
 
 void main() {
-  test('missing browser bundle is exposed as bounded fail-closed status',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-product-missing-');
-    addTearDown(() => temp.delete(recursive: true));
+  test(
+    'missing browser bundle is exposed as bounded fail-closed status',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-product-missing-');
+      addTearDown(() => temp.delete(recursive: true));
 
-    final handle = await _openIsolatedHandle(temp);
-    addTearDown(handle.close);
+      final handle = await _openIsolatedHandle(temp);
+      addTearDown(handle.close);
 
-    expect(handle.available, isFalse);
-    expect(handle.statusCode, 'p3_browser_runtime_bundle_missing');
-    expect(handle.provenance['applicationOwned'], isTrue);
-    expect(handle.provenance['globalRuntimeRequired'], isFalse);
-    expect(handle.provenance['browserNetworkInstallRequired'], isFalse);
-    expect(handle.provenance['p3_002SessionServiceImplemented'], isFalse);
-    await expectLater(
-      handle.probe(),
-      throwsA(
-        isA<P3BrowserRuntimeException>().having(
-          (error) => error.code,
-          'code',
-          'p3_product_runtime_unavailable',
-        ),
-      ),
-    );
-  });
-
-  test('invalid browser bundle remains blocked instead of falling back',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-product-invalid-');
-    addTearDown(() => temp.delete(recursive: true));
-    final bundle = Directory(
-      _join(<String>[temp.path, 'runtime', 'p3', 'current']),
-    );
-    await bundle.create(recursive: true);
-    await File(
-      _join(<String>[bundle.path, 'browser-runtime-manifest.v1.json']),
-    ).writeAsString('{}\n', flush: true);
-
-    final handle = await _openIsolatedHandle(temp);
-    addTearDown(handle.close);
-
-    expect(handle.available, isFalse);
-    expect(handle.statusCode, 'p3_browser_runtime_bundle_invalid');
-    expect(handle.provenance['globalRuntimeRequired'], isFalse);
-    await expectLater(
-      handle.probe(),
-      throwsA(isA<P3BrowserRuntimeException>()),
-    );
-  });
-
-  test('ProductRuntime composes P3 probe and close waits for teardown',
-      () async {
-    final temp = await Directory.systemTemp.createTemp('p3-product-active-');
-    addTearDown(() => temp.delete(recursive: true));
-    await _writeFakeBundle(temp);
-
-    final runtime = await ProductRuntime.initialize(dataRoot: temp.path);
-    var closed = false;
-    try {
-      final handle = runtime.p3BrowserRuntime;
-      expect(handle.available, isTrue);
-      expect(handle.statusCode, 'p3_browser_runtime_available');
+      expect(handle.available, isFalse);
+      expect(handle.statusCode, 'p3_browser_runtime_bundle_missing');
       expect(handle.provenance['applicationOwned'], isTrue);
       expect(handle.provenance['globalRuntimeRequired'], isFalse);
       expect(handle.provenance['browserNetworkInstallRequired'], isFalse);
       expect(handle.provenance['p3_002SessionServiceImplemented'], isFalse);
+      await expectLater(
+        handle.probe(),
+        throwsA(
+          isA<P3BrowserRuntimeException>().having(
+            (error) => error.code,
+            'code',
+            'p3_product_runtime_unavailable',
+          ),
+        ),
+      );
+    },
+  );
 
-      final probe = handle.probe(startupTimeout: const Duration(seconds: 20));
-      final stopwatch = Stopwatch()..start();
-      await runtime.close();
-      closed = true;
-      stopwatch.stop();
-      final result = await probe;
+  test(
+    'invalid browser bundle remains blocked instead of falling back',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-product-invalid-');
+      addTearDown(() => temp.delete(recursive: true));
+      final bundle = Directory(
+        _join(<String>[temp.path, 'runtime', 'p3', 'current']),
+      );
+      await bundle.create(recursive: true);
+      await File(
+        _join(<String>[bundle.path, 'browser-runtime-manifest.v1.json']),
+      ).writeAsString('{}\n', flush: true);
 
-      expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(500));
-      expect(result.ready.sandboxMode, 'required');
-      expect(result.provenance['globalRuntimeRequired'], isFalse);
-      expect(result.provenance['p3_002SessionServiceImplemented'], isFalse);
+      final handle = await _openIsolatedHandle(temp);
+      addTearDown(handle.close);
+
       expect(handle.available, isFalse);
-      expect(handle.statusCode, 'p3_product_runtime_closed');
-    } finally {
-      if (!closed) await runtime.close();
-    }
-  }, timeout: const Timeout(Duration(minutes: 2)));
+      expect(handle.statusCode, 'p3_browser_runtime_bundle_invalid');
+      expect(handle.provenance['globalRuntimeRequired'], isFalse);
+      await expectLater(
+        handle.probe(),
+        throwsA(isA<P3BrowserRuntimeException>()),
+      );
+    },
+  );
+
+  test(
+    'ProductRuntime composes P3 probe and close waits for teardown',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('p3-product-active-');
+      addTearDown(() => temp.delete(recursive: true));
+      await _writeFakeBundle(temp);
+
+      final runtime = await ProductRuntime.initialize(dataRoot: temp.path);
+      var closed = false;
+      try {
+        final handle = runtime.p3BrowserRuntime;
+        expect(handle.available, isTrue);
+        expect(handle.statusCode, 'p3_browser_runtime_available');
+        expect(handle.provenance['applicationOwned'], isTrue);
+        expect(handle.provenance['globalRuntimeRequired'], isFalse);
+        expect(handle.provenance['browserNetworkInstallRequired'], isFalse);
+        expect(handle.provenance['p3_002SessionServiceImplemented'], isFalse);
+
+        final probe = handle.probe(startupTimeout: const Duration(seconds: 20));
+        final stopwatch = Stopwatch()..start();
+        await runtime.close();
+        closed = true;
+        stopwatch.stop();
+        final result = await probe;
+
+        expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(500));
+        expect(result.ready.sandboxMode, 'required');
+        expect(result.provenance['globalRuntimeRequired'], isFalse);
+        expect(result.provenance['p3_002SessionServiceImplemented'], isFalse);
+        expect(handle.available, isFalse);
+        expect(handle.statusCode, 'p3_product_runtime_closed');
+      } finally {
+        if (!closed) await runtime.close();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
 }

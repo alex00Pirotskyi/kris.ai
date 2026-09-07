@@ -75,7 +75,9 @@ void main() {
       final outcome = const DeterministicUnderstanding().understand(decision);
       expect(outcome.path, UnderstandingPath.deterministic);
       expect(
-          outcome.specification.source, TaskSpecificationSource.deterministic);
+        outcome.specification.source,
+        TaskSpecificationSource.deterministic,
+      );
       // Nothing was guessed, so confidence is not a probability estimate.
       expect(outcome.specification.confidence, 1.0);
       expect(outcome.specification.targetRefs.single.value, 'project-8b');
@@ -121,9 +123,7 @@ void main() {
         isFalse,
       );
       expect(
-        service.warrantsModelUnderstanding(
-          compiler.compile('what is SQLite?'),
-        ),
+        service.warrantsModelUnderstanding(compiler.compile('what is SQLite?')),
         isFalse,
       );
       // ...but natural substantial language does warrant it.
@@ -162,16 +162,26 @@ void main() {
       expect(outcome.path, UnderstandingPath.model);
       expect(outcome.specification.hasSemanticUnderstanding, isTrue);
       expect(
-          outcome.specification.objective, 'Improve application performance');
+        outcome.specification.objective,
+        'Improve application performance',
+      );
       // Traceable to the user's own words, so it stays a HARD constraint.
-      expect(outcome.specification.hardConstraints.single.statement,
-          'Do not change the database');
-      expect(outcome.specification.hardConstraints.single.provenance,
-          EvidenceProvenance.userStated);
-      expect(outcome.specification.preferences.single.statement,
-          'Keep the UI simple');
-      expect(outcome.specification.assumptions.single.provenance,
-          EvidenceProvenance.assumed);
+      expect(
+        outcome.specification.hardConstraints.single.statement,
+        'Do not change the database',
+      );
+      expect(
+        outcome.specification.hardConstraints.single.provenance,
+        EvidenceProvenance.userStated,
+      );
+      expect(
+        outcome.specification.preferences.single.statement,
+        'Keep the UI simple',
+      );
+      expect(
+        outcome.specification.assumptions.single.provenance,
+        EvidenceProvenance.assumed,
+      );
       expect(outcome.specification.unresolvedQuestions, hasLength(1));
       expect(outcome.specification.confidence, closeTo(0.92, 0.0001));
       expect(outcome.rejections, isEmpty);
@@ -179,10 +189,9 @@ void main() {
 
     test('the prompt tells the model what actually exists', () async {
       ModelGenerationRequest? captured;
-      final understanding = understandingReturning(
-        <String, dynamic>{'objective': 'Do something'},
-        capture: (request) => captured = request,
-      );
+      final understanding = understandingReturning(<String, dynamic>{
+        'objective': 'Do something',
+      }, capture: (request) => captured = request);
       await understanding.understand(
         request: 'do something with the project',
         model: model,
@@ -194,10 +203,7 @@ void main() {
       expect(captured!.userPrompt, contains('agent.modify_project'));
       expect(captured!.userPrompt, contains('project-8b'));
       expect(captured!.systemPrompt, contains('Never invent an id'));
-      expect(
-        captured!.systemPrompt,
-        contains('do NOT grant'),
-      );
+      expect(captured!.systemPrompt, contains('do NOT grant'));
     });
 
     test('an invented target is refused, not adopted', () async {
@@ -230,29 +236,28 @@ void main() {
         context: contextWith(),
       );
       expect(outcome.specification.capabilityHints, isEmpty);
-      expect(
-        outcome.rejections.join(' '),
-        contains('agent.delete_everything'),
-      );
+      expect(outcome.rejections.join(' '), contains('agent.delete_everything'));
     });
 
-    test('a capability that cannot operate on the named target is refused',
-        () async {
-      final understanding = understandingReturning(<String, dynamic>{
-        'objective': 'Modify the model',
-        // agent.modify_project accepts projects, not models.
-        'capabilityHints': <String>['agent.modify_project'],
-        'targets': <String>['phi4-mini'],
-        'confidence': 0.8,
-      });
-      final outcome = await understanding.understand(
-        request: 'modify phi4-mini',
-        model: model,
-        context: contextWith(),
-      );
-      expect(outcome.specification.capabilityHints, isEmpty);
-      expect(outcome.rejections.join(' '), contains('cannot operate on'));
-    });
+    test(
+      'a capability that cannot operate on the named target is refused',
+      () async {
+        final understanding = understandingReturning(<String, dynamic>{
+          'objective': 'Modify the model',
+          // agent.modify_project accepts projects, not models.
+          'capabilityHints': <String>['agent.modify_project'],
+          'targets': <String>['phi4-mini'],
+          'confidence': 0.8,
+        });
+        final outcome = await understanding.understand(
+          request: 'modify phi4-mini',
+          model: model,
+          context: contextWith(),
+        );
+        expect(outcome.specification.capabilityHints, isEmpty);
+        expect(outcome.rejections.join(' '), contains('cannot operate on'));
+      },
+    );
 
     test(
         'MODEL UNDERSTANDING != AUTHORIZATION: a granted-permission claim '
@@ -332,41 +337,43 @@ void main() {
       );
     });
 
-    test('a non-JSON response is a recognized recoverable planning failure',
-        () async {
-      final understanding = ModelBackedUnderstanding(
-        generate: (request) async {
-          final now = DateTime.now().toUtc();
-          return ModelGenerationResult(
-            text: 'I think you want me to do a thing!',
-            identity: model,
-            startedAt: now,
-            firstTokenAt: now,
-            completedAt: now,
-          );
-        },
-      );
-      await expectLater(
-        understanding.understand(
-          request: 'do a thing',
-          model: model,
-          context: contextWith(),
-        ),
-        throwsA(
-          isA<ProductException>().having(
-            (error) => error.code,
-            'code',
-            'model_response_invalid',
+    test(
+      'a non-JSON response is a recognized recoverable planning failure',
+      () async {
+        final understanding = ModelBackedUnderstanding(
+          generate: (request) async {
+            final now = DateTime.now().toUtc();
+            return ModelGenerationResult(
+              text: 'I think you want me to do a thing!',
+              identity: model,
+              startedAt: now,
+              firstTokenAt: now,
+              completedAt: now,
+            );
+          },
+        );
+        await expectLater(
+          understanding.understand(
+            request: 'do a thing',
+            model: model,
+            context: contextWith(),
           ),
-        ),
-      );
-      expect(
-        classifyPlanningFailure(
-          ProductException('model_response_invalid', 'bad'),
-        ).allowsConservativeFallback,
-        isTrue,
-      );
-    });
+          throwsA(
+            isA<ProductException>().having(
+              (error) => error.code,
+              'code',
+              'model_response_invalid',
+            ),
+          ),
+        );
+        expect(
+          classifyPlanningFailure(
+            ProductException('model_response_invalid', 'bad'),
+          ).allowsConservativeFallback,
+          isTrue,
+        );
+      },
+    );
   });
 
   group('UnderstandingService failure handling', () {
@@ -375,25 +382,27 @@ void main() {
           'bar and a download button',
         );
 
-    test('a bad model response degrades to the honest deterministic reading',
-        () async {
-      final service = UnderstandingService(
-        model: ModelBackedUnderstanding(
-          generate: (request) async {
-            throw ProductException('model_response_invalid', 'not json');
-          },
-        ),
-      );
-      final outcome = await service.understand(
-        decision: substantial(),
-        context: contextWith(),
-        modelIdentity: model,
-      );
-      // Degraded -- and therefore Chat says "interpreted", not
-      // "understood". That is the honest outcome, not a hidden one.
-      expect(outcome.path, UnderstandingPath.deterministic);
-      expect(outcome.isSemantic, isFalse);
-    });
+    test(
+      'a bad model response degrades to the honest deterministic reading',
+      () async {
+        final service = UnderstandingService(
+          model: ModelBackedUnderstanding(
+            generate: (request) async {
+              throw ProductException('model_response_invalid', 'not json');
+            },
+          ),
+        );
+        final outcome = await service.understand(
+          decision: substantial(),
+          context: contextWith(),
+          modelIdentity: model,
+        );
+        // Degraded -- and therefore Chat says "interpreted", not
+        // "understood". That is the honest outcome, not a hidden one.
+        expect(outcome.path, UnderstandingPath.deterministic);
+        expect(outcome.isSemantic, isFalse);
+      },
+    );
 
     test('cancellation propagates instead of degrading', () async {
       final service = UnderstandingService(
@@ -443,30 +452,32 @@ void main() {
       );
     });
 
-    test('targets Chat already resolved are never erased by the model',
-        () async {
-      final decision = compiler.compile(
-        'add a settings screen to @test8B',
-        knownTargets: knownTargets,
-      );
-      final service = UnderstandingService(
-        model: understandingReturning(<String, dynamic>{
-          // The model omits the target entirely.
-          'objective': 'Add a settings screen',
-          'confidence': 0.8,
-        }),
-      );
-      final outcome = await service.understand(
-        decision: decision,
-        context: contextWith(),
-        modelIdentity: model,
-      );
-      expect(outcome.path, UnderstandingPath.model);
-      expect(outcome.specification.targetRefs.single.value, 'project-8b');
-      expect(
-        outcome.specification.targetRefs.single.provenance,
-        EvidenceProvenance.observed,
-      );
-    });
+    test(
+      'targets Chat already resolved are never erased by the model',
+      () async {
+        final decision = compiler.compile(
+          'add a settings screen to @test8B',
+          knownTargets: knownTargets,
+        );
+        final service = UnderstandingService(
+          model: understandingReturning(<String, dynamic>{
+            // The model omits the target entirely.
+            'objective': 'Add a settings screen',
+            'confidence': 0.8,
+          }),
+        );
+        final outcome = await service.understand(
+          decision: decision,
+          context: contextWith(),
+          modelIdentity: model,
+        );
+        expect(outcome.path, UnderstandingPath.model);
+        expect(outcome.specification.targetRefs.single.value, 'project-8b');
+        expect(
+          outcome.specification.targetRefs.single.provenance,
+          EvidenceProvenance.observed,
+        );
+      },
+    );
   });
 }

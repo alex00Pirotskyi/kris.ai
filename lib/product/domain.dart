@@ -295,22 +295,17 @@ class ProjectRecord {
         admissionReason: ProjectAdmissionReason.fromStorageValue(
           json['admissionReason']?.toString(),
         ),
-        lastAnalyzeResult: ProjectQualityResult.fromJson(
-          json['lastAnalyzeResult'],
-        ),
+        lastAnalyzeResult:
+            ProjectQualityResult.fromJson(json['lastAnalyzeResult']),
         lastTestResult: ProjectQualityResult.fromJson(json['lastTestResult']),
-        lastBuildResult: ProjectQualityResult.fromJson(
-          json['lastBuildResult'],
-        ),
+        lastBuildResult: ProjectQualityResult.fromJson(json['lastBuildResult']),
         admittedAt: json['admittedAt'] == null
             ? null
             : parseUtc(json['admittedAt'], fallback: DateTime.now()),
         lastMeaningfulActivityAt: json['lastMeaningfulActivityAt'] == null
             ? null
-            : parseUtc(
-                json['lastMeaningfulActivityAt'],
-                fallback: DateTime.now(),
-              ),
+            : parseUtc(json['lastMeaningfulActivityAt'],
+                fallback: DateTime.now()),
       );
 }
 

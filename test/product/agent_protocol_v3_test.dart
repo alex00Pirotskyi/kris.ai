@@ -13,11 +13,7 @@ void main() {
     title: 'Execute bounded work',
     description: 'Use only the approved tool set.',
     dependencies: <String>{},
-    allowedTools: <String>{
-      'run_command',
-      'research_fetch',
-      'read_file',
-    },
+    allowedTools: <String>{'run_command', 'research_fetch', 'read_file'},
     acceptanceCriteria: <String>['Produce objective evidence.'],
   );
   const adapter = AgentProtocolV3Adapter();
@@ -61,9 +57,7 @@ void main() {
         ),
         MapEntry(
           AgentProviderProtocol.recorded,
-          jsonEncode(<String, Object?>{
-            'normalizedAction': terminalDecision(),
-          }),
+          jsonEncode(<String, Object?>{'normalizedAction': terminalDecision()}),
         ),
       ];
 

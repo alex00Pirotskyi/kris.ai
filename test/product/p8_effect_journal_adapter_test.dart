@@ -53,31 +53,36 @@ void main() {
       expect(downstream.receipts, hasLength(3));
     });
 
-    test('uncertain started effect blocks blind retry and survives restart',
-        () async {
-      await journal.append(p2(P2EffectStatus.started));
-      await journal.append(p2(P2EffectStatus.unknown));
-      expect(journal.receipt('effect-1')!.state, ExternalEffectState.unknown);
-      expect(journal.retryAllowed('effect-1'), isFalse);
-      expect(
-        () => journal.requireRetryAllowed('effect-1'),
-        throwsA(
-          isA<StateError>().having(
-            (error) => error.message,
-            'message',
-            'external_effect_reconciliation_required',
+    test(
+      'uncertain started effect blocks blind retry and survives restart',
+      () async {
+        await journal.append(p2(P2EffectStatus.started));
+        await journal.append(p2(P2EffectStatus.unknown));
+        expect(journal.receipt('effect-1')!.state, ExternalEffectState.unknown);
+        expect(journal.retryAllowed('effect-1'), isFalse);
+        expect(
+          () => journal.requireRetryAllowed('effect-1'),
+          throwsA(
+            isA<StateError>().having(
+              (error) => error.message,
+              'message',
+              'external_effect_reconciliation_required',
+            ),
           ),
-        ),
-      );
+        );
 
-      final restarted = P8ReconciledEffectJournal(
-        downstream: _MemoryJournal(),
-        stateFile: stateFile,
-      );
-      await restarted.initialize();
-      expect(restarted.receipt('effect-1')!.state, ExternalEffectState.unknown);
-      expect(restarted.retryAllowed('effect-1'), isFalse);
-    });
+        final restarted = P8ReconciledEffectJournal(
+          downstream: _MemoryJournal(),
+          stateFile: stateFile,
+        );
+        await restarted.initialize();
+        expect(
+          restarted.receipt('effect-1')!.state,
+          ExternalEffectState.unknown,
+        );
+        expect(restarted.retryAllowed('effect-1'), isFalse);
+      },
+    );
 
     test('rollback records reconciliation then compensation', () async {
       await journal.append(p2(P2EffectStatus.started));
@@ -93,13 +98,15 @@ void main() {
       );
     });
 
-    test('unsupported operation never masquerades as an executed effect',
-        () async {
-      await journal.append(p2(P2EffectStatus.unsupported));
-      final receipt = journal.receipt('effect-1')!;
-      expect(receipt.state, ExternalEffectState.planned);
-      expect(receipt.retryAllowed, isTrue);
-    });
+    test(
+      'unsupported operation never masquerades as an executed effect',
+      () async {
+        await journal.append(p2(P2EffectStatus.unsupported));
+        final receipt = journal.receipt('effect-1')!;
+        expect(receipt.state, ExternalEffectState.planned);
+        expect(receipt.retryAllowed, isTrue);
+      },
+    );
   });
 }
 

@@ -131,9 +131,7 @@ void main() {
       'it',
       () async {
         // --- "Kristin session 1": build/admit, Run, health-check --------
-        var runtime = await ProductRuntime.initialize(
-          dataRoot: dataRoot.path,
-        );
+        var runtime = await ProductRuntime.initialize(dataRoot: dataRoot.path);
         final project = await runtime.addProject(
           name: 'Qualification web fixture',
           rootPath: projectDirectory.path,

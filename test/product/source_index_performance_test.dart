@@ -53,29 +53,18 @@ void main() {
       await sourceIndex.search(project.id, 'SearchableSymbol');
       await sourceIndex.update(project);
 
-      expect(
-        sink.records.map((record) => record.operation),
-        <String>[
-          'source.index.update',
-          'source.search',
-          'source.index.update',
-        ],
-      );
-      expect(
-        sink.records.first.cacheResult,
-        PerformanceCacheResult.miss,
-      );
-      expect(
-        sink.records.last.cacheResult,
-        PerformanceCacheResult.hit,
-      );
+      expect(sink.records.map((record) => record.operation), <String>[
+        'source.index.update',
+        'source.search',
+        'source.index.update',
+      ]);
+      expect(sink.records.first.cacheResult, PerformanceCacheResult.miss);
+      expect(sink.records.last.cacheResult, PerformanceCacheResult.hit);
       expect(sink.records.first.bytesConsidered, greaterThan(0));
       expect(sink.records[1].bytesConsidered, greaterThan(0));
       expect(sink.records.last.bytesConsidered, 0);
       expect(
-        sink.records.every(
-          (record) => record.projectHash?.length == 64,
-        ),
+        sink.records.every((record) => record.projectHash?.length == 64),
         isTrue,
       );
     } finally {
@@ -83,38 +72,41 @@ void main() {
     }
   });
 
-  test('source operations do not fail when performance recording fails',
-      () async {
-    final root =
-        await Directory.systemTemp.createTemp('source-perf-fail-test-');
-    try {
-      final projectRoot = Directory(
-        '${root.path}${Platform.pathSeparator}project',
+  test(
+    'source operations do not fail when performance recording fails',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'source-perf-fail-test-',
       );
-      await projectRoot.create(recursive: true);
-      await File(
-        '${projectRoot.path}${Platform.pathSeparator}sample.dart',
-      ).writeAsString('const searchableValue = 1;\n', flush: true);
-      final sourceIndex = SourceIndexService(
-        Directory('${root.path}${Platform.pathSeparator}index'),
-        performance: _FailingPerformanceSink(),
-      );
-      final now = DateTime.now().toUtc();
-      final project = ProjectRecord(
-        id: 'source_perf_failure_project',
-        name: 'Source performance failure',
-        rootPath: projectRoot.path,
-        createdAt: now,
-        updatedAt: now,
-      );
+      try {
+        final projectRoot = Directory(
+          '${root.path}${Platform.pathSeparator}project',
+        );
+        await projectRoot.create(recursive: true);
+        await File(
+          '${projectRoot.path}${Platform.pathSeparator}sample.dart',
+        ).writeAsString('const searchableValue = 1;\n', flush: true);
+        final sourceIndex = SourceIndexService(
+          Directory('${root.path}${Platform.pathSeparator}index'),
+          performance: _FailingPerformanceSink(),
+        );
+        final now = DateTime.now().toUtc();
+        final project = ProjectRecord(
+          id: 'source_perf_failure_project',
+          name: 'Source performance failure',
+          rootPath: projectRoot.path,
+          createdAt: now,
+          updatedAt: now,
+        );
 
-      final update = await sourceIndex.update(project);
-      final results = await sourceIndex.search(project.id, 'searchableValue');
+        final update = await sourceIndex.update(project);
+        final results = await sourceIndex.search(project.id, 'searchableValue');
 
-      expect(update.total, 1);
-      expect(results, isNotEmpty);
-    } finally {
-      await root.delete(recursive: true);
-    }
-  });
+        expect(update.total, 1);
+        expect(results, isNotEmpty);
+      } finally {
+        await root.delete(recursive: true);
+      }
+    },
+  );
 }

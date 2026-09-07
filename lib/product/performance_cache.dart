@@ -67,8 +67,9 @@ final class RebuildableCacheDatabase implements PerformanceSpanSink {
   static const int _maintenanceInterval = 128;
   static const int _performanceBatchSize = 64;
   static const Duration _performanceFlushDelay = Duration(seconds: 2);
-  static final RegExp _generationNamespacePattern =
-      RegExp(r'^[A-Za-z0-9][A-Za-z0-9._:\-]*$');
+  static final RegExp _generationNamespacePattern = RegExp(
+    r'^[A-Za-z0-9][A-Za-z0-9._:\-]*$',
+  );
   static final RegExp _hexHashPattern = RegExp(r'^[A-Fa-f0-9]+$');
   static const List<int> _sqliteHeader = <int>[
     0x53,
@@ -211,14 +212,10 @@ final class RebuildableCacheDatabase implements PerformanceSpanSink {
               .first['value'],
         );
         if (userTables != 0) {
-          throw const _CacheRebuildRequired(
-            'cache_unversioned_schema_present',
-          );
+          throw const _CacheRebuildRequired('cache_unversioned_schema_present');
         }
       } else if (schemaVersion != currentSchemaVersion) {
-        throw _CacheRebuildRequired(
-          'cache_schema_unsupported_v$schemaVersion',
-        );
+        throw _CacheRebuildRequired('cache_schema_unsupported_v$schemaVersion');
       }
       _configure(database, persistent: true);
       if (schemaVersion == 0) {
@@ -557,7 +554,10 @@ ON CONFLICT(namespace, project_hash) DO UPDATE SET
         namespace.length > 96 ||
         !_generationNamespacePattern.hasMatch(namespace)) {
       throw ArgumentError.value(
-          namespace, 'namespace', 'invalid cache namespace');
+        namespace,
+        'namespace',
+        'invalid cache namespace',
+      );
     }
     if (projectHash.isNotEmpty &&
         (projectHash.length < 16 ||

@@ -86,28 +86,26 @@ void main() {
       ],
     );
 
-    expect(
-      report.actionable.map((item) => item.id).toList(),
-      <String>['model', 'search'],
-    );
+    expect(report.actionable.map((item) => item.id).toList(), <String>[
+      'model',
+      'search',
+    ]);
   });
 
   test('P5-011 rejects duplicate capability identities', () {
     expect(
       () => CapabilityDoctorReport(
         depth: CapabilityDoctorDepth.quick,
-        checks: <CapabilityDoctorCheck>[
-          check('model'),
-          check('model'),
-        ],
+        checks: <CapabilityDoctorCheck>[check('model'), check('model')],
       ),
       throwsArgumentError,
     );
   });
 
   test('P5-011 runtime and Chat wiring preserve task preflight', () async {
-    final runtime =
-        await File('lib/product/product_runtime.dart').readAsString();
+    final runtime = await File(
+      'lib/product/product_runtime.dart',
+    ).readAsString();
     final chat = await File('lib/product/chat_studio.dart').readAsString();
 
     expect(runtime, contains('inspectCapabilities({'));

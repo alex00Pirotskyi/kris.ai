@@ -444,9 +444,7 @@ class SemanticProgressEngine {
     } else {
       final failureSignature = after.errorCodes.isEmpty
           ? ''
-          : Sha256.text(
-              canonicalJson(after.errorCodes.toList()..sort()),
-            );
+          : Sha256.text(canonicalJson(after.errorCodes.toList()..sort()));
       if (failureSignature.isNotEmpty) {
         if (state.lastFailureSignature == failureSignature) {
           state.sameFailureCount++;

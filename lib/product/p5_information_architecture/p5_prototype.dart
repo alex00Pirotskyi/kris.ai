@@ -20,10 +20,7 @@ part 'p5_components.dart';
 part 'p5_shell_workspace.dart';
 
 class P5InformationArchitectureApp extends StatefulWidget {
-  const P5InformationArchitectureApp({
-    super.key,
-    this.controller,
-  });
+  const P5InformationArchitectureApp({super.key, this.controller});
 
   final P5InformationArchitectureController? controller;
 
@@ -114,23 +111,29 @@ class _P5InformationArchitecturePrototypeState
       TextEditingController(
     text: widget.controller.state.acceptanceCriteria.join('\n'),
   );
-  final TextEditingController _webProfileController =
-      TextEditingController(text: 'work');
-  final TextEditingController _webUrlController =
-      TextEditingController(text: 'http://127.0.0.1:3000/');
-  final TextEditingController _webLocatorController =
-      TextEditingController(text: 'body');
-  final TextEditingController _webRoleController =
-      TextEditingController(text: 'button');
+  final TextEditingController _webProfileController = TextEditingController(
+    text: 'work',
+  );
+  final TextEditingController _webUrlController = TextEditingController(
+    text: 'http://127.0.0.1:3000/',
+  );
+  final TextEditingController _webLocatorController = TextEditingController(
+    text: 'body',
+  );
+  final TextEditingController _webRoleController = TextEditingController(
+    text: 'button',
+  );
   final TextEditingController _webActionValueController =
       TextEditingController();
   final TextEditingController _webTargetController = TextEditingController();
   final TextEditingController _webUploadPathController =
       TextEditingController();
-  final TextEditingController _webUploadNameController =
-      TextEditingController(text: 'upload.bin');
-  final TextEditingController _webUploadMimeController =
-      TextEditingController(text: 'application/octet-stream');
+  final TextEditingController _webUploadNameController = TextEditingController(
+    text: 'upload.bin',
+  );
+  final TextEditingController _webUploadMimeController = TextEditingController(
+    text: 'application/octet-stream',
+  );
 
   P3BrowserSessionProcess? _webBrowser;
   P3BrowserSessionKind _webSessionKind = P3BrowserSessionKind.ephemeral;
@@ -245,14 +248,14 @@ class _P5InformationArchitecturePrototypeState
         const SingleActivator(LogicalKeyboardKey.digit8, alt: true):
             const _P5WorkspaceIntent(P5WorkspaceId.modelsProviders),
         const SingleActivator(LogicalKeyboardKey.digit9, alt: true):
-            const _P5WorkspaceIntent(
-          P5WorkspaceId.capabilitiesIntegrations,
-        ),
+            const _P5WorkspaceIntent(P5WorkspaceId.capabilitiesIntegrations),
         const SingleActivator(
           LogicalKeyboardKey.keyV,
           control: true,
           shift: true,
-        ): const _P5WorkspaceIntent(P5WorkspaceId.verificationCenter),
+        ): const _P5WorkspaceIntent(
+          P5WorkspaceId.verificationCenter,
+        ),
         const SingleActivator(LogicalKeyboardKey.enter, control: true):
             const _P5LaunchComposerIntent(),
         const SingleActivator(LogicalKeyboardKey.enter, meta: true):
@@ -435,11 +438,7 @@ class _P5InformationArchitecturePrototypeState
           const SizedBox(width: 8),
         ],
       ),
-      body: _buildP5ThreePaneBody(
-        context,
-        compact: compact,
-        state: state,
-      ),
+      body: _buildP5ThreePaneBody(context, compact: compact, state: state),
     );
   }
 
@@ -483,10 +482,7 @@ class _P5InformationArchitecturePrototypeState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text(
-                'Kristin',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
+              Text('Kristin', style: Theme.of(context).textTheme.headlineSmall),
               Text('${state.experienceLevel.label} presentation'),
             ],
           ),
@@ -610,10 +606,14 @@ class _P5InformationArchitecturePrototypeState
       P5WorkspaceId.capabilitiesIntegrations => _capabilitiesWorkspace(context),
       P5WorkspaceId.settingsDiagnostics => _settingsWorkspace(context),
       P5WorkspaceId.webStudio => _webStudioWorkspace(context),
-      P5WorkspaceId.searchResearch =>
-        _futureCapabilityWorkspace(context, workspace),
-      P5WorkspaceId.nativeAutomation =>
-        _futureCapabilityWorkspace(context, workspace),
+      P5WorkspaceId.searchResearch => _futureCapabilityWorkspace(
+          context,
+          workspace,
+        ),
+      P5WorkspaceId.nativeAutomation => _futureCapabilityWorkspace(
+          context,
+          workspace,
+        ),
       P5WorkspaceId.devices => _futureCapabilityWorkspace(context, workspace),
     };
   }

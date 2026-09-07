@@ -173,8 +173,10 @@ class PlanReconciler {
     final revisedByKey = <String, UniversalTask>{
       for (final task in revised.tasks) task.semanticKey: task,
     };
-    final invalidators =
-        _invalidatingTerms(previous.specification, revised.specification);
+    final invalidators = _invalidatingTerms(
+      previous.specification,
+      revised.specification,
+    );
 
     final reconciliations = <TaskReconciliation>[];
     final tasks = <UniversalTask>[];
@@ -330,8 +332,9 @@ class PlanReconciler {
     ];
     final terms = <String>{};
     for (final statement in added) {
-      for (final raw
-          in statement.toLowerCase().split(RegExp(r'[^a-z0-9.+#-]+'))) {
+      for (final raw in statement.toLowerCase().split(
+            RegExp(r'[^a-z0-9.+#-]+'),
+          )) {
         // Interior punctuation is meaningful ("c++", "c#", ".net"), but
         // trailing sentence punctuation is not: without this trim the term
         // from "Do not use Firebase." is "firebase." and never matches the

@@ -4,41 +4,42 @@ import 'package:kristin_local_agent/product/p8_external_effects.dart';
 void main() {
   group('P8-003 external-effect state machine', () {
     test(
-        'normal effect requires authorization, observation and commit evidence',
-        () {
-      final receipt = ExternalEffectReceipt(
-        effectId: 'effect-1',
-        idempotencyKey: 'idem-1',
-      );
-      final now = DateTime.utc(2026, 8, 23, 12);
+      'normal effect requires authorization, observation and commit evidence',
+      () {
+        final receipt = ExternalEffectReceipt(
+          effectId: 'effect-1',
+          idempotencyKey: 'idem-1',
+        );
+        final now = DateTime.utc(2026, 8, 23, 12);
 
-      expect(receipt.retryAllowed, isTrue);
-      receipt.transition(
-        ExternalEffectState.authorized,
-        evidenceId: 'grant-1',
-        recordedAt: now,
-      );
-      receipt.transition(
-        ExternalEffectState.started,
-        evidenceId: 'worker-start-1',
-        recordedAt: now,
-      );
-      expect(receipt.retryAllowed, isFalse);
-      receipt.transition(
-        ExternalEffectState.observed,
-        evidenceId: 'observation-1',
-        recordedAt: now,
-      );
-      receipt.transition(
-        ExternalEffectState.committed,
-        evidenceId: 'commit-1',
-        recordedAt: now,
-      );
+        expect(receipt.retryAllowed, isTrue);
+        receipt.transition(
+          ExternalEffectState.authorized,
+          evidenceId: 'grant-1',
+          recordedAt: now,
+        );
+        receipt.transition(
+          ExternalEffectState.started,
+          evidenceId: 'worker-start-1',
+          recordedAt: now,
+        );
+        expect(receipt.retryAllowed, isFalse);
+        receipt.transition(
+          ExternalEffectState.observed,
+          evidenceId: 'observation-1',
+          recordedAt: now,
+        );
+        receipt.transition(
+          ExternalEffectState.committed,
+          evidenceId: 'commit-1',
+          recordedAt: now,
+        );
 
-      expect(receipt.state, ExternalEffectState.committed);
-      expect(receipt.requiresReconciliation, isFalse);
-      expect(receipt.transitions, hasLength(4));
-    });
+        expect(receipt.state, ExternalEffectState.committed);
+        expect(receipt.requiresReconciliation, isFalse);
+        expect(receipt.transitions, hasLength(4));
+      },
+    );
 
     test('unknown effect cannot be blindly retried', () {
       final receipt = ExternalEffectReceipt(

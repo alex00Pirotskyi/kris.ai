@@ -349,8 +349,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Sessions',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Sessions',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -393,7 +395,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onSelected: process == null || _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                              () => _webDownloadsEnabled = value),
+                                () => _webDownloadsEnabled = value,
+                              ),
                     ),
                     FilterChip(
                       label: const Text('Uploads'),
@@ -401,7 +404,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       onSelected: process == null || _webBusy
                           ? null
                           : (value) => mutatePresentation(
-                              () => _webUploadsEnabled = value),
+                                () => _webUploadsEnabled = value,
+                              ),
                     ),
                     FilledButton.icon(
                       key: const Key('web-open-session'),
@@ -587,8 +591,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                         width: 130,
                         child: TextField(
                           controller: _webRoleController,
-                          decoration:
-                              const InputDecoration(labelText: 'ARIA role'),
+                          decoration: const InputDecoration(
+                            labelText: 'ARIA role',
+                          ),
                         ),
                       ),
                     SizedBox(
@@ -622,8 +627,9 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       width: 220,
                       child: TextField(
                         controller: _webActionValueController,
-                        decoration:
-                            const InputDecoration(labelText: 'Action value'),
+                        decoration: const InputDecoration(
+                          labelText: 'Action value',
+                        ),
                       ),
                     ),
                     if (_webAction == P3BrowserActionKind.drag)
@@ -632,7 +638,8 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                         child: TextField(
                           controller: _webTargetController,
                           decoration: const InputDecoration(
-                              labelText: 'Target locator'),
+                            labelText: 'Target locator',
+                          ),
                         ),
                       ),
                     FilledButton.icon(
@@ -691,16 +698,18 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
                       width: 170,
                       child: TextField(
                         controller: _webUploadNameController,
-                        decoration:
-                            const InputDecoration(labelText: 'Upload filename'),
+                        decoration: const InputDecoration(
+                          labelText: 'Upload filename',
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 210,
                       child: TextField(
                         controller: _webUploadMimeController,
-                        decoration:
-                            const InputDecoration(labelText: 'MIME type'),
+                        decoration: const InputDecoration(
+                          labelText: 'MIME type',
+                        ),
                       ),
                     ),
                     OutlinedButton.icon(
@@ -733,8 +742,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Live browser preview',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Live browser preview',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             if (encoded is String && encoded.isNotEmpty)
               ConstrainedBox(
@@ -778,14 +789,13 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         ),
         _webTextCard(context, 'Visible text', _observationText('visibleText')),
         _webJsonPanel(
-          context,
-          'Forms',
-          <String, Object?>{
-            'forms': _webObservation!.observation['forms'],
-            'formsTruncated': _webObservation!.observation['formsTruncated'],
-          },
-          'No forms captured.',
-        ),
+            context,
+            'Forms',
+            <String, Object?>{
+              'forms': _webObservation!.observation['forms'],
+              'formsTruncated': _webObservation!.observation['formsTruncated'],
+            },
+            'No forms captured.'),
         const _BoundaryNotice(
           message:
               'The snapshot is live P3 evidence. DOM-to-source mapping remains P3-014 and is not claimed here.',
@@ -825,8 +835,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text('Browser activity',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Browser activity',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             if (_webActivity.isEmpty)
               const Text('No Web Studio runtime actions yet.')
             else
@@ -858,8 +870,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Download quarantine receipts',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Download quarantine receipts',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (_webDownloads.isEmpty)
                   const Text('No controlled downloads.')
                 else
@@ -890,8 +904,10 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
-                Text('Upload receipts',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Upload receipts',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (_webUploads.isEmpty)
                   const Text('No controlled uploads.')
                 else
@@ -971,10 +987,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
   String _observationText(String key) =>
       _observationMap(key)?['text']?.toString() ?? '';
 
-  Future<void> _runWeb(
-    String label,
-    Future<void> Function() action,
-  ) async {
+  Future<void> _runWeb(String label, Future<void> Function() action) async {
     if (_webBusy) return;
     mutatePresentation(() {
       _webBusy = true;
@@ -1247,9 +1260,7 @@ extension _P5SupportWorkspaces on _P5InformationArchitecturePrototypeState {
         await _webBrowser!.downloadPage(
           _webSelectedSessionId!,
           _webSelectedPageId!,
-          P3BrowserDownloadRequest(
-            locators: <P3BrowserLocator>[_webLocator()],
-          ),
+          P3BrowserDownloadRequest(locators: <P3BrowserLocator>[_webLocator()]),
         );
         await _refreshWebStateImpl();
       });

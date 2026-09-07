@@ -179,10 +179,7 @@ final class PromptClarificationSession {
     );
     final errors = session.validate();
     if (errors.isNotEmpty) {
-      throw ProductException(
-        'prompt_clarification_invalid',
-        errors.join(' '),
-      );
+      throw ProductException('prompt_clarification_invalid', errors.join(' '));
     }
     return session;
   }
@@ -388,17 +385,14 @@ Return the compact clarification JSON now.
         fallbackUsed: true,
       );
     }
-    await audit.append(
-      'prompt.clarification_generated',
-      session.id,
-      <String, dynamic>{
-        'goalHash': session.goalHash,
-        'model': model.toJson(),
-        'questionCount': session.questions.length,
-        'fallbackUsed': fallbackUsed,
-        'responseHash': Sha256.text(generation.text),
-      },
-    );
+    await audit
+        .append('prompt.clarification_generated', session.id, <String, dynamic>{
+      'goalHash': session.goalHash,
+      'model': model.toJson(),
+      'questionCount': session.questions.length,
+      'fallbackUsed': fallbackUsed,
+      'responseHash': Sha256.text(generation.text),
+    });
     await events.publish(
       'prompt.clarification_ready',
       session.id,
@@ -638,9 +632,9 @@ When STRUCTURED INTAKE is supplied, every answer is an explicit user decision. I
     };
     final intake = clarification == null
         ? 'None'
-        : const JsonEncoder.withIndent(' ').convert(
-            clarification.answeredJson(normalizedAnswers),
-          );
+        : const JsonEncoder.withIndent(
+            ' ',
+          ).convert(clarification.answeredJson(normalizedAnswers));
     var user = '''
 ACTION
 $actionInstruction
@@ -1213,10 +1207,8 @@ Repair the complete plan. Keep no more than $limit tasks, use unique IDs, valid 
     // three different structures. This also carries phase/parentId onto
     // the compiled WorkItem instead of flattening the hierarchy into
     // description prose, which is what used to destroy it.
-    final specification =
-        const PromptStudioSpecificationAdapter().fromPromptVersion(
-      promptVersion,
-    );
+    final specification = const PromptStudioSpecificationAdapter()
+        .fromPromptVersion(promptVersion);
     final canonical = UniversalTaskPlan(
       id: newId('universal_plan'),
       specification: specification,

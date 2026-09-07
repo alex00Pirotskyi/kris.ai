@@ -37,9 +37,7 @@ Map<String, dynamic> _effectiveResearchSearchJson() {
       ...json,
       'description': _researchSearchDescription,
       'inputSchema': inputSchema,
-      'example': const <String, dynamic>{
-        'query': 'official API documentation',
-      },
+      'example': const <String, dynamic>{'query': 'official API documentation'},
     };
   }
   throw StateError('Generated research_search contract is missing.');
@@ -55,8 +53,9 @@ class ToolSchemaRegistry {
   const ToolSchemaRegistry();
 
   static const base.ToolSchemaRegistry _base = base.ToolSchemaRegistry();
-  static final base.ToolContract _researchSearch =
-      base.ToolContract.fromJson(_effectiveResearchSearchJson());
+  static final base.ToolContract _researchSearch = base.ToolContract.fromJson(
+    _effectiveResearchSearchJson(),
+  );
 
   String get version => _base.version;
   String get contractDigest => _base.contractDigest;
