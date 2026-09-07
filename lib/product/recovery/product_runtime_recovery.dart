@@ -909,21 +909,33 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
   /// Delegates bounded authority to a governed recovery run that carries a
   /// *new* commandId, so the parent's grants cannot cover it implicitly.
   ///
-  /// INVARIANT: child_authority <= remaining_parent_authority. Enforced by
-  /// arithmetic here because sharing is not available:
-  ///   * scope    -- never exceeds the parent's currently active scopes;
-  ///   * expiry   -- never later than the parent's latest surviving expiry;
-  ///   * uses     -- never more than the parent's total remaining uses, and the
-  ///                 parent is debited by exactly what the child receives, so
+  /// INVARIANT: no delegated child may exercise any scope more times, for
+  /// longer, or in a broader combination than the source authority actually
+  /// permitted. Enforced by [boundRecoveryDelegation], which picks ONE active
+  /// parent grant that individually covers the whole required scope set:
+  ///   * scope    -- a subset of that one grant's scopes;
+  ///   * expiry   -- that grant's own expiry, never a later one borrowed from
+  ///                 a different grant;
+  ///   * uses     -- never more than that grant's own remaining uses, and it
+  ///                 is debited by exactly what the child receives, so
   ///                 authority is conserved rather than created;
-  ///   * lifetime -- an expired, revoked or exhausted parent contributes no
-  ///                 scopes and this fails closed instead of resurrecting it.
+  ///   * lifetime -- an expired, revoked or exhausted grant is not active and
+  ///                 contributes nothing, so this fails closed instead of
+  ///                 resurrecting it.
   ///
-  /// Debiting is what makes sibling delegation safe. Two recovery children of
-  /// one parent draw from the same finite pool: the first reduces what the
-  /// second can be given, and the sum can never exceed the original approval.
-  /// Without the debit, each sibling would receive the parent's full remaining
-  /// budget and N children would multiply a single human approval N times.
+  /// The single source is the point. PermissionService.require spends
+  /// whichever grant *itself* allows a scope, so a parent's real authority for
+  /// a scope is bounded by the grants carrying that scope -- not by the sum
+  /// across all of them. Pooling separate grants would hand each scope the
+  /// other grant's budget and lifetime. When no single grant covers the
+  /// required set the delegation is refused rather than assembled.
+  ///
+  /// Debiting is what makes sibling delegation safe. Two recovery children
+  /// drawing on the same grant share its finite budget: the first reduces what
+  /// the second can be given, and the sum can never exceed the original
+  /// approval. Without the debit, each sibling would receive that grant's full
+  /// remaining budget and N children would multiply one human approval N
+  /// times.
   Future<void> _delegateBoundedAuthority({
     required RunRecord? source,
     required RunRecord target,
@@ -1029,8 +1041,12 @@ final class ProductRuntimeRecoveryTaskRouter implements RecoveryTaskRouter {
           'Recovery plan requires authority that was not granted to the original task.',
       };
 
-  /// Collects the parent's currently usable authority and fails closed when it
-  /// does not cover [required].
+  /// Collects the parent's currently usable authority and fails closed when
+  /// the union of its active scopes does not cover [required].
+  ///
+  /// Union coverage is the right test here: it separates "you never held this
+  /// scope" from "you held it, but not all in one grant". The second case is
+  /// caught later by [boundRecoveryDelegation].
   Future<_ParentAuthorityEnvelope> _parentAuthorityEnvelope({
     required RunRecord? source,
     required RunRecord target,
@@ -1207,8 +1223,16 @@ RecoveryDelegationBound boundRecoveryDelegation({
   );
 }
 
-/// The authority that still remains to a parent run at one instant: the ceiling
-/// any recovery child may be given, and never more.
+/// The authority that still remains to a parent run at one instant.
+///
+/// This is what a continuation SHARING the parent's commandId inherits: each
+/// scope stays bound to the grants that carry it, with their own budgets and
+/// expiries, because that is how PermissionService.require spends them.
+///
+/// It is an upper bound on delegation, not the delegation ceiling. A minted
+/// child is bounded more tightly, by one covering grant -- see
+/// [boundRecoveryDelegation]. The aggregate fields here are evidence about
+/// what the parent held, and must not be used to size a child grant.
 final class _ParentAuthorityEnvelope {
   const _ParentAuthorityEnvelope({
     required this.grants,

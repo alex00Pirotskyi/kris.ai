@@ -8,9 +8,17 @@
 //   authority  -- someone actually granted permission to use it
 //
 // For a sensitive or destructive capability the evidence gate additionally
-// demands *directly observed* evidence at *high* confidence. Inference, cache
-// and hearsay are knowledge, not proof, and a capability Kristin merely
-// believes is present must not be reported as usable.
+// demands a single witness that is *itself* both directly observed and at
+// least *high* confidence. Inference, cache and hearsay are knowledge, not
+// proof, and a capability Kristin merely believes is present must not be
+// reported as usable.
+//
+// The witness must be atomic. Asking "is any item direct?" and "is any item
+// high-confidence?" separately lets an inferred-but-certain item supply the
+// confidence while an observed-but-low item supplies the directness --
+// composing a claim no single observation supports. That is the same defect
+// shape as pooling separate permission grants into one stronger authority
+// envelope, and it fails closed here for the same reason.
 //
 // This rule materially affects capability truthfulness -- the first real
 // execution of this subsystem showed a fixture tripping it -- but it had no
@@ -193,11 +201,43 @@ void main() {
       expect(capability.operationallyUsableAt(now), isFalse);
     });
 
+    test('directly observed certain-confidence evidence satisfies the gate',
+        () {
+      final capability = _capability(
+        now: now,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.observed,
+            confidence: ObservationConfidence.certain,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(capability.operationallyUsableAt(now), isTrue);
+    });
+
+    test('configured evidence at high confidence satisfies the gate', () {
+      final capability = _capability(
+        now: now,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.configured,
+            confidence: ObservationConfidence.high,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(capability.operationallyUsableAt(now), isTrue);
+    });
+  });
+
+  group('directness and confidence must come from the same witness', () {
     test(
-      'a strong indirect observation cannot be topped up by a weak direct one',
+      'a certain inference plus a low direct observation is refused',
       () {
-        // hasDirectEvidence and the confidence floor are separate conditions;
-        // neither may be satisfied by the other's witness.
+        // The set contains a directly observed item, and the set's strongest
+        // confidence is `certain` -- but no single observation is both. The
+        // gate must read one witness, not the union of two.
         final capability = _capability(
           now: now,
           evidence: <KnowledgeEvidence>[
@@ -213,15 +253,117 @@ void main() {
             ),
           ],
         );
-        // The strongest confidence present is `certain`, and a directly
-        // observed item is present, so this documents the rule as implemented:
-        // the gate reads the set, not a single item. It is recorded here so a
-        // future tightening to per-item pairing is a deliberate, visible
-        // change rather than a silent one.
+        expect(
+          capability.operationallyUsableAt(now),
+          isFalse,
+          reason: 'nothing directly observed was ever high-confidence',
+        );
+      },
+    );
+
+    test('a certain cache plus a medium configuration is refused', () {
+      final capability = _capability(
+        now: now,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.cached,
+            confidence: ObservationConfidence.certain,
+            observedAt: now,
+          ),
+          _evidence(
+            kind: KnowledgeEvidenceKind.configured,
+            confidence: ObservationConfidence.medium,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(capability.operationallyUsableAt(now), isFalse);
+    });
+
+    test(
+      'a qualifying witness still passes when weaker evidence sits beside it',
+      () {
+        // The observed/high item satisfies the gate on its own, so unrelated
+        // indirect evidence in the same set neither helps nor harms.
+        final capability = _capability(
+          now: now,
+          evidence: <KnowledgeEvidence>[
+            _evidence(
+              kind: KnowledgeEvidenceKind.observed,
+              confidence: ObservationConfidence.high,
+              observedAt: now,
+            ),
+            _evidence(
+              kind: KnowledgeEvidenceKind.inferred,
+              confidence: ObservationConfidence.certain,
+              observedAt: now,
+            ),
+          ],
+        );
         expect(capability.operationallyUsableAt(now), isTrue);
       },
     );
 
+    test('every direct item being sub-high is refused, however many there are',
+        () {
+      final capability = _capability(
+        now: now,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.observed,
+            confidence: ObservationConfidence.medium,
+            observedAt: now,
+          ),
+          _evidence(
+            kind: KnowledgeEvidenceKind.configured,
+            confidence: ObservationConfidence.low,
+            observedAt: now,
+          ),
+          _evidence(
+            kind: KnowledgeEvidenceKind.inferred,
+            confidence: ObservationConfidence.certain,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(capability.operationallyUsableAt(now), isFalse);
+    });
+
+    test('a destructive capability follows the same paired-witness rule', () {
+      final mixed = _capability(
+        now: now,
+        riskClass: CapabilityRiskClass.destructive,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.inferred,
+            confidence: ObservationConfidence.certain,
+            observedAt: now,
+          ),
+          _evidence(
+            kind: KnowledgeEvidenceKind.observed,
+            confidence: ObservationConfidence.low,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(mixed.operationallyUsableAt(now), isFalse);
+
+      final paired = _capability(
+        now: now,
+        riskClass: CapabilityRiskClass.destructive,
+        evidence: <KnowledgeEvidence>[
+          _evidence(
+            kind: KnowledgeEvidenceKind.observed,
+            confidence: ObservationConfidence.high,
+            observedAt: now,
+          ),
+        ],
+      );
+      expect(paired.operationallyUsableAt(now), isTrue);
+    });
+  });
+
+  group('the rest of the sensitive gate', () {
     test('a destructive capability is held to the same evidence bar', () {
       final weak = _capability(
         now: now,

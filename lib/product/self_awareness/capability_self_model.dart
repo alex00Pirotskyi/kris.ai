@@ -305,7 +305,27 @@ final class CapabilityAvailability {
     return best;
   }
 
+  /// Whether ANY item is directly observed. Descriptive only: never pair this
+  /// with [strongestConfidence] to gate anything, because the two can be
+  /// satisfied by different witnesses. Use [hasDirectEvidenceAtLeast].
   bool get hasDirectEvidence => evidence.any((item) => item.directlyObserved);
+
+  /// Whether a SINGLE fresh evidence item is both directly observed and at
+  /// least [minimum] confidence.
+  ///
+  /// Directness and confidence must come from the same witness. Asking
+  /// `hasDirectEvidence` and `strongestConfidence` independently lets an
+  /// inferred-but-certain item supply the confidence while a separate
+  /// observed-but-low item supplies the directness, composing a claim that no
+  /// single observation supports -- the same shape of defect as pooling
+  /// separate permission grants into one stronger authority envelope.
+  bool hasDirectEvidenceAtLeast(ObservationConfidence minimum, DateTime now) =>
+      evidence.any(
+        (item) =>
+            item.directlyObserved &&
+            item.isFreshAt(now) &&
+            _confidenceRank(item.confidence) >= _confidenceRank(minimum),
+      );
 
   Map<String, Object?> toJson() => <String, Object?>{
         'capabilityId': capabilityId,
@@ -413,9 +433,12 @@ final class KnownCapability {
     }
     if (descriptor.riskClass == CapabilityRiskClass.sensitive ||
         descriptor.riskClass == CapabilityRiskClass.destructive) {
-      if (!availability.hasDirectEvidence ||
-          _confidenceRank(availability.strongestConfidence) <
-              _confidenceRank(ObservationConfidence.high)) {
+      // One witness must carry both properties. See
+      // hasDirectEvidenceAtLeast for why these cannot be asked separately.
+      if (!availability.hasDirectEvidenceAtLeast(
+        ObservationConfidence.high,
+        now,
+      )) {
         return false;
       }
     }
