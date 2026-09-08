@@ -110,7 +110,11 @@ final class ProductRuntimeCognitiveGateway {
         forceRefresh: forceRefresh,
         includeProjectKnowledge: includeProjectKnowledge,
         includeMemory: includeMemory,
-        includePublishedSkills: includePublishedSkills,
+        // Ordinary conversation gets identity/product/live capability state by
+        // default, not the user's global published procedure catalog. Explicit
+        // skill introspection and planning paths can still request that catalog.
+        includePublishedSkills: includePublishedSkills ??
+            pathway != CognitiveReasoningPathway.conversation,
       ));
 
   Future<SelfModelPlanningContext> planningContext({
@@ -199,12 +203,9 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
       final raw = double.tryParse(json['confidence']?.toString() ?? '') ?? 0.0;
       final confidence = raw.clamp(0.0, 1.0).toDouble();
       var capabilityId = json['capabilityId']?.toString().trim() ?? '';
-      if (capabilityId.isNotEmpty) {
-        final self = await awareness.snapshot(
-          selectedProject: selectedProject,
-          selectedModel: model,
-        );
-        if (self.capability(capabilityId) == null) capabilityId = '';
+      if (capabilityId.isNotEmpty &&
+          !projection.includedIds.contains('capability:$capabilityId')) {
+        capabilityId = '';
       }
       return CognitiveConversationDecision(
         kind: confidence < 0.55 ? CognitiveConversationKind.unclear : kind,
