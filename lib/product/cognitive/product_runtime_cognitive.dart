@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import '../crypto_utils.dart';
 import '../domain.dart';
 import '../models_research.dart';
 import '../product_runtime.dart';
@@ -207,7 +208,7 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
           !projection.includedIds.contains('capability:$capabilityId')) {
         capabilityId = '';
       }
-      return CognitiveConversationDecision(
+      final decision = CognitiveConversationDecision(
         kind: confidence < 0.55 ? CognitiveConversationKind.unclear : kind,
         objective: _bounded(
           json['objective']?.toString().trim().isNotEmpty == true
@@ -219,6 +220,25 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
         confidence: confidence,
         rationale: _bounded(json['rationale']?.toString().trim() ?? '', 500),
       );
+      try {
+        await runtime.audit.append(
+          'chat.cognitive_classified',
+          Sha256.text(message),
+          <String, dynamic>{
+            'messageHash': Sha256.text(message),
+            'objectiveHash': Sha256.text(decision.objective),
+            'modelExactId': model.exactId,
+            'kind': decision.kind.name,
+            'confidence': decision.confidence,
+            'capabilityId': decision.capabilityId,
+            'snapshotFingerprint': projection.snapshotFingerprint,
+            'contextFingerprint': projection.contextFingerprint,
+          },
+        );
+      } catch (_) {
+        // Classification audit must not change routing behavior.
+      }
+      return decision;
     } catch (_) {
       return null;
     }
