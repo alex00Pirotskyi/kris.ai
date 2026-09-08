@@ -1,10 +1,11 @@
 {
+  "activeSemaphoreId": "SEM-QWEN-P11-001-6DB7D2FB",
   "allowedPaths": [
     "tool/worker_e*.py",
     "tool/worker_e_dependency_binding.py",
     "tool/worker_e_native_parity_readiness_test.py"
   ],
-  "assignedWorker": "ELASTIC-QWEN-E8087CB8",
+  "assignedWorker": "ELASTIC-QWEN-9699D9A3",
   "baseCommit": "f5d2e747edd463877c1fa0df7db4a6211b16d51b",
   "baseTree": "893f8ab6fbd266684dc8ee658e70a6a540e5bed3",
   "createdAt": "2026-08-20T15:01:51Z",
@@ -24,8 +25,8 @@
   ],
   "roadmapTask": "P11-001",
   "schemaVersion": 1,
-  "status": "READY",
+  "status": "IN_PROGRESS",
   "type": "PRODUCT_DEFECT_REPAIR",
-  "updatedAt": "2026-09-08T12:07:02Z",
+  "updatedAt": "2026-09-08T13:39:11Z",
   "workOrderId": "WO-P11-001-CONTINUOUS-QWEN-E9F39E50"
 }
