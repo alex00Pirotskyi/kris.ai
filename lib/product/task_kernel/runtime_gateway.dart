@@ -5,6 +5,8 @@
 // the kernel stay a plain, testable, Prompt-Studio-free domain while
 // still reusing the production planner rather than reimplementing it.
 import '../chat_control_plane.dart';
+import '../cognitive/cognitive_model.dart';
+import '../cognitive/cognitive_substrate.dart';
 import '../domain.dart';
 import '../models_research.dart';
 import '../prompt_planning.dart';
@@ -20,21 +22,15 @@ import 'task_kernel.dart';
 
 /// Implements the kernel's narrow planning seam over the existing
 /// PromptPlanningService.
-///
-/// Two responsibilities beyond plain delegation:
-///
-///   * the specification's structure reaches the model as structure
-///     (renderForPlanner), not as a flattened request string; and
-///   * the specification's established facts are re-asserted onto the
-///     model's draft afterwards, so a hard constraint the user stated
-///     cannot be dropped by a generator that decided it was optional.
 class PromptPlanningKernelGateway implements KernelPlanningGateway {
   const PromptPlanningKernelGateway({
     required this.planning,
+    required this.cognitiveContextKey,
     this.capabilityBriefing = '',
   });
 
   final PromptPlanningService planning;
+  final Object cognitiveContextKey;
 
   /// What Kristin can actually do right now, handed to the planning model
   /// so it plans against real capabilities. Availability, not authority.
@@ -47,11 +43,53 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     Future<void>? cancellation,
     bool Function()? isCancelled,
   }) async {
+    final recovery = specification.contextRefs.any(
+      (item) => item.startsWith('failure:'),
+    );
+    String? resolvedProjectId;
+    if (recovery) {
+      for (final target in specification.targetRefs) {
+        if (target.resolved &&
+            target.kind == 'project' &&
+            target.value.isNotEmpty) {
+          resolvedProjectId = target.value;
+          break;
+        }
+      }
+    }
+
+    // Ordinary first-stage planning intentionally does not infer a project
+    // selection through mutable session state. Autonomic recovery is different:
+    // its deterministic specification carries a resolved project target and
+    // failure reference, so the recovery pathway can safely retrieve diagnostic
+    // history without widening the planning interface or Runner authority.
+    final cognitive = await CognitiveModelContextRegistry.compile(
+      cognitiveContextKey,
+      CognitiveContextRequest(
+        objective: specification.originalRequest,
+        pathway: recovery
+            ? CognitiveReasoningPathway.recovery
+            : CognitiveReasoningPathway.taskPlanning,
+        projectId: resolvedProjectId,
+        selectedModel: model,
+        taskFamily: 'software',
+        capabilityHints: specification.capabilityHints.toSet(),
+        includeProjectKnowledge: recovery,
+        includeMemory: recovery,
+        maxCharacters: recovery ? 5600 : 5000,
+      ),
+    );
+    final goal = <String>[
+      specification.renderForPlanner(),
+      if (cognitive != null &&
+          cognitive.contextForUserPrompt().trim().isNotEmpty)
+        'KRISTIN COGNITIVE CONTEXT — TRUST LABELS ARE AUTHORITATIVE\n${cognitive.contextForUserPrompt()}',
+    ].join('\n\n');
     final draft = await planning.generatePrompt(
-      // The planner receives the semantic sections -- objective, hard
-      // constraints, preferences, criteria -- rather than a re-flattened
-      // sentence.
-      goal: specification.renderForPlanner(),
+      // PromptPlanningService places goal in the user message. Cognitive
+      // coordinator facts remain labelled and retrieved recovery evidence stays
+      // in untrusted AgentContext envelopes rather than system instructions.
+      goal: goal,
       model: model,
       cancellation: cancellation,
       isCancelled: isCancelled,
@@ -67,24 +105,42 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     int maxLeafTasks = 25,
     Future<void>? cancellation,
     bool Function()? isCancelled,
-  }) =>
-      planning.generateTaskPlan(
-        promptVersion: promptVersion,
+  }) async {
+    final cognitive = await CognitiveModelContextRegistry.compile(
+      cognitiveContextKey,
+      CognitiveContextRequest(
+        objective: promptVersion.sourceGoal,
+        pathway: CognitiveReasoningPathway.taskPlanning,
         projectId: projectId,
-        model: model,
-        maxLeafTasks: maxLeafTasks,
-        capabilityBriefing: capabilityBriefing,
-        cancellation: cancellation,
-        isCancelled: isCancelled,
-      );
+        selectedModel: model,
+        taskFamily: 'software',
+        // Canonical KnowledgeService retrieval is available because the
+        // project identity is explicit. Any project/web/memory text remains an
+        // AgentContext untrusted-data envelope in the user-level briefing.
+        includeProjectKnowledge: true,
+        includeMemory: true,
+        maxCharacters: 5200,
+      ),
+    );
+    final briefing = <String>[
+      capabilityBriefing,
+      if (cognitive != null &&
+          cognitive.contextForUserPrompt().trim().isNotEmpty)
+        'KRISTIN COGNITIVE CONTEXT — TRUST LABELS ARE AUTHORITATIVE\n${cognitive.contextForUserPrompt()}',
+    ].where((item) => item.trim().isNotEmpty).join('\n\n');
+    return planning.generateTaskPlan(
+      promptVersion: promptVersion,
+      projectId: projectId,
+      model: model,
+      maxLeafTasks: maxLeafTasks,
+      capabilityBriefing: briefing,
+      cancellation: cancellation,
+      isCancelled: isCancelled,
+    );
+  }
 
   /// Deterministic code puts the specification's established content back
-  /// onto the model's draft.
-  ///
-  /// This is the mechanism behind the constraint scenario: "make this app
-  /// faster but don't touch the database" keeps "the database must not be
-  /// modified" as a guardrail on the draft the planner plans against,
-  /// whatever the draft generator chose to write.
+  /// onto the model's draft so cognitive context cannot weaken constraints.
   PromptStudioDraft _reassertSpecification(
     PromptStudioDraft draft,
     TaskSpecification specification,
@@ -123,10 +179,10 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
   }
 }
 
-/// Builds the production kernel.
-///
-/// Every task family is registered here. Adding Browser later means
-/// adding one planner to this list -- not a second planning architecture.
+/// Builds the production kernel. The cognitive substrate supplies bounded,
+/// trust-labelled context to understanding/planning; UTK remains the single
+/// governed planner/compiler and execution keeps its existing run-scoped
+/// KnowledgeService retrieval path.
 UniversalTaskKernel buildUniversalTaskKernel({
   required PromptPlanningService planning,
   required ToolRegistry tools,
@@ -135,13 +191,6 @@ UniversalTaskKernel buildUniversalTaskKernel({
   String ownerCapabilityId = 'owner.mode',
   ModelGenerationDelegate? understandingGenerator,
 }) {
-  // The PLANNING model is briefed on execution-relevant capabilities
-  // only. Orchestration capabilities (agent.create_project and friends)
-  // are excluded deliberately: they are already discharged by the time a
-  // plan exists, and listing them under "AVAILABLE KRISTIN CAPABILITIES"
-  // is what taught the planner to emit tasks whose instructions read
-  // "Use the agent.create_project capability ...". The executor has no
-  // such tool, so that instruction can only ever fail.
   final briefing = UnderstandingContext(
     availableCapabilities: capabilities
         .where((capability) => !capability.isCoordinatorCapability)
@@ -149,13 +198,25 @@ UniversalTaskKernel buildUniversalTaskKernel({
   ).describeCapabilities();
   final gateway = PromptPlanningKernelGateway(
     planning: planning,
+    cognitiveContextKey: models,
     capabilityBriefing: briefing,
   );
+  final rawUnderstandingGenerate = understandingGenerator ??
+      (ModelGenerationRequest request) =>
+          models.providerFor(request.identity).generate(request);
   return UniversalTaskKernel(
     understanding: SemanticSlashUnderstandingService(
       model: ModelBackedUnderstanding(
-        generate: understandingGenerator ??
-            (request) => models.providerFor(request.identity).generate(request),
+        generate: (request) async {
+          final enriched =
+              await CognitiveModelContextRegistry.enrichModelRequest(
+            models,
+            request,
+            pathway: CognitiveReasoningPathway.taskUnderstanding,
+            maxCharacters: 5200,
+          );
+          return rawUnderstandingGenerate(enriched);
+        },
       ),
     ),
     compiler: UniversalPlanCompiler(tools: tools),

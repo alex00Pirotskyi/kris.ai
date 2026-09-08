@@ -308,6 +308,29 @@ void main() {
         'lib/product/task_kernel/software_family.dart',
         'lib/product/task_kernel/task_kernel.dart',
         'lib/product/task_kernel/runtime_gateway.dart',
+        // The cognitive substrate: typed epistemic claims, bounded
+        // trust-separated model context, and the rebuildable semantic index
+        // over historical episodic memory. Read-only; it mints no authority.
+        'lib/product/cognitive/cognitive_model.dart',
+        'lib/product/cognitive/cognitive_substrate.dart',
+        'lib/product/cognitive/memory_fact_index.dart',
+        'lib/product/cognitive/product_runtime_cognitive.dart',
+        'lib/product/cognitive/runtime_cognitive_enrichment.dart',
+        // Module-owned product knowledge. Each capability area describes its
+        // own concepts; the registry rejects duplicate providers/ids. These
+        // descriptors are metadata only and never assert live availability,
+        // health, or authority.
+        'lib/product/product_knowledge.dart',
+        'lib/product/authority_product_knowledge.dart',
+        'lib/product/browser/product_knowledge.dart',
+        'lib/product/chat_product_knowledge.dart',
+        'lib/product/knowledge_product_knowledge.dart',
+        'lib/product/models_product_knowledge.dart',
+        'lib/product/owner_product_knowledge.dart',
+        'lib/product/project_product_knowledge.dart',
+        'lib/product/recovery/product_knowledge.dart',
+        'lib/product/self_awareness/product_knowledge.dart',
+        'lib/product/task_kernel/product_knowledge.dart',
       };
       final actual = activeDartFiles()
           .map((file) => file.path.replaceAll('\\', '/'))
