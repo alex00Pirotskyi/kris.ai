@@ -14,6 +14,7 @@ import 'deployment_support.dart';
 import 'models_research.dart';
 import 'mcp.dart';
 import 'protocol_recovery_policy.dart';
+import 'repository.dart';
 import 'retry_policy.dart';
 import 'run_live_signals.dart';
 import 'run_preflight.dart';
@@ -1383,6 +1384,103 @@ class ArtifactEvidencePolicy {
 /// A narrow deterministic recovery policy for explicitly named design
 /// artifacts. It is intentionally limited to artifact types that have an
 /// objective [ArtifactEvidencePolicy] validator.
+/// Chooses the one deterministic tool call that rescues a work item after the
+/// model has repeatedly failed the action schema.
+///
+/// The rescue is used at most once per item, so it has to be the call the item
+/// actually needs. A verification item whose acceptance criterion is "project
+/// is analyzed without errors" used to fall through to the generic project
+/// listing, which returns nothing at all on a newly created project: the one
+/// rescue was spent producing no evidence, and the run failed with
+/// model_protocol_exhausted having completed no step.
+class ProtocolFallbackPolicy {
+  const ProtocolFallbackPolicy();
+
+  AgentAction? actionFor({
+    required WorkItem item,
+    required String request,
+  }) {
+    final artifactRecovery = const BoundedArtifactRecoveryPolicy().actionFor(
+      item: item,
+      request: request,
+    );
+    if (artifactRecovery != null) {
+      return artifactRecovery;
+    }
+    final label = '${item.title} ${item.description}'
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    final lower = label.toLowerCase();
+    final informationTask = RegExp(
+      r'\b(?:research|online|web|documentation|information|requirements?|specifications?|frameworks?|libraries|tools)\b',
+    ).hasMatch(lower);
+    final boundedQuery = label.length <= 800 ? label : label.substring(0, 800);
+    // A verification item asks for an analysis, and `verify_project` is the
+    // tool that produces one. Falling through to the generic project listing
+    // spent this item's single deterministic rescue on a call that returns
+    // nothing at all on a newly created project, leaving no way to satisfy
+    // "project is analyzed without errors" and failing the run outright.
+    final verificationTask = RegExp(
+      r'\b(?:verif\w*|validat\w*|analy[sz]\w*|diagnos\w*|health|ready|readiness|check|test|build|lint|compile)\b',
+    ).hasMatch(lower);
+    if (verificationTask && item.allowedTools.contains('verify_project')) {
+      return const AgentAction(
+        kind: 'tool',
+        tool: 'verify_project',
+        arguments: <String, dynamic>{},
+        reason:
+            'Coordinator fallback: run the governed project verification this work item asks for after repeated invalid model actions.',
+      );
+    }
+    if (informationTask && item.allowedTools.contains('knowledge_search')) {
+      return AgentAction(
+        kind: 'tool',
+        tool: 'knowledge_search',
+        arguments: <String, dynamic>{
+          'query': boundedQuery,
+          'limit': 8,
+          'includeEpisodes': true,
+          'includeUnsuccessfulEpisodes': false,
+        },
+        reason:
+            'Coordinator fallback: retrieve successful or pinned local knowledge relevant to this information-gathering task.',
+      );
+    }
+    if (item.allowedTools.contains('list_directory')) {
+      return const AgentAction(
+        kind: 'tool',
+        tool: 'list_directory',
+        arguments: <String, dynamic>{
+          'path': '.',
+          'recursive': false,
+          'maxEntries': 200,
+        },
+        reason:
+            'Coordinator fallback: collect one bounded, read-only project-root listing after repeated invalid model actions.',
+      );
+    }
+    if (item.allowedTools.contains('index_project')) {
+      return const AgentAction(
+        kind: 'tool',
+        tool: 'index_project',
+        arguments: <String, dynamic>{},
+        reason:
+            'Coordinator fallback: build the bounded project index after repeated invalid model actions.',
+      );
+    }
+    if (item.allowedTools.contains('git_status')) {
+      return const AgentAction(
+        kind: 'tool',
+        tool: 'git_status',
+        arguments: <String, dynamic>{},
+        reason:
+            'Coordinator fallback: collect bounded Git status after repeated invalid model actions.',
+      );
+    }
+    return null;
+  }
+}
+
 class BoundedArtifactRecoveryPolicy {
   const BoundedArtifactRecoveryPolicy();
 
@@ -3111,10 +3209,8 @@ class RunCoordinator {
       }
     }
 
-    final priorEvidence = (await repositories.evidence.all())
-        .where(
-          (item) => item.runId == run.id && item.workItemId == progress.item.id,
-        )
+    final priorEvidence = (await _evidenceForRun(run.id))
+        .where((item) => item.workItemId == progress.item.id)
         .toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final history = _priorEvidenceHistory(priorEvidence);
@@ -4872,10 +4968,9 @@ class RunCoordinator {
     String query, {
     required bool includeUnsuccessfulEpisodes,
   }) async {
-    final candidates = (await repositories.evidence.all())
+    final candidates = (await _evidenceForRun(runId))
         .where(
           (item) =>
-              item.runId == runId &&
               item.workItemId == workItemId &&
               item.kind == EvidenceKind.knowledge,
         )
@@ -5422,6 +5517,23 @@ Choose the single safest next action. Return one JSON object only.
         'apply_patch',
       }.contains(name);
 
+  /// Evidence for one run, filtered by the store when it can do so.
+  ///
+  /// The evidence collection is append-only for the life of the installation,
+  /// so loading all of it to keep one run's rows made every work-item attempt
+  /// and every run-detail refresh scale with total history rather than with
+  /// the run being executed.
+  Future<List<EvidenceRecord>> _evidenceForRun(String runId) async {
+    final repository = repositories.evidence;
+    if (repository is ScopedEntityQuery<EvidenceRecord>) {
+      return (repository as ScopedEntityQuery<EvidenceRecord>)
+          .whereFieldEquals('runId', runId);
+    }
+    return (await repository.all())
+        .where((item) => item.runId == runId)
+        .toList();
+  }
+
   bool _requiresInspectionEvidence(WorkItem item) {
     final label = '${item.title}\n${item.description}'.toLowerCase();
     return label.contains('inspect project') ||
@@ -5530,69 +5642,8 @@ Choose the single safest next action. Return one JSON object only.
   AgentAction? _preferredProtocolTool(
     WorkItem item, {
     required String request,
-  }) {
-    final artifactRecovery = const BoundedArtifactRecoveryPolicy().actionFor(
-      item: item,
-      request: request,
-    );
-    if (artifactRecovery != null) {
-      return artifactRecovery;
-    }
-    final label = '${item.title} ${item.description}'
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    final lower = label.toLowerCase();
-    final informationTask = RegExp(
-      r'\b(?:research|online|web|documentation|information|requirements?|specifications?|frameworks?|libraries|tools)\b',
-    ).hasMatch(lower);
-    final boundedQuery = label.length <= 800 ? label : label.substring(0, 800);
-    if (informationTask && item.allowedTools.contains('knowledge_search')) {
-      return AgentAction(
-        kind: 'tool',
-        tool: 'knowledge_search',
-        arguments: <String, dynamic>{
-          'query': boundedQuery,
-          'limit': 8,
-          'includeEpisodes': true,
-          'includeUnsuccessfulEpisodes': false,
-        },
-        reason:
-            'Coordinator fallback: retrieve successful or pinned local knowledge relevant to this information-gathering task.',
-      );
-    }
-    if (item.allowedTools.contains('list_directory')) {
-      return const AgentAction(
-        kind: 'tool',
-        tool: 'list_directory',
-        arguments: <String, dynamic>{
-          'path': '.',
-          'recursive': false,
-          'maxEntries': 200,
-        },
-        reason:
-            'Coordinator fallback: collect one bounded, read-only project-root listing after repeated invalid model actions.',
-      );
-    }
-    if (item.allowedTools.contains('index_project')) {
-      return const AgentAction(
-        kind: 'tool',
-        tool: 'index_project',
-        arguments: <String, dynamic>{},
-        reason:
-            'Coordinator fallback: build the bounded project index after repeated invalid model actions.',
-      );
-    }
-    if (item.allowedTools.contains('git_status')) {
-      return const AgentAction(
-        kind: 'tool',
-        tool: 'git_status',
-        arguments: <String, dynamic>{},
-        reason:
-            'Coordinator fallback: collect bounded Git status after repeated invalid model actions.',
-      );
-    }
-    return null;
-  }
+  }) =>
+      const ProtocolFallbackPolicy().actionFor(item: item, request: request);
 
   bool _isAgentProtocolError(ProductException error) => const <String>{
         'model_json_invalid',
@@ -5810,9 +5861,7 @@ Choose the single safest next action. Return one JSON object only.
 
   Future<void> _recordEpisode(RunRecord run, {bool reconciled = false}) async {
     try {
-      final evidence = (await repositories.evidence.all())
-          .where((item) => item.runId == run.id)
-          .toList()
+      final evidence = (await _evidenceForRun(run.id))
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
       final episode = await knowledge.recordEpisode(
         run: run,

@@ -13,6 +13,7 @@ import 'extensions_index.dart';
 import 'file_adapters.dart';
 import 'git_state_probe.dart';
 import 'models_research.dart';
+import 'repository.dart';
 import 'research_search_provider.dart';
 import 'knowledge_memory_v2.dart';
 import 'mcp.dart';
@@ -1649,7 +1650,12 @@ class ProductRuntime {
       ).recordUserResponse(runId: runId, response: response);
 
   Future<List<RunRecord>> listRuns({String? projectId, int limit = 100}) async {
-    var runs = await repositories.runs.all();
+    final repository = repositories.runs;
+    if (repository is ScopedRunQuery) {
+      return (repository as ScopedRunQuery)
+          .recentRuns(projectId: projectId, limit: limit);
+    }
+    var runs = await repository.all();
     if (projectId != null) {
       runs = runs
           .where((run) => run.command.contract.projectId == projectId)
@@ -1661,10 +1667,17 @@ class ProductRuntime {
 
   Future<RunRecord?> getRun(String id) => repositories.runs.get(id);
 
+  /// Evidence for one run. The run-detail view polls this while a run is
+  /// active, so it must cost one scoped query rather than a scan of every
+  /// evidence record the installation has ever written.
   Future<List<EvidenceRecord>> evidenceForRun(String runId) async {
-    final evidence = (await repositories.evidence.all())
-        .where((item) => item.runId == runId)
-        .toList();
+    final repository = repositories.evidence;
+    final evidence = repository is ScopedEntityQuery<EvidenceRecord>
+        ? await (repository as ScopedEntityQuery<EvidenceRecord>)
+            .whereFieldEquals('runId', runId)
+        : (await repository.all())
+            .where((item) => item.runId == runId)
+            .toList();
     evidence.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     return evidence;
   }

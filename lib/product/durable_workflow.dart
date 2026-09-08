@@ -779,6 +779,38 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
             .toList(growable: false);
       });
 
+  /// Entity rows whose top-level JSON [field] equals [value].
+  ///
+  /// SQLite does the filtering, so an unbounded collection costs one indexed
+  /// collection scan in C instead of decoding every historical record into
+  /// Dart objects the caller immediately discards.
+  Future<List<Map<String, dynamic>>> listEntitiesByJsonField(
+    String collection,
+    String field,
+    String value,
+  ) async {
+    if (!_safeJsonFieldPattern.hasMatch(field)) {
+      throw WorkflowStorageException(
+        'entity_json_field_invalid',
+        'A scoped entity query field must be a simple JSON property name: $field',
+      );
+    }
+    return _serialize<List<Map<String, dynamic>>>(() {
+      return _database
+          .select(
+            '''SELECT record_json FROM entity_records
+               WHERE collection = ? AND json_extract(record_json, ?) = ?
+               ORDER BY updated_at DESC, id''',
+            <Object?>[collection, '\$.$field', value],
+          )
+          .map((row) => _decodeMap(row['record_json']))
+          .toList(growable: false);
+    });
+  }
+
+  static final RegExp _safeJsonFieldPattern =
+      RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$');
+
   Future<Map<String, dynamic>?> getEntity(String collection, String id) =>
       _serialize<Map<String, dynamic>?>(() {
         final rows = _database.select(
@@ -939,6 +971,31 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   Future<List<RunRecord>> listRuns() => _serialize<List<RunRecord>>(() {
         return _database
             .select('SELECT run_json FROM runs ORDER BY updated_at DESC, id')
+            .map((row) => RunRecord.fromJson(_decodeMap(row['run_json'])))
+            .toList(growable: false);
+      });
+
+  /// The newest runs, optionally for one project, filtered and limited by
+  /// SQLite through the existing (project_id, updated_at DESC, id) index.
+  Future<List<RunRecord>> listRecentRuns({
+    String? projectId,
+    int limit = 100,
+  }) =>
+      _serialize<List<RunRecord>>(() {
+        final bounded = limit < 1 ? 1 : limit;
+        // A non-null project id scopes the query, exactly as the previous
+        // in-memory filter did. An empty id is a real (if unusual) scope, not
+        // a request for every run.
+        final scoped = projectId != null;
+        return _database
+            .select(
+              scoped
+                  ? '''SELECT run_json FROM runs WHERE project_id = ?
+                       ORDER BY updated_at DESC, id LIMIT ?'''
+                  : '''SELECT run_json FROM runs
+                       ORDER BY updated_at DESC, id LIMIT ?''',
+              scoped ? <Object?>[projectId, bounded] : <Object?>[bounded],
+            )
             .map((row) => RunRecord.fromJson(_decodeMap(row['run_json'])))
             .toList(growable: false);
       });
@@ -2451,7 +2508,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   }
 }
 
-class SqliteEntityRepository<T> implements EntityRepository<T> {
+class SqliteEntityRepository<T>
+    implements EntityRepository<T>, ScopedEntityQuery<T> {
   const SqliteEntityRepository({
     required this.store,
     required this.collection,
@@ -2469,6 +2527,12 @@ class SqliteEntityRepository<T> implements EntityRepository<T> {
   @override
   Future<List<T>> all() async =>
       (await store.listEntities(collection)).map(fromJson).toList();
+
+  @override
+  Future<List<T>> whereFieldEquals(String field, String value) async =>
+      (await store.listEntitiesByJsonField(collection, field, value))
+          .map(fromJson)
+          .toList();
 
   @override
   Future<T?> get(String id) async {
@@ -2511,13 +2575,21 @@ class SqliteEntityRepository<T> implements EntityRepository<T> {
       );
 }
 
-class SqliteRunRepository implements EntityRepository<RunRecord> {
+class SqliteRunRepository
+    implements EntityRepository<RunRecord>, ScopedRunQuery {
   const SqliteRunRepository(this.store);
 
   final DurableWorkflowStore store;
 
   @override
   Future<List<RunRecord>> all() => store.listRuns();
+
+  @override
+  Future<List<RunRecord>> recentRuns({
+    String? projectId,
+    required int limit,
+  }) =>
+      store.listRecentRuns(projectId: projectId, limit: limit);
 
   @override
   Future<RunRecord?> get(String id) => store.getRun(id);
