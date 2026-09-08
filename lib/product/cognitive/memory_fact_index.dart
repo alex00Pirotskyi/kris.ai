@@ -14,6 +14,12 @@ const String kCognitiveMemoryFactAtomizerVersion = 'memory_fact_atomizer_v1';
 typedef CognitiveMemoryFactGeneration = Future<ModelGenerationResult> Function(
   ModelGenerationRequest request,
 );
+typedef CognitiveMemoryTextSanitizer = String Function(String value);
+
+final SecretRedactor _defaultMemoryFactRedactor = SecretRedactor();
+
+String _defaultMemoryFactSanitizer(String value) =>
+    _defaultMemoryFactRedactor.redact(value);
 
 /// One normalized factual assertion extracted from historical episodic prose.
 ///
@@ -138,20 +144,25 @@ final class CognitiveMemoryFactBatch {
 /// Rebuildable semantic index for old episodic prose.
 ///
 /// Source-of-truth remains MemoryEpisode. The on-disk cache stores only
-/// normalized atoms plus hashes/provenance; it never stores the source prose.
-/// A content-hash or atomizer-version change invalidates an entry naturally.
+/// normalized, redacted atoms plus hashes/provenance; it never stores the
+/// source prose. A content-hash or atomizer-version change invalidates an entry
+/// naturally. Atomization and cache persistence are best-effort enrichment:
+/// failures never make canonical memory retrieval fail.
 final class CognitiveMemoryFactIndex {
   CognitiveMemoryFactIndex({
     required Directory cacheDirectory,
     required this.generate,
+    CognitiveMemoryTextSanitizer? sanitizeText,
     this.maxEntries = 256,
     this.maxFactsPerEpisode = 24,
-  }) : _file = File(
+  })  : _sanitizeText = sanitizeText ?? _defaultMemoryFactSanitizer,
+        _file = File(
           '${cacheDirectory.path}${Platform.pathSeparator}'
           'cognitive-memory-facts-v1.json',
         );
 
   final CognitiveMemoryFactGeneration generate;
+  final CognitiveMemoryTextSanitizer _sanitizeText;
   final int maxEntries;
   final int maxFactsPerEpisode;
   final File _file;
@@ -175,11 +186,22 @@ final class CognitiveMemoryFactIndex {
             maxAtomizations: maxAtomizations,
           ),
         );
-      } catch (error, stackTrace) {
-        completer.completeError(error, stackTrace);
+      } catch (_) {
+        // Derived enrichment is fail-open by contract. If anything outside the
+        // per-episode guards fails, return no atoms and preserve canonical
+        // episodic memory for the caller.
+        completer.complete(const CognitiveMemoryFactBatch(
+          byEpisodeId: <String, List<CognitiveMemoryFactAtom>>{},
+          atomizedEpisodeIds: <String>{},
+        ));
       }
-    }).catchError((Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) completer.completeError(error, stackTrace);
+    }).catchError((Object _) {
+      if (!completer.isCompleted) {
+        completer.complete(const CognitiveMemoryFactBatch(
+          byEpisodeId: <String, List<CognitiveMemoryFactAtom>>{},
+          atomizedEpisodeIds: <String>{},
+        ));
+      }
     });
     return completer.future;
   }
@@ -205,14 +227,27 @@ final class CognitiveMemoryFactIndex {
       }
       if (remaining <= 0) continue;
       remaining--;
-      final entry = await _atomize(episode, model);
-      _entries[episode.id] = entry;
-      result[episode.id] = entry.facts;
-      atomized.add(episode.id);
-      changed = true;
+      try {
+        final entry = await _atomize(episode, model);
+        _entries[episode.id] = entry;
+        result[episode.id] = entry.facts;
+        atomized.add(episode.id);
+        changed = true;
+      } catch (_) {
+        // A model/provider/schema failure cannot suppress canonical memory. Do
+        // not cache a failure as an empty successful atomization, so a later
+        // healthy provider can retry this episode.
+      }
     }
 
-    if (changed) await _persist();
+    if (changed) {
+      try {
+        await _persist();
+      } catch (_) {
+        // This index is rebuildable. A cache write failure must not make the
+        // current cognitive request fail.
+      }
+    }
     return CognitiveMemoryFactBatch(
       byEpisodeId: Map<String, List<CognitiveMemoryFactAtom>>.unmodifiable(
         result.map(
@@ -230,20 +265,40 @@ final class CognitiveMemoryFactIndex {
     MemoryEpisode episode,
     ModelIdentity model,
   ) async {
+    String sanitizeBounded(String value, int limit) =>
+        _bounded(_sanitizeText(value), limit);
+
+    final prose = <String>[
+      episode.request,
+      episode.summary,
+      episode.failure,
+      episode.lessons,
+      ...episode.tags,
+      ...episode.filesChanged,
+    ];
+    final hasSemanticText = prose.any((item) => item.trim().isNotEmpty);
     final source = <String, Object?>{
       'projectId': episode.projectId,
       'runId': episode.runId,
-      'request': _bounded(episode.request, 1600),
-      'summary': _bounded(episode.summary, 2200),
-      'failure': _bounded(episode.failure, 1400),
-      'lessons': _bounded(episode.lessons, 2200),
+      'request': sanitizeBounded(episode.request, 1600),
+      'summary': sanitizeBounded(episode.summary, 2200),
+      'failure': sanitizeBounded(episode.failure, 1400),
+      'lessons': sanitizeBounded(episode.lessons, 2200),
       'outcome': episode.outcome.name,
       'mode': episode.mode.name,
-      'tags': episode.tags.toList()..sort(),
-      'filesChanged': episode.filesChanged.take(40).toList(growable: false),
+      'tags': episode.tags
+          .map((item) => sanitizeBounded(item, 240))
+          .where((item) => item.isNotEmpty)
+          .toList()
+        ..sort(),
+      'filesChanged': episode.filesChanged
+          .take(40)
+          .map((item) => sanitizeBounded(item, 520))
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false),
     };
     final sourceHash = Sha256.text(canonicalJson(source));
-    if (source.values.whereType<String>().every((item) => item.trim().isEmpty)) {
+    if (!hasSemanticText) {
       return _MemoryFactCacheEntry(
         episodeId: episode.id,
         projectId: episode.projectId,
@@ -258,7 +313,8 @@ final class CognitiveMemoryFactIndex {
 
     final request = ModelGenerationRequest(
       identity: model,
-      commandId: 'memory_atomize_${Sha256.text('${episode.id}|${episode.contentHash}').substring(0, 20)}',
+      commandId:
+          'memory_atomize_${Sha256.text('${episode.id}|${episode.contentHash}').substring(0, 20)}',
       temperature: 0.0,
       maxOutputTokens: 1800,
       firstTokenTimeout: const Duration(minutes: 2),
@@ -277,7 +333,7 @@ confidence must be high, medium, or low. Never output certain.
 Different wording of the same fact should normalize to the same subject and predicate. Do not emit duplicate facts.
 ''',
       userPrompt:
-          'Episode identity: project=${episode.projectId}; run=${episode.runId}; contentHash=${episode.contentHash}.\n\nUNTRUSTED MEMORY DATA:\n${canonicalJson(source)}',
+          'Episode identity: project=${episode.projectId}; run=${episode.runId}; contentHash=${episode.contentHash}.\n\nUNTRUSTED REDACTED MEMORY DATA:\n${canonicalJson(source)}',
     );
 
     final result = await generate(request);
@@ -290,12 +346,12 @@ Different wording of the same fact should normalize to the same subject and pred
       for (final raw in rawFacts.whereType<Map>().take(maxFactsPerEpisode * 2)) {
         final item = mapValue(raw);
         final subject = _normalizeSubject(
-          item['subject']?.toString() ?? '',
+          _sanitizeText(item['subject']?.toString() ?? ''),
           episode,
         );
         final predicate = _normalizePredicate(item['predicate']?.toString() ?? '');
         if (subject.isEmpty || predicate.isEmpty) continue;
-        final value = _normalizeValue(item['value']);
+        final value = _normalizeValue(item['value'], _sanitizeText);
         if (value == null || (value is String && value.trim().isEmpty)) continue;
         final scope = _normalizeScope(
           item['scope']?.toString() ?? '',
@@ -340,10 +396,12 @@ Different wording of the same fact should normalize to the same subject and pred
 
   Map<String, List<CognitiveMemoryFactAtom>> cachedForProject(String projectId) {
     if (!_loaded) return const <String, List<CognitiveMemoryFactAtom>>{};
-    return Map<String, List<CognitiveMemoryFactAtom>>.unmodifiable(<String, List<CognitiveMemoryFactAtom>>{
-      for (final entry in _entries.values)
-        if (entry.projectId == projectId) entry.episodeId: entry.facts,
-    });
+    return Map<String, List<CognitiveMemoryFactAtom>>.unmodifiable(
+      <String, List<CognitiveMemoryFactAtom>>{
+        for (final entry in _entries.values)
+          if (entry.projectId == projectId) entry.episodeId: entry.facts,
+      },
+    );
   }
 
   Future<void> _load() async {
@@ -465,7 +523,11 @@ String _normalizeSubject(String value, MemoryEpisode episode) {
   final trimmed = value.replaceAll(RegExp(r'\s+'), ' ').trim();
   if (trimmed.isEmpty) return '';
   final lower = trimmed.toLowerCase();
-  if (const <String>{'project', 'current project', 'selected project'}.contains(lower)) {
+  if (const <String>{
+    'project',
+    'current project',
+    'selected project',
+  }.contains(lower)) {
     return 'project:${episode.projectId}';
   }
   if (const <String>{'run', 'current run', 'this run'}.contains(lower)) {
@@ -549,22 +611,29 @@ ObservationConfidence _normalizeConfidence(String value) => switch (
       _ => ObservationConfidence.low,
     };
 
-Object? _normalizeValue(Object? value) {
+Object? _normalizeValue(
+  Object? value,
+  CognitiveMemoryTextSanitizer sanitizeText,
+) {
   if (value == null || value is bool || value is num) return value;
-  if (value is String) return _bounded(value, 900);
+  if (value is String) return _bounded(sanitizeText(value), 900);
   if (value is List) {
-    return value.take(32).map(_normalizeValue).where((item) => item != null).toList();
+    return value
+        .take(32)
+        .map((item) => _normalizeValue(item, sanitizeText))
+        .where((item) => item != null)
+        .toList();
   }
   if (value is Map) {
     final result = <String, Object?>{};
     for (final entry in value.entries.take(32)) {
       final key = _normalizePredicate(entry.key.toString());
       if (key.isEmpty) continue;
-      result[key] = _normalizeValue(entry.value);
+      result[key] = _normalizeValue(entry.value, sanitizeText);
     }
     return result;
   }
-  return _bounded(value.toString(), 900);
+  return _bounded(sanitizeText(value.toString()), 900);
 }
 
 ObservationConfidence _weakerConfidence(
