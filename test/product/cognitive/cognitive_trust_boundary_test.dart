@@ -123,8 +123,13 @@ void main() {
         projection.coordinatorGuidance,
         isNot(contains('RELEVANT PUBLISHED SKILLS')),
       );
-      expect(projection.coordinatorGuidance, contains('CAPABILITIES'));
-      expect(projection.includedIds, contains('capability:owner.mode'));
+      // "Minimal" is literal: a healthy capability the message never mentions
+      // is not carried into the prompt, and the omission is reported rather
+      // than hidden, so routing cost stays proportional to the turn.
+      expect(projection.includedIds, isNot(contains('capability:owner.mode')));
+      expect(projection.omittedCounts['capabilities'], 1);
+      expect(projection.coordinatorGuidance, contains('IDENTITY'));
+      expect(projection.coordinatorGuidance, contains('APPLICATION STATE'));
 
       // The production classifier is wired with exactly these restrictions.
       final gateway =
@@ -141,11 +146,16 @@ void main() {
         () async {
       final substrate = buildTestSubstrate(
         self: testSelf(
-          capabilities: <KnownCapability>[testCapability('chat.answer')],
+          capabilities: <KnownCapability>[
+            testCapability('chat.answer'),
+            testCapability('owner.mode.enter'),
+          ],
         ),
       );
       final projection = await substrate.compile(
-        const CognitiveContextRequest(objective: 'what can you do?'),
+        const CognitiveContextRequest(
+          objective: 'how does chat answer a question?',
+        ),
       );
       expect(projection.includedIds, contains('capability:chat.answer'));
       expect(

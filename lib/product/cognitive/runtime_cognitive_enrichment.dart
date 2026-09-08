@@ -378,11 +378,24 @@ final class CognitiveRuntimeEnrichment {
     final buffer = StringBuffer(header);
     final included = <String>{};
     for (final item in ordered) {
-      final line =
-          '\n- ${item.descriptor.id} [provider=${item.providerId}]: ${item.descriptor.summary}';
-      if (buffer.length + line.length > maxCharacters) continue;
-      buffer.write(line);
+      final prefix =
+          '\n- ${item.descriptor.id} [provider=${item.providerId}]: ';
+      final line = '$prefix${item.descriptor.summary}';
+      final remaining = maxCharacters - buffer.length;
+      if (line.length <= remaining) {
+        buffer.write(line);
+        included.add('product:${item.descriptor.id}');
+        continue;
+      }
+      // Provider attribution makes a replacement line slightly wider than the
+      // catalog line it replaces. Shorten the most relevant concept to fit
+      // rather than skipping it for a shorter, less relevant one.
+      final room = remaining - prefix.length;
+      if (room < 48) break;
+      buffer.write(prefix);
+      buffer.write(boundedCognitiveText(item.descriptor.summary, room));
       included.add('product:${item.descriptor.id}');
+      break;
     }
     return _RenderedProductSection(
       text: buffer.toString(),

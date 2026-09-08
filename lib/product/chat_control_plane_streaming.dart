@@ -50,34 +50,49 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
         ? decision.parsed.originalText
         : '${promptSections.join('\n\n')}\n\nUser: ${decision.parsed.originalText}';
     final activeModel = model;
-    final cognitive = await dispatcher.cognitiveContext(
-      objective: decision.parsed.originalText,
-      selectedProject: selectedProject,
-      selectedModel: activeModel,
-      // The transcript already stays in the user prompt above. Do not also
-      // duplicate it into cognitive working memory.
-      maxCharacters: 6800,
-    );
+    const baseInstructions =
+        'Answer as Kristin, the persistent application-level AI identity. '
+        'This turn is informational only: do not claim to execute tools, '
+        'change files, start processes, enter Owner Mode, or grant permissions. '
+        'Use the authoritative cognitive context for product/self facts. '
+        'If it marks something unknown, stale, conflicting, blocked, or not observed, '
+        'say so rather than inventing a facility. Be concise and useful. '
+        'Return one JSON object with exactly one string field named "answer" and no markdown fence.';
 
+    // The composer switches to a live response before the substrate is
+    // gathered, so collecting state never looks like a stalled turn.
     _mutate(() {
       conversationSession.beginAssistantResponse();
       status = 'Thinking';
     });
+
+    // Cognitive context is enrichment, exactly like memory atomization: if it
+    // cannot be produced the turn still answers from the base instructions
+    // rather than failing.
+    CognitiveContextProjection? cognitive;
+    try {
+      cognitive = await dispatcher.cognitiveContext(
+        objective: decision.parsed.originalText,
+        selectedProject: selectedProject,
+        selectedModel: activeModel,
+        // The transcript already stays in the user prompt above. Do not also
+        // duplicate it into cognitive working memory.
+        maxCharacters: 6800,
+      );
+    } catch (_) {
+      cognitive = null;
+    }
+    final systemPrompt = cognitive == null
+        ? baseInstructions
+        : cognitive.wrapSystemPrompt(baseInstructions);
+
     final result = await _perform<ModelGenerationResult>(
       'Thinking',
       () => runtime.models.providerFor(activeModel).generate(
             ModelGenerationRequest(
               identity: activeModel,
               commandId: newId('chat_info'),
-              systemPrompt: cognitive.wrapSystemPrompt(
-                'Answer as Kristin, the persistent application-level AI identity. '
-                'This turn is informational only: do not claim to execute tools, '
-                'change files, start processes, enter Owner Mode, or grant permissions. '
-                'Use the authoritative cognitive context for product/self facts. '
-                'If it marks something unknown, stale, conflicting, blocked, or not observed, '
-                'say so rather than inventing a facility. Be concise and useful. '
-                'Return one JSON object with exactly one string field named "answer" and no markdown fence.',
-              ),
+              systemPrompt: systemPrompt,
               userPrompt: userPrompt,
               temperature: 0.2,
               maxOutputTokens: 1600,
