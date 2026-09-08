@@ -3,6 +3,8 @@ import 'dart:async';
 import 'capability_doctor.dart';
 import 'capability_invocation.dart';
 import 'chat_control_plane.dart';
+import 'cognitive/cognitive_model.dart';
+import 'cognitive/product_runtime_cognitive.dart';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'product_runtime.dart';
@@ -93,6 +95,26 @@ abstract interface class ChatSelfAwarenessGateway {
   });
 }
 
+/// Read-only cognitive access for ordinary conversation. This surface returns
+/// knowledge and routing interpretation only; it has no mutation/authority API.
+abstract interface class ChatCognitiveGateway {
+  Future<CognitiveContextProjection> cognitiveContext({
+    required String objective,
+    required CognitiveReasoningPathway pathway,
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    List<String> workingMemory = const <String>[],
+    int maxCharacters = 7200,
+  });
+
+  Future<CognitiveConversationDecision?> classifyConversation({
+    required String message,
+    required ModelIdentity model,
+    ProjectRecord? selectedProject,
+    List<String> workingMemory = const <String>[],
+  });
+}
+
 /// Optional production planning surface. It is deliberately separate from
 /// ChatRuntimeGateway so existing small fakes remain source-compatible. The
 /// production implementation supplies the live self-model to the real kernel.
@@ -128,6 +150,14 @@ class ChatActionDispatcher {
       throw StateError('chat_self_awareness_gateway_unavailable');
     }
     return gateway as ChatSelfAwarenessGateway;
+  }
+
+  ChatCognitiveGateway get _cognitiveGateway {
+    final gateway = runtime;
+    if (gateway is! ChatCognitiveGateway) {
+      throw StateError('chat_cognitive_gateway_unavailable');
+    }
+    return gateway as ChatCognitiveGateway;
   }
 
   CapabilityAuthorityDecision authorize({
@@ -167,6 +197,36 @@ class ChatActionDispatcher {
         selectedProject: selectedProject,
         selectedModel: selectedModel,
         relevantCapabilityIds: relevantCapabilityIds,
+      );
+
+  Future<CognitiveContextProjection> cognitiveContext({
+    required String objective,
+    CognitiveReasoningPathway pathway = CognitiveReasoningPathway.conversation,
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    List<String> workingMemory = const <String>[],
+    int maxCharacters = 7200,
+  }) =>
+      _cognitiveGateway.cognitiveContext(
+        objective: objective,
+        pathway: pathway,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        workingMemory: workingMemory,
+        maxCharacters: maxCharacters,
+      );
+
+  Future<CognitiveConversationDecision?> classifyConversation({
+    required String message,
+    required ModelIdentity model,
+    ProjectRecord? selectedProject,
+    List<String> workingMemory = const <String>[],
+  }) =>
+      _cognitiveGateway.classifyConversation(
+        message: message,
+        model: model,
+        selectedProject: selectedProject,
+        workingMemory: workingMemory,
       );
 
   Future<String> explainCapabilityAvailability(
@@ -387,35 +447,17 @@ class ChatActionDispatcher {
   }
 }
 
-/// Production gateway and composition point for self-awareness plus autonomic
-/// recovery. It remains a wrapper around canonical ProductRuntime behavior;
-/// no second execution engine is introduced here.
+/// Production gateway and composition point for the unified cognitive model,
+/// self-awareness and autonomic recovery. The cognitive layer remains
+/// read-only; execution and authority stay in their existing systems.
 class ProductRuntimeChatGateway
     implements
         ChatRuntimeGateway,
         ChatSelfAwarenessGateway,
+        ChatCognitiveGateway,
         ChatSelfAwarePlanningGateway {
   ProductRuntimeChatGateway(this.runtime) {
-    final live = ProductSelfAwarenessRuntime.shared(runtime);
-    // Every kernel plan/understanding path now receives the same live
-    // self-model intersection, including paths that still construct a plain
-    // PlanningContext for compatibility. Exact Runner tools remain supplied
-    // independently by those callers.
-    KernelSelfModelRegistry.register(
-      runtime.taskKernel,
-      ({
-        required ProjectRecord? project,
-        required ModelIdentity? model,
-        required Set<String> relevantCapabilityIds,
-      }) =>
-          live.planningContext(
-        selectedProject: project,
-        selectedModel: model,
-        sessionKey:
-            'kernel:${project?.id ?? 'none'}:${model?.exactId ?? 'none'}',
-        relevantCapabilityIds: relevantCapabilityIds,
-      ),
-    );
+    ProductRuntimeCognitiveGateway.shared(runtime);
     ProductRuntimeAutonomicRecovery.shared(runtime);
   }
 
@@ -423,6 +465,8 @@ class ProductRuntimeChatGateway
 
   ProductSelfAwarenessRuntime get awareness =>
       ProductSelfAwarenessRuntime.shared(runtime);
+  ProductRuntimeCognitiveGateway get cognitive =>
+      ProductRuntimeCognitiveGateway.shared(runtime);
   ProductRuntimeAutonomicRecovery get autonomic =>
       ProductRuntimeAutonomicRecovery.shared(runtime);
 
@@ -444,10 +488,42 @@ class ProductRuntimeChatGateway
     ModelIdentity? selectedModel,
     Set<String> relevantCapabilityIds = const <String>{},
   }) =>
-      awareness.planningContext(
+      cognitive.planningContext(
         selectedProject: selectedProject,
         selectedModel: selectedModel,
         relevantCapabilityIds: relevantCapabilityIds,
+      );
+
+  @override
+  Future<CognitiveContextProjection> cognitiveContext({
+    required String objective,
+    required CognitiveReasoningPathway pathway,
+    ProjectRecord? selectedProject,
+    ModelIdentity? selectedModel,
+    List<String> workingMemory = const <String>[],
+    int maxCharacters = 7200,
+  }) =>
+      cognitive.context(
+        objective: objective,
+        pathway: pathway,
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        workingMemory: workingMemory,
+        maxCharacters: maxCharacters,
+      );
+
+  @override
+  Future<CognitiveConversationDecision?> classifyConversation({
+    required String message,
+    required ModelIdentity model,
+    ProjectRecord? selectedProject,
+    List<String> workingMemory = const <String>[],
+  }) =>
+      cognitive.classifyConversation(
+        message: message,
+        model: model,
+        selectedProject: selectedProject,
+        workingMemory: workingMemory,
       );
 
   @override
@@ -518,11 +594,10 @@ class ProductRuntimeChatGateway
   }) async {
     final consumed = <String>{
       ...consumedCoordinatorCapabilities,
-      ...specification.capabilityHints.where(
-        kCoordinatorCapabilityIds.contains,
-      ),
+      ...specification.capabilityHints
+          .where(kCoordinatorCapabilityIds.contains),
     };
-    final selfContext = await awareness.planningContext(
+    final selfContext = await cognitive.planningContext(
       selectedProject: project,
       selectedModel: model,
       relevantCapabilityIds: specification.capabilityHints.toSet(),
@@ -547,18 +622,16 @@ class ProductRuntimeChatGateway
     );
     final prepared = PreparedCommand(
       id: newId('command'),
-      requestKey: Sha256.text(
-        canonicalJson(<String, dynamic>{
-          'projectId': project.id,
-          'specification': specification.contentKey,
-          'planHash': result.plan.contentHash,
-          'selectedTaskIds': compiled.selectedTaskIds.toList()..sort(),
-          'mode': mode.name,
-          'model': model?.toJson(),
-          'selfAvailableCapabilities':
-              selfContext.availableCapabilityIds.toList()..sort(),
-        }),
-      ),
+      requestKey: Sha256.text(canonicalJson(<String, dynamic>{
+        'projectId': project.id,
+        'specification': specification.contentKey,
+        'planHash': result.plan.contentHash,
+        'selectedTaskIds': compiled.selectedTaskIds.toList()..sort(),
+        'mode': mode.name,
+        'model': model?.toJson(),
+        'selfAvailableCapabilities': selfContext.availableCapabilityIds.toList()
+          ..sort(),
+      })),
       contract: compiled.contract,
       plan: compiled.plan,
       model: model ??
@@ -588,6 +661,7 @@ class ProductRuntimeChatGateway
         'workItems': compiled.plan.items.length,
         'planHash': result.plan.contentHash,
         'selfModelFreshnessWarnings': selfContext.freshnessWarnings,
+        'cognitivePlanning': true,
       });
       await runtime.events
           .publish('command.prepared', prepared.id, <String, dynamic>{
@@ -598,6 +672,7 @@ class ProductRuntimeChatGateway
         'generatedTaskPlan': !result.isConservative,
         'taskFamily': result.plan.family.name,
         'selfAwarePlanning': true,
+        'cognitivePlanning': true,
       });
     }
     return KernelPreparedPlan(
@@ -626,17 +701,13 @@ class ProductRuntimeChatGateway
         stateChanging: stateChanging,
       );
     } catch (error) {
-      // The visible operation still fails immediately. Autonomic recovery runs
-      // under its own bounded supervisor against the same durable runtime.
-      unawaited(
-        autonomic.handleOperationalFailure(
-          operation: operation,
-          error: error,
-          projectId: projectId,
-          modelExactId: modelExactId,
-          capabilityId: capabilityId,
-        ),
-      );
+      unawaited(autonomic.handleOperationalFailure(
+        operation: operation,
+        error: error,
+        projectId: projectId,
+        modelExactId: modelExactId,
+        capabilityId: capabilityId,
+      ));
       rethrow;
     }
   }

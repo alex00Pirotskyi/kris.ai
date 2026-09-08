@@ -2,9 +2,9 @@ part of 'chat_control_plane_studio.dart';
 
 extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
   /// Answers ordinary informational turns through the provider's real text
-  /// delta callback. Self-awareness questions are resolved deterministically
-  /// before model generation so Kristin reports current application truth
-  /// rather than asking a model to infer its own capabilities.
+  /// delta callback. The deterministic self-awareness recognizer remains a
+  /// fast path, but correctness no longer depends on it: every model answer
+  /// receives the same bounded cognitive substrate first.
   Future<void> _answerInformationalStreaming(
     ChatInteractionDecision decision,
   ) async {
@@ -50,6 +50,14 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
         ? decision.parsed.originalText
         : '${promptSections.join('\n\n')}\n\nUser: ${decision.parsed.originalText}';
     final activeModel = model;
+    final cognitive = await dispatcher.cognitiveContext(
+      objective: decision.parsed.originalText,
+      selectedProject: selectedProject,
+      selectedModel: activeModel,
+      // The transcript already stays in the user prompt above. Do not also
+      // duplicate it into cognitive working memory.
+      maxCharacters: 6800,
+    );
 
     _mutate(() {
       conversationSession.beginAssistantResponse();
@@ -61,13 +69,15 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
             ModelGenerationRequest(
               identity: activeModel,
               commandId: newId('chat_info'),
-              systemPrompt:
-                  'You are Kristin. Answer the user as a normal conversational assistant. '
-                  'This request is informational only: do not claim to execute tools, '
-                  'change files, start processes, or grant permissions. Only use the '
-                  'recent conversation and status context if the current message is '
-                  'actually about them. Be concise and useful. Return one JSON object '
-                  'with exactly one string field named "answer" and no markdown fence.',
+              systemPrompt: cognitive.wrapSystemPrompt(
+                'Answer as Kristin, the persistent application-level AI identity. '
+                'This turn is informational only: do not claim to execute tools, '
+                'change files, start processes, enter Owner Mode, or grant permissions. '
+                'Use the authoritative cognitive context for product/self facts. '
+                'If it marks something unknown, stale, conflicting, blocked, or not observed, '
+                'say so rather than inventing a facility. Be concise and useful. '
+                'Return one JSON object with exactly one string field named "answer" and no markdown fence.',
+              ),
               userPrompt: userPrompt,
               temperature: 0.2,
               maxOutputTokens: 1600,
@@ -118,10 +128,8 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       r'\bself[- ]?awareness\b|\bself[- ]?integrity\b|'
       r'\b(?:check|verify|probe) yourself\b|\bare you healthy\b',
     ).hasMatch(text);
-    // Shorthand spellings ("what can u do?", "list ur capabilities") must
-    // reach the live self-model too. Left unmatched they fall through to a
-    // hardcoded help string or to free-form model generation, which is how
-    // Kristin ends up describing capabilities it does not currently have.
+    // Shorthand spellings remain an optimization. Unmatched languages still
+    // fall through to model generation with the cognitive substrate above.
     final asksCapabilities = RegExp(
       r'\bwhat can (?:you|u) do\b|\bwhat are (?:you|u) able to do\b|'
       r'\b(?:your|ur|available|current) capabilities\b|'
