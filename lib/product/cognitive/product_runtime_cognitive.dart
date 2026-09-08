@@ -36,6 +36,8 @@ final class ProductRuntimeCognitiveGateway {
       cacheDirectory: runtime.directories.cache,
       generate: (request) =>
           runtime.models.providerFor(request.identity).generate(request),
+      sanitizeText: runtime.redactor.redact,
+      onFailure: _recordMemoryFactFailure,
     );
     enrichment = CognitiveRuntimeEnrichment(
       productKnowledge: productKnowledge,
@@ -133,10 +135,18 @@ final class ProductRuntimeCognitiveGateway {
     );
     var facts = const _MemoryFactContext.empty();
     if (selectedProject != null && selectedModel != null) {
-      facts = await _factsForInspection(
-        project: selectedProject,
-        model: selectedModel,
-      );
+      try {
+        facts = await _factsForInspection(
+          project: selectedProject,
+          model: selectedModel,
+        );
+      } catch (error) {
+        await _recordEnrichmentFailure(
+          'state_inspection_memory',
+          selectedProject.id,
+          error,
+        );
+      }
     }
     return enrichment.enrichSnapshot(
       base,
@@ -187,35 +197,44 @@ final class ProductRuntimeCognitiveGateway {
     if (!_contextIncludesMemory(pathway, includeMemory) || selectedModel == null) {
       return projection;
     }
-    final project = selectedProject ??
-        ((projectId?.trim().isNotEmpty ?? false)
-            ? await runtime.getProject(projectId!.trim())
-            : null);
-    if (project == null) return projection;
+    try {
+      final project = selectedProject ??
+          ((projectId?.trim().isNotEmpty ?? false)
+              ? await runtime.getProject(projectId!.trim())
+              : null);
+      if (project == null) return projection;
 
-    final facts = await _factsForObjective(
-      project: project,
-      model: selectedModel,
-      objective: objective,
-      pathway: pathway,
-    );
-    if (facts.factsByEpisodeId.isEmpty) return projection;
+      final facts = await _factsForObjective(
+        project: project,
+        model: selectedModel,
+        objective: objective,
+        pathway: pathway,
+      );
+      if (facts.factsByEpisodeId.isEmpty) return projection;
 
-    final snapshot = enrichment.enrichSnapshot(
-      await substrate.snapshot(
-        selectedProject: project,
-        selectedModel: selectedModel,
-        workingMemory: workingMemory,
-      ),
-      factsByEpisodeId: facts.factsByEpisodeId,
-      episodesById: facts.episodesById,
-    );
-    return enrichment.replaceMemoryWithResolvedFacts(
-      projection,
-      enrichedSnapshot: snapshot,
-      factsByEpisodeId: facts.factsByEpisodeId,
-      episodesById: facts.episodesById,
-    );
+      final snapshot = enrichment.enrichSnapshot(
+        await substrate.snapshot(
+          selectedProject: project,
+          selectedModel: selectedModel,
+          workingMemory: workingMemory,
+        ),
+        factsByEpisodeId: facts.factsByEpisodeId,
+        episodesById: facts.episodesById,
+      );
+      return enrichment.replaceMemoryWithResolvedFacts(
+        projection,
+        enrichedSnapshot: snapshot,
+        factsByEpisodeId: facts.factsByEpisodeId,
+        episodesById: facts.episodesById,
+      );
+    } catch (error) {
+      await _recordEnrichmentFailure(
+        'context_memory',
+        selectedProject?.id ?? projectId ?? '',
+        error,
+      );
+      return projection;
+    }
   }
 
   Future<SelfModelPlanningContext> planningContext({
@@ -356,12 +375,20 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
     );
     var facts = const _MemoryFactContext.empty();
     if (selectedProject != null && selectedModel != null) {
-      facts = await _factsForObjective(
-        project: selectedProject,
-        model: selectedModel,
-        objective: query,
-        pathway: CognitiveReasoningPathway.introspection,
-      );
+      try {
+        facts = await _factsForObjective(
+          project: selectedProject,
+          model: selectedModel,
+          objective: query,
+          pathway: CognitiveReasoningPathway.introspection,
+        );
+      } catch (error) {
+        await _recordEnrichmentFailure(
+          'self_lookup_memory',
+          selectedProject.id,
+          error,
+        );
+      }
     }
     final snapshot = enrichment.enrichSnapshot(
       base,
@@ -425,7 +452,12 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
               ? CognitiveReasoningPathway.recovery
               : CognitiveReasoningPathway.introspection,
         );
-      } catch (_) {
+      } catch (error) {
+        await _recordEnrichmentFailure(
+          'recall_memory_atomization',
+          selectedProject.id,
+          error,
+        );
         // Fact indexing is derived enrichment; canonical recall must survive it.
       }
     }
@@ -535,6 +567,38 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
         for (final episode in selected) episode.id: episode,
       },
     );
+  }
+
+  Future<void> _recordMemoryFactFailure(
+    String stage,
+    String episodeId,
+    Object error,
+  ) =>
+      _recordEnrichmentFailure(
+        'memory_fact_$stage',
+        episodeId,
+        error,
+      );
+
+  Future<void> _recordEnrichmentFailure(
+    String stage,
+    String subjectId,
+    Object error,
+  ) async {
+    try {
+      final redacted = runtime.redactor.redact('$error');
+      await runtime.audit.append(
+        'cognitive.enrichment_failed',
+        Sha256.text('$stage|$subjectId'),
+        <String, dynamic>{
+          'stage': stage,
+          if (subjectId.isNotEmpty) 'subjectIdHash': Sha256.text(subjectId),
+          'errorHash': Sha256.text(redacted),
+        },
+      );
+    } catch (_) {
+      // Derived observability cannot alter cognitive behavior.
+    }
   }
 }
 
