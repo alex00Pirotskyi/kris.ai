@@ -54,9 +54,9 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       objective: decision.parsed.originalText,
       selectedProject: selectedProject,
       selectedModel: activeModel,
-      workingMemory: <String>[
-        if (recentConversation.isNotEmpty) recentConversation,
-      ],
+      // The transcript already remains in the user prompt above. Do not also
+      // convert it into cognitive working memory, which would reserve context
+      // budget for a duplicate user assertion and alter snapshot identity.
       maxCharacters: 6800,
     );
 
@@ -168,107 +168,134 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       for (final change in changes.reversed.take(6)) {
         final parts = <String>[];
         if (change.applicationFieldsChanged.isNotEmpty) {
-          parts.add(
-            'application: ${change.applicationFieldsChanged.join(', ')}',
-          );
+          parts.add('application: ${change.applicationFieldsChanged.join(', ')}');
         }
-        if (change.capabilityChanges.isNotEmpty) {
-          parts.add(
-            change.capabilityChanges.map((item) {
-              final availability =
-                  '${item.previousAvailability?.name ?? 'unknown'}→${item.nextAvailability.name}';
-              final health =
-                  '${item.previousHealth?.name ?? 'unknown'}→${item.nextHealth.name}';
-              return '${item.capabilityId} availability $availability, health $health';
-            }).join('; '),
-          );
+        if (change.capabilitiesAdded.isNotEmpty) {
+          parts.add('added: ${change.capabilitiesAdded.join(', ')}');
+        }
+        if (change.capabilitiesRemoved.isNotEmpty) {
+          parts.add('removed: ${change.capabilitiesRemoved.join(', ')}');
+        }
+        if (change.capabilitiesChanged.isNotEmpty) {
+          parts.add('changed: ${change.capabilitiesChanged.join(', ')}');
         }
         lines.add(
-          '${change.observedAt.toLocal().toIso8601String()}: ${parts.join(' | ')}',
+          '${change.observedAt.toLocal().toIso8601String()}: ${parts.join('; ')}',
         );
       }
-      return 'Material changes I observed recently:\n${lines.join('\n')}';
+      return 'Recent self-model changes:\n${lines.join('\n')}';
     }
 
     if (asksIntegrity) {
-      if (RegExp(r'\bcheck\b|\bverify\b|\bprobe\b').hasMatch(text)) {
-        await dispatcher.runSelfConsistencyProbes(
-          selectedProject: selectedProject,
-          selectedModel: selectedModel,
-        );
-      }
-      final snapshot = await dispatcher.selfAwareness(
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
-        forceRefresh: true,
-      );
       final violations = await dispatcher.selfIntegrity(
         selectedProject: selectedProject,
         selectedModel: selectedModel,
       );
-      final available = snapshot.available.length;
-      final blocked = snapshot.blocked.length;
-      if (violations.isEmpty) {
-        return 'My current self-model reports $available operational capabilities and $blocked blocked or unhealthy capabilities. The configured self-integrity invariants currently pass. This describes observed application state; it does not grant me any additional authority.';
-      }
-      final details = violations
-          .take(8)
-          .map(
-            (item) =>
-                '- ${item.severity.name}: ${item.invariantId}: ${item.message}',
-          )
-          .join('\n');
-      return 'My self-model currently has $available operational capabilities and $blocked blocked or unhealthy capabilities. I also see these integrity findings:\n$details';
-    }
-
-    if (asksCapabilities) {
-      final snapshot = await dispatcher.selfAwareness(
+      final probes = await dispatcher.runSelfConsistencyProbes(
         selectedProject: selectedProject,
         selectedModel: selectedModel,
-        forceRefresh: true,
       );
-      final operational = snapshot.available
-          .take(18)
-          .map((item) => '${item.descriptor.name} (${item.descriptor.id})')
-          .join(', ');
-      final blockers = snapshot.blocked.take(6).map((item) {
-        final reasons = <String>[
-          ...item.availability.reasons,
-          ...?item.health?.reasons,
-        ];
-        return '- ${item.descriptor.id}: ${reasons.isEmpty ? item.availability.state.name : reasons.first}';
-      }).join('\n');
-      return 'Right now I report ${snapshot.available.length} operational capabilities. '
-          '${operational.isEmpty ? 'None are currently operational.' : operational}. '
-          'I also know ${snapshot.blocked.length} capabilities that are currently blocked or unhealthy.'
-          '${blockers.isEmpty ? '' : '\nKey blockers:\n$blockers'}\n'
-          'Capability availability is separate from execution authority; governed permissions are still evaluated for the concrete action.';
+      final failing = probes
+          .where((item) =>
+              item.status == ProbeStatus.degraded ||
+              item.status == ProbeStatus.failing)
+          .toList();
+      if (violations.isEmpty && failing.isEmpty) {
+        return 'My current self-model passes its invariants and active consistency probes. This means my observed application state is internally consistent; it does not grant any new authority.';
+      }
+      final issues = <String>[
+        ...violations.take(5).map((item) => '${item.code}: ${item.message}'),
+        ...failing.take(5).map((item) => '${item.id}: ${item.detail}'),
+      ];
+      return 'I found self-model consistency issues:\n- ${issues.join('\n- ')}';
     }
 
-    final candidates = await dispatcher.capabilitiesForObjective(
+    final capabilities = await dispatcher.capabilitiesForObjective(
       original,
       selectedProject: selectedProject,
       selectedModel: selectedModel,
     );
-    if (candidates.isEmpty) return null;
-    final target = candidates.first;
-    final report = await dispatcher.capabilityRequirements(
-      target.descriptor.id,
-      selectedProject: selectedProject,
-      selectedModel: selectedModel,
-    );
-    final details = <String>[
-      '${target.descriptor.name} (${target.descriptor.id}) is ${report.usableNow ? 'operationally usable' : 'not operationally usable'} right now.',
-      report.explanation,
-      if (report.missingPrerequisites.isNotEmpty)
-        'Missing prerequisites: ${report.missingPrerequisites.join(', ')}.',
-      if (report.requiredAuthority.isNotEmpty)
-        report.authorityObservation.name == 'notEvaluated'
-            ? 'Required authority (${report.requiredAuthority.join(', ')}) has not been evaluated for a concrete operation yet.'
-            : 'Authority state is ${report.authorityObservation.name}; unresolved authority: ${report.missingAuthority.join(', ')}.',
-      if (report.satisfactionPath.isNotEmpty)
-        'Minimum path to satisfy it:\n${report.satisfactionPath.map((step) => '- ${step.description}').join('\n')}',
-    ].where((item) => item.trim().isNotEmpty).toList(growable: false);
-    return details.join('\n');
+    if (capabilities.isEmpty) {
+      return 'I do not have a current capability descriptor that matches that request. I will not infer one from the language model itself.';
+    }
+
+    if (asksRequirements) {
+      final reports = <CapabilityRequirementReport>[];
+      for (final capability in capabilities.take(3)) {
+        reports.add(await dispatcher.capabilityRequirements(
+          capability.descriptor.id,
+          selectedProject: selectedProject,
+          selectedModel: selectedModel,
+        ));
+      }
+      return reports.map((item) => item.explanation).join('\n\n');
+    }
+
+    final lines = capabilities.take(8).map((item) {
+      final state = item.availability.state.name;
+      final health = item.health?.state.name ?? 'unknown';
+      final authority = item.availability.authorityObservation.name;
+      final reason = <String>[
+        ...item.availability.reasons,
+        ...?item.health?.reasons,
+      ].firstOrNull;
+      return '- ${item.descriptor.name} (${item.descriptor.id}): availability=$state, health=$health, authority=$authority${reason == null ? '' : ' — $reason'}';
+    }).join('\n');
+    return 'Here is the relevant portion of my current capability model:\n$lines\n\nAvailability, health, authority and an executable Runner tool are separate facts; knowing about a capability does not grant it.';
+  }
+
+  Future<String?> _tryLocalAnswer(
+    ChatInteractionDecision decision,
+  ) async {
+    final text = decision.parsed.originalText.trim();
+    final lower = text.toLowerCase();
+    final asksCurrentRun = RegExp(
+      r'\b(?:what|which) (?:task|run|job) (?:are you|are u|r u) (?:doing|working on|running)\b|'
+      r'\b(?:what|which) (?:are you|are u|r u) (?:doing|working on)\b|'
+      r'\bcurrent (?:task|run|job)\b|'
+      r'\bwhat(?:\'s| is) (?:the )?(?:current )?(?:task|run|job)\b',
+    ).hasMatch(lower);
+    if (asksCurrentRun) {
+      final run = currentRun;
+      if (run == null) {
+        return 'I do not have an active run right now.';
+      }
+      final activeItem = run.plan.items.firstWhereOrNull(
+        (item) =>
+            run.progressFor(item.id).state == WorkItemState.running ||
+            run.progressFor(item.id).state == WorkItemState.awaitingPermission ||
+            run.progressFor(item.id).state == WorkItemState.awaitingUserInput,
+      );
+      if (activeItem == null) {
+        return 'Run ${run.id} is ${run.state.name}. I do not currently observe a work item in an active step.';
+      }
+      return 'Run ${run.id} is ${run.state.name}. I am on “${activeItem.title}” (${activeItem.id}), which is ${run.progressFor(activeItem.id).state.name}.';
+    }
+
+    final asksSelectedProject = RegExp(
+      r'\b(?:what|which) project (?:is selected|am i in|are we in|are you using)\b|'
+      r'\bselected project\b|\bcurrent project\b',
+    ).hasMatch(lower);
+    if (asksSelectedProject) {
+      final project = selectedProject;
+      if (project == null) {
+        return 'No project is selected.';
+      }
+      return 'The selected project is ${project.name} (${project.id}).';
+    }
+
+    final asksSelectedModel = RegExp(
+      r'\b(?:what|which) (?:ai )?model (?:is selected|are you using|am i using)\b|'
+      r'\bselected model\b|\bcurrent model\b',
+    ).hasMatch(lower);
+    if (asksSelectedModel) {
+      final model = selectedModel;
+      if (model == null) {
+        return 'No reasoning model is selected.';
+      }
+      return 'I am currently using ${model.exactId} as my reasoning provider. The provider is not my identity.';
+    }
+
+    return null;
   }
 }
