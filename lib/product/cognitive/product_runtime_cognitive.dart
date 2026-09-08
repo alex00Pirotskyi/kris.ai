@@ -33,6 +33,8 @@ final class ProductRuntimeCognitiveGateway {
       loadMemory: runtime.listMemoryEpisodes,
       loadPublishedSkills: runtime.listPublishedSkills,
       loadSkillCandidates: runtime.listSkillCandidates,
+      retrieveKnowledge: runtime.searchKnowledge,
+      sanitizeDiagnostic: (error) => runtime.redactor.redact('$error'),
     );
     CognitiveModelContextRegistry.register(runtime.models, substrate.compile);
     KernelSelfModelRegistry.register(
@@ -70,15 +72,13 @@ final class ProductRuntimeCognitiveGateway {
     ModelIdentity? selectedModel,
     bool forceRefresh = false,
     List<String> workingMemory = const <String>[],
-  }) {
-    _bind(selectedProject, selectedModel);
-    return substrate.snapshot(
-      selectedProject: selectedProject,
-      selectedModel: selectedModel,
-      forceRefresh: forceRefresh,
-      workingMemory: workingMemory,
-    );
-  }
+  }) =>
+      substrate.snapshot(
+        selectedProject: selectedProject,
+        selectedModel: selectedModel,
+        forceRefresh: forceRefresh,
+        workingMemory: workingMemory,
+      );
 
   Future<CognitiveContextProjection> context({
     required String objective,
@@ -92,29 +92,32 @@ final class ProductRuntimeCognitiveGateway {
     List<String> workingMemory = const <String>[],
     int maxCharacters = 7200,
     bool forceRefresh = false,
-  }) {
-    _bind(selectedProject, selectedModel, sessionKey: sessionKey);
-    return substrate.compile(CognitiveContextRequest(
-      objective: objective,
-      pathway: pathway,
-      selectedProject: selectedProject,
-      projectId: projectId,
-      selectedModel: selectedModel,
-      sessionKey: sessionKey,
-      taskFamily: taskFamily,
-      capabilityHints: capabilityHints,
-      workingMemory: workingMemory,
-      maxCharacters: maxCharacters,
-      forceRefresh: forceRefresh,
-    ));
-  }
+    bool? includeProjectKnowledge,
+    bool? includeMemory,
+    bool? includePublishedSkills,
+  }) =>
+      substrate.compile(CognitiveContextRequest(
+        objective: objective,
+        pathway: pathway,
+        selectedProject: selectedProject,
+        projectId: projectId,
+        selectedModel: selectedModel,
+        sessionKey: sessionKey,
+        taskFamily: taskFamily,
+        capabilityHints: capabilityHints,
+        workingMemory: workingMemory,
+        maxCharacters: maxCharacters,
+        forceRefresh: forceRefresh,
+        includeProjectKnowledge: includeProjectKnowledge,
+        includeMemory: includeMemory,
+        includePublishedSkills: includePublishedSkills,
+      ));
 
   Future<SelfModelPlanningContext> planningContext({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     Set<String> relevantCapabilityIds = const <String>{},
   }) async {
-    _bind(selectedProject, selectedModel, sessionKey: 'kernel');
     final self = await awareness.planningContext(
       selectedProject: selectedProject,
       selectedModel: selectedModel,
@@ -129,6 +132,11 @@ final class ProductRuntimeCognitiveGateway {
       selectedModel: selectedModel,
       sessionKey: 'kernel',
       capabilityHints: relevantCapabilityIds,
+      // SelfModelPlanningContext is trusted planning metadata. Project/web/run
+      // evidence remains on the user/evidence side of model prompts and is not
+      // copied into this coordinator summary.
+      includeProjectKnowledge: false,
+      includeMemory: false,
       maxCharacters: 5200,
     );
     return SelfModelPlanningContext(
@@ -142,9 +150,11 @@ final class ProductRuntimeCognitiveGateway {
     );
   }
 
-  /// Semantic routing only. Facts come from the typed context and concrete
-  /// actions still pass through Chat/UTK/governance. Failure returns null so
-  /// the existing deterministic policy remains the fail-closed fallback.
+  /// Semantic routing only. The classifier intentionally receives no project
+  /// knowledge, prior-run memory, or published procedures; product concepts
+  /// and fresh self/capability state are enough to distinguish an information
+  /// question from a request for effects. Failure returns null so the existing
+  /// deterministic policy remains the fail-closed fallback.
   Future<CognitiveConversationDecision?> classifyConversation({
     required String message,
     required ModelIdentity model,
@@ -159,6 +169,9 @@ final class ProductRuntimeCognitiveGateway {
       sessionKey: 'chat-classification',
       workingMemory: workingMemory,
       maxCharacters: 5000,
+      includeProjectKnowledge: false,
+      includeMemory: false,
+      includePublishedSkills: false,
     );
     final request = ModelGenerationRequest(
       identity: model,
@@ -169,7 +182,7 @@ Questions asking what a Kristin facility is, what it can do, whether it exists, 
 Use effectful_objective only when the user is asking Kristin to perform, change, run, enable, connect, create, or repair something now.
 A capabilityId is only a routing hint and grants no authority. Use only an id present in the cognitive context, otherwise leave it empty. Do not answer the user here.
 '''),
-      userPrompt: message,
+      userPrompt: projection.wrapUserPrompt(message),
       commandId: 'chat_cognitive_classification',
       temperature: 0.0,
       maxOutputTokens: 320,
@@ -285,19 +298,6 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
         selectedProject: selectedProject,
         selectedModel: selectedModel,
       );
-
-  void _bind(
-    ProjectRecord? project,
-    ModelIdentity? model, {
-    String sessionKey = 'chat',
-  }) {
-    CognitiveModelContextRegistry.bindSelection(
-      runtime.models,
-      project: project,
-      model: model,
-      sessionKey: sessionKey,
-    );
-  }
 }
 
 Map<String, dynamic>? _decodeObject(String text) {
