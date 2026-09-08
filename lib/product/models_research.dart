@@ -368,6 +368,7 @@ class OllamaProvider implements LanguageModelProvider {
           details: <String, dynamic>{
             'firstTokenTimeoutSeconds': request.firstTokenTimeout.inSeconds,
             'warmupAttempts': warmup.attempts,
+            'warmupSkippedForActiveKeepAlive': warmup.attempts == 0,
           },
         );
       }
@@ -533,9 +534,18 @@ class OllamaProvider implements LanguageModelProvider {
           'keepAliveMinutes': keepAliveMinutes.clamp(1, 120).toInt(),
         },
       );
-    } on ProductException {
+    } on ProductException catch (error) {
+      // A generation that failed is evidence that the assumed keep-alive
+      // session is not there. Holding the warm marker makes the next request
+      // skip warmup again and charge any reload to its first-token deadline,
+      // which reports a loaded-but-slow model when the model was actually
+      // being loaded.
+      if (error.code != 'cancelled') {
+        _forgetWarmModel(exact);
+      }
       rethrow;
     } catch (error) {
+      _forgetWarmModel(exact);
       if (cancellationBinding.cancelled) {
         throw ProductException('cancelled', 'Execution was cancelled.');
       }
@@ -759,6 +769,10 @@ class OllamaProvider implements LanguageModelProvider {
 
   String _warmKey(ModelIdentity identity) =>
       '${identity.providerId}\u0000${identity.name}\u0000${identity.digest}';
+
+  void _forgetWarmModel(ModelIdentity identity) {
+    _warmUntilByModel.remove(_warmKey(identity));
+  }
 
   void _markModelWarm(ModelIdentity identity) {
     _warmUntilByModel[_warmKey(identity)] = DateTime.now().toUtc().add(

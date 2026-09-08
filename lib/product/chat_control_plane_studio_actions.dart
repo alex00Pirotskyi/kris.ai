@@ -957,24 +957,15 @@ extension _ChatControlPlaneActions on _ChatControlPlaneStudioState {
       return 'Found ${result.results.length} source(s) for "$query":\n$rawList';
     }
 
-    var answer = ConversationStreamProjector.visibleText(response.text).trim();
-    var grounded = true;
-    if (answer.isEmpty) {
-      try {
-        final decoded = jsonDecode(response.text);
-        if (decoded is Map) {
-          if (decoded['answer'] is String) {
-            answer = decoded['answer'].toString().trim();
-          }
-          if (decoded['grounded'] is bool) {
-            grounded = decoded['grounded'] as bool;
-          }
-        }
-      } catch (_) {
-        answer = response.text.trim();
-      }
-    }
-    if (answer.isEmpty || !grounded) {
+    // `grounded` is the whole point of asking the model for it: it is how the
+    // model says the sources do not actually answer the question. It used to
+    // be read only when the answer text was empty, which never happened --
+    // the projector extracts "answer" from the envelope -- so the honest
+    // fallback below could not fire and an "insufficient evidence" sentence
+    // was presented to the user as though it were the answer.
+    final projected = ResearchAnswerProjector.project(response.text);
+    final answer = projected.answer;
+    if (!projected.usable) {
       return 'Found ${result.results.length} source(s) for "$query", but I '
           "could not ground a confident answer in them:\n$rawList";
     }

@@ -518,46 +518,74 @@ List<SearchProviderResult> parseDuckDuckGoHtmlResults(
   int limit = 10,
 }) {
   final boundedLimit = limit.clamp(1, 20).toInt();
-  final links = <({String href, String title})>[];
-  final snippets = <String>[];
-  final anchorPattern = RegExp(
-    r'<a\b([^>]*)>([\s\S]*?)</a>',
+
+  // Each result's snippet is taken from the markup that follows its own link,
+  // not from a second list zipped by position. The result page also carries
+  // links without a snippet (sponsored rows, "more results", the bare URL
+  // anchor), and it renders snippets on more than one element type, so two
+  // independently collected lists drift apart and attach a snippet to the
+  // wrong result -- or, when the snippet element is not an anchor, leave every
+  // result with no snippet at all and nothing for a model to answer from.
+  final candidates = <({int offset, String href, String title})>[];
+  final snippets = <({int offset, String text})>[];
+  final elementPattern = RegExp(
+    r'<(a|div|td|span)\b([^>]*)>([\s\S]*?)</\1>',
     caseSensitive: false,
   );
-  for (final match in anchorPattern.allMatches(html)) {
-    final attributes = match.group(1) ?? '';
+  for (final match in elementPattern.allMatches(html)) {
+    final tag = (match.group(1) ?? '').toLowerCase();
+    final attributes = match.group(2) ?? '';
     final classes = (_attribute(attributes, 'class') ?? '')
         .split(RegExp(r'\s+'))
         .where((value) => value.isNotEmpty)
         .map((value) => value.toLowerCase())
         .toSet();
-    if (classes.contains('result__a')) {
+    if (tag == 'a' && classes.contains('result__a')) {
       final href = _attribute(attributes, 'href') ?? '';
-      final title = _plainHtmlText(match.group(2) ?? '');
+      final title = _plainHtmlText(match.group(3) ?? '');
       if (href.isNotEmpty && title.isNotEmpty) {
-        links.add((href: href, title: title));
+        candidates.add((offset: match.start, href: href, title: title));
       }
     } else if (classes.contains('result__snippet')) {
-      snippets.add(_plainHtmlText(match.group(2) ?? ''));
+      final text = _plainHtmlText(match.group(3) ?? '');
+      if (text.isNotEmpty) {
+        snippets.add((offset: match.start, text: text));
+      }
     }
   }
+
+  String snippetFor(int linkOffset, int? nextLinkOffset) {
+    for (final snippet in snippets) {
+      if (snippet.offset <= linkOffset) continue;
+      if (nextLinkOffset != null && snippet.offset >= nextLinkOffset) break;
+      return _boundedText(snippet.text, _maxSearchSnippetCharacters);
+    }
+    return '';
+  }
+
   final results = <SearchProviderResult>[];
   final seen = <String>{};
   for (var index = 0;
-      index < links.length && results.length < boundedLimit;
+      index < candidates.length && results.length < boundedLimit;
       index++) {
-    final url = normalizePublicSearchResultUrl(links[index].href);
+    final candidate = candidates[index];
+    final url = normalizePublicSearchResultUrl(candidate.href);
     if (url == null || !seen.add(url)) {
       continue;
     }
-    final title = _boundedText(links[index].title, _maxSearchTitleCharacters);
+    final title = _boundedText(candidate.title, _maxSearchTitleCharacters);
     if (title.isEmpty) {
       continue;
     }
-    final snippet = index < snippets.length
-        ? _boundedText(snippets[index], _maxSearchSnippetCharacters)
-        : '';
-    results.add(SearchProviderResult(title: title, url: url, snippet: snippet));
+    final nextOffset =
+        index + 1 < candidates.length ? candidates[index + 1].offset : null;
+    results.add(
+      SearchProviderResult(
+        title: title,
+        url: url,
+        snippet: snippetFor(candidate.offset, nextOffset),
+      ),
+    );
   }
   return List<SearchProviderResult>.unmodifiable(results);
 }

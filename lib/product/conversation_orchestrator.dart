@@ -27,6 +27,47 @@ class ConversationIntent {
   final String suggestedProjectName;
 }
 
+/// One grounded answer as the research synthesiser understood it.
+///
+/// `grounded` is the model's own verdict on whether the retrieved sources
+/// actually answer the question. It exists so an "the evidence does not say"
+/// response is shown as a source list rather than dressed up as an answer, so
+/// it has to survive envelope parsing rather than being read only when the
+/// answer text happened to be missing.
+class GroundedAnswer {
+  const GroundedAnswer({required this.answer, required this.grounded});
+
+  final String answer;
+  final bool grounded;
+
+  bool get usable => answer.isNotEmpty && grounded;
+}
+
+class ResearchAnswerProjector {
+  const ResearchAnswerProjector._();
+
+  static GroundedAnswer project(String modelText) {
+    var answer = ConversationStreamProjector.visibleText(modelText).trim();
+    var grounded = true;
+    try {
+      final decoded = jsonDecode(modelText);
+      if (decoded is Map) {
+        if (answer.isEmpty && decoded['answer'] is String) {
+          answer = decoded['answer'].toString().trim();
+        }
+        if (decoded['grounded'] is bool) {
+          grounded = decoded['grounded'] as bool;
+        }
+      }
+    } catch (_) {
+      if (answer.isEmpty) {
+        answer = modelText.trim();
+      }
+    }
+    return GroundedAnswer(answer: answer, grounded: grounded);
+  }
+}
+
 class ConversationStreamProjector {
   const ConversationStreamProjector._();
 
