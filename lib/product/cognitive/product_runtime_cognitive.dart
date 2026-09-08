@@ -192,7 +192,10 @@ final class ProductRuntimeCognitiveGateway {
           pathway != CognitiveReasoningPathway.conversation,
     );
     var projection = await substrate.compile(request);
-    projection = enrichment.replaceProductKnowledgeProjection(projection);
+    projection = enrichment.replaceProductKnowledgeProjection(
+      projection,
+      objective: objective,
+    );
 
     if (!_contextIncludesMemory(pathway, includeMemory) || selectedModel == null) {
       return projection;
