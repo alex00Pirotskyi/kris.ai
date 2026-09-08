@@ -43,6 +43,10 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     Future<void>? cancellation,
     bool Function()? isCancelled,
   }) async {
+    // This interface does not carry a project identity. Do not recover one from
+    // mutable global/session state. The first-stage prompt therefore receives
+    // only request-scoped identity/product/capability context. Project evidence
+    // is retrieved later once the canonical projectId is explicit.
     final cognitive = await CognitiveModelContextRegistry.compile(
       cognitiveContextKey,
       CognitiveContextRequest(
@@ -51,40 +55,20 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
         selectedModel: model,
         taskFamily: 'software',
         capabilityHints: specification.capabilityHints.toSet(),
-        maxCharacters: 5600,
+        includeProjectKnowledge: false,
+        includeMemory: false,
+        maxCharacters: 5000,
       ),
     );
-    final executionCognitive = await CognitiveModelContextRegistry.compile(
-      cognitiveContextKey,
-      CognitiveContextRequest(
-        objective: specification.originalRequest,
-        pathway: CognitiveReasoningPathway.execution,
-        selectedModel: model,
-        taskFamily: 'software',
-        capabilityHints: specification.capabilityHints.toSet(),
-        maxCharacters: 4400,
-      ),
-    );
-    if (executionCognitive != null) {
-      CognitiveExecutionContextCache.put(
-        specification.originalRequest,
-        executionCognitive,
-      );
-    }
-    final goal = cognitive == null
-        ? specification.renderForPlanner()
-        : '''
-$kKristinReasoningModelFrame
-
-AUTHORITATIVE KRISTIN COGNITIVE CONTEXT
-${cognitive.rendered}
-
-TASK SPECIFICATION
-${specification.renderForPlanner()}
-''';
+    final goal = <String>[
+      specification.renderForPlanner(),
+      if (cognitive != null && cognitive.contextForUserPrompt().trim().isNotEmpty)
+        'KRISTIN COGNITIVE CONTEXT — TRUST LABELS ARE AUTHORITATIVE\n${cognitive.contextForUserPrompt()}',
+    ].join('\n\n');
     final draft = await planning.generatePrompt(
-      // The planner receives typed task structure plus a bounded cognitive
-      // projection. This context is read-only and cannot alter tool grants.
+      // PromptPlanningService places goal in the user message. Cognitive
+      // coordinator facts remain labelled and no retrieved evidence is
+      // promoted into that service's system prompt.
       goal: goal,
       model: model,
       cancellation: cancellation,
@@ -110,13 +94,18 @@ ${specification.renderForPlanner()}
         projectId: projectId,
         selectedModel: model,
         taskFamily: 'software',
-        maxCharacters: 4400,
+        // Canonical KnowledgeService retrieval is now available because the
+        // project identity is explicit. Any project/web/memory text remains an
+        // AgentContext untrusted-data envelope in the user-level briefing.
+        includeProjectKnowledge: true,
+        includeMemory: true,
+        maxCharacters: 5200,
       ),
     );
     final briefing = <String>[
       capabilityBriefing,
-      if (cognitive != null)
-        '$kKristinReasoningModelFrame\n\nAUTHORITATIVE KRISTIN COGNITIVE CONTEXT\n${cognitive.rendered}',
+      if (cognitive != null && cognitive.contextForUserPrompt().trim().isNotEmpty)
+        'KRISTIN COGNITIVE CONTEXT — TRUST LABELS ARE AUTHORITATIVE\n${cognitive.contextForUserPrompt()}',
     ].where((item) => item.trim().isNotEmpty).join('\n\n');
     return planning.generateTaskPlan(
       promptVersion: promptVersion,
@@ -169,8 +158,10 @@ ${specification.renderForPlanner()}
   }
 }
 
-/// Builds the production kernel. The cognitive substrate supplies context to
-/// understanding/planning; UTK remains the single governed planner/compiler.
+/// Builds the production kernel. The cognitive substrate supplies bounded,
+/// trust-labelled context to understanding/planning; UTK remains the single
+/// governed planner/compiler and execution keeps its existing run-scoped
+/// KnowledgeService retrieval path.
 UniversalTaskKernel buildUniversalTaskKernel({
   required PromptPlanningService planning,
   required ToolRegistry tools,
