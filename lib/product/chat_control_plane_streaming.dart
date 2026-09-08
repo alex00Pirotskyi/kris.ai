@@ -54,9 +54,8 @@ extension _ChatControlPlaneStreaming on _ChatControlPlaneStudioState {
       objective: decision.parsed.originalText,
       selectedProject: selectedProject,
       selectedModel: activeModel,
-      workingMemory: <String>[
-        if (recentConversation.isNotEmpty) recentConversation,
-      ],
+      // The transcript already stays in the user prompt above. Do not also
+      // duplicate it into cognitive working memory.
       maxCharacters: 6800,
     );
 
