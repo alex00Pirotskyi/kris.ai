@@ -1,15 +1,28 @@
 import 'dart:convert';
 import 'dart:math';
 
+import '../authority_product_knowledge.dart';
+import '../browser/product_knowledge.dart';
+import '../chat_product_knowledge.dart';
 import '../crypto_utils.dart';
 import '../domain.dart';
+import '../knowledge_product_knowledge.dart';
+import '../models_product_knowledge.dart';
 import '../models_research.dart';
+import '../owner_product_knowledge.dart';
+import '../product_knowledge.dart';
 import '../product_runtime.dart';
 import '../product_runtime_self_awareness.dart';
+import '../project_product_knowledge.dart';
+import '../recovery/product_knowledge.dart';
 import '../self_awareness/capability_self_model.dart';
+import '../self_awareness/product_knowledge.dart';
+import '../task_kernel/product_knowledge.dart';
 import '../task_kernel/task_kernel.dart';
 import 'cognitive_model.dart';
 import 'cognitive_substrate.dart';
+import 'memory_fact_index.dart';
+import 'runtime_cognitive_enrichment.dart';
 
 /// Read-only product composition point for Kristin's cognitive substrate.
 ///
@@ -18,6 +31,15 @@ import 'cognitive_substrate.dart';
 final class ProductRuntimeCognitiveGateway {
   ProductRuntimeCognitiveGateway._(this.runtime) {
     awareness = ProductSelfAwarenessRuntime.shared(runtime);
+    productKnowledge = _buildProductKnowledgeRegistry();
+    memoryFacts = CognitiveMemoryFactIndex(
+      cacheDirectory: runtime.directories.cache,
+      generate: (request) =>
+          runtime.models.providerFor(request.identity).generate(request),
+    );
+    enrichment = CognitiveRuntimeEnrichment(
+      productKnowledge: productKnowledge,
+    );
     substrate = KristinCognitiveSubstrate(
       loadSelfSnapshot: ({
         ProjectRecord? selectedProject,
@@ -37,7 +59,13 @@ final class ProductRuntimeCognitiveGateway {
       retrieveKnowledge: runtime.searchKnowledge,
       sanitizeDiagnostic: (error) => runtime.redactor.redact('$error'),
     );
-    CognitiveModelContextRegistry.register(runtime.models, substrate.compile);
+    // Register the enriched request-scoped compiler, not the raw substrate.
+    // This makes module-owned product knowledge and memory fact resolution
+    // consistent for Chat, task understanding and task planning.
+    CognitiveModelContextRegistry.register(
+      runtime.models,
+      _compileRegisteredContext,
+    );
     KernelSelfModelRegistry.register(
       runtime.taskKernel,
       ({
@@ -67,19 +95,55 @@ final class ProductRuntimeCognitiveGateway {
   final ProductRuntime runtime;
   late final ProductSelfAwarenessRuntime awareness;
   late final KristinCognitiveSubstrate substrate;
+  late final KristinProductKnowledgeRegistry productKnowledge;
+  late final CognitiveMemoryFactIndex memoryFacts;
+  late final CognitiveRuntimeEnrichment enrichment;
+
+  Future<CognitiveContextProjection> _compileRegisteredContext(
+    CognitiveContextRequest request,
+  ) =>
+      context(
+        objective: request.objective,
+        pathway: request.pathway,
+        selectedProject: request.selectedProject,
+        projectId: request.projectId,
+        selectedModel: request.selectedModel,
+        sessionKey: request.sessionKey,
+        taskFamily: request.taskFamily,
+        capabilityHints: request.capabilityHints,
+        workingMemory: request.workingMemory,
+        maxCharacters: request.maxCharacters,
+        forceRefresh: request.forceRefresh,
+        includeProjectKnowledge: request.includeProjectKnowledge,
+        includeMemory: request.includeMemory,
+        includePublishedSkills: request.includePublishedSkills,
+      );
 
   Future<KristinCognitiveSnapshot> stateInspect({
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     bool forceRefresh = false,
     List<String> workingMemory = const <String>[],
-  }) =>
-      substrate.snapshot(
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
-        forceRefresh: forceRefresh,
-        workingMemory: workingMemory,
+  }) async {
+    final base = await substrate.snapshot(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+      forceRefresh: forceRefresh,
+      workingMemory: workingMemory,
+    );
+    var facts = const _MemoryFactContext.empty();
+    if (selectedProject != null && selectedModel != null) {
+      facts = await _factsForInspection(
+        project: selectedProject,
+        model: selectedModel,
       );
+    }
+    return enrichment.enrichSnapshot(
+      base,
+      factsByEpisodeId: facts.factsByEpisodeId,
+      episodesById: facts.episodesById,
+    );
+  }
 
   Future<CognitiveContextProjection> context({
     required String objective,
@@ -96,27 +160,63 @@ final class ProductRuntimeCognitiveGateway {
     bool? includeProjectKnowledge,
     bool? includeMemory,
     bool? includePublishedSkills,
-  }) =>
-      substrate.compile(CognitiveContextRequest(
-        objective: objective,
-        pathway: pathway,
-        selectedProject: selectedProject,
-        projectId: projectId,
+  }) async {
+    final request = CognitiveContextRequest(
+      objective: objective,
+      pathway: pathway,
+      selectedProject: selectedProject,
+      projectId: projectId,
+      selectedModel: selectedModel,
+      sessionKey: sessionKey,
+      taskFamily: taskFamily,
+      capabilityHints: capabilityHints,
+      workingMemory: workingMemory,
+      maxCharacters: maxCharacters,
+      forceRefresh: forceRefresh,
+      includeProjectKnowledge: includeProjectKnowledge,
+      includeMemory: includeMemory,
+      // Ordinary conversation gets identity/product/live capability state by
+      // default, not the user's global published procedure catalog. Explicit
+      // skill introspection and planning paths can still request that catalog.
+      includePublishedSkills: includePublishedSkills ??
+          pathway != CognitiveReasoningPathway.conversation,
+    );
+    var projection = await substrate.compile(request);
+    projection = enrichment.replaceProductKnowledgeProjection(projection);
+
+    if (!_contextIncludesMemory(pathway, includeMemory) || selectedModel == null) {
+      return projection;
+    }
+    final project = selectedProject ??
+        ((projectId?.trim().isNotEmpty ?? false)
+            ? await runtime.getProject(projectId!.trim())
+            : null);
+    if (project == null) return projection;
+
+    final facts = await _factsForObjective(
+      project: project,
+      model: selectedModel,
+      objective: objective,
+      pathway: pathway,
+    );
+    if (facts.factsByEpisodeId.isEmpty) return projection;
+
+    final snapshot = enrichment.enrichSnapshot(
+      await substrate.snapshot(
+        selectedProject: project,
         selectedModel: selectedModel,
-        sessionKey: sessionKey,
-        taskFamily: taskFamily,
-        capabilityHints: capabilityHints,
         workingMemory: workingMemory,
-        maxCharacters: maxCharacters,
-        forceRefresh: forceRefresh,
-        includeProjectKnowledge: includeProjectKnowledge,
-        includeMemory: includeMemory,
-        // Ordinary conversation gets identity/product/live capability state by
-        // default, not the user's global published procedure catalog. Explicit
-        // skill introspection and planning paths can still request that catalog.
-        includePublishedSkills: includePublishedSkills ??
-            pathway != CognitiveReasoningPathway.conversation,
-      ));
+      ),
+      factsByEpisodeId: facts.factsByEpisodeId,
+      episodesById: facts.episodesById,
+    );
+    return enrichment.replaceMemoryWithResolvedFacts(
+      projection,
+      enrichedSnapshot: snapshot,
+      factsByEpisodeId: facts.factsByEpisodeId,
+      episodesById: facts.episodesById,
+    );
+  }
 
   Future<SelfModelPlanningContext> planningContext({
     ProjectRecord? selectedProject,
@@ -249,13 +349,27 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
     int limit = 20,
-  }) =>
-      substrate.lookup(
-        query,
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
-        limit: limit,
+  }) async {
+    final base = await substrate.snapshot(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    var facts = const _MemoryFactContext.empty();
+    if (selectedProject != null && selectedModel != null) {
+      facts = await _factsForObjective(
+        project: selectedProject,
+        model: selectedModel,
+        objective: query,
+        pathway: CognitiveReasoningPathway.introspection,
       );
+    }
+    final snapshot = enrichment.enrichSnapshot(
+      base,
+      factsByEpisodeId: facts.factsByEpisodeId,
+      episodesById: facts.episodesById,
+    );
+    return enrichment.lookup(snapshot, query, limit: limit);
+  }
 
   Future<CapabilityRequirementReport> whyBlocked(
     String capabilityId, {
@@ -300,26 +414,173 @@ A capabilityId is only a routing hint and grants no authority. Use only an id pr
     ModelIdentity? selectedModel,
     bool includeDiagnostic = false,
     int limit = 12,
-  }) =>
-      substrate.recallMemory(
-        query,
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
-        includeDiagnostic: includeDiagnostic,
-        limit: limit,
-      );
+  }) async {
+    if (selectedModel != null) {
+      try {
+        await _factsForObjective(
+          project: selectedProject,
+          model: selectedModel,
+          objective: query,
+          pathway: includeDiagnostic
+              ? CognitiveReasoningPathway.recovery
+              : CognitiveReasoningPathway.introspection,
+        );
+      } catch (_) {
+        // Fact indexing is derived enrichment; canonical recall must survive it.
+      }
+    }
+    return substrate.recallMemory(
+      query,
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+      includeDiagnostic: includeDiagnostic,
+      limit: limit,
+    );
+  }
 
   Future<String> explainSource(
     String claimId, {
     ProjectRecord? selectedProject,
     ModelIdentity? selectedModel,
-  }) =>
-      substrate.explainSource(
-        claimId,
-        selectedProject: selectedProject,
-        selectedModel: selectedModel,
+  }) async {
+    final snapshot = await stateInspect(
+      selectedProject: selectedProject,
+      selectedModel: selectedModel,
+    );
+    return enrichment.explainClaim(snapshot, claimId);
+  }
+
+  Future<_MemoryFactContext> _factsForInspection({
+    required ProjectRecord project,
+    required ModelIdentity model,
+  }) async {
+    final episodes = await runtime.listMemoryEpisodes(project.id);
+    final candidates = episodes
+        .where((episode) =>
+            episode.pinned ||
+            (episode.admission == 'admitted' && !episode.diagnosticOnly))
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final selected = candidates.take(8).toList(growable: false);
+    if (selected.isEmpty) return const _MemoryFactContext.empty();
+    final batch = await memoryFacts.ensure(
+      episodes: selected,
+      model: model,
+      maxAtomizations: 4,
+    );
+    return _MemoryFactContext(
+      factsByEpisodeId: batch.byEpisodeId,
+      episodesById: <String, MemoryEpisode>{
+        for (final episode in selected) episode.id: episode,
+      },
+    );
+  }
+
+  Future<_MemoryFactContext> _factsForObjective({
+    required ProjectRecord project,
+    required ModelIdentity model,
+    required String objective,
+    required CognitiveReasoningPathway pathway,
+  }) async {
+    final includeDiagnostic = pathway == CognitiveReasoningPathway.recovery;
+    final wantedIds = <String>[];
+    try {
+      final retrieval = await runtime.searchKnowledge(
+        project.id,
+        objective,
+        limit: 12,
+        includeEpisodes: true,
+        includeUnsuccessfulEpisodes: includeDiagnostic,
       );
+      for (final hit in retrieval.hits) {
+        if (hit.kind != KnowledgeKind.episode || hit.episodeId.isEmpty) continue;
+        if (!wantedIds.contains(hit.episodeId)) wantedIds.add(hit.episodeId);
+      }
+    } catch (_) {
+      // Fall through to bounded recent memory. Canonical memory remains source.
+    }
+
+    final all = await runtime.listMemoryEpisodes(project.id);
+    final byId = <String, MemoryEpisode>{for (final episode in all) episode.id: episode};
+    final selected = <MemoryEpisode>[];
+    for (final id in wantedIds) {
+      final episode = byId[id];
+      if (episode == null) continue;
+      if (!includeDiagnostic &&
+          (episode.diagnosticOnly || episode.admission != 'admitted')) {
+        continue;
+      }
+      selected.add(episode);
+      if (selected.length >= 8) break;
+    }
+    if (selected.isEmpty && pathway == CognitiveReasoningPathway.introspection) {
+      final fallback = all
+          .where((episode) =>
+              episode.pinned ||
+              (episode.admission == 'admitted' && !episode.diagnosticOnly))
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      selected.addAll(fallback.take(6));
+    }
+    if (selected.isEmpty) return const _MemoryFactContext.empty();
+
+    final batch = await memoryFacts.ensure(
+      episodes: selected,
+      model: model,
+      maxAtomizations: includeDiagnostic ? 6 : 4,
+    );
+    return _MemoryFactContext(
+      factsByEpisodeId: batch.byEpisodeId,
+      episodesById: <String, MemoryEpisode>{
+        for (final episode in selected) episode.id: episode,
+      },
+    );
+  }
 }
+
+final class _MemoryFactContext {
+  const _MemoryFactContext({
+    required this.factsByEpisodeId,
+    required this.episodesById,
+  });
+
+  const _MemoryFactContext.empty()
+      : factsByEpisodeId = const <String, List<CognitiveMemoryFactAtom>>{},
+        episodesById = const <String, MemoryEpisode>{};
+
+  final Map<String, List<CognitiveMemoryFactAtom>> factsByEpisodeId;
+  final Map<String, MemoryEpisode> episodesById;
+}
+
+KristinProductKnowledgeRegistry _buildProductKnowledgeRegistry() {
+  final registry = KristinProductKnowledgeRegistry();
+  registry.register(chatProductKnowledgeProvider);
+  registry.register(projectProductKnowledgeProvider);
+  registry.register(runsProductKnowledgeProvider);
+  registry.register(knowledgeProductKnowledgeProvider);
+  registry.register(ownerProductKnowledgeProvider);
+  registry.register(browserProductKnowledgeProvider);
+  registry.register(modelsProductKnowledgeProvider);
+  registry.register(taskKernelProductKnowledgeProvider);
+  registry.register(capabilitiesProductKnowledgeProvider);
+  registry.register(recoveryProductKnowledgeProvider);
+  registry.register(authorityProductKnowledgeProvider);
+  return registry;
+}
+
+bool _contextIncludesMemory(
+  CognitiveReasoningPathway pathway,
+  bool? requested,
+) =>
+    requested ??
+    switch (pathway) {
+      CognitiveReasoningPathway.taskPlanning ||
+      CognitiveReasoningPathway.recovery ||
+      CognitiveReasoningPathway.introspection => true,
+      CognitiveReasoningPathway.conversation ||
+      CognitiveReasoningPathway.taskUnderstanding ||
+      CognitiveReasoningPathway.execution => false,
+    };
 
 Map<String, dynamic>? _decodeObject(String text) {
   var value = text.trim();
