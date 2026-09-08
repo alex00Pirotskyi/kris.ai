@@ -1,0 +1,324 @@
+name: P5 Web Studio Runtime Integration Materializer
+
+on:
+  push:
+    branches:
+      - 'agent/p5-web-studio-salvage-replay-20260822'
+    paths:
+      - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
+      - '.p5-web-studio-runtime-integration.part*'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/p5-web-studio-runtime-integration-materialize.yml'
+      - '.p5-web-studio-runtime-integration.part*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p5-web-studio-runtime-integration-materialize
+  cancel-in-progress: false
+
+env:
+  BASE_MAIN_SHA: ac7531f9c192caf90699b53ddb7fdcdd16f24208
+  BRANCH_NAME: agent/p5-web-studio-salvage-replay-20260822
+  SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify exact transport head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          test "$(git merge-base HEAD origin/main)" = "$BASE_MAIN_SHA"
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.0.0
+        with:
+          node-version: '24.18.0'
+          check-latest: false
+          cache: npm
+          cache-dependency-path: automation_host/package-lock.json
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.44.8'
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      - name: Install exact dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          flutter pub get
+          npm ci --prefix automation_host --ignore-scripts --no-audit --no-fund
+
+      - name: Decode and apply guarded product slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .p5-web-studio-runtime-integration.part* | base64 --decode | gzip --decompress > "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python -m py_compile "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+          python "$RUNNER_TEMP/apply_p5_web_studio_integration.py"
+
+      - name: Align P5 tests with live Web Studio semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          accessibility = Path('test/product/p5_information_architecture/p5_accessibility_test.dart')
+          expected_accessibility = 'ef8599d34758c0ac3cff49fcf514df160e5d5bd5'
+          actual_accessibility = subprocess.check_output(
+              ['git', 'hash-object', str(accessibility)], text=True
+          ).strip()
+          if actual_accessibility != expected_accessibility:
+              raise SystemExit(
+                  f'P5 accessibility collision: expected={expected_accessibility} actual={actual_accessibility}'
+              )
+
+          navigation = Path('test/product/p5_information_architecture/p5_navigation_test.dart')
+          nav_text = navigation.read_text(encoding='utf-8')
+          pattern = re.compile(
+              r"^  testWidgets\('Web Studio unavailable state has an exit', \(tester\) async \{.*?^  \}\);\n",
+              re.MULTILINE | re.DOTALL,
+          )
+          replacement = (
+              "  testWidgets('Web Studio opens from capabilities and has a navigation exit',\n"
+              "      (tester) async {\n"
+              "    final controller = P5InformationArchitectureController()\n"
+              "      ..changeExperienceLevel(P5ExperienceLevel.advanced)\n"
+              "      ..selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    addTearDown(controller.dispose);\n"
+              "    await pumpPrototype(tester, controller);\n\n"
+              "    await tapKey(tester, const Key('capability-webStudio'));\n"
+              "    expect(controller.state.workspace, P5WorkspaceId.webStudio);\n"
+              "    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);\n\n"
+              "    await tapKey(tester, const Key('history-back'));\n"
+              "    expect(controller.state.workspace, P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    expect(controller.sideEffects.isZero, isTrue);\n"
+              "  });\n"
+          )
+          nav_text, count = pattern.subn(replacement, nav_text, count=1)
+          if count != 1:
+              raise SystemExit('stale Web Studio navigation contract not found exactly once')
+          navigation.write_text(nav_text, encoding='utf-8', newline='\n')
+
+          text = accessibility.read_text(encoding='utf-8')
+          old_owner = 'Owner Mode status: Blocked by environment. Presentation only.'
+          new_owner = 'Owner Mode status: Blocked by environment.'
+          if text.count(old_owner) != 1:
+              raise SystemExit('stale Owner Mode accessibility label not found exactly once')
+          text = text.replace(old_owner, new_owner, 1)
+
+          access_pattern = re.compile(
+              r"^    controller\.selectWorkspace\(P5WorkspaceId\.capabilitiesIntegrations\);\n"
+              r"    await tester\.pumpAndSettle\(\);\n"
+              r"    final webCapability = find\.byKey\(const Key\('capability-webStudio'\)\);\n"
+              r"    await tester\.ensureVisible\(webCapability\);\n"
+              r"    await tester\.tap\(webCapability\);\n"
+              r"    await tester\.pumpAndSettle\(\);\n\n"
+              r"    expect\(\n"
+              r"      find\.bySemanticsLabel\(\n"
+              r"        'Web Studio is BLOCKED_BY_DEPENDENCY\. P3-001 browser runtime is not implemented\.',\n"
+              r"      \),\n"
+              r"      findsOneWidget,\n"
+              r"    \);\n",
+              re.MULTILINE,
+          )
+          access_replacement = (
+              "    controller.selectWorkspace(P5WorkspaceId.capabilitiesIntegrations);\n"
+              "    await tester.pumpAndSettle();\n"
+              "    expect(\n"
+              "      find.bySemanticsLabel(\n"
+              "        'Web Studio: EXPERIMENTAL. P3-002 through P3-006B browser sessions, observations, actions, downloads, and uploads are landed and can be consumed by Experience.',\n"
+              "      ),\n"
+              "      findsOneWidget,\n"
+              "    );\n\n"
+              "    final webCapability = find.byKey(const Key('capability-webStudio'));\n"
+              "    await tester.ensureVisible(webCapability);\n"
+              "    await tester.tap(webCapability);\n"
+              "    await tester.pumpAndSettle();\n"
+              "    expect(find.byKey(const Key('web-studio-runtime-card')), findsOneWidget);\n"
+          )
+          text, count = access_pattern.subn(access_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('stale Web Studio accessibility contract not found exactly once')
+          accessibility.write_text(text, encoding='utf-8', newline='\n')
+          print('P5 live-semantics test alignment: PASS')
+          PY
+
+      - name: Apply pinned Dart formatter
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart format \
+            lib/product/ui.dart \
+            lib/product/p5_information_architecture \
+            lib/product/browser/browser_runtime.dart \
+            test/product/p5_information_architecture \
+            test/product/browser/browser_runtime_process_test.dart
+
+      - name: P3 Node browser contracts
+        shell: bash
+        working-directory: automation_host
+        run: npm test
+
+      - name: P3 Dart browser contracts
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 test/product/browser/browser_runtime_process_test.dart
+
+      - name: P5 Experience contracts
+        shell: bash
+        run: flutter test --no-pub --concurrency=1 test/product/p5_information_architecture
+
+      - name: Analyzer and formatting scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tool/dart_format_scope.py --check
+          flutter analyze --no-pub --fatal-warnings --fatal-infos
+
+      - name: Remove one-shot transport and regenerate source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .p5-web-studio-runtime-integration.b64
+          rm -f .p5-web-studio-runtime-integration.part*
+          rm -f .p5-web-studio-runtime-integration.fixpart*
+          rm -f .p5-web-studio-runtime-integration.verifiedpart*
+          rm .github/workflows/p5-web-studio-runtime-integration-materialize.yml
+          python tool/p1a_refresh_source_manifest.py .
+          cp SOURCE_MANIFEST.sha256 "$RUNNER_TEMP/SOURCE_MANIFEST.first"
+          python tool/p1a_refresh_source_manifest.py .
+          cmp "$RUNNER_TEMP/SOURCE_MANIFEST.first" SOURCE_MANIFEST.sha256
+          python tool/p1a_text_eof_contract_test.py --project .
+          git diff --check
+
+      - name: Abort if protected main moved
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BASE_MAIN_SHA" || {
+            echo 'Protected main moved during materialization; refusing stale publication.' >&2
+            exit 79
+          }
+
+      - name: Stage exact collision-safe candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- \
+            SOURCE_MANIFEST.sha256 \
+            automation_host/src/browser-runtime.mjs \
+            automation_host/src/browser-runtime.test.mjs \
+            lib/product/browser/browser_runtime.dart \
+            test/product/browser/browser_runtime_process_test.dart \
+            lib/product/ui.dart \
+            lib/product/p5_information_architecture/p5_models.dart \
+            lib/product/p5_information_architecture/p5_fixtures.dart \
+            lib/product/p5_information_architecture/p5_prototype.dart \
+            lib/product/p5_information_architecture/p5_support_workspaces.dart \
+            lib/product/p5_information_architecture/p5_verification_workspaces.dart \
+            test/product/p5_information_architecture/p5_source_boundary_test.dart \
+            test/product/p5_information_architecture/p5_navigation_test.dart \
+            test/product/p5_information_architecture/p5_accessibility_test.dart \
+            test/product/p5_information_architecture/p5_state_controller_test.dart \
+            .p5-web-studio-runtime-integration.b64 \
+            .p5-web-studio-runtime-integration.part00 \
+            .p5-web-studio-runtime-integration.part01 \
+            .p5-web-studio-runtime-integration.part02 \
+            .p5-web-studio-runtime-integration.part03 \
+            .p5-web-studio-runtime-integration.part04 \
+            .p5-web-studio-runtime-integration.fixpart00 \
+            .p5-web-studio-runtime-integration.fixpart01 \
+            .p5-web-studio-runtime-integration.fixpart02 \
+            .p5-web-studio-runtime-integration.fixpart03 \
+            .p5-web-studio-runtime-integration.fixpart04 \
+            .p5-web-studio-runtime-integration.verifiedpart00 \
+            .p5-web-studio-runtime-integration.verifiedpart01 \
+            .p5-web-studio-runtime-integration.verifiedpart02 \
+            .p5-web-studio-runtime-integration.verifiedpart03 \
+            .p5-web-studio-runtime-integration.verifiedpart04 \
+            .github/workflows/p5-web-studio-runtime-integration-materialize.yml
+          python - <<'PY'
+          import subprocess
+          expected = {
+              'SOURCE_MANIFEST.sha256',
+              'automation_host/src/browser-runtime.mjs',
+              'automation_host/src/browser-runtime.test.mjs',
+              'lib/product/browser/browser_runtime.dart',
+              'test/product/browser/browser_runtime_process_test.dart',
+              'lib/product/ui.dart',
+              'lib/product/p5_information_architecture/p5_models.dart',
+              'lib/product/p5_information_architecture/p5_fixtures.dart',
+              'lib/product/p5_information_architecture/p5_prototype.dart',
+              'lib/product/p5_information_architecture/p5_support_workspaces.dart',
+              'lib/product/p5_information_architecture/p5_verification_workspaces.dart',
+              'test/product/p5_information_architecture/p5_source_boundary_test.dart',
+              'test/product/p5_information_architecture/p5_navigation_test.dart',
+              'test/product/p5_information_architecture/p5_accessibility_test.dart',
+              'test/product/p5_information_architecture/p5_state_controller_test.dart',
+              '.p5-web-studio-runtime-integration.b64',
+              '.p5-web-studio-runtime-integration.part00',
+              '.p5-web-studio-runtime-integration.part01',
+              '.p5-web-studio-runtime-integration.part02',
+              '.p5-web-studio-runtime-integration.part03',
+              '.p5-web-studio-runtime-integration.part04',
+              '.p5-web-studio-runtime-integration.fixpart00',
+              '.p5-web-studio-runtime-integration.fixpart01',
+              '.p5-web-studio-runtime-integration.fixpart02',
+              '.p5-web-studio-runtime-integration.fixpart03',
+              '.p5-web-studio-runtime-integration.fixpart04',
+              '.p5-web-studio-runtime-integration.verifiedpart00',
+              '.p5-web-studio-runtime-integration.verifiedpart01',
+              '.p5-web-studio-runtime-integration.verifiedpart02',
+              '.p5-web-studio-runtime-integration.verifiedpart03',
+              '.p5-web-studio-runtime-integration.verifiedpart04',
+              '.github/workflows/p5-web-studio-runtime-integration-materialize.yml',
+          }
+          actual = set(subprocess.check_output(
+              ['git', 'diff', '--cached', '--name-only'], text=True
+          ).splitlines())
+          if actual != expected:
+              raise SystemExit(
+                  f'candidate scope mismatch: actual={sorted(actual)} expected={sorted(expected)}'
+              )
+          print('P5 materializer exact staged scope: PASS')
+          PY
+
+      - name: Publish exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Kristin P5 Integration Worker'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'feat(p5): connect Web Studio to landed P2/P3 runtime'
+          git push origin "HEAD:refs/heads/$BRANCH_NAME"
+          echo "P5_CANDIDATE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "P5_CANDIDATE_TREE=$(git rev-parse HEAD^{tree})" >> "$GITHUB_ENV"
+
+      - name: Candidate identity
+        shell: bash
+        run: |
+          echo "candidate=$P5_CANDIDATE_SHA"
+          echo "tree=$P5_CANDIDATE_TREE"
