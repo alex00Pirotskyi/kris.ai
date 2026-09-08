@@ -15,6 +15,11 @@ typedef CognitiveMemoryFactGeneration = Future<ModelGenerationResult> Function(
   ModelGenerationRequest request,
 );
 typedef CognitiveMemoryTextSanitizer = String Function(String value);
+typedef CognitiveMemoryFactFailureSink = Future<void> Function(
+  String stage,
+  String episodeId,
+  Object error,
+);
 
 final SecretRedactor _defaultMemoryFactRedactor = SecretRedactor();
 
@@ -153,6 +158,7 @@ final class CognitiveMemoryFactIndex {
     required Directory cacheDirectory,
     required this.generate,
     CognitiveMemoryTextSanitizer? sanitizeText,
+    this.onFailure,
     this.maxEntries = 256,
     this.maxFactsPerEpisode = 24,
   })  : _sanitizeText = sanitizeText ?? _defaultMemoryFactSanitizer,
@@ -163,6 +169,7 @@ final class CognitiveMemoryFactIndex {
 
   final CognitiveMemoryFactGeneration generate;
   final CognitiveMemoryTextSanitizer _sanitizeText;
+  final CognitiveMemoryFactFailureSink? onFailure;
   final int maxEntries;
   final int maxFactsPerEpisode;
   final File _file;
@@ -186,7 +193,8 @@ final class CognitiveMemoryFactIndex {
             maxAtomizations: maxAtomizations,
           ),
         );
-      } catch (_) {
+      } catch (error) {
+        await _reportFailure('batch', '', error);
         // Derived enrichment is fail-open by contract. If anything outside the
         // per-episode guards fails, return no atoms and preserve canonical
         // episodic memory for the caller.
@@ -195,7 +203,8 @@ final class CognitiveMemoryFactIndex {
           atomizedEpisodeIds: <String>{},
         ));
       }
-    }).catchError((Object _) {
+    }).catchError((Object error) async {
+      await _reportFailure('queue', '', error);
       if (!completer.isCompleted) {
         completer.complete(const CognitiveMemoryFactBatch(
           byEpisodeId: <String, List<CognitiveMemoryFactAtom>>{},
@@ -233,7 +242,8 @@ final class CognitiveMemoryFactIndex {
         result[episode.id] = entry.facts;
         atomized.add(episode.id);
         changed = true;
-      } catch (_) {
+      } catch (error) {
+        await _reportFailure('atomize', episode.id, error);
         // A model/provider/schema failure cannot suppress canonical memory. Do
         // not cache a failure as an empty successful atomization, so a later
         // healthy provider can retry this episode.
@@ -243,7 +253,8 @@ final class CognitiveMemoryFactIndex {
     if (changed) {
       try {
         await _persist();
-      } catch (_) {
+      } catch (error) {
+        await _reportFailure('cache_write', '', error);
         // This index is rebuildable. A cache write failure must not make the
         // current cognitive request fail.
       }
@@ -422,7 +433,8 @@ Different wording of the same fact should normalize to the same subject and pred
         _entries[entry.episodeId] = entry;
       }
       _trim();
-    } catch (_) {
+    } catch (error) {
+      await _reportFailure('cache_load', '', error);
       // This is a rebuildable semantic index. Corruption never blocks memory.
       _entries.clear();
     }
@@ -450,6 +462,20 @@ Different wording of the same fact should normalize to the same subject and pred
       ..sort((a, b) => b.extractedAt.compareTo(a.extractedAt));
     final keep = values.take(maxEntries).map((entry) => entry.episodeId).toSet();
     _entries.removeWhere((key, value) => !keep.contains(key));
+  }
+
+  Future<void> _reportFailure(
+    String stage,
+    String episodeId,
+    Object error,
+  ) async {
+    final sink = onFailure;
+    if (sink == null) return;
+    try {
+      await sink(stage, episodeId, error);
+    } catch (_) {
+      // Observability cannot make derived enrichment fail.
+    }
   }
 }
 
