@@ -293,13 +293,16 @@ void main() {
 
       expect(recovery.includedIds, contains('product:recovery'));
       expect(browser.includedIds, contains('product:browser_web_studio'));
-      // Ordering follows the descriptors, so the objective's own concept is
-      // rendered before unrelated ones.
+      // Selection follows the descriptors: the objective's own concept is
+      // rendered, and a concept the objective never touches is left out of a
+      // focused turn rather than padding the prompt.
       final browserSection = productSection(browser.coordinatorGuidance);
-      expect(
-        browserSection.indexOf('browser_web_studio'),
-        lessThan(browserSection.indexOf('recovery')),
-      );
+      expect(browserSection, contains('browser_web_studio'));
+      // The browser turn is ordinary conversation, so a concept it never
+      // touches stays out of the prompt. The recovery pathway is not focused
+      // and still receives the broad catalog it reasons against.
+      expect(browser.includedIds, isNot(contains('product:recovery')));
+      expect(recovery.includedIds, contains('product:browser_web_studio'));
     });
 
     test('the rendered production section is provider-attributed', () async {

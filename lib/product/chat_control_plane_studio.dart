@@ -10,6 +10,7 @@ import 'chat_action_dispatcher.dart';
 import 'chat_control_plane.dart';
 import 'chat_conversation_state.dart';
 import 'chat_target_resolver.dart';
+import 'cognitive/cognitive_model.dart';
 import 'chat_studio.dart';
 import 'conversation_orchestrator.dart';
 import 'domain.dart';
