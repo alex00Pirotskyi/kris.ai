@@ -20,6 +20,21 @@ final class CognitiveRuntimeEnrichment {
   final KristinProductKnowledgeRegistry productKnowledge;
   final CognitiveClaimTrustPolicy trustPolicy;
 
+  static const Set<String> _applicationPredicates = <String>{
+    'selectedProject',
+    'selectedModel',
+    'providers',
+    'runState',
+    'ownerMode',
+    'browser',
+    'authority',
+  };
+  static const Set<String> _capabilityPredicates = <String>{
+    'availability',
+    'health',
+    'authority',
+  };
+
   List<RegisteredProductKnowledge> get registeredProductKnowledge =>
       productKnowledge.snapshot();
 
@@ -35,7 +50,7 @@ final class CognitiveRuntimeEnrichment {
       final episode = episodesById[entry.key];
       if (episode == null) continue;
       for (final atom in entry.value) {
-        atomClaims.add(atom.toClaim(episode));
+        atomClaims.add(_memoryClaim(atom, episode));
       }
     }
 
@@ -158,7 +173,7 @@ final class CognitiveRuntimeEnrichment {
 
       final claims = <CognitiveClaim>[];
       for (final atom in atoms) {
-        final raw = atom.toClaim(episode);
+        final raw = _memoryClaim(atom, episode);
         final resolved = resolvedById[raw.id];
         if (resolved != null) claims.add(resolved);
       }
@@ -241,6 +256,41 @@ final class CognitiveRuntimeEnrichment {
           '${sources.isEmpty ? 'No direct evidence source is attached.' : 'Evidence: ${sources.join(', ')}.'}';
     }
     return 'No cognitive claim with id $claimId is present in the current enriched snapshot.';
+  }
+
+  /// Hard-normalize known live-product fields so atomizer wording/scope choices
+  /// cannot prevent field-level comparison with the authoritative self model.
+  /// Arbitrary project/domain facts keep the atomizer's normalized entity key.
+  CognitiveClaim _memoryClaim(
+    CognitiveMemoryFactAtom atom,
+    MemoryEpisode episode,
+  ) {
+    final raw = atom.toClaim(episode);
+    var subject = raw.subject;
+    var scope = raw.scope;
+    if (_capabilityPredicates.contains(raw.predicate) &&
+        raw.subject.startsWith('capability:')) {
+      scope = CognitiveClaimScope.capability;
+    } else if (_applicationPredicates.contains(raw.predicate)) {
+      subject = 'application';
+      scope = CognitiveClaimScope.application;
+    }
+    if (subject == raw.subject && scope == raw.scope) return raw;
+    return CognitiveClaim(
+      subject: subject,
+      predicate: raw.predicate,
+      value: raw.value,
+      scope: scope,
+      provenance: raw.provenance,
+      epistemicStatus: raw.epistemicStatus,
+      confidence: raw.confidence,
+      createdAt: raw.createdAt,
+      observedAt: raw.observedAt,
+      expiresAt: raw.expiresAt,
+      lifecycle: raw.lifecycle,
+      evidence: raw.evidence,
+      tags: raw.tags,
+    );
   }
 
   AgentContextEnvelope _fitMemoryEnvelope(
