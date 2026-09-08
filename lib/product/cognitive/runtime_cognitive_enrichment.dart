@@ -88,12 +88,14 @@ final class CognitiveRuntimeEnrichment {
   }
 
   /// Replaces the compiler's legacy PRODUCT KNOWLEDGE section in-place, using
-  /// no more characters than that section already consumed. Existing included
-  /// product ids preserve the compiler's relevance ordering, so module
-  /// ownership cannot displace the concept selected for the current objective.
+  /// no more characters than that section already consumed. Which concepts fit
+  /// the budget is scored from the registered providers themselves; the old
+  /// static catalog is therefore only a compatibility/budget fallback and does
+  /// not drive production product-knowledge relevance.
   CognitiveContextProjection replaceProductKnowledgeProjection(
-    CognitiveContextProjection projection,
-  ) {
+    CognitiveContextProjection projection, {
+    required String objective,
+  }) {
     final sections = projection.coordinatorGuidance.split('\n\n');
     final index = sections.indexWhere(
       (section) => section == 'PRODUCT KNOWLEDGE' ||
@@ -101,14 +103,11 @@ final class CognitiveRuntimeEnrichment {
     );
     if (index < 0) return projection;
 
-    final preferredIds = <String>[
-      for (final id in projection.includedIds)
-        if (id.startsWith('product:')) id.substring('product:'.length),
-    ];
     final oldSection = sections[index];
     final rendered = _renderProviderSection(
       oldSection.length,
-      preferredIds: preferredIds,
+      objective: objective,
+      pathway: projection.pathway,
     );
     sections[index] = rendered.text;
     final included = projection.includedIds
@@ -352,7 +351,8 @@ final class CognitiveRuntimeEnrichment {
 
   _RenderedProductSection _renderProviderSection(
     int maxCharacters, {
-    required List<String> preferredIds,
+    required String objective,
+    required CognitiveReasoningPathway pathway,
   }) {
     const header = 'PRODUCT KNOWLEDGE';
     final all = registeredProductKnowledge;
@@ -363,15 +363,16 @@ final class CognitiveRuntimeEnrichment {
         omitted: all.length,
       );
     }
-    final byId = <String, RegisteredProductKnowledge>{
-      for (final item in all) item.descriptor.id: item,
-    };
-    final ordered = <RegisteredProductKnowledge>[
-      for (final id in preferredIds)
-        if (byId[id] != null) byId[id]!,
-      for (final item in all)
-        if (!preferredIds.contains(item.descriptor.id)) item,
-    ];
+    final terms = _terms(objective);
+    final ordered = all.toList()
+      ..sort((a, b) {
+        final aScore = _productRelevance(a, terms, pathway);
+        final bScore = _productRelevance(b, terms, pathway);
+        if (aScore != bScore) return bScore.compareTo(aScore);
+        final provider = a.providerId.compareTo(b.providerId);
+        if (provider != 0) return provider;
+        return a.descriptor.id.compareTo(b.descriptor.id);
+      });
     final buffer = StringBuffer(header);
     final included = <String>{};
     for (final item in ordered) {
@@ -386,6 +387,32 @@ final class CognitiveRuntimeEnrichment {
       includedIds: Set<String>.unmodifiable(included),
       omitted: max(0, all.length - included.length),
     );
+  }
+
+  int _productRelevance(
+    RegisteredProductKnowledge item,
+    Set<String> terms,
+    CognitiveReasoningPathway pathway,
+  ) {
+    final descriptor = item.descriptor;
+    var score = _overlapScore(
+          terms,
+          '${descriptor.id} ${descriptor.title} ${descriptor.keywords.join(' ')} ${descriptor.summary}',
+        ) *
+        10;
+    if (descriptor.id == 'authority_execution' ||
+        descriptor.id == 'capabilities') {
+      score += 8;
+    }
+    if (pathway == CognitiveReasoningPathway.taskPlanning &&
+        descriptor.id == 'task_kernel') {
+      score += 8;
+    }
+    if (pathway == CognitiveReasoningPathway.recovery &&
+        descriptor.id == 'recovery') {
+      score += 10;
+    }
+    return score;
   }
 }
 
