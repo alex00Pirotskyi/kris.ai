@@ -1,0 +1,115 @@
+{
+  "authority": {
+    "decision": "docs/roadmap/decisions/ADR-P26-001-verification-center-architecture.md",
+    "human": "docs/roadmap/P26_VERIFICATION_CENTER.md",
+    "testStation": "docs/roadmap/p26/verification_center_test_station.v1.json",
+    "acceptanceContract": "docs/roadmap/p26/verification_center_acceptance_contract.v1.json"
+  },
+  "manifestId": "p26.verification-center-v1",
+  "nextReady": [
+    "P26-001"
+  ],
+  "performanceBudget": "docs/roadmap/p26/performance_budget.v1.json",
+  "schemaVersion": "1.0.0",
+  "status": "READY",
+  "taskOrder": [
+    "P26-001",
+    "P26-002",
+    "P26-003",
+    "P26-004",
+    "P26-005",
+    "P26-006",
+    "P26-007",
+    "P26-008",
+    "P26-009",
+    "P26-010",
+    "P26-011",
+    "P26-012"
+  ],
+  "tasks": [
+    {
+      "dependsOn": [],
+      "id": "P26-001",
+      "packet": "tasks/planned/P26-001.md",
+      "status": "READY",
+      "title": "Establish Verification Center governance, contracts and Test Station"
+    },
+    {
+      "dependsOn": ["P26-001"],
+      "id": "P26-002",
+      "packet": "tasks/planned/P26-002.md",
+      "status": "BLOCKED",
+      "title": "Project discovery, profile model and durable run identity"
+    },
+    {
+      "dependsOn": ["P26-001"],
+      "id": "P26-003",
+      "packet": "tasks/planned/P26-003.md",
+      "status": "BLOCKED",
+      "title": "Verification plan compiler and affected-test selection"
+    },
+    {
+      "dependsOn": ["P26-002"],
+      "id": "P26-004",
+      "packet": "tasks/planned/P26-004.md",
+      "status": "BLOCKED",
+      "title": "Structured, human and agent-prompt acceptance engine"
+    },
+    {
+      "dependsOn": ["P26-002", "P26-004"],
+      "id": "P26-005",
+      "packet": "tasks/planned/P26-005.md",
+      "status": "BLOCKED",
+      "title": "Verification Center workspace and live run experience"
+    },
+    {
+      "dependsOn": ["P26-004"],
+      "id": "P26-006",
+      "packet": "tasks/planned/P26-006.md",
+      "status": "BLOCKED",
+      "title": "Managed execution, cancellation, logs and exact result states"
+    },
+    {
+      "dependsOn": ["P26-002"],
+      "id": "P26-007",
+      "packet": "tasks/planned/P26-007.md",
+      "status": "BLOCKED",
+      "title": "Bounded test-and-repair orchestration"
+    },
+    {
+      "dependsOn": ["P26-003"],
+      "id": "P26-008",
+      "packet": "tasks/planned/P26-008.md",
+      "status": "BLOCKED",
+      "title": "Web verification through P3 browser and headless HTTP fixtures"
+    },
+    {
+      "dependsOn": ["P26-003"],
+      "id": "P26-009",
+      "packet": "tasks/planned/P26-009.md",
+      "status": "BLOCKED",
+      "title": "Coverage ingestion and source mapping"
+    },
+    {
+      "dependsOn": ["P26-003"],
+      "id": "P26-010",
+      "packet": "tasks/planned/P26-010.md",
+      "status": "BLOCKED",
+      "title": "Updater operation verification and rollback journey"
+    },
+    {
+      "dependsOn": ["P26-003"],
+      "id": "P26-011",
+      "packet": "tasks/planned/P26-011.md",
+      "status": "BLOCKED",
+      "title": "Native-owner campaigns, permissions and environment blockers"
+    },
+    {
+      "dependsOn": ["P26-005", "P26-006", "P26-007", "P26-008", "P26-009", "P26-010", "P26-011"],
+      "id": "P26-012",
+      "packet": "tasks/planned/P26-012.md",
+      "status": "BLOCKED",
+      "title": "Kristin dogfood release-blocking journey and migration closeout"
+    }
+  ]
+}

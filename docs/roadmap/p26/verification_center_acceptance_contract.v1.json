@@ -1,0 +1,72 @@
+{
+  "actionPolicy": {
+    "analyzeOnlyMutation": "FORBIDDEN",
+    "destructiveActionsRequireConfirmation": true,
+    "remoteActionsRequireConfirmation": true,
+    "restartRequiresConfirmation": true,
+    "rollbackRequiresConfirmation": true
+  },
+  "contractId": "p26.verification-center-acceptance-v1",
+  "coverage": {
+    "formats": [
+      "COBERTURA_XML",
+      "LCOV",
+      "NATIVE_SOURCE_MAP"
+    ],
+    "missingState": "UNKNOWN",
+    "unmappableState": "UNKNOWN"
+  },
+  "criteriaTypes": [
+    "STRUCTURED",
+    "HUMAN",
+    "AGENT_PROMPT"
+  ],
+  "modes": [
+    "ANALY_ONLY",
+    "QUICK_CHECK",
+    "DEEP_CHECK",
+    "TEST_AND_REPAIR"
+  ],
+  "projectConfiguration": {
+    "directory": ".prowork/verification/",
+    "discoveryRequired": false,
+    "idempotent": true,
+    "versioned": true
+  },
+  "repairPolicy": {
+    "maxAttempts": 2,
+    "silentRetries": 0,
+    "stopOnPass": true,
+    "stopOnRepeatedNonProgress": true
+  },
+  "resultStates": [
+    "PASS",
+    "FAIL",
+    "BLOCKED_ENVIRONMENT",
+    "BLOCKED_PERMISSION",
+    "NOT_RUN",
+    "UNKNOWN"
+  ],
+  "schemaVersion": "1.0.0",
+  "stateSemantics": {
+    "passing": [
+      "PASS"
+    ],
+    "nonPassing": [
+      "FAIL",
+      "BLOCKED_ENVIRONMENT",
+      "BLOCKED_PERMISSION",
+      "NOT_RUN",
+      "UNKNOWN"
+    ],
+    "coercionForbidden": true
+  },
+  "updaterStages": [
+    "CHECK",
+    "DOWNLOAD",
+    "INSTALL",
+    "RESTART",
+    "VERIFY",
+    "ROLLBACK"
+  ]
+}

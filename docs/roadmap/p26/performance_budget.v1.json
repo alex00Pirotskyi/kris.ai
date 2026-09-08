@@ -1,0 +1,19 @@
+{
+  "budgetId": "p26.verification-center-performance-v1",
+  "metrics": {
+    "uiAcknowledgementP95Ms": 100,
+    "durableRunCreationP95Ms": 250,
+    "firstVisibleActivityP95Ms": 500,
+    "maximumInvisibleEventGapMs": 3000,
+    "cancelAcknowledgementP95Ms": 250,
+    "managedProcessTerminationP95Ms": 2000,
+    "fixtureProjectDiscoveryP95Ms": 2000,
+    "affectedSelectionP95Ms": 500,
+    "exactReportLoadP95Ms": 1000,
+    "coverageParse10MiBP95Ms": 3000,
+    "repairAttemptsMax": 2,
+    "silentRetriesMax": 0,
+    "logPreviewBytesMax": 65536
+  },
+  "schemaVersion": "1.0.0"
+}

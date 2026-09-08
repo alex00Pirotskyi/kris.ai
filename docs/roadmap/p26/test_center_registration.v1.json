@@ -1,0 +1,59 @@
+{
+  "affectedTestMapping": {
+    "excludedPaths": [
+      "release/evidence/generated/**"
+    ],
+    "mappingId": "affected.p26-verification-center-governance",
+    "pathPatterns": [
+      ".github/workflows/p26-verification-center.yml",
+      "docs/roadmap/P26_VERIFICATION_CENTER.md",
+      "docs/roadmap/p26/**",
+      "docs/roadmap/decisions/ADR-P26-001-verification-center-architecture.md",
+      "docs/testing/TEST_CENTER_P26_VERIFICATION_CENTER.md",
+      "tasks/planned/P26-*.md",
+      "tool/p26_verification_center_*.py"
+    ],
+    "priority": 260,
+    "testIds": [
+      "tc.p26.roadmap-contract",
+      "tc.p26.test-station-contract"
+    ]
+  },
+  "module": {
+    "assuranceClasses": [
+      "source_contract",
+      "behavioral",
+      "platform",
+      "release"
+    ],
+    "displayName": "P26 Verification Center",
+    "moduleId": "tm.p26.verification-center",
+    "owner": "P26 product and Test Center lane",
+    "purpose": "Verify general project acceptance, managed execution, coverage, web/native/updater journeys and bounded repair without promoting evidence above its assurance class."
+  },
+  "schemaVersion": "1.0.0",
+  "testCases": [
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P26 roadmap and acceptance contract",
+      "mandatory": true,
+      "moduleId": "tm.p26.verification-center",
+      "purpose": "Validate the bounded P26 roadmap, exact state domain, modes, repair limit, task DAG and station registration.",
+      "roadmapTaskIds": [
+        "P26-001"
+      ],
+      "testId": "tc.p26.roadmap-contract"
+    },
+    {
+      "assuranceClass": "source_contract",
+      "displayName": "P26 Verification Center Test Station contract",
+      "mandatory": true,
+      "moduleId": "tm.p26.verification-center",
+      "purpose": "Validate safe profile selection, explicit blockers, non-mutating contract checks and fail-closed future profiles.",
+      "roadmapTaskIds": [
+        "P26-001"
+      ],
+      "testId": "tc.p26.test-station-contract"
+    }
+  ]
+}

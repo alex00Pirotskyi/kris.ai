@@ -1,0 +1,187 @@
+{
+  "cases": [
+    {
+      "assuranceLevel": "architecture_lint",
+      "caseId": "p26-roadmap-contract",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_roadmap_test.py",
+        "--project",
+        "."
+      ],
+      "completionEligible": true,
+      "taskIds": [
+        "P26-001"
+      ],
+      "testId": "tc.p26.roadmap-contract"
+    },
+    {
+      "assuranceLevel": "architecture_lint",
+      "caseId": "p26-test-station-contract",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_test_station.py",
+        "--project",
+        ".",
+        "--profile",
+        "contract",
+        "--check"
+      ],
+      "completionEligible": true,
+      "taskIds": [
+        "P26-001"
+      ],
+      "testId": "tc.p26.test-station-contract"
+    },
+    {
+      "assuranceLevel": "unit",
+      "caseId": "p26-deterministic-fixtures",
+      "command": [
+        "flutter",
+        "test",
+        "test/product/p26_verification_center_fixture_test.dart"
+      ],
+      "completionEligible": false,
+      "implementationPath": "test/product/p26_verification_center_fixture_test.dart",
+      "taskIds": [
+        "P26-002",
+        "P26-003",
+        "P26-004",
+        "P26-006",
+        "P26-007"
+      ],
+      "testId": "tc.p26.deterministic-fixtures"
+    },
+    {
+      "assuranceLevel": "integration",
+      "caseId": "p26-behavioral-local",
+      "command": [
+        "flutter",
+        "test",
+        "test/product/p26_verification_center_behavior_test.dart"
+      ],
+      "completionEligible": false,
+      "implementationPath": "test/product/p26_verification_center_behavior_test.dart",
+      "taskIds": [
+        "P26-005",
+        "P26-006",
+        "P26-007"
+      ],
+      "testId": "tc.p26.behavioral-local"
+    },
+    {
+      "assuranceLevel": "integration",
+      "caseId": "p26-web-http-fixture",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_web_fixture.py",
+        "--check"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p26_verification_center_web_fixture.py",
+      "taskIds": [
+        "P26-008"
+      ],
+      "testId": "tc.p26.web-http-fixture"
+    },
+    {
+      "assuranceLevel": "platform",
+      "caseId": "p26-native-owner",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_native_campaign.py",
+        "--check"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p26_verification_center_native_campaign.py",
+      "taskIds": [
+        "P26-011"
+      ],
+      "testId": "tc.p26.native-owner"
+    },
+    {
+      "assuranceLevel": "platform",
+      "caseId": "p26-updater-operation",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_updater_campaign.py",
+        "--check"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p26_verification_center_updater_campaign.py",
+      "taskIds": [
+        "P26-010"
+      ],
+      "testId": "tc.p26.updater-operation"
+    },
+    {
+      "assuranceLevel": "release",
+      "caseId": "p26-kristin-dogfood",
+      "command": [
+        "python3",
+        "tool/p26_verification_center_dogfood.py",
+        "--check"
+      ],
+      "completionEligible": false,
+      "implementationPath": "tool/p26_verification_center_dogfood.py",
+      "taskIds": [
+        "P26-012"
+      ],
+      "testId": "tc.p26.kristin-dogfood"
+    }
+  ],
+  "profiles": [
+    {
+      "caseIds": [
+        "p26-roadmap-contract",
+        "p26-test-station-contract"
+      ],
+      "description": "Portable P26 governance, acceptance and Test Station contract.",
+      "profileId": "contract"
+    },
+    {
+      "caseIds": [
+        "p26-deterministic-fixtures"
+      ],
+      "description": "Deterministic project, criteria, state aggregation and repair fixtures.",
+      "profileId": "deterministic"
+    },
+    {
+      "caseIds": [
+        "p26-behavioral-local"
+      ],
+      "description": "Local product behavior and managed execution.",
+      "profileId": "behavioral-local"
+    },
+    {
+      "caseIds": [
+        "p26-web-http-fixture"
+      ],
+      "description": "Headless HTTP fixture and governed web adapter.",
+      "profileId": "web-fixture"
+    },
+    {
+      "caseIds": [
+        "p26-native-owner"
+      ],
+      "description": "Owner-machine native application and permission campaign.",
+      "profileId": "native-owner"
+    },
+    {
+      "caseIds": [
+        "p26-updater-operation"
+      ],
+      "description": "P2 updater stage and rollback campaign.",
+      "profileId": "updater-operation"
+    },
+    {
+      "caseIds": [
+        "p26-kristin-dogfood"
+      ],
+      "description": "Release-blocking Kristin dogfood journey.",
+      "profileId": "dogfood-release"
+    }
+  ],
+  "schemaVersion": "1.0.0",
+  "suiteId": "p26.verification-center-test-station-v1"
+}
