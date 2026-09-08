@@ -36,6 +36,7 @@ EXTRA_SOURCE_PATHS = (
 )
 SNAPSHOT_PATHS = tuple(dict.fromkeys((*WORKER_E_DURABLE_PATHS, *EXTRA_SOURCE_PATHS)))
 
+
 def _snapshot(project: Path) -> dict[str, str]:
     return {
         path.as_posix(): (
@@ -44,6 +45,7 @@ def _snapshot(project: Path) -> dict[str, str]:
         )
         for path in SNAPSHOT_PATHS
     }
+
 
 def check_source_manifest(project: Path) -> None:
     path = project / "SOURCE_MANIFEST.sha256"
@@ -62,6 +64,7 @@ def check_source_manifest(project: Path) -> None:
         expected = hashlib.sha256(target.read_bytes()).hexdigest()
         if entries.get(relative.as_posix()) != expected:
             raise ReadinessError(f"source manifest mismatch for {relative}")
+
 
 def check_dependency_status(project: Path) -> None:
     document = json.loads((project / "release/evidence/P11-001/dependency-status.json").read_text())
@@ -94,6 +97,7 @@ def check_dependency_status(project: Path) -> None:
         if activation.get(field) is not False:
             raise ReadinessError(f"forbidden authorization: {field}")
 
+
 def check_test_center(project: Path) -> None:
     try:
         result = registration.validate_handoff(project)
@@ -107,6 +111,7 @@ def check_test_center(project: Path) -> None:
         raise ReadinessError("Test Center owner specification stable IDs drifted")
     if len(spec.get("mappingGroups", [])) < 4:
         raise ReadinessError("Test Center owner specification mappings incomplete")
+
 
 def check_artifact_manifest(project: Path) -> None:
     data = json.loads((project / "release/evidence/P11-001/manifest.json").read_text())
@@ -127,6 +132,7 @@ def check_artifact_manifest(project: Path) -> None:
     if len(owned) != len(set(owned)):
         raise ReadinessError("duplicate Worker E owned paths")
 
+
 def check_claim_boundary(project: Path) -> None:
     data = json.loads((project / "release/evidence/P11-001/manifest.json").read_text())
     claims = data.get("claims", {})
@@ -138,6 +144,7 @@ def check_claim_boundary(project: Path) -> None:
     for field in forbidden:
         if claims.get(field) is not False:
             raise ReadinessError(f"forbidden manifest claim: {field}")
+
 
 def _run_selected(project: Path, test_id: str | None) -> list[str]:
     checks = {
@@ -165,6 +172,7 @@ def _run_selected(project: Path, test_id: str | None) -> list[str]:
     check_source_manifest(project)
     return completed
 
+
 def check(project: Path, test_id: str | None = None) -> dict[str, Any]:
     project = project.resolve()
     before = _snapshot(project)
@@ -184,6 +192,7 @@ def check(project: Path, test_id: str | None = None) -> dict[str, Any]:
         "capabilitySupport": "SOURCE_FOUNDATION",
         "mutatedPaths": [],
     }
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
