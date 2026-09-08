@@ -43,21 +43,38 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     Future<void>? cancellation,
     bool Function()? isCancelled,
   }) async {
-    // This interface does not carry a project identity. Do not recover one from
-    // mutable global/session state. The first-stage prompt therefore receives
-    // only request-scoped identity/product/capability context. Project evidence
-    // is retrieved later once the canonical projectId is explicit.
+    final recovery = specification.contextRefs.any(
+      (item) => item.startsWith('failure:'),
+    );
+    String? resolvedProjectId;
+    if (recovery) {
+      for (final target in specification.targetRefs) {
+        if (target.resolved && target.kind == 'project' && target.value.isNotEmpty) {
+          resolvedProjectId = target.value;
+          break;
+        }
+      }
+    }
+
+    // Ordinary first-stage planning intentionally does not infer a project
+    // selection through mutable session state. Autonomic recovery is different:
+    // its deterministic specification carries a resolved project target and
+    // failure reference, so the recovery pathway can safely retrieve diagnostic
+    // history without widening the planning interface or Runner authority.
     final cognitive = await CognitiveModelContextRegistry.compile(
       cognitiveContextKey,
       CognitiveContextRequest(
         objective: specification.originalRequest,
-        pathway: CognitiveReasoningPathway.taskPlanning,
+        pathway: recovery
+            ? CognitiveReasoningPathway.recovery
+            : CognitiveReasoningPathway.taskPlanning,
+        projectId: resolvedProjectId,
         selectedModel: model,
         taskFamily: 'software',
         capabilityHints: specification.capabilityHints.toSet(),
-        includeProjectKnowledge: false,
-        includeMemory: false,
-        maxCharacters: 5000,
+        includeProjectKnowledge: recovery,
+        includeMemory: recovery,
+        maxCharacters: recovery ? 5600 : 5000,
       ),
     );
     final goal = <String>[
@@ -67,8 +84,8 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
     ].join('\n\n');
     final draft = await planning.generatePrompt(
       // PromptPlanningService places goal in the user message. Cognitive
-      // coordinator facts remain labelled and no retrieved evidence is
-      // promoted into that service's system prompt.
+      // coordinator facts remain labelled and retrieved recovery evidence stays
+      // in untrusted AgentContext envelopes rather than system instructions.
       goal: goal,
       model: model,
       cancellation: cancellation,
@@ -94,7 +111,7 @@ class PromptPlanningKernelGateway implements KernelPlanningGateway {
         projectId: projectId,
         selectedModel: model,
         taskFamily: 'software',
-        // Canonical KnowledgeService retrieval is now available because the
+        // Canonical KnowledgeService retrieval is available because the
         // project identity is explicit. Any project/web/memory text remains an
         // AgentContext untrusted-data envelope in the user-level briefing.
         includeProjectKnowledge: true,
