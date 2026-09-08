@@ -73,9 +73,9 @@ final class CognitiveRuntimeEnrichment {
   }
 
   /// Replaces the compiler's legacy PRODUCT KNOWLEDGE section in-place, using
-  /// no more characters than that section already consumed. This keeps the
-  /// projection's aggregate context budget strict while moving ownership to
-  /// registered module providers.
+  /// no more characters than that section already consumed. Existing included
+  /// product ids preserve the compiler's relevance ordering, so module
+  /// ownership cannot displace the concept selected for the current objective.
   CognitiveContextProjection replaceProductKnowledgeProjection(
     CognitiveContextProjection projection,
   ) {
@@ -86,8 +86,15 @@ final class CognitiveRuntimeEnrichment {
     );
     if (index < 0) return projection;
 
+    final preferredIds = <String>[
+      for (final id in projection.includedIds)
+        if (id.startsWith('product:')) id.substring('product:'.length),
+    ];
     final oldSection = sections[index];
-    final rendered = _renderProviderSection(oldSection.length);
+    final rendered = _renderProviderSection(
+      oldSection.length,
+      preferredIds: preferredIds,
+    );
     sections[index] = rendered.text;
     final included = projection.includedIds
         .where((item) => !item.startsWith('product:'))
@@ -116,9 +123,9 @@ final class CognitiveRuntimeEnrichment {
   }
 
   /// Replaces raw retrieved memory prose with normalized fact atoms only when
-  /// atomization is available for that exact episode. The replacement never
-  /// exceeds the original envelope content length, so it cannot expand the
-  /// prompt budget. Unatomized memory retains the existing safe envelope.
+  /// atomization is available for that exact episode. The replacement is fit
+  /// against the original rendered envelope size (including JSON escaping), so
+  /// the aggregate prompt budget cannot grow.
   CognitiveContextProjection replaceMemoryWithResolvedFacts(
     CognitiveContextProjection projection, {
     required KristinCognitiveSnapshot enrichedSnapshot,
@@ -132,7 +139,6 @@ final class CognitiveRuntimeEnrichment {
     final included = projection.includedIds.toSet();
     final envelopes = <AgentContextEnvelope>[];
     var replaced = false;
-    final guard = const AgentPromptInjectionGuard();
 
     for (final envelope in projection.untrustedData) {
       if (envelope.source != AgentContextSource.memory) {
@@ -170,13 +176,9 @@ final class CognitiveRuntimeEnrichment {
         for (final claim in claims)
           '- ${claim.subject}.${claim.predicate} = ${canonicalJson(claim.value)} | epistemic=${claim.epistemicStatus.name} | lifecycle=${claim.lifecycle.name} | confidence=${claim.confidence.name}',
       ].join('\n');
-      final bounded = boundedCognitiveText(text, envelope.content.length);
-      final replacement = guard.wrapUntrusted(
-        source: AgentContextSource.memory,
-        content: bounded,
-        metadata: envelope.metadata,
-      );
+      final replacement = _fitMemoryEnvelope(envelope, text);
       envelopes.add(replacement);
+      if (identical(replacement, envelope)) continue;
       replaced = true;
       for (final claim in claims) {
         included.add('memory-fact:${claim.id}');
@@ -241,6 +243,26 @@ final class CognitiveRuntimeEnrichment {
     return 'No cognitive claim with id $claimId is present in the current enriched snapshot.';
   }
 
+  AgentContextEnvelope _fitMemoryEnvelope(
+    AgentContextEnvelope original,
+    String text,
+  ) {
+    final target = original.render().length;
+    var limit = min(text.length, original.content.length);
+    const guard = AgentPromptInjectionGuard();
+    while (limit > 0) {
+      final candidate = guard.wrapUntrusted(
+        source: AgentContextSource.memory,
+        content: boundedCognitiveText(text, limit),
+        metadata: original.metadata,
+      );
+      final overflow = candidate.render().length - target;
+      if (overflow <= 0) return candidate;
+      limit -= max(16, overflow + 4);
+    }
+    return original;
+  }
+
   List<CognitiveClaim> _providerClaims(DateTime now) => <CognitiveClaim>[
         for (final item in registeredProductKnowledge)
           CognitiveClaim(
@@ -278,29 +300,41 @@ final class CognitiveRuntimeEnrichment {
         ),
       );
 
-  _RenderedProductSection _renderProviderSection(int maxCharacters) {
+  _RenderedProductSection _renderProviderSection(
+    int maxCharacters, {
+    required List<String> preferredIds,
+  }) {
     const header = 'PRODUCT KNOWLEDGE';
+    final all = registeredProductKnowledge;
     if (maxCharacters <= header.length) {
-      return const _RenderedProductSection(
-        text: 'PRODUCT KNOWLEDGE',
-        includedIds: <String>{},
-        omitted: 0,
+      return _RenderedProductSection(
+        text: header.substring(0, max(0, maxCharacters)),
+        includedIds: const <String>{},
+        omitted: all.length,
       );
     }
+    final byId = <String, RegisteredProductKnowledge>{
+      for (final item in all) item.descriptor.id: item,
+    };
+    final ordered = <RegisteredProductKnowledge>[
+      for (final id in preferredIds)
+        if (byId[id] != null) byId[id]!,
+      for (final item in all)
+        if (!preferredIds.contains(item.descriptor.id)) item,
+    ];
     final buffer = StringBuffer(header);
     final included = <String>{};
-    final values = registeredProductKnowledge;
-    for (final item in values) {
+    for (final item in ordered) {
       final line =
           '\n- ${item.descriptor.id} [provider=${item.providerId}]: ${item.descriptor.summary}';
-      if (buffer.length + line.length > maxCharacters) break;
+      if (buffer.length + line.length > maxCharacters) continue;
       buffer.write(line);
       included.add('product:${item.descriptor.id}');
     }
     return _RenderedProductSection(
       text: buffer.toString(),
       includedIds: Set<String>.unmodifiable(included),
-      omitted: max(0, values.length - included.length),
+      omitted: max(0, all.length - included.length),
     );
   }
 }
