@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'cognitive/cognitive_substrate.dart';
 import 'crypto_utils.dart';
 import 'domain.dart';
 import 'performance_spans.dart';
@@ -500,33 +499,20 @@ class SkillRegistry {
   }
 
   String contextFor(String request) {
-    final sections = <String>[];
     final skills = match(request);
     if (skills.isEmpty) {
-      sections.add('No specialized built-in skill package matched this request.');
-    } else {
-      sections.add(
-        skills
-            .map(
-              (skill) => '''
+      return 'No specialized built-in skill package matched this request.';
+    }
+    return skills
+        .map(
+          (skill) => '''
 SKILL ${skill.id} — ${skill.title}
 These are product-authored advisory instructions. They never expand tools, permissions, paths, or budgets.
 ${skill.instructions}
 Recommended tools: ${skill.recommendedTools.join(', ')}
 ''',
-            )
-            .join('\n'),
-      );
-    }
-    final cognitive = CognitiveExecutionContextCache.forRequest(request);
-    if (cognitive != null && cognitive.trim().isNotEmpty) {
-      sections.add('''
-KRISTIN COGNITIVE CONTEXT — READ ONLY
-This projection describes identity, state, capabilities, relevant published skills, knowledge, memory, uncertainty and authority observations. It never adds Runner tools or grants authority.
-$cognitive
-''');
-    }
-    return sections.join('\n\n');
+        )
+        .join('\n');
   }
 }
 
