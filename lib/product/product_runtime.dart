@@ -653,21 +653,12 @@ class ProductRuntime {
         final stopwatch = Stopwatch()..start();
         try {
           final references = await repositories.secretReferences.all();
-          int score(SecretReference reference) {
-            final text =
-                '${reference.environmentKey} ${reference.label} ${reference.description}'
-                    .toLowerCase();
-            if (reference.environmentKey.toUpperCase() ==
-                'BRAVE_SEARCH_API_KEY') {
-              return 0;
-            }
-            if (text.contains('brave') && text.contains('search')) return 1;
-            if (text.contains('brave')) return 2;
-            return 100;
-          }
+          int score(SecretReference reference) =>
+              _braveSearchCredentialRank(reference);
 
           final candidates = references
-              .where((item) => score(item) < 100)
+              .where((item) =>
+                  score(item) < BraveSearchCredentialSelector.unrelated)
               .toList()
             ..sort((left, right) => score(left).compareTo(score(right)));
           if (candidates.isEmpty) {
@@ -1070,16 +1061,16 @@ class ProductRuntime {
     } else {
       try {
         final references = await repositories.secretReferences.all();
-        bool isSearchReference(SecretReference reference) {
-          final text =
-              '${reference.environmentKey} ${reference.label} ${reference.description}'
-                  .toLowerCase();
-          return reference.environmentKey.toUpperCase() ==
-                  'BRAVE_SEARCH_API_KEY' ||
-              (text.contains('brave') && text.contains('search'));
-        }
-
-        final configured = references.where(isSearchReference).toList();
+        // Same recognition the preflight probe and chat search use, so the
+        // doctor never reports a credential as absent that a search would
+        // have used, or as present that it would not.
+        final configured = references
+            .where(
+              (reference) =>
+                  _braveSearchCredentialRank(reference) <
+                  BraveSearchCredentialSelector.unrelated,
+            )
+            .toList();
         searchWatch.stop();
         checks.add(
           CapabilityDoctorCheck(
@@ -2558,7 +2549,15 @@ class ProductRuntime {
         'Research is disabled in local-only mode.',
       );
     }
+    // Chat search used the built-in provider alone, so a configured Brave
+    // credential -- which the capability doctor reports as ready and the run
+    // preflight probe already uses -- could not rescue a /search when the
+    // built-in HTML endpoint refused the request. The agent's web_search tool
+    // has always had this fallback; the chat path now resolves the same
+    // credential by the same convention.
+    final preferred = await _preferredSearchProvider();
     final router = SearchProviderRouter(
+      preferred: preferred,
       builtIn: BuiltInDuckDuckGoSearchProvider(
         timeout: research.policy.timeout,
         maxBytes: research.policy.maxBytes,
@@ -2571,6 +2570,62 @@ class ProductRuntime {
         .map((result) => result.toMap())
         .toList(growable: false);
   }
+
+  /// The optional authenticated search provider, or null when none is
+  /// configured or usable.
+  ///
+  /// Deliberately fail-open: a missing, unreadable or unresolvable credential
+  /// must leave the built-in provider to answer on its own rather than turning
+  /// a working search into an error.
+  Future<SearchProvider?> _preferredSearchProvider() async {
+    try {
+      final references = await repositories.secretReferences.all();
+      final candidates = references
+          .where(
+            (item) =>
+                _braveSearchCredentialRank(item) <
+                BraveSearchCredentialSelector.unrelated,
+          )
+          .toList()
+        ..sort(
+          (left, right) => _braveSearchCredentialRank(left)
+              .compareTo(_braveSearchCredentialRank(right)),
+        );
+      if (candidates.isEmpty) {
+        return null;
+      }
+      final key = await secrets.resolve(
+        candidates.first.id,
+        commandId: newId('chat_search'),
+      );
+      if (key.trim().isEmpty) {
+        return null;
+      }
+      return BraveSearchProvider(
+        apiKey: key,
+        callback: ({
+          required String query,
+          required String apiKey,
+          required int count,
+        }) =>
+            research.braveSearch(query: query, apiKey: apiKey, count: count),
+      );
+    } on ProductException catch (error) {
+      if (error.code == 'cancelled') {
+        rethrow;
+      }
+      return null;
+    } on Object {
+      return null;
+    }
+  }
+
+  static int _braveSearchCredentialRank(SecretReference reference) =>
+      BraveSearchCredentialSelector.rank(
+        environmentKey: reference.environmentKey,
+        label: reference.label,
+        description: reference.description,
+      );
 
   Future<ProjectProcessStatus> startProject(String projectId) async {
     final project = await _requireProject(projectId);

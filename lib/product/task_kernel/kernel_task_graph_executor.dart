@@ -190,10 +190,14 @@ class KernelTaskGraphExecutor {
                 )
               : await executeNode!(task, dependencies);
         } catch (error) {
+          // `summary` must not repeat the code that `failureCode` already
+          // carries: ProductException.toString() is "code: message", and the
+          // family executors rethrow as ProductException(failureCode, summary),
+          // which rendered the code twice in the surfaced error.
           result = KernelTaskNodeResult(
             taskId: task.id,
             state: KernelTaskNodeState.failed,
-            summary: '$error',
+            summary: error is ProductException ? error.message : '$error',
             failureCode: error is ProductException
                 ? error.code
                 : 'kernel_task_executor_failed',

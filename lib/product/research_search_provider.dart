@@ -133,9 +133,21 @@ class SearchProviderRouter {
         failures.add('${provider.id}:search_provider_error');
       }
     }
+    // The reason codes are the only thing that distinguishes "the endpoint
+    // rate-limited us" from "there is no network" from "the response did not
+    // parse", and `details` never reaches the surfaced error string. They are
+    // reported without their provider prefix so the message stays neutral
+    // about which provider was tried -- naming one would both leak the
+    // configured provider set and blame a single provider for a total outage.
+    final reasons = <String>{
+      for (final failure in failures) _reasonOf(failure),
+    }.toList()
+      ..sort();
     throw ProductException(
       'web_search_unavailable',
-      'Web search is currently unavailable.',
+      reasons.isEmpty
+          ? 'Web search is currently unavailable.'
+          : 'Web search is currently unavailable (${reasons.join(', ')}).',
       details: <String, dynamic>{'providerFailures': failures},
     );
   }
@@ -169,6 +181,15 @@ class SearchProviderRouter {
         message: 'Web search is currently unavailable.',
       );
     }
+  }
+
+  /// The reason half of a `providerId:reason` failure entry.
+  static String _reasonOf(String failure) {
+    final separator = failure.lastIndexOf(':');
+    if (separator < 0 || separator + 1 >= failure.length) {
+      return failure;
+    }
+    return failure.substring(separator + 1);
   }
 
   static void _validateRequest(SearchProviderRequest request) {
@@ -302,6 +323,48 @@ class BuiltInDuckDuckGoSearchProvider implements SearchProvider {
     }
     return results;
   }
+}
+
+/// Canonical recognition of the secret reference that carries the optional
+/// Brave Search credential.
+///
+/// The run preflight probe and the capability doctor already agreed on this
+/// convention -- an exact BRAVE_SEARCH_API_KEY environment key, otherwise a
+/// reference whose text mentions both "brave" and "search" -- but each carried
+/// its own copy, so a third caller could silently disagree with the readiness
+/// the doctor reports. Kept string-typed so the search module does not depend
+/// on the record type.
+class BraveSearchCredentialSelector {
+  const BraveSearchCredentialSelector._();
+
+  static const int unrelated = 100;
+
+  /// Lower is a better match; [unrelated] means "not a web-search credential".
+  static int rank({
+    required String environmentKey,
+    required String label,
+    required String description,
+  }) {
+    if (environmentKey.trim().toUpperCase() == 'BRAVE_SEARCH_API_KEY') {
+      return 0;
+    }
+    final text = '$environmentKey $label $description'.toLowerCase();
+    if (text.contains('brave') && text.contains('search')) return 1;
+    if (text.contains('brave')) return 2;
+    return unrelated;
+  }
+
+  static bool matches({
+    required String environmentKey,
+    required String label,
+    required String description,
+  }) =>
+      rank(
+        environmentKey: environmentKey,
+        label: label,
+        description: description,
+      ) <
+      unrelated;
 }
 
 typedef BraveSearchCallback = Future<List<Map<String, String>>> Function({

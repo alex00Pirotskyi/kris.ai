@@ -278,11 +278,27 @@ void main() {
         throwsA(
           isA<ProductException>()
               .having((error) => error.code, 'code', 'web_search_unavailable')
+              // Neutrality is about provider identity, not about hiding why the
+              // search failed: the message states the reason and still names no
+              // provider, so a total outage is never blamed on one of them.
               .having(
                 (error) => error.message,
                 'message',
-                'Web search is currently unavailable.',
-              ),
+                allOf(
+                  startsWith('Web search is currently unavailable'),
+                  contains('search_provider_timeout'),
+                  isNot(contains(builtInSearchProviderId)),
+                  isNot(contains(braveSearchProviderId)),
+                  isNot(contains('duckduckgo')),
+                  isNot(contains('brave')),
+                ),
+              )
+              // The provider-attributed detail stays available for diagnosis.
+              .having(
+            (error) => error.details['providerFailures'],
+            'providerFailures',
+            <String>['$builtInSearchProviderId:search_provider_timeout'],
+          ),
         ),
       );
     });
